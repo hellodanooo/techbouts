@@ -1,8 +1,17 @@
-// app/gyms/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import Map, { Marker } from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+const GymMarker = () => (
+  <div className="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+    <div className="w-2 h-2 bg-white rounded-full"></div>
+  </div>
+);
 
 const GymsPage = () => {
   const [gyms, setGyms] = useState<Record<string, any>>({});
@@ -32,12 +41,10 @@ const GymsPage = () => {
     fetchGyms();
   }, []);
 
-  // Filter gyms based on search
   const filteredGyms = Object.entries(gyms).filter(([name]) => 
     name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort gyms by wins
   const sortedGyms = [...filteredGyms].sort((a, b) => (b[1].win || 0) - (a[1].win || 0));
 
   if (loading) {
@@ -89,6 +96,31 @@ const GymsPage = () => {
                 <h2 className="text-xl font-semibold text-gray-900 mb-2 truncate">
                   {gymName}
                 </h2>
+                
+                {/* Map */}
+                {data.address && data.address.latitude && data.address.longitude && (
+                  <div className="mb-4 h-48 rounded-lg overflow-hidden">
+                    <Map
+                      mapboxAccessToken={MAPBOX_TOKEN}
+                      initialViewState={{
+                        longitude: data.address.longitude,
+                        latitude: data.address.latitude,
+                        zoom: 13
+                      }}
+                      style={{ width: '100%', height: '100%' }}
+                      mapStyle="mapbox://styles/mapbox/streets-v11"
+                    >
+                      <Marker
+                        longitude={data.address.longitude}
+                        latitude={data.address.latitude}
+                      >
+                        <GymMarker />
+                      </Marker>
+                    </Map>
+                  </div>
+                )}
+
+                {/* Stats */}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-4">
                     <div>
