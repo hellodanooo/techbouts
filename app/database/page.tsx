@@ -124,7 +124,7 @@ const FighterDatabase: React.FC = () => {
                     className={buttons.addFighter}
                     onClick={fetchFighters}
                 >
-                    Refresh Data
+                    Refresh Data again
                 </button>
             </div>
 
