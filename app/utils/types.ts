@@ -1,5 +1,4 @@
 
-import { Timestamp } from 'firebase/firestore';
 
 export type FighterProfile = {
 first: string;
@@ -77,21 +76,89 @@ export type PuristFighter = {
 
   } 
 
+  export type ResultsFighter = {
+    pmt_id: string;
+    first: string;
+    last: string;
+    gym: string;
+    gender: string;
+    weighin: number;
+    weightclass: number;
+    win: number;
+    loss: number;
+    age: number;
+    id: string;
+    dob: string;
+    result: string;
+    opponent_id: string;
+    event: string;
+    boutid: string;
+    email: string;
+    height?: number;
+    trainer?: string;
+    coachesphone?: string;
+    street1?: string;
+    city?: string;
+    state: string;
+    post_code?: string;
+    phone?: string;
+    fighternum: 'fighter1' | 'fighter2' | 'unmatched' | 'bye';
+    boutmat: string;
+    bout: number;
+    mat: number;
+    docId: string;
+    eventDocId: string;
+    comp_city: string;
+    comp_state: string;
+    bout_type: string;
+    registrationFee?: number;
+    ammy: number;
+    years_exp: number;
+    other?: string;
+    paymentIntentId?: string;
+    paired?: boolean;
+    legkick: number;
+    bodykick: number;
+    headkick: number;
+    clinch: number;
+    defense: number;
+    kicks: number;
+    footwork: number;
+    boxing: number;
+    knees: number;
+    ringawareness: number;
+  photo_package: boolean;
+  }
 
-export type GymProfile = {
-  gym: string;
-  website: string;
-  address: string;
-  city: string;
-  state: string;
-  docId?: string;
-
-   id: string
-   coach_name: string;
-   coach_phone: string;
-
-   
- }
+  export type GymProfile = {
+    gym: string;
+    win: number;
+    loss: number;
+    logo: string;
+    website: string;
+    address: string;
+    city: string;
+    state: string;
+    docId?: string;
+    boysWin: number;
+    boysLoss: number;
+    girlsWin: number;
+    girlsLoss: number;
+    menWin: number;
+    menLoss: number;
+    womanLoss: number;
+    womanWin: number;
+    latitude: number;
+    longitude: number;
+    id: string;
+    suspended: boolean;
+    suspensionLength: number;
+    suspensionDate: string;
+    suspensionReason: string;
+    athletes: ResultsFighter[];
+    coach_name: string;
+    coach_phone: string;
+  }
 
 
 export type Event = {
