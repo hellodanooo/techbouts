@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -62,7 +61,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose }) => {
         coach_enabled: formData.coach_enabled ?? false,
         photos_enabled: formData.photos_enabled ?? false,
         photos_price: formData.photos_price ?? 0,
-        sanctioning: formData.sanctioning ?? 'PMT',
+        sanctioning: formData.sanctioning ?? 'PMT', // Default value for sanctioning
         promotion: formData.promotion ?? '',
       };
 
@@ -118,7 +117,23 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose }) => {
             value={formData.date || ''}
             onChange={(e) => handleInputChange('date', e.target.value)}
           />
-          {/* Add more fields here as necessary */}
+          {/* Sanctioning Body Dropdown */}
+          <select
+            className="w-full p-2 border rounded"
+            value={formData.sanctioning || ''}
+            onChange={(e) => handleInputChange('sanctioning', e.target.value)}
+          >
+            <option value="" disabled>
+              Select Sanctioning Body
+            </option>
+            <option value="International Kickboxing Federation">
+              International Kickboxing Federation
+            </option>
+            <option value="Point Muay Thai">Point Muay Thai</option>
+            <option value="Point Boxing Sparring Circuit">
+              Point Boxing Sparring Circuit
+            </option>
+          </select>
         </div>
         <div className="mt-6 flex justify-end space-x-4">
           <button
