@@ -171,7 +171,7 @@ export type Event = {
   date: string;
   flyer: string;
   coordinates?: { latitude: number; longitude: number };
-  link?: string;
+  registration_link?: string;
   matches_link?: string;
   weighin_date: string;
   weighin_start_time: string;
@@ -181,6 +181,8 @@ export type Event = {
   docId: string;
   doors_open: string;
   spectator_info: string;
+  registration_enabled: boolean;
+  registration_fee: number;
   tickets_enabled: boolean;
   ticket_price: number;
   ticket_price_description: string;
@@ -195,6 +197,8 @@ export type Event = {
   promotion: string;
 
 }
+
+
 
 
 export interface FighterFormData {

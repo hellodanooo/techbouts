@@ -1,7 +1,7 @@
 import { Event } from '@/utils/types';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { generateDocId } from '@/utils/eventManagement';
-import { db } from '@/utils/firebase'; // Use shared Firebase instance
+import { db } from '@/utils/firebase';
 
 export async function fetchEvents(): Promise<Event[]> {
   try {
