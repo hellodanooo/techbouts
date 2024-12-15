@@ -181,7 +181,6 @@ export type Event = {
   docId: string;
   doors_open: string;
   spectator_info: string;
-  
   tickets_enabled: boolean;
   ticket_price: number;
   ticket_price_description: string;
@@ -192,6 +191,8 @@ export type Event = {
   coach_enabled: boolean;
   photos_enabled: boolean;
   photos_price: number;
+  sanctioning: string;
+  promotion: string;
 
 }
 

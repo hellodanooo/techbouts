@@ -15,9 +15,10 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Use a singleton pattern to ensure Firebase is only initialized once
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const analytics = typeof window !== "undefined" ? getAnalytics(app) : undefined;
 const storage = getStorage(app);
 
-export { initializeApp, app, analytics, storage, db };
+export { app, analytics, storage, db };

@@ -2,7 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import FighterTable from '../../components/FightersTable';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { db } from '../../utils/firebase';
 
 type Fighter = {
   fighter_id: string;

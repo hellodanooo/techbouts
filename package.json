@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
     "firebase": "^11.0.2",
+    "firebase-admin": "^13.0.1",
     "lucide-react": "^0.468.0",
     "mapbox-gl": "^3.8.0",
     "next": "15.0.4",
