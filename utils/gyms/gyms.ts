@@ -1,5 +1,7 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../utils/firebase';
+import { populateGymLogos } from "@/utils/gyms/logos";
+import { GymProfile } from '@/utils/types';
 
 type MetadataType = {
   [key: string]: unknown;
@@ -7,7 +9,8 @@ type MetadataType = {
 
 type GymGroupType = {
   gyms: Record<string, {
-    name: string;
+    id: string; // Ensure gyms have IDs for logo fetching
+    gym: string;
     location?: string;
     wins?: number;
     losses?: number;
@@ -20,46 +23,74 @@ type GymGroupType = {
 };
 
 const fetchGyms = async (): Promise<{
-  gyms: Record<string, GymGroupType['gyms'][string]>;
+  gyms: Record<string, GymProfile>;
   metadata?: MetadataType | null;
+  topGyms: GymProfile[]; // Updated type for topGyms
   success: boolean;
   error?: string;
 }> => {
-  const DEFAULT_STATE = 'CA';
+  const DEFAULT_STATE = "CA";
   const collectionName = `gym_profiles_${DEFAULT_STATE}_json_data`;
 
   try {
-    const metadataDoc = await getDoc(doc(db, collectionName, 'metadata'));
-    const metadata: MetadataType | null = metadataDoc.exists() ? (metadataDoc.data() as MetadataType) : null;
+    const metadataDoc = await getDoc(doc(db, collectionName, "metadata"));
+    const metadata: MetadataType | null = metadataDoc.exists()
+      ? (metadataDoc.data() as MetadataType)
+      : null;
 
-    const winGroups = ['0_win', '1_5_win', '6_10_win', '11_20_win', '21_more_win'];
-    const allGyms: Record<string, GymGroupType['gyms'][string]> = {};
+    const winGroups = [
+      "0_win",
+      "1_5_win",
+      "6_10_win",
+      "11_20_win",
+      "21_more_win",
+    ];
+    const allGyms: Record<string, GymProfile> = {};
 
     for (const group of winGroups) {
       const docRef = doc(db, collectionName, group);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const data = docSnap.data() as GymGroupType;
+        const data = docSnap.data() as { gyms: Record<string, GymProfile> };
         if (data.gyms) {
           Object.assign(allGyms, data.gyms);
         }
       }
     }
 
-    console.log('Successfully fetched gyms:', allGyms); // Debugging log
+    const gymsArray: GymProfile[] = Object.values(allGyms);
+
+    // Populate logos for all gyms
+    const allGymsWithLogos = await populateGymLogos(gymsArray);
+
+    // Sort gyms by total wins (boys, girls, men, women)
+    const topGyms = [...allGymsWithLogos]
+      .sort((a, b) => {
+        const totalWinsA = a.win + a.boysWin + a.girlsWin + a.menWin + a.womanWin;
+        const totalWinsB = b.win + b.boysWin + b.girlsWin + b.menWin + b.womanWin;
+        return totalWinsB - totalWinsA;
+      })
+      .slice(0, 10);
+
+    console.log("Successfully fetched gyms and top gyms:", topGyms);
 
     return {
-      gyms: allGyms,
+      gyms: allGymsWithLogos.reduce((acc, gym) => {
+        acc[gym.gym] = gym; // Use 'gym' (name) as the key
+        return acc;
+      }, {} as Record<string, GymProfile>),
       metadata,
+      topGyms,
       success: true,
     };
   } catch (error) {
-    console.error('Error fetching gym data:', error); // Improved error handling
+    console.error("Error fetching gym data:", error);
     return {
       gyms: {},
+      topGyms: [],
       success: false,
-      error: 'Failed to fetch gym data',
+      error: "Failed to fetch gym data",
     };
   }
 };

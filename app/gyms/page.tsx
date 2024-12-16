@@ -2,36 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
-import Map, { Marker } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import fetchGyms from '@/utils/gyms/gyms'; 
+import fetchGyms from '@/utils/gyms/gyms';
+import Head from 'next/head';
+import { GymProfile } from '@/utils/types';
 
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
-type GymData = {
-  win?: number;
-  loss?: number;
-  address?: {
-    latitude?: number;
-    longitude?: number;
-  };
-  [key: string]: unknown;
-};
-
-const GymMarker = () => (
-  <div className="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-    <div className="w-2 h-2 bg-white rounded-full"></div>
-  </div>
-);
 
 const GymsPage: React.FC = () => {
-  const [gyms, setGyms] = useState<Record<string, GymData>>({});
+  const [gyms, setGyms] = useState<Record<string, GymProfile>>({});
+  const [topGyms, setTopGyms] = useState<GymProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +22,7 @@ const GymsPage: React.FC = () => {
         const response = await fetchGyms();
         if (response.success) {
           setGyms(response.gyms);
+          setTopGyms(response.topGyms);
         } else {
           setError(response.error || 'Unknown error occurred');
         }
@@ -49,16 +33,20 @@ const GymsPage: React.FC = () => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, []);
-
 
   const filteredGyms = Object.entries(gyms).filter(([name]) =>
     name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const sortedGyms = [...filteredGyms].sort((a, b) => (b[1].win || 0) - (a[1].win || 0));
+
+  const seoDescription = topGyms
+    .map((gym) => gym.gym)
+    .slice(0, 10)
+    .join(', ');
 
   if (loading) {
     return (
@@ -78,10 +66,17 @@ const GymsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <Head>
+        <title>Muay Thai Gyms - Top Gyms</title>
+        <meta
+          name="description"
+          content={`Explore the top 10 Muay Thai gyms: ${seoDescription}. Find the best gym for your training needs.`}
+        />
+      </Head>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Muay Thai Gyms Bro</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Muay Thai Gyms</h1>
           <div className="max-w-xl mx-auto">
             <div className="relative">
               <input
@@ -103,28 +98,15 @@ const GymsPage: React.FC = () => {
               key={gymName}
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden"
             >
+              {data.logo && (
+                <img
+                  src={data.logo}
+                  alt={`${gymName} logo`}
+                  className="w-full h-32 object-cover"
+                />
+              )}
               <div className="p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2 truncate">{gymName}</h2>
-                {/* Map */}
-                {data.address?.latitude && data.address?.longitude && (
-                  <div className="mb-4 h-48 rounded-lg overflow-hidden">
-                    <Map
-                      mapboxAccessToken={MAPBOX_TOKEN}
-                      initialViewState={{
-                        longitude: data.address.longitude,
-                        latitude: data.address.latitude,
-                        zoom: 13,
-                      }}
-                      style={{ width: '100%', height: '100%' }}
-                      mapStyle="mapbox://styles/mapbox/streets-v11"
-                    >
-                      <Marker longitude={data.address.longitude} latitude={data.address.latitude}>
-                        <GymMarker />
-                      </Marker>
-                    </Map>
-                  </div>
-                )}
-                {/* Stats */}
                 <div className="flex justify-between items-center">
                   <div className="flex gap-4">
                     <div>
@@ -137,11 +119,11 @@ const GymsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="bg-gray-100 px-3 py-1 rounded-full">
-                  <p className="text-sm font-medium">
-      {(
-        ((data.win ?? 0) / ((data.win ?? 0) + (data.loss ?? 0))) * 100
-      ).toFixed(1)}%
-    </p>
+                    <p className="text-sm font-medium">
+                      {(
+                        ((data.win ?? 0) / ((data.win ?? 0) + (data.loss ?? 0))) * 100
+                      ).toFixed(1)}%
+                    </p>
                   </div>
                 </div>
               </div>
