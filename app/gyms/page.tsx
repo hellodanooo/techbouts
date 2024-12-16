@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import Map, { Marker } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import fetchGyms from '@/utils/gyms/gyms'; 
+
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
@@ -29,26 +31,28 @@ const GymsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+
+
   useEffect(() => {
-    const fetchGyms = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/gyms');
-        const data = await response.json();
-        if (data.success) {
-          setGyms(data.gyms);
+        const response = await fetchGyms();
+        if (response.success) {
+          setGyms(response.gyms);
         } else {
-          setError('Failed to load gym data');
+          setError(response.error || 'Unknown error occurred');
         }
-      } catch (error) {
-        setError('Error connecting to the server');
-        console.error('Error:', error);
+      } catch (err) {
+        setError('Error fetching gyms');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchGyms();
+  
+    fetchData();
   }, []);
+  
 
   const filteredGyms = Object.entries(gyms).filter(([name]) =>
     name.toLowerCase().includes(searchTerm.toLowerCase())

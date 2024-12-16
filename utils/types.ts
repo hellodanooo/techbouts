@@ -195,6 +195,7 @@ export type Event = {
   photos_price: number;
   sanctioning: string;
   promotion: string;
+  email: string;
 
 }
 

@@ -1,86 +1,75 @@
-import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { app } from './firebase';
+import { doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from './firebase'; // Use the exported db instance
+import { Event } from './types';
 
-interface EventData {
-  event_name: string;
-  city: string;
-  state: string;
-  date: string;
-  registration_fee: number;
-  promoterId: string;
-}
+const getFirestoreEvents = async (): Promise<Event[]> => {
+  const docRef = doc(db, 'techbouts_events', 'events');
+  const snapshot = await getDoc(docRef);
 
-interface PendingEvent {
-  id: string;
-  event_name: string;
-  city: string;
-  state: string;
-  date: string;
-  registration_fee: number;
-  promoterId: string;
-}
-
-export const generateDocId = (city: string, state: string, date: string): string => {
-  const [year, month, day] = date.split('-');
-  return `${city}_${state}_${month}_${day}_${year}`;
-};
-
-// Utility to save to JSON via API
-const saveToJsonFile = async (event: EventData | any, action: 'add' | 'update' | 'delete') => {
-  const response = await fetch('/api/manageEvent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event, action }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to ${action} event in techbouts_events.json`);
+  if (!snapshot.exists()) {
+    try {
+      // Initialize the document if it doesn't exist
+      await setDoc(docRef, { events: [] });
+    } catch (error) {
+      console.error('Error initializing Firestore events document:', error);
+      throw new Error('Failed to initialize events document.');
+    }
+    return [];
   }
+
+  const data = snapshot.data();
+  return data?.events || [];
 };
 
-// Add event to Firestore and JSON
-export const addEvent = async (eventData: EventData): Promise<{ success: boolean; message: string }> => {
-  const db = getFirestore(app);
-  const { city, state, date, event_name, registration_fee, promoterId } = eventData;
+const saveFirestoreEvents = async (events: Event[]) => {
+  const docRef = doc(db, 'techbouts_events', 'events');
+  await updateDoc(docRef, { events });
+};
 
+export const saveToFirestore = async (event: Event | { id: string }, action: 'add' | 'update' | 'delete') => {
+  if (!event || typeof event !== 'object' || !('id' in event)) {
+    throw new Error('Invalid event data provided.');
+  }
+
+  const events = await getFirestoreEvents();
+  let updatedEvents = events;
+
+  switch (action) {
+    case 'add':
+      if (events.some((e) => e.id === event.id)) {
+        throw new Error('Event with the same ID already exists.');
+      }
+      updatedEvents = [...events, event as Event];
+      break;
+
+    case 'update':
+      if (!events.some((e) => e.id === event.id)) {
+        throw new Error('Event not found for update.');
+      }
+      updatedEvents = events.map((e) => (e.id === event.id ? { ...e, ...event } : e));
+      break;
+
+    case 'delete':
+      updatedEvents = events.filter((e) => e.id !== event.id);
+      break;
+
+    default:
+      throw new Error('Invalid action specified.');
+  }
+
+  await saveFirestoreEvents(updatedEvents);
+};
+
+export const addEvent = async (eventData: Event): Promise<{ success: boolean; message: string }> => {
   try {
-    // Generate document ID
-    const cityFormatted = city.replace(/\s+/g, '_');
-    const docId = generateDocId(cityFormatted, state, date);
+    const cityFormatted = eventData.city.replace(/\s+/g, '_');
+    const docId = generateDocId(cityFormatted, eventData.state, eventData.date);
+    const newEvent: Event = { ...eventData, id: docId, docId };
 
-    // Add event to Firestore collection
     const eventRef = doc(db, 'techbouts_events', docId);
-    const newEvent = {
-      ...eventData,
-      id: docId,
-      address: 'TBA',
-      flyer: '',
-    };
-
     await setDoc(eventRef, newEvent);
 
-    // Update event calendar
-    const eventCalendarRef = doc(db, 'event_calendar', 'techbouts_events');
-    const docSnap = await getDoc(eventCalendarRef);
-
-    if (docSnap.exists()) {
-      const currentData = docSnap.data();
-      const currentEvents = currentData.events || [];
-      const updatedEvents = [...currentEvents, newEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-      await updateDoc(eventCalendarRef, {
-        lastUpdated: new Date().toISOString(),
-        events: updatedEvents,
-      });
-    } else {
-      await setDoc(eventCalendarRef, {
-        lastUpdated: new Date().toISOString(),
-        events: [newEvent],
-      });
-    }
-
-    // Save to JSON file
-    await saveToJsonFile(newEvent, 'add');
+    await saveToFirestore(newEvent, 'add');
 
     return { success: true, message: 'Event added successfully' };
   } catch (error) {
@@ -89,25 +78,20 @@ export const addEvent = async (eventData: EventData): Promise<{ success: boolean
   }
 };
 
-// Update event in Firestore and JSON
-export const updateEvent = async (eventId: string, updatedData: Partial<EventData>): Promise<{ success: boolean; message: string }> => {
-  const db = getFirestore(app);
-
+export const updateEvent = async (eventId: string, updatedData: Partial<Event>): Promise<{ success: boolean; message: string }> => {
   try {
     const eventRef = doc(db, 'techbouts_events', eventId);
-
-    // Check if the event exists
     const snapshot = await getDoc(eventRef);
+
     if (!snapshot.exists()) {
       throw new Error(`Event with ID ${eventId} does not exist.`);
     }
 
-    // Update Firestore document
-    await updateDoc(eventRef, updatedData);
+    const existingEvent = snapshot.data() as Event;
+    const updatedEvent = { ...existingEvent, ...updatedData };
 
-    // Update JSON file
-    const updatedEvent = { id: eventId, ...updatedData };
-    await saveToJsonFile(updatedEvent, 'update');
+    await updateDoc(eventRef, updatedData);
+    await saveToFirestore(updatedEvent, 'update');
 
     return { success: true, message: 'Event updated successfully' };
   } catch (error) {
@@ -116,21 +100,22 @@ export const updateEvent = async (eventId: string, updatedData: Partial<EventDat
   }
 };
 
-// Delete event from Firestore and JSON
 export const deleteEvent = async (eventId: string): Promise<{ success: boolean; message: string }> => {
-  const db = getFirestore(app);
-
   try {
-    // Delete from Firestore
     const eventRef = doc(db, 'techbouts_events', eventId);
     await deleteDoc(eventRef);
 
-    // Remove from JSON file
-    await saveToJsonFile({ id: eventId }, 'delete');
+    await saveToFirestore({ id: eventId }, 'delete');
 
     return { success: true, message: 'Event deleted successfully' };
   } catch (error) {
     console.error('Error deleting event:', error);
     return { success: false, message: 'Error deleting event' };
   }
+};
+
+export const generateDocId = (city: string, state: string, date: string): string => {
+  const parsedDate = new Date(date).toISOString().split('T')[0]; // Ensure YYYY-MM-DD
+  const [year, month, day] = parsedDate.split('-');
+  return `${city}_${state}_${month}_${day}_${year}`;
 };

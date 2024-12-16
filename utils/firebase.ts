@@ -21,4 +21,5 @@ const db = getFirestore(app);
 const analytics = typeof window !== "undefined" ? getAnalytics(app) : undefined;
 const storage = getStorage(app);
 
+
 export { app, analytics, storage, db };
