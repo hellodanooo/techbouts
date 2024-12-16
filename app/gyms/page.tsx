@@ -52,7 +52,7 @@ const GymsPage: React.FC = () => {
   
     fetchData();
   }, []);
-  
+
 
   const filteredGyms = Object.entries(gyms).filter(([name]) =>
     name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -81,7 +81,7 @@ const GymsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Muay Thai Gyms</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Muay Thai Gyms Bro</h1>
           <div className="max-w-xl mx-auto">
             <div className="relative">
               <input
