@@ -94,29 +94,28 @@ export default function FighterPage({
               </div>
             </div>
             <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { label: "Weight Class", value: fighter.weightclass },
-                { label: "Record", value: `${fighter.win}-${fighter.loss}` },
-                { label: "Gym", value: fighter.gym },
-                { label: "Age", value: fighter.age },
-                { label: "Gender", value: fighter.gender },
-                fighter.city && {
-                  label: "Location",
-                  value: `${fighter.city}, ${fighter.state || ""}`,
-                },
-              ]
-                .filter(Boolean)
-                .map((item, index) => (
-                  <div
-                    key={index}
-                    className="bg-[#f8f5f0] p-4 rounded-lg text-center"
-                  >
-                    <h2 className="text-[#8B7355] font-semibold text-sm">
-                      {item.label}
-                    </h2>
-                    <p className="text-gray-800 font-bold mt-1">{item.value}</p>
-                  </div>
-                ))}
+            {[
+  { label: "Weight Class", value: fighter.weightclass },
+  { label: "Record", value: `${fighter.win}-${fighter.loss}` },
+  { label: "Gym", value: fighter.gym },
+  { label: "Age", value: fighter.age.toString() }, // Ensure value is a string
+  { label: "Gender", value: fighter.gender },
+  fighter.city
+    ? {
+        label: "Location",
+        value: `${fighter.city}, ${fighter.state || ""}`,
+      }
+    : null,
+]
+  .filter((item): item is { label: string; value: string } => item !== null) // Type guard
+  .map((item, index) => (
+    <div key={index} className="bg-[#f8f5f0] p-4 rounded-lg text-center">
+      <h2 className="text-[#8B7355] font-semibold text-sm">
+        {item.label}
+      </h2>
+      <p className="text-gray-800 font-bold mt-1">{item.value}</p>
+    </div>
+  ))}
             </div>
           </div>
         </div>
