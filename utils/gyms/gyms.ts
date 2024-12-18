@@ -1,3 +1,4 @@
+// utils/gyms/gyms.ts
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../utils/firebase';
 import { populateGymLogos } from "@/utils/gyms/logos";
@@ -9,7 +10,7 @@ type MetadataType = {
 
 type GymGroupType = {
   gyms: Record<string, {
-    id: string; // Ensure gyms have IDs for logo fetching
+    id: string; 
     gym: string;
     location?: string;
     wins?: number;
@@ -77,7 +78,7 @@ const fetchGyms = async (): Promise<{
 
     return {
       gyms: allGymsWithLogos.reduce((acc, gym) => {
-        acc[gym.gym] = gym; // Use 'gym' (name) as the key
+        acc[gym.id] = gym; // Use gym ID as the key instead of gym name
         return acc;
       }, {} as Record<string, GymProfile>),
       metadata,

@@ -1,0 +1,306 @@
+/*/styles/LandingPage.module.css*/
+
+.all_content {
+    max-width: 100vw; /* Prevent horizontal overflow */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .upcoming_events {
+    width: 100%; /* Take full width of the parent */
+    overflow-x: auto; /* Horizontal scroll for overflowing content */
+    white-space: nowrap; /* Keep all items in a single line */
+    padding-bottom: 10px; /* Optional: Space for scrollbar */
+  }
+  
+  .upcoming_events::-webkit-scrollbar {
+    height: 25px; /* Set the height of the horizontal scrollbar */
+  }
+  
+  .upcoming_events::-webkit-scrollbar-track {
+    background: #b4b86f; /* Light grey track */
+  }
+  
+  .upcoming_events::-webkit-scrollbar-thumb {
+    background: #166e0f; /* Darker grey draggable part */
+    border-radius: 50px;
+    height: 30px; /* Fully rounded ends of the scrollbar */
+  }
+  
+  .upcoming_events::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Darken thumb on hover */
+  }
+  
+  .upcoming_events::-webkit-scrollbar-button {
+    display: block;
+    width: 25px; /* Set arrow button width */
+    height: 30px; /* Set arrow button height */
+    background-color: #ccc;
+    background-repeat: no-repeat;
+    background-position: center;
+    color: black;
+  }
+  
+  .upcoming_events::-webkit-scrollbar-button:start {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/200/svg" width="10" height="10" viewBox="0 0 24 24"><path d="M15 12l-8 6V6z" fill="%23000"/></svg>');
+  }
+  
+  .upcoming_events::-webkit-scrollbar-button:end {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"><path d="M9 18l8-6-8-6z" fill="%23000"/></svg>');
+  }
+
+
+  .upcoming_events ul {
+    display: inline-flex; /* Inline flex to keep items in line */
+    flex-wrap: nowrap; /* Prevent wrapping of items */
+  }
+  
+  .upcoming_events ul li {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 20px; /* Space between items */
+    text-align: center;
+  }
+  
+
+  
+
+
+
+
+
+  /* Ensure flyers are responsive */
+  .flyerNew {
+    width: 200px; 
+    height: 300px; 
+    object-fit: cover;
+  }
+  
+  
+  .toggle_text {
+    cursor: pointer;
+    color: #007bff; /* Example color, adjust as needed */
+    margin-top: 10px; /* Spacing between the h2 and toggle text */
+    text-align: center; /* Center align the text */
+    font-weight: bold;
+    left: -25px; /* Adjust this value as needed to shift the h2 element to the left */
+  
+  }
+  
+  
+  .past_events{ 
+    width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around; /* Adjust as needed */
+  }
+  
+  
+  .past_events ul {
+    display: flex;
+    min-width: 100%; /* Ensure at least full width */
+    overflow-x: auto; /* Enable horizontal scrolling for the list */
+    list-style: none;
+    white-space: nowrap; /* Prevent wrapping of list items */
+  }
+  
+  
+
+  .past_events ul li {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 20px; /* Space between items */
+    text-align: center;
+  }
+  
+  
+  .flyerOld {
+    width: 30%; /* 30% of the viewport width */
+    height: auto; /* Maintain aspect ratio */
+    margin-bottom: 10px; 
+  }
+  
+
+  
+
+  
+  .tooltip {
+    position: fixed;
+    width: 30vw; /* Adjust as necessary */
+    height: auto; /* Adjust as necessary */
+    overflow: hidden; /* Ensure content fits within the tooltip */
+    z-index: 1000;
+  }
+  
+  .tooltip img {
+    width: 100%;
+    height: auto;
+  }
+  
+  .past_events li {
+    border: 1px solid rgb(251, 247, 247); /* Black border */
+  padding: 10px;
+  }
+  
+  .past_events a {
+  color: rgb(255, 255, 255);
+  }
+  
+
+
+  .tooltipImage {
+    width: 200px; /* Adjust the width as needed */
+    height: auto; /* Maintain aspect ratio */
+    border: 1px solid #ccc; /* Optional: border */
+    border-radius: 8px; /* Optional: rounded corners */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Optional: shadow */
+    /* Add any additional styling you need */
+  }
+
+
+
+
+/*Header*/
+
+
+  .container {
+    position: relative;
+    width: 100%; /* Adjust as needed */
+    height: 225px; /* Adjust based on the height of your carousel */
+  }
+  
+  .carousel_container {
+    overflow: hidden;
+    display: flex;
+    width: 300%;
+    justify-content: flex-start;
+    background: black;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+  
+  .carousel {
+    display: flex;
+    width: fit-content;
+    filter: opacity(50%);
+  }
+  
+  .carousel img {
+    width: 50%;
+    max-height: 225px;
+    object-fit: cover;
+  }
+  
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 225px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 2; /* Ensures overlay is on top */
+  }
+
+  .logo_container img {
+    max-width: 120px; /* Adjust based on your preference */
+  }
+    .rules_btn {
+      clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+    }
+    .awards_btn {
+      clip-path: polygon(10% 100%, 100% 100%, 90% 0, 0 0); /* Slant to the right, flipped vertically */
+    }
+    .rankings_btn{
+      clip-path: polygon(0 0, 90% 0, 100% 100%, 10% 100%); /* Slant to the left for right buttons */
+    }
+    .gym_rankings_btn {
+    clip-path: polygon(90% 100%, 0% 100%, 10% 0, 100% 0); /* Slant to the right, flipped horizontally */
+    }
+  
+    .rules_btn a, .awards_btn a, .rankings_btn a, .gym_rankings_btn a {
+      color: inherit; 
+      text-decoration: none; 
+      width: 150px
+    }
+
+    .rules_btn, .awards_btn, .rankings_btn, .gym_rankings_btn {
+     background-color: antiquewhite;
+     color: black;
+     padding: 3px;
+     margin: 10px;
+     cursor: pointer;
+    }
+
+    .rules_btn:hover, .awards_btn:hover, .rankings_btn:hover, .gym_rankings_btn:hover {
+      background-color: tan;
+      color: black; 
+    
+    }
+  
+    .headerLinks {
+      display: flex;
+      justify-content: space-evenly;
+      width: 100%;
+      padding-bottom: 2%;
+    }
+
+    .leftHeader, .rightHeader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+      font-size: 1.5em;
+  
+    }
+
+/*////////////////////////////////////////////// LARGE SCREEN////////////////////////////////////////////////*/
+  @media (min-width: 601px) {
+    /* Adjust layout and font sizes for larger screens */
+    
+   
+.leftHeader, .rightHeader {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+}
+.leftHeader {
+padding-top: 2%;
+padding-bottom: 2%;
+}
+.rightHeader {
+padding-top: 2%;
+padding-bottom: 2%;
+}
+
+
+    .upcoming_events ul li, .past_events ul li {
+        /* Example: Larger margins between items */
+        margin-right: 40px; /* Adjust as needed */
+    }
+
+    .flyerNew, .flyerOld {
+        /* Example: Adjust size of images */
+width: 400px;
+height: auto;
+    }
+
+
+    .logoContainer {
+      overflow: hidden; /* Ensure overflow is hidden for the logo */
+  
+  }
+
+
+    /* Add more specific styles for larger screens here */
+}

@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image'; // Added Next.js Image component
 import 'mapbox-gl/dist/mapbox-gl.css';
 import fetchGyms from '@/utils/gyms/gyms';
 import Head from 'next/head';
 import { GymProfile } from '@/utils/types';
-
-
 
 const GymsPage: React.FC = () => {
   const [gyms, setGyms] = useState<Record<string, GymProfile>>({});
@@ -37,10 +37,10 @@ const GymsPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const filteredGyms = Object.entries(gyms).filter(([name]) =>
-    name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredGyms = Object.entries(gyms).filter(([gymName]) =>
+    gymName.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+  
   const sortedGyms = [...filteredGyms].sort((a, b) => (b[1].win || 0) - (a[1].win || 0));
 
   const seoDescription = topGyms
@@ -93,20 +93,26 @@ const GymsPage: React.FC = () => {
 
         {/* Gym List */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sortedGyms.map(([gymName, data]) => (
-            <div
-              key={gymName}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden"
-            >
+      {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+{sortedGyms.map(([_, data]) => (
+  <Link 
+    key={data.id} 
+    href={`/gyms/${data.id}`}
+    className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden cursor-pointer"
+  >
               {data.logo && (
-                <img
-                  src={data.logo}
-                  alt={`${gymName} logo`}
-                  className="w-full h-32 object-cover"
-                />
+                <div className="relative w-full h-32">
+                  <Image
+                    src={data.logo}
+                    alt={`${data.gym} logo`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                </div>
               )}
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2 truncate">{gymName}</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2 truncate">{data.gym}</h2>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-4">
                     <div>
@@ -127,7 +133,7 @@ const GymsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

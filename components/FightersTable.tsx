@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 type Fighter = {
   fighter_id: string;
@@ -37,6 +40,8 @@ const isValidUrl = (url: string): boolean => {
 };
 
 const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditFighter, onDeleteFighter }) => {
+  const router = useRouter();
+
   return (
     <div style={{ overflowX: 'auto' }}>
       <table>
@@ -53,13 +58,17 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
             <th>Losses</th>
             <th>City</th>
             <th>State</th>
-            <th>MTP ID</th>
+            <th>Fighter ID</th>
             {editable && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {fighters.map((fighter) => (
-            <tr key={fighter.fighter_id}>
+            <tr 
+              key={fighter.fighter_id} 
+              onClick={() => router.push(`/fighter/${fighter.fighter_id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               <td>
                 <Image
                   src={isValidUrl(fighter.photo || '') ? fighter.photo! : defaultPhotoUrl}
