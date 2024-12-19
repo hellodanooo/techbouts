@@ -388,9 +388,28 @@ const handleStreamData = (data: StreamData) => {
     return (
         <div style={styles.container}>
             <div style={styles.yearSelectionContainer}>
-                <h1 style={styles.heading}>Tournament Statistics Analysis</h1>
-                
-                {/* Year Selection */}
+                <h1 style={styles.heading}>POINT MUAY THAI STATISTICS</h1>
+                <p className="flex items-center justify-center gap-2">The Largest Community Based Muay Thai Organization</p>
+                <div className="flex items-center justify-center gap-2">
+
+                        <p className="text-gray-600">Powered by Techbouts Inc</p>
+                        <Image 
+                            src="/logos/techboutslogoFlat.png"
+                            alt="Techbouts Logo"
+                            width={80}
+                            height={80}
+                            className="inline-block"
+                        />
+                    </div>                <div className="flex justify-center mb-6">
+                    <Image 
+                        src="/logos/pmt_logo_2024_sm.png"
+                        alt="Point Muay Thai Logo"
+                        width={100}
+                        height={100}
+                        priority
+                    />
+                </div>
+
                 <div style={styles.filterSection}>
                     <h3 style={styles.filterTitle}>Select Years</h3>
                     <div style={styles.yearButtonContainer}>
@@ -468,35 +487,70 @@ const handleStreamData = (data: StreamData) => {
                 </div>
             </div>
 
-            <div style={styles.chartContainer}>
-                <h3 style={styles.statsTitle}>Top 10 Athletes by Wins</h3>
-                <div style={styles.barChartContainer}>
-                    <ResponsiveContainer>
-                        <BarChart data={filteredStats.topAthletes} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" />
-                            <YAxis dataKey="name" type="category" width={150} />
-                            <Tooltip />
-                            <Bar dataKey="wins" fill="#82ca9d" name="Wins" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+
 
             <div style={styles.chartContainer}>
-                <h3 style={styles.statsTitle}>Top 10 Gyms by Wins</h3>
-                <div style={styles.barChartContainer}>
-                    <ResponsiveContainer>
-                        <BarChart data={filteredStats.topGyms} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" />
-                            <YAxis dataKey="name" type="category" width={150} />
-                            <Tooltip />
-                            <Bar dataKey="wins" fill="#0088FE" name="Wins" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+    <h3 style={styles.statsTitle}>Top 10 Athletes by Wins</h3>
+    <div style={styles.barChartContainer}>
+        <ResponsiveContainer width="100%" height={400}>
+            <BarChart 
+                data={filteredStats.topAthletes} 
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={150}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                />
+                <Tooltip />
+                <Bar 
+                    dataKey="wins" 
+                    fill="#82ca9d" 
+                    name="Wins"
+                    barSize={20}
+                />
+            </BarChart>
+        </ResponsiveContainer>
+    </div>
+</div>
+
+<div style={styles.chartContainer}>
+    <h3 style={styles.statsTitle}>Top 10 Gyms by Wins</h3>
+    <div style={styles.barChartContainer}>
+        <ResponsiveContainer width="100%" height={400}>
+            <BarChart 
+                data={filteredStats.topGyms} 
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={150}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                />
+                <Tooltip />
+                <Bar 
+                    dataKey="wins" 
+                    fill="#0088FE" 
+                    name="Wins"
+                    barSize={20}
+                />
+            </BarChart>
+        </ResponsiveContainer>
+    </div>
+</div>
+
+
+
 
             <div style={styles.terminalContainer}>
                 <div style={styles.terminalButtons}>
@@ -669,7 +723,8 @@ const styles: Record<string, React.CSSProperties> = {
         color: '#6b7280'
     },
     barChartContainer: {
-        height: '300px'
+        width: '100%',
+        height: '400px'
     },
     terminalContainer: {
         position: 'fixed',
