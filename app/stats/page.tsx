@@ -283,25 +283,76 @@ const StatisticsDashboard = () => {
 
 
     
-    const handleStreamData = (data: StreamData) => {
-        switch (data.type) {
-            case 'progress':
-                addLog(`Processing ${data.eventName}: ${data.processedAthletes} athletes processed`);
-                break;
-            case 'complete':
-                setStats(data);
-                const states = Object.keys(data.eventStats.stateDistribution);
-                setAvailableStates(states.sort());
+const handleStreamData = (data: StreamData) => {
+    switch (data.type) {
+        case 'progress':
+            addLog(`Processing ${data.eventName}: ${data.processedAthletes} athletes processed`);
+            break;
+            
+        case 'complete':
+            // Handle chunked complete data
+            setStats(prevStats => {
+                const newStats = { ...prevStats };
+                
+                // Update base stats if present
+                if (data.genderDistribution) {
+                    newStats.genderDistribution = data.genderDistribution;
+                }
+                if (data.ageGenderDistribution) {
+                    newStats.ageGenderDistribution = data.ageGenderDistribution;
+                }
+                if (data.topAthletes) {
+                    newStats.topAthletes = data.topAthletes;
+                }
+                if (data.topGyms) {
+                    newStats.topGyms = data.topGyms;
+                }
+                if (data.totalBouts) {
+                    newStats.totalBouts = data.totalBouts;
+                }
+
+                // Update event stats
+                if (data.eventStats) {
+                    newStats.eventStats = {
+                        ...newStats.eventStats,
+                        stateDistribution: {
+                            ...newStats.eventStats.stateDistribution,
+                            ...data.eventStats.stateDistribution
+                        },
+                        athleteWinsByState: {
+                            ...newStats.eventStats.athleteWinsByState,
+                            ...data.eventStats.athleteWinsByState
+                        },
+                        gymWinsByState: {
+                            ...newStats.eventStats.gymWinsByState,
+                            ...data.eventStats.gymWinsByState
+                        }
+                    };
+                }
+
+                // Update available states if state distribution is present
+                if (data.eventStats?.stateDistribution && Object.keys(data.eventStats.stateDistribution).length > 0) {
+                    const states = Object.keys(newStats.eventStats.stateDistribution);
+                    setAvailableStates(states.sort());
+                }
+
+                return newStats;
+            });
+
+            // Only log completion when we receive base stats
+            if (data.totalBouts) {
                 addLog('Analysis completed successfully');
-                break;
-            case 'error':
-                throw new Error(data.message);
-            default:
-                // This case should never be reached due to TypeScript's exhaustive checking
-                const _exhaustiveCheck: never = data;
-                console.warn('Unknown data type received:', _exhaustiveCheck);
-        }
-    };
+            }
+            break;
+
+        case 'error':
+            throw new Error(data.message);
+            
+        default:
+            const _exhaustiveCheck: never = data;
+            console.warn('Unknown data type received:', _exhaustiveCheck);
+    }
+};
 
 
     const filteredStats = React.useMemo(() => {

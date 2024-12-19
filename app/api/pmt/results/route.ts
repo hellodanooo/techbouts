@@ -76,11 +76,66 @@ export async function GET(request: Request) {
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    // Properly typed writeChunk function
+    // Improved chunk writing with size limitation
     const writeChunk = async (data: StreamData): Promise<void> => {
         try {
-            const jsonString = JSON.stringify(data);
-            await writer.write(encoder.encode(jsonString + '\n'));
+            // Split large data into smaller chunks if needed
+            if (data.type === 'complete') {
+                // Send stats in separate chunks
+                const { eventStats, ...baseStats } = data;
+                
+                // Send base stats first
+                const baseStatsChunk = {
+                    ...baseStats,
+                    type: 'complete' as const,
+                    eventStats: {
+                        stateDistribution: {},
+                        athleteWinsByState: {},
+                        gymWinsByState: {}
+                    }
+                };
+                await writer.write(encoder.encode(JSON.stringify(baseStatsChunk) + '\n'));
+
+                // Send state distribution
+                const stateDistChunk = {
+                    type: 'complete' as const,
+                    eventStats: {
+                        stateDistribution: eventStats.stateDistribution,
+                        athleteWinsByState: {},
+                        gymWinsByState: {}
+                    }
+                };
+                await writer.write(encoder.encode(JSON.stringify(stateDistChunk) + '\n'));
+
+                // Send athlete wins by state in chunks
+                for (const [state, athletes] of Object.entries(eventStats.athleteWinsByState)) {
+                    const athleteChunk = {
+                        type: 'complete' as const,
+                        eventStats: {
+                            stateDistribution: {},
+                            athleteWinsByState: { [state]: athletes },
+                            gymWinsByState: {}
+                        }
+                    };
+                    await writer.write(encoder.encode(JSON.stringify(athleteChunk) + '\n'));
+                }
+
+                // Send gym wins by state in chunks
+                for (const [state, gyms] of Object.entries(eventStats.gymWinsByState)) {
+                    const gymChunk = {
+                        type: 'complete' as const,
+                        eventStats: {
+                            stateDistribution: {},
+                            athleteWinsByState: {},
+                            gymWinsByState: { [state]: gyms }
+                        }
+                    };
+                    await writer.write(encoder.encode(JSON.stringify(gymChunk) + '\n'));
+                }
+            } else {
+                // For progress and error messages, send as is
+                await writer.write(encoder.encode(JSON.stringify(data) + '\n'));
+            }
         } catch (error) {
             console.error('Error writing chunk:', error);
             const errorChunk: ErrorData = {
@@ -138,11 +193,10 @@ export async function GET(request: Request) {
 
             // Process final data
             const finalData = processAthleteData(allFighters);
-            const completeData: ProcessedData = {
-                type: 'complete',
-                ...finalData
-            };
-            await writeChunk(completeData);
+            await writeChunk({
+                ...finalData,
+                type: 'complete' as const
+            });
 
         } catch (error) {
             console.error('Error in main processing:', error);
