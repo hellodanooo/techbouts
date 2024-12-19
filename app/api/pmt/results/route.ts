@@ -76,8 +76,19 @@ export async function GET(request: Request) {
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    const writeChunk = async (data: StreamData) => {
-        await writer.write(encoder.encode(JSON.stringify(data) + '\n'));
+    // Properly typed writeChunk function
+    const writeChunk = async (data: StreamData): Promise<void> => {
+        try {
+            const jsonString = JSON.stringify(data);
+            await writer.write(encoder.encode(jsonString + '\n'));
+        } catch (error) {
+            console.error('Error writing chunk:', error);
+            const errorChunk: ErrorData = {
+                type: 'error',
+                message: 'Error processing data chunk'
+            };
+            await writer.write(encoder.encode(JSON.stringify(errorChunk) + '\n'));
+        }
     };
 
     (async () => {
@@ -92,47 +103,60 @@ export async function GET(request: Request) {
                 const eventYear = eventData.date?.substring(0, 4);
 
                 if (years.includes(eventYear)) {
-                    const resultsRef = collection(db, 'events', eventDoc.id, 'resultsJson');
-                    const resultsSnapshot = await getDocs(resultsRef);
+                    try {
+                        const resultsRef = collection(db, 'events', eventDoc.id, 'resultsJson');
+                        const resultsSnapshot = await getDocs(resultsRef);
 
-                    for (const doc of resultsSnapshot.docs) {
-                        const data = doc.data();
-                        if (data.fighters && Array.isArray(data.fighters)) {
-                            const enhancedFighters = data.fighters.map((fighter: Fighter) => ({
-                                ...fighter,
-                                event_name: eventData.event_name,
-                                event_date: eventData.date,
-                                event_city: eventData.city,
-                                event_state: eventData.state
-                            }));
-                            
-                            allFighters.push(...enhancedFighters);
-                            processedAthletes += enhancedFighters.length;
-                            
-                            await writeChunk({
-                                type: 'progress',
-                                processedAthletes,
-                                eventName: eventData.event_name || 'Unknown Event'
-                            });
+                        for (const doc of resultsSnapshot.docs) {
+                            const data = doc.data();
+                            if (data.fighters && Array.isArray(data.fighters)) {
+                                const enhancedFighters = data.fighters.map((fighter: Fighter) => ({
+                                    ...fighter,
+                                    event_name: eventData.event_name || '',
+                                    event_date: eventData.date || '',
+                                    event_city: eventData.city || '',
+                                    event_state: eventData.state || ''
+                                }));
+                                
+                                allFighters.push(...enhancedFighters);
+                                processedAthletes += enhancedFighters.length;
+                                
+                                const progressData: ProgressData = {
+                                    type: 'progress',
+                                    processedAthletes,
+                                    eventName: eventData.event_name || 'Unknown Event'
+                                };
+                                await writeChunk(progressData);
+                            }
                         }
+                    } catch (error) {
+                        console.error(`Error processing event ${eventDoc.id}:`, error);
+                        continue; // Skip this event but continue processing others
                     }
                 }
             }
 
+            // Process final data
             const finalData = processAthleteData(allFighters);
-            await writeChunk({
+            const completeData: ProcessedData = {
                 type: 'complete',
                 ...finalData
-            });
+            };
+            await writeChunk(completeData);
 
-            await writer.close();
         } catch (error) {
-            console.error('Error fetching data:', error);
-            await writeChunk({
+            console.error('Error in main processing:', error);
+            const errorData: ErrorData = {
                 type: 'error',
-                message: 'Failed to fetch data'
-            });
-            await writer.close();
+                message: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+            await writeChunk(errorData);
+        } finally {
+            try {
+                await writer.close();
+            } catch (error) {
+                console.error('Error closing writer:', error);
+            }
         }
     })();
 
@@ -144,6 +168,7 @@ export async function GET(request: Request) {
         },
     });
 }
+
 
 function processAthleteData(fighters: Fighter[]) {
     const boutMap = new Map<string, Fighter[]>();

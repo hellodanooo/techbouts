@@ -11,6 +11,29 @@ import MyPieChart from './MyPieChart';
 import Image from 'next/image';
 
 
+interface ProgressData {
+    type: 'progress';
+    eventName: string;
+    processedAthletes: number;
+}
+
+interface CompleteData {
+    type: 'complete';
+    genderDistribution: DistributionItem[];
+    ageGenderDistribution: DistributionItem[];
+    topAthletes: Athlete[];
+    topGyms: Gym[];
+    totalBouts: number;
+    eventStats: EventStats;
+}
+
+interface ErrorData {
+    type: 'error';
+    message: string;
+}
+
+// Union type for all possible stream data types
+type StreamData = ProgressData | CompleteData | ErrorData;
 
 
 
@@ -176,59 +199,110 @@ const StatisticsDashboard = () => {
         );
     };
 
-    const beginAnalysis = async () => {
-        const selectedYearsList = Object.entries(selectedYears)
-            .filter(([, isSelected]) => isSelected)
-            .map(([year]) => year);
 
-        if (selectedYearsList.length === 0) {
-            alert('Please select at least one year to analyze');
-            return;
-        }
 
-        setIsAnalyzing(true);
-        setDebugLogs([]);
-        addLog('Starting analysis...');
+ const beginAnalysis = async () => {
+    const selectedYearsList = Object.entries(selectedYears)
+        .filter(([, isSelected]) => isSelected)
+        .map(([year]) => year);
 
-        try {
-            const response = await fetch(`/api/pmt/results?years=${selectedYearsList.join(',')}`);
-            if (!response.ok) throw new Error('Failed to fetch data');
+    if (selectedYearsList.length === 0) {
+        alert('Please select at least one year to analyze');
+        return;
+    }
 
-            const reader = response.body?.getReader();
-            if (!reader) throw new Error('Stream not available');
+    setIsAnalyzing(true);
+    setDebugLogs([]);
+    addLog('Starting analysis...');
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+    try {
+        const response = await fetch(`/api/pmt/results?years=${selectedYearsList.join(',')}`);
+        if (!response.ok) throw new Error('Failed to fetch data');
 
-                const chunks = new TextDecoder()
-                    .decode(value)
-                    .split('\n')
-                    .filter(chunk => chunk.trim());
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('Stream not available');
 
-                for (const chunk of chunks) {
-                    const data = JSON.parse(chunk);
+        let buffer = ''; // Buffer for incomplete chunks
 
-                    if (data.type === 'progress') {
-                        addLog(`Processing ${data.eventName}: ${data.processedAthletes} athletes processed`);
-                    } else if (data.type === 'complete') {
-                        setStats(data);
-                        // Update available states from the state distribution
-                        const states = Object.keys(data.eventStats.stateDistribution);
-                        setAvailableStates(states.sort());
-                        addLog('Analysis completed successfully');
-                    } else if (data.type === 'error') {
-                        throw new Error(data.message);
+        while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+                // Process any remaining data in buffer
+                if (buffer.trim()) {
+                    try {
+                        const data = JSON.parse(buffer.trim()) as StreamData;
+                        handleStreamData(data);
+                    } catch (error) {
+                        console.error('Error parsing final buffer:', error);
+                        const errorMessage = error instanceof Error 
+                            ? error.message 
+                            : 'Unknown parsing error';
+                        addLog(`Error parsing data: ${errorMessage}`);
+                    }
+                }
+                break;
+            }
+
+            // Decode the chunk and add to buffer
+            const chunk = new TextDecoder().decode(value);
+            buffer += chunk;
+
+            // Split by newlines and process complete chunks
+            const lines = buffer.split('\n');
+            
+            // Keep the last potentially incomplete chunk in buffer
+            buffer = lines.pop() || '';
+
+            // Process complete chunks
+            for (const line of lines) {
+                if (line.trim()) {
+                    try {
+                        const data = JSON.parse(line.trim()) as StreamData;
+                        handleStreamData(data);
+                    } catch (error) {
+                        console.error('Error parsing chunk:', error);
+                        const errorMessage = error instanceof Error 
+                            ? error.message 
+                            : 'Unknown parsing error';
+                        addLog(`Error parsing data: ${errorMessage}`);
                     }
                 }
             }
-        } catch (error) {
-            console.error('Error during analysis:', error);
-            addLog(`ERROR: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
-        } finally {
-            setIsAnalyzing(false);
+        }
+    } catch (error) {
+        console.error('Error during analysis:', error);
+        const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error occurred';
+        addLog(`ERROR: ${errorMessage}`);
+    } finally {
+        setIsAnalyzing(false);
+    }
+};
+
+
+    
+    const handleStreamData = (data: StreamData) => {
+        switch (data.type) {
+            case 'progress':
+                addLog(`Processing ${data.eventName}: ${data.processedAthletes} athletes processed`);
+                break;
+            case 'complete':
+                setStats(data);
+                const states = Object.keys(data.eventStats.stateDistribution);
+                setAvailableStates(states.sort());
+                addLog('Analysis completed successfully');
+                break;
+            case 'error':
+                throw new Error(data.message);
+            default:
+                // This case should never be reached due to TypeScript's exhaustive checking
+                const _exhaustiveCheck: never = data;
+                console.warn('Unknown data type received:', _exhaustiveCheck);
         }
     };
+
 
     const filteredStats = React.useMemo(() => {
         if (selectedStates.length === 0) return stats;
