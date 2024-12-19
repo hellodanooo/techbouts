@@ -1,7 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-
 interface DataItem {
   name: string;
   value: number;
@@ -64,37 +63,44 @@ const MyPieChart: React.FC<MyPieChartProps> = ({ data, title }) => {
   }
 
   return (
-    <div className="w-full h-[400px] bg-white p-4 rounded-lg shadow">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <ResponsiveContainer width="100%" height={350}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderCustomizedLabel}
-            outerRadius={130}
-            fill="#8884d8"
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(value: number, name: string) => [`${value} athletes`, name]}
-          />
-          <Legend 
-            layout="vertical" 
-            align="right"
-            verticalAlign="middle"
-          />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="w-full h-64 md:h-[400px] bg-white p-4 rounded-lg shadow">
+      <h3 className="text-xl font-bold mb-4 text-center">{title}</h3>
+      <div className="w-full h-[calc(110%-1rem)]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomizedLabel}
+              outerRadius="80%"
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value: number, name: string) => [`${value} athletes`, name]}
+            />
+            <Legend 
+              layout="horizontal" 
+              align="center"
+              verticalAlign="bottom"
+              wrapperStyle={{
+                paddingTop: '12px',
+                maxWidth: '100%',
+                overflowX: 'auto'
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

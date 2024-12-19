@@ -70,32 +70,31 @@ interface StateMapProps {
         <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">
           Bouts by State
         </h3>
-        <div className="flex flex-wrap justify-center gap-8">
+        <div className="flex flex-wrap justify-center gap-2">
           {Object.entries(stateDistribution).map(([state, bouts]) => {
             // Skip rendering if state doesn't have an associated file
             if (!isValidState(state)) return null;
             
             return (
-              <div
-                key={state}
-                onClick={() => onStateToggle(state)}
-                className={`relative cursor-pointer group transition-transform hover:scale-105 ${
-                  selectedStates.includes(state) ? 'scale-105' : 'opacity-75'
+                <div key={state} 
+                onClick={() => onStateToggle(state)} 
+                className={`relative cursor-pointer group transition-transform hover:scale-105 flex items-center justify-center ${
+                  selectedStates.includes(state) 
+                    ? 'shadow-lg ring-2 ring-blue-500 rounded-lg w-[120px]' 
+                    : 'opacity-75'
                 }`}
               >
-                {/* Container for image and stats */}
-                <div className="relative w-[100px]">
+                <div className="relative w-[130px] flex items-center justify-center h-[140px]">
                   {/* State image */}
                   <Image
                     src={`/images/states/${stateFiles[state]}.svg`}
                     alt={`${state} state`}
-                    width={100}
-                    height={100}
+                    width={90}
+                    height={90}
                     className={`transition-all duration-200 ${
                       selectedStates.includes(state) ? 'drop-shadow-lg' : ''
                     }`}
                   />
-                  
                   {/* State abbreviation */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="font-bold text-gray-700 text-lg">
@@ -158,8 +157,7 @@ const StatisticsDashboard = () => {
         '2023': false,
         '2024': false
     });
-    const [selectedStates, setSelectedStates] = useState<string[]>([]);
-    const [availableStates, setAvailableStates] = useState<string[]>([]);
+    const [selectedStates, setSelectedStates] = useState<string[]>(['CA', 'TX', 'CO', 'NV', 'OK', 'WY']);    const [availableStates, setAvailableStates] = useState<string[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
     const [showLogs, setShowLogs] = useState(true);
