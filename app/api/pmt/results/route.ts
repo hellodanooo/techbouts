@@ -181,6 +181,7 @@ export async function GET(request: Request) {
                                     processedAthletes,
                                     eventName: eventData.event_name || 'Unknown Event'
                                 };
+                                
                                 await writeChunk(progressData);
                             }
                         }
@@ -224,20 +225,37 @@ export async function GET(request: Request) {
 }
 
 
+
+
+
 function processAthleteData(fighters: Fighter[]) {
     const boutMap = new Map<string, Fighter[]>();
+    const uniqueAthletesByState: Record<string, Set<string>> = {};
+
+    console.log('Processing fighters to calculate unique athletes by state...');
+
+    // Initialize maps and process bouts
     fighters.forEach(fighter => {
         if (fighter.mat && fighter.bout) {
             const boutKey = `${fighter.event_name}_mat${fighter.mat}_bout${fighter.bout}`;
             const existingBout = boutMap.get(boutKey) || [];
             existingBout.push(fighter);
             boutMap.set(boutKey, existingBout);
+
+            // Track unique athletes by state
+            if (fighter.event_state && fighter.pmt_id) {
+                if (!uniqueAthletesByState[fighter.event_state]) {
+                    uniqueAthletesByState[fighter.event_state] = new Set();
+                }
+                uniqueAthletesByState[fighter.event_state].add(fighter.pmt_id);
+                console.log(`Added unique athlete: ${fighter.pmt_id} in state ${fighter.event_state}`);
+            }
         }
     });
 
     const athleteStateWins: Record<string, Record<string, AthleteWin>> = {};
-    const gymStateWins: Record<string, Record<string, { wins: number, eventLocations: Set<string> }>> = {};
-    
+    const gymStateWins: Record<string, Record<string, { wins: number; eventLocations: Set<string> }>> = {};
+
     fighters.forEach(fighter => {
         if (fighter.event_state) {
             if (!athleteStateWins[fighter.event_state]) {
@@ -253,7 +271,7 @@ function processAthleteData(fighters: Fighter[]) {
         if (fighter.result === 'W' && fighter.pmt_id && fighter.mat && fighter.bout && fighter.event_state) {
             const boutKey = `${fighter.event_name}_mat${fighter.mat}_bout${fighter.bout}`;
             const bout = boutMap.get(boutKey);
-            
+
             if (bout && bout.length === 2) {
                 if (!athleteStateWins[fighter.event_state][fighter.pmt_id]) {
                     athleteStateWins[fighter.event_state][fighter.pmt_id] = {
@@ -282,12 +300,23 @@ function processAthleteData(fighters: Fighter[]) {
     });
 
     const stateDistribution: Record<string, number> = {};
+    const uniqueAthletesCount: Record<string, number> = {};
+
     boutMap.forEach((boutFighters) => {
         if (boutFighters.length === 2 && boutFighters[0]?.event_state) {
-            stateDistribution[boutFighters[0].event_state] = 
-                (stateDistribution[boutFighters[0].event_state] || 0) + 1;
+            const state = boutFighters[0].event_state;
+            stateDistribution[state] = (stateDistribution[state] || 0) + 1;
+
+            if (uniqueAthletesByState[state]) {
+                uniqueAthletesCount[state] = uniqueAthletesByState[state].size;
+            }
         }
     });
+
+    // **FIX: Calculate totalUniqueAthletes here**
+    const totalUniqueAthletes = Object.values(uniqueAthletesCount).reduce((sum, count) => sum + count, 0);
+    console.log('Unique Athletes Count by State:', uniqueAthletesCount);
+    console.log('Total Unique Athletes:', totalUniqueAthletes);
 
     return {
         genderDistribution: processGenderDistribution(fighters),
@@ -307,8 +336,10 @@ function processAthleteData(fighters: Fighter[]) {
             .sort((a, b) => b.wins - a.wins)
             .slice(0, 10),
         totalBouts: boutMap.size,
+        uniqueAthletesCount: totalUniqueAthletes, // Pass the total count
         eventStats: {
             stateDistribution,
+            uniqueAthletesCount,
             athleteWinsByState: Object.fromEntries(
                 Object.entries(athleteStateWins).map(([state, athletes]) => [
                     state,
@@ -333,6 +364,10 @@ function processAthleteData(fighters: Fighter[]) {
         }
     };
 }
+
+
+
+
 
 function processGenderDistribution(fighters: Fighter[]) {
     const genderCounts = fighters.reduce((acc, fighter) => {

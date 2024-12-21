@@ -25,6 +25,8 @@ interface CompleteData {
     topGyms: Gym[];
     totalBouts: number;
     eventStats: EventStats;
+    uniqueAthletesCount: number;
+
 }
 
 interface ErrorData {
@@ -128,6 +130,7 @@ interface Athlete {
     name: string;
     wins: number;
     events?: AthleteEvent[];
+    pmt_id?: string;
 }
 
 interface Gym {
@@ -148,6 +151,7 @@ interface Stats {
     topAthletes: Athlete[];
     topGyms: Gym[];
     totalBouts: number;
+    uniqueAthletesCount: number;
     eventStats: EventStats;
 }
 
@@ -162,18 +166,19 @@ const StatisticsDashboard = () => {
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
     const [showLogs, setShowLogs] = useState(true);
 
-    const [stats, setStats] = useState<Stats>({
-        genderDistribution: [],
-        ageGenderDistribution: [],
-        topAthletes: [],
-        topGyms: [],
-        totalBouts: 0,
-        eventStats: {
-            stateDistribution: {},
-            athleteWinsByState: {},
-            gymWinsByState: {}
-        }
-    });
+const [stats, setStats] = useState<Stats>({
+    genderDistribution: [],
+    ageGenderDistribution: [],
+    topAthletes: [],
+    topGyms: [],
+    totalBouts: 0,
+    uniqueAthletesCount: 0, // This will hold the total count
+    eventStats: {
+        stateDistribution: {},
+        athleteWinsByState: {},
+        gymWinsByState: {}
+    }
+});
 
     const addLog = (message: string) => {
         setDebugLogs(prev => {
@@ -282,17 +287,17 @@ const StatisticsDashboard = () => {
 
     
 const handleStreamData = (data: StreamData) => {
+    console.log('Received data from API:', data); // <-- Log full response from API
+
     switch (data.type) {
         case 'progress':
             addLog(`Processing ${data.eventName}: ${data.processedAthletes} athletes processed`);
             break;
-            
+
         case 'complete':
-            // Handle chunked complete data
             setStats(prevStats => {
                 const newStats = { ...prevStats };
-                
-                // Update base stats if present
+
                 if (data.genderDistribution) {
                     newStats.genderDistribution = data.genderDistribution;
                 }
@@ -308,8 +313,11 @@ const handleStreamData = (data: StreamData) => {
                 if (data.totalBouts) {
                     newStats.totalBouts = data.totalBouts;
                 }
+                if (data.uniqueAthletesCount) {
+                    newStats.uniqueAthletesCount = data.uniqueAthletesCount; // <-- Update the count
+                    console.log('Updated uniqueAthletesCount:', data.uniqueAthletesCount); // <-- Log updated count
+                }
 
-                // Update event stats
                 if (data.eventStats) {
                     newStats.eventStats = {
                         ...newStats.eventStats,
@@ -328,24 +336,24 @@ const handleStreamData = (data: StreamData) => {
                     };
                 }
 
-                // Update available states if state distribution is present
-                if (data.eventStats?.stateDistribution && Object.keys(data.eventStats.stateDistribution).length > 0) {
+                // Log updated stats
+                console.log('Updated Stats:', newStats); // <-- Log entire stats object
+
+                // Update available states
+                if (data.eventStats?.stateDistribution) {
                     const states = Object.keys(newStats.eventStats.stateDistribution);
                     setAvailableStates(states.sort());
                 }
 
                 return newStats;
             });
-
-            // Only log completion when we receive base stats
-            if (data.totalBouts) {
-                addLog('Analysis completed successfully');
-            }
             break;
 
         case 'error':
-            throw new Error(data.message);
-            
+            console.error('Error in stream data:', data.message);
+            addLog(`ERROR: ${data.message}`);
+            break;
+
         default:
             const _exhaustiveCheck: never = data;
             console.warn('Unknown data type received:', _exhaustiveCheck);
@@ -353,43 +361,79 @@ const handleStreamData = (data: StreamData) => {
 };
 
 
-    const filteredStats = React.useMemo(() => {
-        if (selectedStates.length === 0) return stats;
-    
-        // Get the top athletes and gyms for the selected states
-        const stateAthletes = selectedStates.flatMap(state => 
-            stats.eventStats.athleteWinsByState[state] || []
-        ).sort((a, b) => b.wins - a.wins)
-        .slice(0, 10);
-    
-        const stateGyms = selectedStates.flatMap(state => 
-            stats.eventStats.gymWinsByState[state] || []
-        ).sort((a, b) => b.wins - a.wins)
-        .slice(0, 10);
-    
-        const totalBoutsInStates = Object.entries(stats.eventStats.stateDistribution)
-            .filter(([state]) => selectedStates.includes(state))
-            .reduce((sum, [, count]) => sum + count, 0);
-    
-        return {
-            ...stats,
-            topAthletes: stateAthletes,
-            topGyms: stateGyms,
-            totalBouts: totalBoutsInStates,
-            eventStats: {
-                stateDistribution: Object.fromEntries(
-                    Object.entries(stats.eventStats.stateDistribution)
-                        .filter(([state]) => selectedStates.includes(state))
-                )
+
+
+
+
+const getUniqueAthleteCount = (athletesByState: Record<string, Athlete[]>): number => {
+    const uniquePmtIds = new Set();
+    Object.values(athletesByState).forEach(athletes => {
+        athletes.forEach(athlete => {
+            if (athlete.pmt_id) {
+                uniquePmtIds.add(athlete.pmt_id);
             }
-        };
-    }, [stats, selectedStates]);
+        });
+    });
+    return uniquePmtIds.size;
+};
+
+
+
+
+const filteredStats = React.useMemo(() => {
+    if (selectedStates.length === 0) return stats;
+
+    // Filter top athletes and gyms for selected states
+    const stateAthletes = selectedStates.flatMap(state => 
+        stats.eventStats.athleteWinsByState[state] || []
+    ).sort((a, b) => b.wins - a.wins)
+    .slice(0, 10);
+
+    const stateGyms = selectedStates.flatMap(state => 
+        stats.eventStats.gymWinsByState[state] || []
+    ).sort((a, b) => b.wins - a.wins)
+    .slice(0, 10);
+
+    const totalBoutsInStates = Object.entries(stats.eventStats.stateDistribution)
+        .filter(([state]) => selectedStates.includes(state))
+        .reduce((sum, [, count]) => sum + count, 0);
+
+    // Calculate unique athlete count directly in memo
+    const uniqueAthletesCount = getUniqueAthleteCount(
+        Object.fromEntries(
+            Object.entries(stats.eventStats.athleteWinsByState).filter(([state]) =>
+                selectedStates.includes(state)
+            )
+        )
+    );
+
+    return {
+        ...stats,
+        topAthletes: stateAthletes,
+        topGyms: stateGyms,
+        totalBouts: totalBoutsInStates,
+        uniqueAthletesCount, // Include the unique count in the returned stats
+        eventStats: {
+            stateDistribution: Object.fromEntries(
+                Object.entries(stats.eventStats.stateDistribution)
+                    .filter(([state]) => selectedStates.includes(state))
+            )
+        }
+    };
+}, [stats, selectedStates]);
+
+
+React.useEffect(() => {
+    console.log('Stats updated:', stats); // Track changes in state
+}, [stats]);
+
 
     return (
         <div style={styles.container}>
             <div style={styles.yearSelectionContainer}>
                 <h1 style={styles.heading}>POINT MUAY THAI STATISTICS</h1>
-                <p className="flex items-center justify-center gap-2">The Largest Community Based Muay Thai Organization</p>
+                <p className="text-center">The Largest Community Based Muay Thai Organization</p>
+
                 <div className="flex items-center justify-center gap-2">
 
                         <p className="text-gray-600">Powered by Techbouts Inc</p>
@@ -400,7 +444,9 @@ const handleStreamData = (data: StreamData) => {
                             height={80}
                             className="inline-block"
                         />
-                    </div>                <div className="flex justify-center mb-6">
+                    </div>               
+                    
+                     <div className="flex justify-center mb-6">
                     <Image 
                         src="/logos/pmt_logo_2024_sm.png"
                         alt="Point Muay Thai Logo"
@@ -457,17 +503,83 @@ const handleStreamData = (data: StreamData) => {
             </div>
 
 
-            <div style={styles.statsContainer}>
-                <div style={styles.statsHeader}>
-                    <div>
-                        <h2 style={styles.statsTitle}>Total Bouts</h2>
-                        <p style={styles.statsSubtitle}>Across selected years {selectedStates.length > 0 ? `in ${selectedStates.join(', ')}` : ''}</p>
-                    </div>
-                    <div style={styles.totalBouts}>
-                        {filteredStats.totalBouts.toLocaleString()}
-                    </div>
-                </div>
-            </div>
+            <div style={styles.statsHeader}>
+    <div>
+        <div style={styles.statsSubtitle}>Across selected years {selectedStates.length > 0 ? `in ${selectedStates.join(', ')}` : ''}</div>
+    </div>
+
+
+
+
+<div
+style={{
+    border: '1px solid #e5e7eb',
+    flexDirection: 'column',
+    borderRadius: '5px',
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '20px',
+    marginTop: '20px',
+    maxWidth: '400px',
+    margin: '0 auto',
+
+}}
+>
+    <div
+    style={{
+        backgroundColor:'black',
+        color:'white',
+        padding:'5px 10px',
+        borderRadius: '5px',
+
+    }}
+    >
+Total Unique Atheles 
+</div>
+    <div style={styles.totalAthletes}>
+       {stats.uniqueAthletesCount.toLocaleString()}
+    </div>
+    </div>
+
+
+
+    <div
+style={{
+    border: '1px solid #e5e7eb',
+    flexDirection: 'column',
+    borderRadius: '5px',
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '20px',
+    marginTop: '20px',
+    maxWidth: '400px',
+    margin: '0 auto',
+
+}}
+>
+    <div
+    style={{
+        backgroundColor:'black',
+        color:'white',
+        padding:'5px 10px',
+        borderRadius: '5px',
+
+    }}
+    >
+    Total Bouts Analyzed 
+    </div>
+    <div style={styles.totalBouts}>
+        {filteredStats.totalBouts.toLocaleString()}
+    </div>
+    </div>
+</div>
+
+
+
 
             <div style={styles.chartsGrid}>
 
@@ -678,28 +790,57 @@ const styles: Record<string, React.CSSProperties> = {
         maxWidth: '1280px',
         margin: '0 auto',
         backgroundColor: '#ffffff',
-        borderRadius: '0.5rem',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        padding: '1.5rem',
-        marginBottom: '2rem'
+        borderRadius: '0.75rem',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        padding: '2rem',
+        marginBottom: '2rem',
+        textAlign: 'center',
+        border: '1px solid #e5e7eb',
     },
     statsHeader: {
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '1rem',
+        marginBottom: '1.5rem'
     },
     statsTitle: {
-        fontSize: '1.5rem',
+        fontSize: '1.75rem',
         fontWeight: 'bold',
-        color: '#1f2937'
+        color: '#1f2937',
+        marginBottom: '0.5rem'
     },
     statsSubtitle: {
-        color: '#4b5563'
+        fontSize: '1rem',
+        color: '#6b7280'
+    },
+    totalBoutsContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '1rem'
     },
     totalBouts: {
-        fontSize: '2.25rem',
+        fontSize: '3rem',
         fontWeight: 'bold',
-        color: '#2563eb'
+        color: '#2563eb',
+        padding: '1rem',
+        backgroundColor: '#f3f4f6',
+        borderRadius: '0.5rem',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        display: 'inline-block',
+       
+    },
+    totalAthletes: {
+        fontSize: '3rem',
+        fontWeight: 'bold',
+        color: '#2563eb',
+        padding: '1rem',
+        backgroundColor: '#f3f4f6',
+        borderRadius: '0.5rem',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        display: 'inline-block',
+      
     },
     chartsGrid: {
         maxWidth: '1280px',
