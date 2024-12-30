@@ -2,6 +2,7 @@
 import { headers } from 'next/headers';
 import PromoterDashboard from './Dashboard';
 import { Event } from '../../utils/types';
+export const dynamic = 'force-dynamic';
 
 async function fetchAllEvents() {
   try {
