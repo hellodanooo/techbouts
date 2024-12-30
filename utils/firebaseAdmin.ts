@@ -5,7 +5,12 @@ if (!admin.apps.length) {
     // Safely parse FIREBASE_SERVICE_ACCOUNT_KEY
     let serviceAccount = {};
     try {
-      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
+      const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}';
+      
+      // Replace escaped '\n' with actual newlines
+      const sanitizedKey = rawKey.replace(/\\n/g, '\n');
+      serviceAccount = JSON.parse(sanitizedKey);
+
     } catch (parseError) {
       console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', parseError);
       throw new Error('Invalid FIREBASE_SERVICE_ACCOUNT_KEY format.');
@@ -20,7 +25,7 @@ if (!admin.apps.length) {
     console.log('Firebase Admin initialized successfully');
   } catch (error) {
     console.error('Firebase admin initialization error:', error);
-    throw error; // Propagate the error to fail fast
+    throw error; // Fail fast
   }
 }
 
