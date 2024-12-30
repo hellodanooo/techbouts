@@ -1,5 +1,10 @@
 
 
+export const PROMOTER_OPTIONS = ['legends', 'shadowpack', 'genx', 'antdawgs', 'santacruz', 'borntowin', 'ultamatefitness', 'iyarin', 'techbouts', 'voodoo'] as const;
+
+export type PromoterType = typeof PROMOTER_OPTIONS[number];
+
+
 export type FighterProfile = {
 first: string;
 last: string;
@@ -196,7 +201,20 @@ export type Event = {
   sanctioning: string;
   promotion: string;
   email: string;
-
+  promoterId: string;
+  promoterEmail: string;
+  status?: string;
+  street?: string;
+  postal_code?: string;
+  country?: string;
+  colonia?: string;
+  municipality?: string;
+  ticket_enabled: boolean;
+  ticket_system_option: 'inHouse' | 'thirdParty' | 'none';
+  ticket_link?: string;
+  zip?: string;
+  name?: string;
+  numMats?: number;
 }
 
 

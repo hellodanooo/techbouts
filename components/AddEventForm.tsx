@@ -71,6 +71,10 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose }) => {
         sanctioning: formData.sanctioning ?? '',
         promotion: formData.promotion ?? '',
         email: formData.email ?? '',
+        promoterId: 'unknown_promoter',
+        promoterEmail: 'unknown_promoter_email',
+        ticket_enabled: false,
+        ticket_system_option: 'none',
       };
   
       // Use the addEvent function to handle Firestore and JSON file updates

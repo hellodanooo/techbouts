@@ -1,0 +1,75 @@
+/* styles/calendar.module.css */
+.calendarContainer {
+    background-color: #f5f5dc; /* Light tan background */
+    border-radius: 3px;
+    border: 1px solid #000;
+    width: 98vw;
+    margin-bottom: 10px;
+  }
+  
+  .calendarHeader {
+    background-color: #e6e6cc; /* Slightly darker tan for header */
+    color: #000;
+  }
+  
+  .calendarHeaderCell {
+    font-weight: 600;
+    border-bottom: 1px solid #000;
+    text-align: center;
+    border-radius: 3px;
+  }
+  
+  .calendarCell {
+    height: 8rem;
+    border: 1px solid #000;
+    padding: 0.2rem;
+    vertical-align: top;
+    background-color: #f5f5dc;
+  }
+  
+  .emptyCell {
+    background-color: #eaeadc;
+  }
+  
+  .todayCell {
+    background-color: #fff3e0; /* Warm highlight for today */
+  }
+  
+  .dateNumber {
+    font-weight: 500;
+    color: #000;
+    margin-bottom: 0.25rem;
+  }
+  
+  .eventItem {
+    background-color: #e6e6cc;
+    color: #000;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    border: 1px solid #000;
+  }
+  
+  .eventItem:hover {
+    background-color: #d6d6bc;
+  }
+  
+  .navigationButton {
+    border-radius: 9999px;
+    color: #000;
+    margin: 5px;
+  }
+  
+  .navigationButton:hover {
+    background-color: #e6e6cc;
+  }
+  
+  .monthTitle {
+    color: #ffffff;
+    font-weight: 600;
+    width: 60%;
+  }
+
+  
