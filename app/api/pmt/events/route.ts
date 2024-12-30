@@ -25,6 +25,7 @@ interface FirebaseCalendarDoc {
 
 export async function GET() {
   console.log("API Route: Starting fetch...");
+  
   if (!firebaseAdmin.apps.length) {
     console.error('Firebase Admin SDK not initialized.');
     throw new Error('Firebase Admin SDK initialization failed.');
@@ -98,10 +99,17 @@ export async function GET() {
     console.log(`API Route: Sending ${events.length} events`);
     return NextResponse.json({ events });
   } catch (error) {
-    console.error("API Route: Error fetching events from Firestore:", error);
+    // Explicitly cast 'error' to 'Error'
+    const err = error as Error;
+  
+    console.error("API Route: Error fetching events from Firestore:", err.message);
+    console.error(err.stack);
+  
     return NextResponse.json(
-      { error: "Failed to fetch events" },
+      { error: "Failed to fetch events", details: err.message },
       { status: 500 }
     );
   }
+  
+
 }
