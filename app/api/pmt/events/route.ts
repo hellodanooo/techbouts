@@ -3,6 +3,9 @@ import firebaseAdmin from '../../../../utils/firebaseAdmin';
 import { Event } from '../../../../utils/types';
 import { generateDocId } from '../../../../utils/eventManagement';
 
+// Specify Node.js runtime
+export const runtime = 'nodejs';
+
 interface FirebaseEventData {
   name?: string;
   city?: string;
