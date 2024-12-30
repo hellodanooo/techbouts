@@ -1,10 +1,15 @@
 import admin from 'firebase-admin';
 
-// Check if Firebase Admin is already initialized
 if (!admin.apps.length) {
   try {
-    // Use the FIREBASE_SERVICE_ACCOUNT_KEY from the environment variables
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
+    // Safely parse FIREBASE_SERVICE_ACCOUNT_KEY
+    let serviceAccount = {};
+    try {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
+    } catch (parseError) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', parseError);
+      throw new Error('Invalid FIREBASE_SERVICE_ACCOUNT_KEY format.');
+    }
 
     // Initialize Firebase Admin SDK
     admin.initializeApp({
@@ -15,6 +20,7 @@ if (!admin.apps.length) {
     console.log('Firebase Admin initialized successfully');
   } catch (error) {
     console.error('Firebase admin initialization error:', error);
+    throw error; // Propagate the error to fail fast
   }
 }
 

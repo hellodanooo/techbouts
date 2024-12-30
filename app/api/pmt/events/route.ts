@@ -25,8 +25,13 @@ interface FirebaseCalendarDoc {
 
 export async function GET() {
   console.log("API Route: Starting fetch...");
+  if (!firebaseAdmin.apps.length) {
+    console.error('Firebase Admin SDK not initialized.');
+    throw new Error('Firebase Admin SDK initialization failed.');
+  }
+  
   const db = firebaseAdmin.firestore();
-  let events: Event[] = [];
+    let events: Event[] = [];
 
   try {
     const eventCalendarRef = db.collection("event_calendar").doc("upcoming_events");
