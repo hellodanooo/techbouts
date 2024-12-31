@@ -73,15 +73,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      await signInWithPopup(auth, provider);
+      provider.setCustomParameters({ prompt: 'select_account' });
+    
+      const result = await signInWithPopup(auth, provider);
+      console.log('Google Login Success:', result.user);
     } catch (error) {
-      console.error('Google sign in error:', error);
-      throw new Error(getAuthErrorMessage(error as AuthError));
+      const err = error as AuthError; // Explicitly cast error to AuthError
+      console.error('Google sign-in error:', err);
+      console.log('Error Code:', err.code); // Logs the error code
+      console.log('Error Message:', err.message); // Logs the error message
+      throw new Error(getAuthErrorMessage(err)); // Pass the casted error
     }
   };
+  
+  
 
   const signOut = async () => {
     try {
