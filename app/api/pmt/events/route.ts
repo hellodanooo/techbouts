@@ -31,11 +31,17 @@ export async function GET() {
     projectId: process.env.FIREBASE_PROJECT_ID,
     credentials: {
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      // Ensure newlines are preserved
       private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
-    preferRest: true, // Force REST API instead of gRPC
+    preferRest: true, // Use REST API instead of gRPC
   });
 
+console.log("Environment Variables:");
+console.log("Project ID:", process.env.FIREBASE_PROJECT_ID);
+console.log("Client Email:", process.env.FIREBASE_CLIENT_EMAIL);
+console.log("Private Key Length:", process.env.FIREBASE_PRIVATE_KEY?.length);
+console.log("Private Key Preview:", process.env.FIREBASE_PRIVATE_KEY?.slice(0, 100));
   let events: Event[] = [];
 
   try {
@@ -71,7 +77,6 @@ export async function GET() {
             docId,
             doors_open: "07:30",
         
-            // Additional fields required by the Event type
             venue_name: "",
             weighin_date: event.date,
             weighin_start_time: "08:00",
