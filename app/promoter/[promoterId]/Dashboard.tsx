@@ -63,7 +63,7 @@ export default function PromoterDashboard({
   // Authentication & Authorization
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/auth/login');
+      router.push(`/auth/login?promoterId=${promoterId}`);
       return;
     }
 

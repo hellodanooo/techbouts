@@ -20,7 +20,10 @@ export default function LoginPage() {
   const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+
+  // Retrieve the promoterId from query params or fallback to '/'
+  const promoterId = searchParams.get('promoterId');
+  const callbackUrl = promoterId ? `/promoter/${promoterId}` : '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,7 @@ export default function LoginPage() {
     
     try {
       await signIn(email, password);
-      router.push(callbackUrl);
+      router.push(callbackUrl); // Redirect to the promoter-specific page
     } catch (error) {
       if (error instanceof FirebaseError) {
         setError(error.message);
@@ -48,8 +51,12 @@ export default function LoginPage() {
     setError('');
     
     try {
-      await signInWithGoogle();
-      router.push(callbackUrl);
+      if (promoterId) {
+        // Pass the promoterId to signInWithGoogle
+        await signInWithGoogle(promoterId);
+      } else {
+        throw new Error('Promoter ID is missing in the URL');
+      }
     } catch (error) {
       if (error instanceof FirebaseError) {
         setError(error.message);
