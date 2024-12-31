@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import firebaseAdmin from '../../../../utils/firebaseAdmin';
+import { Firestore } from '@google-cloud/firestore';
 import { Event } from '../../../../utils/types';
 import { generateDocId } from '../../../../utils/eventManagement';
-import { Firestore } from '@google-cloud/firestore';
 
 // Specify Node.js runtime
 export const runtime = 'nodejs';
@@ -26,21 +25,18 @@ interface FirebaseCalendarDoc {
 
 export async function GET() {
   console.log("API Route: Starting fetch...");
-  
-  if (!firebaseAdmin.apps.length) {
-    console.error('Firebase Admin SDK not initialized.');
-    throw new Error('Firebase Admin SDK initialization failed.');
-  }
-  
+
+  // Initialize Firestore REST client
   const db = new Firestore({
     projectId: process.env.FIREBASE_PROJECT_ID,
     credentials: {
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Handle multiline private key
+      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
     preferRest: true, // Force REST API instead of gRPC
   });
-      let events: Event[] = [];
+
+  let events: Event[] = [];
 
   try {
     const eventCalendarRef = db.collection("event_calendar").doc("upcoming_events");
@@ -49,7 +45,7 @@ export async function GET() {
 
     if (snapshot.exists) {
       const data = snapshot.data() as FirebaseCalendarDoc;
-      
+
       if (data?.events) {
         events = data.events.map((event: FirebaseEventData) => {
           const cityFormatted = event.city?.replace(/\s+/g, "_") ?? "unknown_city";
@@ -58,7 +54,7 @@ export async function GET() {
             event.state ?? "unknown_state",
             event.date
           );
-
+        
           return {
             id: docId,
             event_name: event.name ?? "Unnamed Event",
@@ -72,14 +68,16 @@ export async function GET() {
             ticket_system_option: event.ticket_system_option ?? "none",
             promoterId: event.promoterId ?? "",
             status: event.status ?? "confirmed",
+            docId,
+            doors_open: "07:30",
+        
+            // Additional fields required by the Event type
             venue_name: "",
             weighin_date: event.date,
             weighin_start_time: "08:00",
             weighin_end_time: "09:00",
             rules_meeting_time: "09:15",
             bouts_start_time: "10:00",
-            docId,
-            doors_open: "07:30",
             spectator_info: "",
             registration_enabled: false,
             tickets_enabled: false,
@@ -96,9 +94,10 @@ export async function GET() {
             sanctioning: "",
             promotion: "",
             email: "",
-            promoterEmail: ""
+            promoterEmail: "",
           };
         });
+        
       }
     } else {
       console.log("API Route: No snapshot exists");
@@ -107,17 +106,13 @@ export async function GET() {
     console.log(`API Route: Sending ${events.length} events`);
     return NextResponse.json({ events });
   } catch (error) {
-    // Explicitly cast 'error' to 'Error'
     const err = error as Error;
-  
     console.error("API Route: Error fetching events from Firestore:", err.message);
     console.error(err.stack);
-  
+
     return NextResponse.json(
       { error: "Failed to fetch events", details: err.message },
       { status: 500 }
     );
   }
-  
-
 }

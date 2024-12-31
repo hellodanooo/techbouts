@@ -1,3 +1,4 @@
+// utils/firebaseAdmin.ts
 import admin from 'firebase-admin';
 
 // Validate required env variables
