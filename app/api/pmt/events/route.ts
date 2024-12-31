@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import firebaseAdmin from '../../../../utils/firebaseAdmin';
 import { Event } from '../../../../utils/types';
 import { generateDocId } from '../../../../utils/eventManagement';
+import { Firestore } from '@google-cloud/firestore';
 
 // Specify Node.js runtime
 export const runtime = 'nodejs';
@@ -31,8 +32,15 @@ export async function GET() {
     throw new Error('Firebase Admin SDK initialization failed.');
   }
   
-  const db = firebaseAdmin.firestore();
-    let events: Event[] = [];
+  const db = new Firestore({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    credentials: {
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Handle multiline private key
+    },
+    preferRest: true, // Force REST API instead of gRPC
+  });
+      let events: Event[] = [];
 
   try {
     const eventCalendarRef = db.collection("event_calendar").doc("upcoming_events");
