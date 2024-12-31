@@ -11,6 +11,7 @@ console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID);
 console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL);
 console.log('FIREBASE_PRIVATE_KEY length:', process.env.FIREBASE_PRIVATE_KEY?.length); // Ensure key length is not 0 or undefined
 console.log('Environment:', process.env.NODE_ENV); // Log environment type
+console.log('Private Key Preview:', process.env.FIREBASE_PRIVATE_KEY?.slice(0, 100)); // Output first 100 chars
 
 if (!projectId || !clientEmail || !privateKey) {
   throw new Error('Missing Firebase environment variables. Check .env or Vercel configuration.');
