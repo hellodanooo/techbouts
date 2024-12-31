@@ -3,10 +3,15 @@ import admin from 'firebase-admin';
 // Validate required env variables
 const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'); // Replace escaped newlines
+const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+// Log the key length for debugging (do not log the actual key)
+console.log('FIREBASE_PROJECT_ID:', projectId);
+console.log('FIREBASE_CLIENT_EMAIL:', clientEmail);
+console.log('FIREBASE_PRIVATE_KEY length:', privateKey?.length); // Should not be undefined or 0
 
 if (!projectId || !clientEmail || !privateKey) {
-  throw new Error('Missing Firebase environment variables. Check .env.local or Vercel configuration.');
+  throw new Error('Missing Firebase environment variables. Check .env or Vercel configuration.');
 }
 
 // Initialize Firebase Admin SDK
