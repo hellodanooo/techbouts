@@ -5,6 +5,30 @@ export const PROMOTER_OPTIONS = ['legends', 'shadowpack', 'genx', 'antdawgs', 's
 export type PromoterType = typeof PROMOTER_OPTIONS[number];
 
 
+export interface BasicSanctioningBody {
+  id: string;
+  name: string;
+  email: string;
+  website: string;
+  region: string;
+}
+
+export interface DetailedSanctioningBody extends BasicSanctioningBody {
+  officialName: string;
+  registeredAddress: string;
+  corporateUrl: string;
+  yearsActive: number;
+  combatSportsTypes: string[];
+  representativeName: string;
+  representativeTitle: string;
+  licenseNumber?: string;
+  insuranceProvider?: string;
+  stateAffiliations: string[];
+  mainOfficePhone: string;
+  emergencyContact: string;
+}
+
+
 export type FighterProfile = {
 first: string;
 last: string;

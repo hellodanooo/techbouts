@@ -21,9 +21,9 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Retrieve the promoterId from query params or fallback to '/'
-  const promoterId = searchParams.get('promoterId');
-  const callbackUrl = promoterId ? `/promoter/${promoterId}` : '/';
+  // Retrieve the promoterId from query params or fallback to 'techbouts'
+  const promoterId = searchParams.get('promoterId') || 'techbouts';
+  const callbackUrl = `/promoter/${promoterId}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,12 +51,7 @@ export default function LoginPage() {
     setError('');
     
     try {
-      if (promoterId) {
-        // Pass the promoterId to signInWithGoogle
-        await signInWithGoogle(promoterId);
-      } else {
-        throw new Error('Promoter ID is missing in the URL');
-      }
+      await signInWithGoogle(promoterId);
     } catch (error) {
       if (error instanceof FirebaseError) {
         setError(error.message);
@@ -76,13 +71,13 @@ export default function LoginPage() {
         <div>
           <h2 className="text-3xl font-bold text-center">Promoter Login</h2>
         </div>
-        
+
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">

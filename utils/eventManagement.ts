@@ -1,3 +1,4 @@
+// utils/eventManagement.ts
 import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase'; // Use the exported db instance
 import { Event } from './types';

@@ -3,20 +3,27 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[auto_20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       {/* Top Header */}
       <header className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-900 p-4 sm:p-6 shadow-md">
         <h1 className="text-lg sm:text-2xl font-semibold">
-          <Link href="/" className="hover:underline">
-            Next.js Example
-          </Link>
+         
+<Image src="/logos/techboutslogoFlat.png" alt="Logo" width={150} height={60} />
+          
+
         </h1>
         <nav className="flex gap-6">
-          <Link
-            href="/organizations"
+        <Link
+            href="/promoter"
             className="text-sm sm:text-base hover:underline text-blue-500 dark:text-blue-400"
           >
-            Organizations
+            Promoters
+          </Link>
+          <Link
+            href="/sanctioning"
+            className="text-sm sm:text-base hover:underline text-blue-500 dark:text-blue-400"
+          >
+            Sanctioning
           </Link>
           <Link
             href="/database"
@@ -28,33 +35,41 @@ export default function Home() {
             href="/create"
             className="text-sm sm:text-base hover:underline text-blue-500 dark:text-blue-400"
           >
-            Create
+            Create Event
           </Link>
         </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="flex flex-col gap-16 row-start-3 items-center sm:items-start">
-        {/* Next.js Logo Section */}
-        <div className="flex flex-col gap-8 items-center sm:items-start">
-          <Image
-            className="dark:invert"
-            src="/next.svg"
-            alt="Next.js logo"
-            width={180}
-            height={38}
-            priority
-          />
-          <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-            <li className="mb-2">
-              Get started by editing{" "}
-              <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-                app/page.tsx
-              </code>
-              .
-            </li>
-            <li>Save and see your changes instantly.</li>
-          </ol>
+      {/* Hero Section */}
+      <section className="text-center sm:text-left max-w-4xl">
+        <h1 className="text-3xl sm:text-5xl font-bold leading-snug mb-4">
+          Revolutionize Your Boxing Events and Rankings
+        </h1>
+        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-8">
+          Manage fighters, gyms, and events with ease. Track rankings and grow your boxing community.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link href="/create" className="bg-blue-500 text-white py-3 px-6 rounded shadow hover:bg-blue-600">
+            Get Started for Free
+          </Link>
+          <Link href="/auth/login" className="border border-blue-500 text-blue-500 py-3 px-6 rounded shadow hover:bg-blue-50">
+            Book a Demo
+          </Link>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="w-full max-w-6xl grid gap-16">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-8">Key Features</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureCard title="Event Management" description="Plan and schedule fights effortlessly." />
+            <FeatureCard title="Rankings System" description="Automatically track fighters and gym rankings." />
+            <FeatureCard title="Promoter Tools" description="Simplify promotion and revenue tracking." />
+            <FeatureCard title="Gym Profiles" description="Monitor gym stats and performance." />
+            <FeatureCard title="Fighter Stats" description="Detailed fighter profiles with performance history." />
+            <FeatureCard title="Secure Payments" description="Integrated ticketing and payment solutions." />
+          </div>
         </div>
 
         {/* Upcoming Events Section */}
@@ -76,43 +91,13 @@ export default function Home() {
             </p>
           </div>
         </section>
-      </main>
+      </section>
 
       {/* Footer */}
-      <footer className="row-start-4 flex gap-6 flex-wrap items-center justify-center">
+      <footer className="w-full flex gap-6 flex-wrap items-center justify-center">
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          href="https://nextjs.org"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -123,9 +108,23 @@ export default function Home() {
             width={16}
             height={16}
           />
-          Go to nextjs.org →
+          Learn More
         </a>
       </footer>
+    </div>
+  );
+}
+
+interface FeatureCardProps {
+  title: string;
+  description: string;
+}
+
+function FeatureCard({ title, description }: FeatureCardProps) {
+  return (
+    <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded shadow-md">
+      <h3 className="text-lg font-bold mb-2">{title}</h3>
+      <p className="text-gray-600 dark:text-gray-400">{description}</p>
     </div>
   );
 }

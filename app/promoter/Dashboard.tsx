@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Event, PROMOTER_OPTIONS } from '../../utils/types';
 import Calendar from './Calendar';
 import MonthTable from './MonthTable';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { getDatabase, ref, get } from 'firebase/database';
+import { FaLock } from "react-icons/fa6";
 
 interface PromoterEvent extends Event {
   parsedDate: Date;
@@ -43,6 +46,47 @@ const PromoterDashboard = ({
 }: Props) => {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [isPromoter, setIsPromoter] = useState<boolean>(false);
+
+
+  // Authentication & Authorization
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (user?.email) {
+        try {
+          const db = getDatabase();
+          const promoterRef = ref(db, `promoters/techbouts/authorizedEmails`);
+          const snapshot = await get(promoterRef);
+
+          if (snapshot.exists()) {
+            const authorizedEmails = snapshot.val();
+            const isAuthorizedUser = Array.isArray(authorizedEmails) && 
+              authorizedEmails.some(email => email.toLowerCase() === user.email?.toLowerCase());
+            setIsPromoter(isAuthorizedUser);
+            console.log('isAuthorizedUser:', isAuthorizedUser);
+          } else {
+            setIsPromoter(false);
+          }
+        } catch (error) {
+          console.error('Error checking authorization:', error);
+          setIsPromoter(false);
+        }
+      }
+    };
+
+    if (user) {
+      checkAuthorization();
+    } else {
+      setIsPromoter(false);
+    }
+  }, [user]);
+
+
+  
+  const handleLogin = () => {
+    router.push(`/auth/login`);
+  };
 
   const allEvents = useMemo(() => {
     const confirmed = (initialConfirmedEvents || []).map(event => ({
@@ -131,7 +175,13 @@ const PromoterDashboard = ({
   return (
     <div style={styles.container}>
       <h1>Promoter Dashboard</h1>
-
+      {!isPromoter && (
+          <button 
+            onClick={handleLogin} 
+            className="text-gray-500 hover:text-gray-700">
+            <FaLock size={20} />
+          </button>
+        )}
       <div style={styles.grid}>
         {allPromoters.map((promoter) => {
           const promoterEvents = promoterEventsMap[promoter] || [];
@@ -166,6 +216,7 @@ const PromoterDashboard = ({
         <MonthTable 
           initialEvents={initialConfirmedEvents} 
           initialPendingEvents={initialPendingEvents}
+          isAuthorized={isPromoter}
         />
         <Calendar />
       </div>

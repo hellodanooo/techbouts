@@ -23,15 +23,13 @@ interface EventAdminActions {
 }
 
 
-interface PasswordPromptProps {
-  onSubmit: (password: string) => void;
-  onCancel: () => void;
-  error: boolean;
-}
+
 
 interface MonthTableProps {
   initialEvents: Event[];
   initialPendingEvents: Event[];
+  isAuthorized?: boolean;
+
 }
 
 const EventActions: React.FC<EventAdminActions> = ({ onStatusToggle, onDelete, status, event }) => {
@@ -187,76 +185,11 @@ const EventActions: React.FC<EventAdminActions> = ({ onStatusToggle, onDelete, s
 };
 
 
-const PasswordPrompt: React.FC<PasswordPromptProps> = ({ onSubmit, onCancel, error }) => {
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(password);
-  };
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onCancel();
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [onCancel]);
-
-  return (
-    <div 
-      className="modalOverlay2"
-      role="dialog"
-      aria-labelledby="dialog-title"
-      aria-describedby="dialog-description"
-    >
-      <div className="modalContent2">
-        <form onSubmit={handleSubmit}>
-          <h3 id="dialog-title" className="text-lg font-semibold mb-4">Admin Login Required</h3>
-          <p id="dialog-description" className="mb-4">Please enter the administrator password to manage events.</p>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded mb-4"
-            placeholder="Enter password"
-            autoFocus
-            aria-label="Password input"
-          />
-          {error && (
-            <div className="bg-red-100 text-red-600 p-3 rounded mb-4" role="alert">
-              Incorrect password. Please try again.
-            </div>
-          )}
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Submit
-            </button>
-          </div>
-        </form>
-      </div>
-
-    </div>
-  );
-};
-
 
 const MonthTable: React.FC<MonthTableProps> = ({ 
   initialEvents, 
-  initialPendingEvents 
+  initialPendingEvents,
+  isAuthorized 
 }) => {
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [pendingEvents, setPendingEvents] = useState<Event[]>(initialPendingEvents);
@@ -265,12 +198,18 @@ const MonthTable: React.FC<MonthTableProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [passwordError, setPasswordError] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Default false
   const [selectedEventForActions, setSelectedEventForActions] = useState<Event | null>(null);
   const [showActions, setShowActions] = useState(false);
+
+  // Sync authentication state with isAuthorized
+  useEffect(() => {
+    setIsAuthenticated(isAuthorized || false); // Automatically update isAuthenticated
+  }, [isAuthorized]);
+
+  useEffect(() => {
+    console.log('Pending Events Received in Month Table:', initialPendingEvents);
+  }, [initialPendingEvents]);
 
 
 
@@ -379,33 +318,13 @@ const MonthTable: React.FC<MonthTableProps> = ({
   //   }
   // };
 
-  const handlePasswordSubmit = (inputPassword: string) => {
-    if (inputPassword === 'pmtadmin2025') {
-      setIsAuthenticated(true);
-      setShowPasswordPrompt(false);
-      setPasswordError(false);
-      
-      if (selectedEvent) {
-        setSelectedEventForActions(selectedEvent);
-        setShowActions(true);
-      }
-    } else {
-      setPasswordError(true);
-    }
-  };
-
-  const handlePasswordCancel = () => {
-    setShowPasswordPrompt(false);
-    setSelectedEvent(null);
-    setPasswordError(false);
-  };
-
+ 
   const handleEventClick = (event: Event) => {
     if (!isAuthenticated) {
-      setSelectedEvent(event);
-      setShowPasswordPrompt(true);
+  
     } else {
       // If already authenticated, just show the action buttons
+// 
       setSelectedEventForActions(event);
       setShowActions(true);
     }
@@ -711,13 +630,7 @@ const MonthTable: React.FC<MonthTableProps> = ({
 
   return (
     <div className="space-y-4">
-{showPasswordPrompt && (
-  <PasswordPrompt 
-    onSubmit={handlePasswordSubmit}
-    onCancel={handlePasswordCancel}
-    error={passwordError}
-  />
-)}    
+ 
 
 <div className="flex items-center justify-start p-4 bg-white rounded-lg shadow-sm">
         <div className="flex gap-8">

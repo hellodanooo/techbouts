@@ -1,134 +1,208 @@
 'use client';
 
-import React, { useState } from 'react';
-import { generateDocId, addEvent } from '@/utils/eventManagement';
+import React, { useState, useEffect } from 'react';
 import { Event } from '@/utils/types';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import GoogleAutocomplete from './ui/GoogleAutocomplete'; // Import the reusable component
+import { addEvent } from '@/utils/eventManagement';
+import SanctionPopup from '../components/popups/One'
 
 interface AddEventFormProps {
   onClose: () => void;
+  promoters: { id: string; name: string; email: string; promotion: string; sanctioning: string; }[];
+  onOpenAddPromoter: () => void;
 }
 
-const AddEventForm: React.FC<AddEventFormProps> = ({ onClose }) => {
-  const [formData, setFormData] = useState<Partial<Event>>({});
+const AddEventForm: React.FC<AddEventFormProps> = ({
+  onClose,
+  onOpenAddPromoter,
+  promoters,
+}) => {
+
+  const [formData, setFormData] = useState<Partial<Event>>({
+    registration_enabled: true,
+    tickets_enabled: false,
+    coach_enabled: false,
+    photos_enabled: false,
+    registration_fee: 65,
+    ticket_price: 0,
+    ticket_price2: 0,
+    coach_price: 0,
+    photos_price: 0,
+    ticket_system_option: 'none',
+  });
+  const [sanctioning, setSanctioning] = useState('');
+  const [promotionQuery, setPromotionQuery] = useState('');
+  const [filteredPromoters, setFilteredPromoters] = useState(promoters);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedPromotion, setSelectedPromotion] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    promotion: string;
+  } | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [sanctionPopupOpen, setSanctionPopupOpen] = useState(false);
 
+  // Handle input query and filter promoters
+  useEffect(() => {
+    if (promotionQuery.length >= 2) {
+      const filtered = promoters.filter((promo) =>
+        promo.promotion.toLowerCase().includes(promotionQuery.toLowerCase())
+      );
+      setFilteredPromoters(filtered);
+      setShowDropdown(filtered.length > 0 && !isAuthenticated);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [promotionQuery, promoters, isAuthenticated]);
 
- 
-  
+  // Handle promotion selection
+  const handlePromotionSelect = async (promotion: {
+    id: string;
+    name: string;
+    email: string;
+    promotion: string;
+    sanctioning: string;
+  }) => {
+    if (isAuthenticated) return; // Prevent re-authentication if already authenticated
 
+    setPromotionQuery(promotion.promotion);
+    setSelectedPromotion(promotion);
+    setSanctioning(promotion.sanctioning);
+    setShowDropdown(false);
 
-  const handleInputChange = (field: keyof Event, value: string | number | boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    try {
+      setLoading(true);
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      if (user && user.email === promotion.email) {
+        setIsAuthenticated(true);
+        alert('Authenticated successfully as the promoter!');
+      } else {
+        alert('Authentication failed: Email does not match the promoter!');
+        setSelectedPromotion(null);
+        setPromotionQuery('');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      alert('Failed to authenticate with Google.');
+      setSelectedPromotion(null);
+      setPromotionQuery('');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Handle form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'number' ? parseFloat(value) : value,
+    });
+  };
+
+  // Handle address selection from GoogleAutocomplete
+  const handleAddressSelect = (
+    address: string,
+    coordinates: { lat: number; lng: number }
+  ) => {
+    // Parse address components
+    const addressParts = address.split(',').map(part => part.trim());
+    const street = addressParts[0];
+    const city = addressParts[1];
+    const state = addressParts[2];
+    const country = addressParts[3];
+
+    console.log('address:', address);
+    console.log('street:', street);
+    console.log('city:', city);
+    console.log('state:', state);
+    console.log('country:', country);
+    console.log('coordinates:', coordinates);
+
+
+    setFormData({
+      ...formData,
+      address,
+      street,
+      city,
+      state,
+      country,
+      coordinates: {
+        latitude: coordinates.lat,
+        longitude: coordinates.lng
+      }
+    });
+  };
+
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
-  
-      // Validate event data
-      validateEvent(formData);
-  
-      const cityFormatted = formData.city?.replace(/\s+/g, '_') ?? 'unknown_city';
-      const docId = generateDocId(
-        cityFormatted,
-        formData.state ?? 'unknown_state',
-        formData.date ?? new Date().toISOString()
-      );
-  
-      // Construct new event object
-      const newEvent: Event = {
+      setSubmitError(null);
+
+      if (!selectedPromotion) {
+        throw new Error('Please select a promotion');
+      }
+
+      if (!formData.event_name || !formData.date || !formData.address) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      const eventData: Event = {
         ...formData,
-        id: docId,
-        docId: docId,
-        event_name: formData.event_name ?? 'Unnamed Event',
-        address: formData.address ?? 'No address provided',
-        city: formData.city ?? 'Unknown City',
-        state: formData.state ?? 'Unknown State',
-        date: formData.date ?? new Date().toISOString(),
-        flyer: formData.flyer ?? '/default-flyer.png',
-        weighin_date: formData.weighin_date ?? '',
-        weighin_start_time: formData.weighin_start_time ?? '',
-        weighin_end_time: formData.weighin_end_time ?? '',
-        rules_meeting_time: formData.rules_meeting_time ?? '',
-        bouts_start_time: formData.bouts_start_time ?? '',
-        doors_open: formData.doors_open ?? '',
-        spectator_info: formData.spectator_info ?? '',
-        registration_enabled: formData.registration_enabled ?? false,
-        registration_fee: formData.registration_fee ?? 0,
-        tickets_enabled: formData.tickets_enabled ?? false,
-        ticket_price: formData.ticket_price ?? 0,
-        ticket_price_description: formData.ticket_price_description ?? '',
-        ticket_price2: formData.ticket_price2 ?? 0,
-        ticket_price2_description: formData.ticket_price2_description ?? '',
-        event_details: formData.event_details ?? '',
-        coach_price: formData.coach_price ?? 0,
-        coach_enabled: formData.coach_enabled ?? false,
-        photos_enabled: formData.photos_enabled ?? false,
-        photos_price: formData.photos_price ?? 0,
-        sanctioning: formData.sanctioning ?? '',
-        promotion: formData.promotion ?? '',
-        email: formData.email ?? '',
-        promoterId: 'unknown_promoter',
-        promoterEmail: 'unknown_promoter_email',
-        ticket_enabled: false,
-        ticket_system_option: 'none',
-      };
-  
-      // Use the addEvent function to handle Firestore and JSON file updates
-      const result = await addEvent(newEvent);
-  
+        event_name: formData.event_name!,
+        date: formData.date!,
+        address: formData.address!,
+        promotion: selectedPromotion.promotion,
+        promoterId: selectedPromotion.id,
+        promoterEmail: selectedPromotion.email,
+        status: 'pending',
+        id: '', // This will be generated by addEvent function
+        docId: '', // This will be generated by addEvent function
+        flyer: '',
+        weighin_date: formData.date!, // Default to event date
+        weighin_start_time: '',
+        weighin_end_time: '',
+        rules_meeting_time: '',
+        bouts_start_time: '',
+        doors_open: '',
+        spectator_info: '',
+        event_details: '',
+        ticket_price_description: '',
+        ticket_price2_description: '',
+        sanctioning: '',
+        email: selectedPromotion.email,
+      } as Event;
+
+      const result = await addEvent(eventData);
+
       if (result.success) {
-        alert('Event created successfully!');
         onClose();
       } else {
         throw new Error(result.message);
       }
     } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Error creating event');
       console.error('Error creating event:', error);
-      if (error instanceof Error) {
-        alert(`Failed to create event: ${error.message}`);
-      } else {
-        alert('Failed to create event: An unknown error occurred.');
-      }
     } finally {
       setLoading(false);
     }
   };
-  
-  
 
-
-
-  const validateEvent = (event: Partial<Event>): void => {
-    if (!event.event_name || event.event_name.trim() === '') {
-      throw new Error('Event name is required.');
-    }
-    if (!event.date || isNaN(new Date(event.date).getTime())) {
-      throw new Error('Valid event date is required.');
-    }
-    if (!event.city || event.city.trim() === '') {
-      throw new Error('City is required.');
-    }
-    if (!event.state || event.state.trim() === '') {
-      throw new Error('State is required.');
-    }
-    if (!event.address || event.address.trim() === '') {
-      throw new Error('Address is required.');
-    }
-    if (!event.promotion || event.promotion.trim() === '') {
-      throw new Error('Promotion name is required.');
-    }
-    if (!event.sanctioning || event.sanctioning.trim() === '') {
-      throw new Error('Sanctioning body is required.');
-    }
-    if (!event.email || event.email.trim() === '') {
-      throw new Error('Email is required.');
-    }
+  // Handle sanctioning selection
+  const handleSanctioningChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSanctioning(e.target.value);
+    setSanctionPopupOpen(true);
   };
-  
 
 
   return (
@@ -136,101 +210,118 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose }) => {
       <div className="bg-white p-6 rounded shadow-md w-full max-w-lg">
         <h2 className="text-xl font-bold mb-4">Create New Event</h2>
         <div className="space-y-4">
-         
-            {/* Sanctioning Body Dropdown */}
-            <select
-            className="w-full p-2 border rounded"
-            value={formData.sanctioning || ''}
-            onChange={(e) => handleInputChange('sanctioning', e.target.value)}
-          >
-            <option value="" disabled>
-              Select Sanctioning Body
-            </option>
-            <option value="none">
-              No Sanctioning
-            </option>
-            <option value="International Kickboxing Federation">
-              International Kickboxing Federation
-            </option>
-            <option value="Point Muay Thai">Point Muay Thai</option>
-            <option value="Point Boxing Sparring Circuit">
-              Point Boxing Sparring Circuit
-            </option>
-          </select>
-         
-
-          <input
-            type="text"
-            placeholder="Promotion Name"
-            className="w-full p-2 border rounded"
-            value={formData.promotion || ''}
-            onChange={(e) => handleInputChange('promotion', e.target.value)}
-          />
-
-
-          <input
-            type="text"
-            placeholder="Event Name"
-            className="w-full p-2 border rounded"
-            value={formData.event_name || ''}
-            onChange={(e) => handleInputChange('event_name', e.target.value)}
-          />
-
-          <input
-            type="text"
-            placeholder="Address"
-            className="w-full p-2 border rounded"
-            value={formData.address || ''}
-            onChange={(e) => handleInputChange('address', e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="City"
-            className="w-full p-2 border rounded"
-            value={formData.city || ''}
-            onChange={(e) => handleInputChange('city', e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="State"
-            className="w-full p-2 border rounded"
-            value={formData.state || ''}
-            onChange={(e) => handleInputChange('state', e.target.value)}
-          />
-          <input
-            type="date"
-            className="w-full p-2 border rounded"
-            value={formData.date || ''}
-            onChange={(e) => handleInputChange('date', e.target.value)}
-          />
+          {/* Promoter Selection */}
+          <div className="relative">
             <input
-                type="text"
-                placeholder="Email"
-                className="w-full p-2 border rounded"
-                value={formData.email || ''}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+              type="text"
+              placeholder="Promotion Name"
+              className="w-full p-2 border rounded"
+              value={promotionQuery}
+              onChange={(e) => setPromotionQuery(e.target.value)}
+              disabled={isAuthenticated}
             />
-       
+            {showDropdown && (
+              <ul className="absolute z-10 border rounded bg-white w-full max-h-40 overflow-y-auto">
+                {filteredPromoters.map((promo) => (
+                  <li
+                    key={promo.id}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                    onClick={() => handlePromotionSelect(promo)}
+                  >
+                    {promo.promotion}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
+          {!isAuthenticated && (
+            <button
+              className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
+              onClick={onOpenAddPromoter}
+            >
+              Add Promoter
+            </button>
+
+          )}
+
+
+
+
+          {isAuthenticated && (
+            <div className="space-y-4">
+
+
+              {/* Sanctioning Selection */}
+              <select
+                value={sanctioning}
+                onChange={handleSanctioningChange}
+                className="w-full p-2 border rounded"
+                disabled={true}
+
+              >
+                <option value="">Select Sanctioning</option>
+                <option value="IKF">International Kickboxing Federation (IKF)</option>
+                <option value="PMT">Point Muay Thai (PMT)</option>
+                <option value="PBSC">Point Boxing Sparring Circuit (PBSC)</option>
+                <option value="none">None</option>
+              </select>
+
+              {/* Event Name */}
+              <input
+                type="text"
+                name="eventName"
+                placeholder="Event Name"
+                className="w-full p-2 border rounded"
+                onChange={handleInputChange}
+              />
+
+              {/* Event Date */}
+              <input
+                type="date"
+                name="eventDate"
+                className="w-full p-2 border rounded"
+                onChange={handleInputChange}
+              />
+
+
+
+              <GoogleAutocomplete onSelect={handleAddressSelect} />
+            </div>
+          )}
+
+          {submitError && (
+            <div className="text-red-500 text-sm mt-2">
+              {submitError}
+            </div>
+          )}
         </div>
-        <div className="mt-6 flex justify-end space-x-4">
+
+        <div className="mt-4 flex justify-end">
           <button
+            className="px-4 py-2 bg-gray-300 rounded mr-2"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
           >
             Cancel
           </button>
           <button
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-blue-300"
             onClick={handleSubmit}
-            className={`px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            disabled={loading}
+            disabled={loading || !isAuthenticated}
           >
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Creating...' : 'Create Event'}
           </button>
         </div>
       </div>
+
+      {sanctionPopupOpen && (
+        <SanctionPopup
+          popUpSource="sanctioningDetails"
+          selectedSanctioning={sanctioning}
+          onClose={() => setSanctionPopupOpen(false)}
+        />
+      )}
+
     </div>
   );
 };
