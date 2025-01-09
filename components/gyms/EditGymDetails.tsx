@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
-import { app } from '../../utils/firebase';
+import { app } from '@/lib/firebase_techbouts/config';
 import LogoUpload from '../../app/gyms/[gymId]/LogoUpload';
 import { GymProfile } from '../../utils/types';
 import axios from 'axios';

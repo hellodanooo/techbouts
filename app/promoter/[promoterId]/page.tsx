@@ -1,14 +1,86 @@
 import { headers } from 'next/headers';
 import { Event } from '../../../utils/types';
 import PromoterDashboard from './Dashboard';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { app } from '../../../utils/firebase';
 import Head from 'next/head';
 
-async function fetchAllEvents(promoterId: string) {
+
+
+async function fetchPromoter(promoterId: string) {
   try {
     const headersList = await headers();
     const host = headersList.get('host');
+    console.log('Fetching promoter from:', `http://${host}/api/promoters/${promoterId}`);
+    
+    const response = await fetch(`http://${host}/api/promoters/${promoterId}`, {
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error response:', errorData);
+      throw new Error(`Failed to fetch promoter: ${errorData.error}`);
+    }
+
+    const data = await response.json();
+    console.log('Full promoter data:', data.promoter); // Add this log to see the full data
+    if (!data.promoter) {
+      throw new Error('No promoter data returned');
+    }
+    return data.promoter;
+  } catch (error) {
+    console.error('Error fetching promoter:', error);
+    return null;
+  }
+}
+
+async function fetchPromoterIKFEvents(promoterId: string) {
+  try {
+    console.log('Starting IKF Event Fetch')
+    const headersList = await headers();
+    const host = headersList.get('host');
+    
+    const [confirmedResponse] = await Promise.all([
+      fetch(`http://${host}/api/ikf/events`, { 
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    ]);
+
+    console.log('Fetch IKF Events Status:', confirmedResponse.status);
+
+    let ikfEvents: Event[] = [];
+
+    if (confirmedResponse.ok) {
+      try {
+        const confirmedData = await confirmedResponse.json();
+        
+        
+        ikfEvents = confirmedData.events?.filter(
+          (event: Event) => event.promoterId === promoterId
+        ) || [];
+     
+
+      } catch (error) {
+        console.error('Error parsing confirmed events:', error);
+      }
+    }
+
+    return { ikfEvents };
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return { ikfEvents: [] }; // Always return a default structure
+  }
+}
+
+async function fetchPMTEvents(promoterId: string) {
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host');
+    
+    // Fetch both responses first
     const [confirmedResponse, pendingResponse] = await Promise.all([
       fetch(`http://${host}/api/pmt/events`, {
         cache: 'no-store',
@@ -17,27 +89,33 @@ async function fetchAllEvents(promoterId: string) {
       fetch(`http://${host}/api/pmt/promoterEvents`, {
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
-      }),
+      })
     ]);
 
+    // Initialize arrays
     let confirmedEvents: Event[] = [];
     let pendingEvents: Event[] = [];
 
+    // Handle confirmed events
     if (confirmedResponse.ok) {
       const confirmedData = await confirmedResponse.json();
-      confirmedEvents =
-        confirmedData.events?.filter(
-          (event: Event) => event.promoterId === promoterId
-        ) || [];
+      confirmedEvents = confirmedData.events?.filter(
+        (event: Event) => event.promoterId === promoterId
+      ) || [];
+    } else {
+      const errorText = await confirmedResponse.text();
+      console.error('Failed to fetch confirmed events:', errorText);
     }
 
-
+    // Handle pending events
     if (pendingResponse.ok) {
       const pendingData = await pendingResponse.json();
-      pendingEvents =
-        pendingData.events?.filter(
-          (event: Event) => event.promoterId === promoterId
-        ) || [];
+      pendingEvents = pendingData.events?.filter(
+        (event: Event) => event.promoterId === promoterId
+      ) || [];
+    } else {
+      const errorText = await pendingResponse.text();
+      console.error('Failed to fetch pending events:', errorText);
     }
 
     return {
@@ -50,40 +128,43 @@ async function fetchAllEvents(promoterId: string) {
   }
 }
 
-async function fetchPromoterLogo(promoterId: string) {
-  try {
-    const storage = getStorage(app);
-    const logoRef = ref(storage, `techbouts_promoters/${promoterId}.png`);
-    const logoUrl = await getDownloadURL(logoRef);
-    return logoUrl;
-  } catch (error) {
-    if (error instanceof Error && (error.message.includes('storage/object-not-found') || error.message.includes('storage/unauthorized'))) {
-      console.warn('Logo not found or access denied, using default logo.');
-      return '/logos/techboutslogoFlat.png';
-    }
-    console.error('Unexpected error fetching logo:', error);
-    throw error; 
-  }
-}
+
 
 export default async function PromoterPage(props: { params: Promise<{ promoterId: string }> }) {
- 
   const { promoterId } = await props.params;
+  
+  // Fetch all data in parallel
+  const [
+    promoter,
+    { confirmedEvents, pendingEvents },
+    { ikfEvents },
+  ] = await Promise.all([
+    fetchPromoter(promoterId),
+    fetchPMTEvents(promoterId),
+    fetchPromoterIKFEvents(promoterId),
 
-  const { confirmedEvents, pendingEvents } = await fetchAllEvents(promoterId);
-  const logoUrl = await fetchPromoterLogo(promoterId);
+  ]);
+
+  // If no promoter is found, you might want to handle this case
+  if (!promoter) {
+    // You could redirect to a 404 page or show an error message
+    return <div>Promoter not found</div>;
+  }
+
+  const pageTitle = promoter.promotion || `${promoter.firstName} ${promoter.lastName}'s Events`;
 
   return (
     <>
       <Head>
-        <title>{promoterId.charAt(0).toUpperCase() + promoterId.slice(1)} Events</title>
-        {logoUrl && <meta property="og:image" content={logoUrl} />}
+        <title>{pageTitle}</title>
       </Head>
       <PromoterDashboard
+        promoter={promoter}
         promoterId={promoterId}
         initialConfirmedEvents={confirmedEvents}
         initialPendingEvents={pendingEvents}
-        logoUrl={logoUrl}
+        logoUrl={"/logos/techboutslogoFlat.png"}
+        ikfEvents={ikfEvents}
       />
     </>
   );

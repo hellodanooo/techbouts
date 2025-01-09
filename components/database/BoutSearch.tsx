@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { doc, updateDoc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '../../utils/firebase';
+import { db } from '@/lib/firebase_techbouts/config';
 
 interface FightVerification extends SearchResults {
   resultVerified: boolean;

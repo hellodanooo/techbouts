@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Firestore } from '@google-cloud/firestore';
 import { Event } from '../../../../utils/types';
-import { generateDocId } from '../../../../utils/eventManagement';
 
 // Specify Node.js runtime
 export const runtime = 'nodejs';
@@ -17,6 +16,8 @@ interface FirebaseEventData {
   ticket_system_option?: "inHouse" | "thirdParty" | "none";
   promoterId?: string;
   status?: string;
+  eventId: string;
+  competition_type: 'FightCard' | 'Tournament';
 }
 
 interface FirebaseCalendarDoc {
@@ -28,20 +29,20 @@ export async function GET() {
 
   // Initialize Firestore REST client
   const db = new Firestore({
-    projectId: process.env.FIREBASE_PROJECT_ID,
+    projectId: process.env.FIREBASE_PROJECT_ID_PMT,
     credentials: {
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL_PMT,
       // Ensure newlines are preserved
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key: process.env.FIREBASE_PRIVATE_KEY_PMT?.replace(/\\n/g, '\n'),
     },
     preferRest: true, // Use REST API instead of gRPC
   });
 
-console.log("Environment Variables:");
-console.log("Project ID:", process.env.FIREBASE_PROJECT_ID);
-console.log("Client Email:", process.env.FIREBASE_CLIENT_EMAIL);
-console.log("Private Key Length:", process.env.FIREBASE_PRIVATE_KEY?.length);
-console.log("Private Key Preview:", process.env.FIREBASE_PRIVATE_KEY?.slice(0, 100));
+console.log("PMT Environment Variables:");
+console.log("PMT Project ID:", process.env.FIREBASE_PROJECT_ID_PMT);
+console.log("PMT Client Email:", process.env.FIREBASE_CLIENT_EMAIL_PMT);
+console.log("PMT Private Key Length:", process.env.FIREBASE_PRIVATE_KEY_PMT?.length);
+console.log("PMT Private Key Preview:", process.env.FIREBASE_PRIVATE_KEY_PMT?.slice(0, 100));
   let events: Event[] = [];
 
   try {
@@ -54,15 +55,11 @@ console.log("Private Key Preview:", process.env.FIREBASE_PRIVATE_KEY?.slice(0, 1
 
       if (data?.events) {
         events = data.events.map((event: FirebaseEventData) => {
-          const cityFormatted = event.city?.replace(/\s+/g, "_") ?? "unknown_city";
-          const docId = generateDocId(
-            cityFormatted,
-            event.state ?? "unknown_state",
-            event.date
-          );
+          const docId = event.eventId
         
           return {
             id: docId,
+            eventId: event.eventId,
             event_name: event.name ?? "Unnamed Event",
             name: event.name ?? "Unnamed Event",
             address: event.address ?? "No address provided",
@@ -100,6 +97,7 @@ console.log("Private Key Preview:", process.env.FIREBASE_PRIVATE_KEY?.slice(0, 1
             promotion: "",
             email: "",
             promoterEmail: "",
+            competition_type: "Tournament",
           };
         });
         

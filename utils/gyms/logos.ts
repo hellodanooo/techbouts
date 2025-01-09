@@ -1,6 +1,6 @@
 // utils/gyms/logos.ts
 import { getStorage, ref, listAll, getDownloadURL } from "firebase/storage";
-import { app } from "../firebase";
+import { app } from "@/lib/firebase_techbouts/config";
 import { GymProfile } from "../types";
 
 /**

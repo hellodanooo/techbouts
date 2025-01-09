@@ -1,7 +1,7 @@
 import { Event } from '@/utils/types';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { generateDocId } from '@/utils/eventManagement';
-import { db } from '@/utils/firebase';
+import { db } from '@/lib/firebase_pmt/config';
 
 export async function fetchEvents(): Promise<Event[]> {
   try {
@@ -17,10 +17,15 @@ export async function fetchEvents(): Promise<Event[]> {
         return data.events.map((event: any) => {
           // Generate consistent ID using city, state, and date
           const cityFormatted = event.city?.replace(/\s+/g, '_') ?? 'unknown_city';
+          
+          
           const docId = generateDocId(
+            event.name ?? 'Unnamed Event',
             cityFormatted,
             event.state ?? 'unknown_state',
             event.date
+
+            
           );
 
           return {

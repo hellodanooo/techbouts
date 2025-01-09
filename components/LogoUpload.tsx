@@ -1,7 +1,7 @@
 // components/LogoUpload.tsx
 import React, { useState, useCallback } from 'react';
 import { getStorage, ref } from 'firebase/storage';
-import { app } from '../utils/firebase';
+import { app } from '@/lib/firebase_techbouts/config';
 import Cropper from 'react-easy-crop';
 import { uploadBytes } from 'firebase/storage';
 

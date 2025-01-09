@@ -1,12 +1,12 @@
 // components/promoters/submotEvent.tsx
 import React, { useState } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { app } from '../../utils/firebase';
-import { PromoterType } from '../../utils/types';
+import { app } from '@/lib/firebase_techbouts/config';
+import { Promoter } from '../../utils/types';
 import Image from 'next/image';
 
 interface SubmitPendingEventProps {
-  promoterId: PromoterType;
+  promoterId: Promoter;
   onSuccess?: () => void;
   onCancel: () => void;
 }

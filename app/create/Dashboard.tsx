@@ -1,11 +1,13 @@
+// app/create/Dashboard.tsx
 'use client';
 
 import React, { useState } from 'react';
 import AddEventForm from '@/components/AddEventForm';
 import AddPromoter from '@/components/AddPromoter'; 
+import { Promoter } from '@/utils/types'; 
 
 interface DashboardProps {
-    promoters: { id: string; name: string; email: string; promotion: string; sanctioning: string; }[]; // Accept promoters with email
+    promoters: Promoter[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ promoters }) => {

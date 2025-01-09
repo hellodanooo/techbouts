@@ -1,9 +1,9 @@
 // components/PasswordVerification.tsx
 import React, { useState } from 'react';
-import { PromoterType } from '../../utils/types';
+import { Promoter } from '../../utils/types';
 
 interface PasswordVerificationProps {
-  promoterId: PromoterType;
+  promoterId: Promoter;
   onSuccess: () => void;
   onCancel: () => void;
 }

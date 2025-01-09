@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { getStorage, ref, uploadString } from 'firebase/storage';
-import { app } from '../../../utils/firebase';
+import { app } from '@/lib/firebase_pmt/config';
 import Cropper from 'react-easy-crop';
 
 interface LogoUploadProps {

@@ -1,35 +1,83 @@
+// components/AddPromoter.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { db } from '../utils/firebase';
+import React, { useState, useEffect } from 'react';
+import { db } from '../lib/firebase_techbouts/config';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import SanctionPopup from '../components/popups/One'
-
+import { Promoter } from '../utils/types';
 
 interface AddPromoterProps {
   onClose: () => void;
-  promoters: { id: string; name: string; email: string; promotion: string }[];
+  promoters: Promoter[];
+  isAdmin?: boolean; // Add optional isAdmin prop
 }
 
-const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
-  const [formData, setFormData] = useState({
-    promotion: '',
-    firstName: '',
-    lastName: '',
-    city: '',
-    state: '',
-    phone: '',
-    email: '',
-    santioning: '',
-  });
+
+const initialFormData: Promoter = {
+  firstName: '',
+  lastName: '',
+  name: '',
+  city: '',
+  state: '',
+  phone: '',
+  email: '',
+  promoterId: '',
+  promotion: '',
+  sanctioning: '',
+  createdAt: new Date().toISOString() 
+
+};
+
+const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters, isAdmin = false }) => {
+  const [formData, setFormData] = useState<Promoter>(initialFormData);
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [sanctioning, setSanctioning] = useState('');
   const [sanctionPopupOpen, setSanctionPopupOpen] = useState(false);
+  const [promotionError, setPromotionError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    if (isAdmin) {
+     
+
+      // Set authenticated to true if user is admin
+      setAuthenticated(true);
+    
+
+    }
+  }, [isAdmin]);
+
 
   const handleInputChange = (field: string, value: string) => {
+   
+   
+    if (field === 'promotion') {
+      // Clear any existing error
+      setPromotionError(null);
+      
+      // Generate promoterId from the new promotion name
+      const newPromoterId = value.toLowerCase().replace(/\s+/g, '_');
+      
+      // Check if this promoterId already exists
+      const existingPromoter = promoters.find(
+        promoter => promoter.promoterId === newPromoterId
+      );
+
+      if (existingPromoter) {
+        setPromotionError('This promotion name already exists. Please modify the name and try again.');
+        // Still update the form to show what was typed
+        setFormData((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+        return;
+      }
+    }
+   
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -75,12 +123,12 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
     try {
       setLoading(true);
 
-      const promoterId = `${formData.promotion.replace(/\s+/g, '_')}_${formData.city.replace(/\s+/g, '_')}`;
+      const promoterId = `${formData.promotion.toLowerCase().replace(/\s+/g, '_')}`;
 
       const promoterData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        name: `${formData.firstName} ${formData.lastName}`,
+        name: formData.promotion,
         city: formData.city,
         state: formData.state,
         phone: formData.phone,
@@ -88,12 +136,13 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
         promoterId: promoterId,
         promotion: formData.promotion,
         sanctioning: sanctioning,
+        createdAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, 'techbouts_promotions', promoterId), promoterData);
+      await setDoc(doc(db, 'promotions', promoterId), promoterData);
 
       // Add promoter details to JSON file in Firestore
-      const jsonDocRef = doc(db, 'techbouts_promotions', 'promotions_json');
+      const jsonDocRef = doc(db, 'promotions', 'promotions_json');
       const jsonDocSnap = await getDoc(jsonDocRef);
 
       if (jsonDocSnap.exists()) {
@@ -125,7 +174,8 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
       <div className="bg-white p-6 rounded shadow-md w-full max-w-lg">
         <h2 className="text-xl font-bold mb-4">Create Promotion</h2>
         <div className="space-y-4">
-          {!authenticated && (
+
+        {!authenticated && (
             <button
               onClick={handleGoogleSignIn}
               className="w-full p-2 border rounded bg-blue-500 text-white hover:bg-blue-600"
@@ -135,7 +185,9 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
           )}
 
           {authenticated && <p className="text-green-500">Signed in as: {userEmail}</p>}
-
+          
+          {isAdmin && <p className="text-green-500">Admin {userEmail}</p>}
+          
           <input
             type="text"
             placeholder="Promotion Name"
@@ -144,7 +196,9 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
             onChange={(e) => handleInputChange('promotion', e.target.value)}
             disabled={!authenticated}
           />
-
+  {promotionError && (
+          <p className="text-red-500 text-sm mt-1">{promotionError}</p>
+        )}
 
  {/* Sanctioning Selection */}
  <select
@@ -206,7 +260,9 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
             placeholder="Email"
             className="w-full p-2 border rounded"
             value={formData.email}
-            disabled
+            onChange={(e) => handleInputChange('email', e.target.value)}
+
+            
           />
         </div>
         <div className="mt-6 flex justify-end space-x-4">
@@ -217,14 +273,14 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters }) => {
             Cancel
           </button>
           <button
-            onClick={handleSubmit}
-            className={`px-4 py-2 bg-green-500 text-white rounded ${
-              loading || !authenticated ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            disabled={loading || !authenticated}
-          >
-            {loading ? 'Saving...' : 'Save'}
-          </button>
+          onClick={handleSubmit}
+          className={`px-4 py-2 bg-green-500 text-white rounded ${
+            loading || !authenticated || promotionError ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          disabled={loading || !authenticated || promotionError !== null}
+        >
+          {loading ? 'Saving...' : 'Save'}
+        </button>
         </div>
       </div>
       {sanctionPopupOpen && (

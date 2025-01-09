@@ -1,6 +1,6 @@
 // app/api/pmt/promoterEvents/[id].ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import firebaseAdmin from '../../../../utils/firebaseAdmin';
+import firebaseAdmin from '../../../../utils/firebaseAdminPMT';
 
 interface FirebaseEventData {
   eventId: string;

@@ -1,9 +1,8 @@
 // utils/gyms/fetchGymById.ts
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/utils/firebase';
+import { db, app } from '@/lib/firebase_techbouts/config';
 import { GymProfile } from '@/utils/types';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { app } from '@/utils/firebase';
 
 const DEFAULT_STATE = "CA";
 

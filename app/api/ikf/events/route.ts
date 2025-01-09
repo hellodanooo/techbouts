@@ -1,0 +1,83 @@
+// app/api/ikf/events/route.ts
+import { NextResponse } from 'next/server';
+import { db } from '../../../../lib/firebase_techbouts/config'; // Import the Firestore instance
+import { doc, getDoc } from 'firebase/firestore';
+import { Event } from '../../../../utils/types';
+
+export async function GET() {
+  console.log("API Route: Starting fetch...");
+  let events: Event[] = [];
+
+  try {
+    const eventCalendarRef = doc(db, "events", "events_json");
+    const snapshot = await getDoc(eventCalendarRef);
+    console.log("API Route IKF Events: Got Firestore snapshot");
+
+    if (snapshot.exists()) {
+      const data = snapshot.data() as { events: Event[] };
+
+      if (data?.events) {
+        events = data.events.map((event: Event) => {
+          const docId = event.docId;
+        
+          return {
+            id: docId,
+            eventId: event.eventId,
+            event_name: event.event_name ?? "Unnamed Event",
+            name: event.name ?? "Unnamed Event",
+            address: event.address ?? "No address provided",
+            city: event.city ?? "Unknown City",
+            state: event.state ?? "Unknown State",
+            date: event.date,
+            flyer: event.flyer && event.flyer !== "" ? event.flyer : "/default-flyer.png",
+            registration_fee: event.registration_fee ?? 0,
+            ticket_system_option: event.ticket_system_option ?? "none",
+            promoterId: event.promoterId ?? "",
+            status: event.status ?? "confirmed",
+            docId,
+            doors_open: "07:30",
+            venue_name: "",
+            weighin_date: event.date,
+            weighin_start_time: "08:00",
+            weighin_end_time: "09:00",
+            rules_meeting_time: "09:15",
+            bouts_start_time: "10:00",
+            spectator_info: "",
+            registration_enabled: false,
+            tickets_enabled: false,
+            ticket_enabled: false,
+            ticket_price: 0,
+            ticket_price_description: "General Admission",
+            ticket_price2: 0,
+            ticket_price2_description: "VIP",
+            event_details: "",
+            coach_price: 0,
+            coach_enabled: false,
+            photos_enabled: false,
+            photos_price: 0,
+            sanctioning: "",
+            promotion: "",
+            email: "",
+            promoterEmail: event.promoterEmail,
+            competition_type: event.competition_type ?? "Fightcard",
+          };
+        });
+      }
+    } else {
+      console.log("API Route IKF Events: No snapshot exists");
+    }
+
+    console.log(`API Route: Sending ${events.length} events`);
+    return NextResponse.json({ events });
+    
+  } catch (error) {
+    const err = error as Error;
+    console.error("API Route IKF Events: Error fetching events from Firestore:", err.message);
+    console.error(err.stack);
+
+    return NextResponse.json(
+      { error: "Failed to fetch IKF events", details: err.message },
+      { status: 500 }
+    );
+  }
+}

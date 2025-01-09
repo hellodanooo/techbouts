@@ -9,7 +9,7 @@ import {
   signOut as firebaseSignOut,
   AuthError
 } from 'firebase/auth';
-import { auth } from '../lib/firebase/config';
+import { auth } from '../lib/firebase_techbouts/config';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {

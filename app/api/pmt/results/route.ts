@@ -1,5 +1,5 @@
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/utils/firebase';
+import { db } from '@/lib/firebase_pmt/config';
 import { NextResponse } from 'next/server';
 
 interface Fighter {

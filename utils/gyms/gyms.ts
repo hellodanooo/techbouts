@@ -1,6 +1,6 @@
 // utils/gyms/gyms.ts
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../utils/firebase';
+import { db } from '@/lib/firebase_techbouts/config';
 import { populateGymLogos } from "@/utils/gyms/logos";
 import { GymProfile } from '@/utils/types';
 

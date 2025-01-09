@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { db } from '@/utils/firebase';
+import { db } from '@/lib/firebase_techbouts/config';
 import { doc, updateDoc } from 'firebase/firestore';
 
 interface ViewSanctioningBodyProps {

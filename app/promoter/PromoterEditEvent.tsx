@@ -2,7 +2,7 @@
 import React, { FC, useState, useEffect } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirestore, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
-import { app } from '../../utils/firebase';
+import { app } from '@/lib/firebase_pmt/config';
 import { Event } from '../../utils/types';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { generateDocId } from '../../utils/eventManagement';
@@ -276,8 +276,7 @@ const PromoterEditEvent: FC<PromoterEditEventProps> = ({
       const db = getFirestore(app);
       const fullAddress = formatAddress();
       const cityFormatted = city.replace(/\s+/g, '_');
-      const docId = generateDocId(cityFormatted, state, event.date);
-
+      const docId = generateDocId(event.event_name, cityFormatted, state, zip);
       const newEventData = {
         ...event,
         name: event.event_name,
