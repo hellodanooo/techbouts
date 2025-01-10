@@ -24,7 +24,6 @@ async function fetchAllPMTEvents() {
     console.log('Confirmed Events Status:', confirmedResponse.status);
 
     let confirmedEvents: Event[] = [];
-    let pendingEvents: Event[] = [];
 
     if (confirmedResponse.ok) {
       try {
@@ -43,7 +42,7 @@ async function fetchAllPMTEvents() {
     };
   } catch (error) {
     console.error('Error fetching events:', error);
-    return { confirmedEvents: [], pendingEvents: [] };
+    return { confirmedEvents: [] };
   }
 }
 async function fetchAllIKFEvents() {
@@ -150,7 +149,7 @@ async function fetchAllPMTPromoters() {
 
 export default async function PromoterEventsPage() {
 
-  const { confirmedEvents, pendingEvents } = await fetchAllPMTEvents();
+  const { confirmedEvents } = await fetchAllPMTEvents();
 
   const { ikfEvents } = await fetchAllIKFEvents();
 

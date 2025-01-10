@@ -230,7 +230,7 @@ const PromoterDashboard = ({
 
   const activeEvents = useMemo(() => {
     if (activeSystem === 'PMT') {
-      return [...initialConfirmedEvents, ...initialPendingEvents];
+      return [...initialConfirmedEvents];
     }
     return ikfEvents;
   }, [activeSystem, initialConfirmedEvents, ikfEvents]);
