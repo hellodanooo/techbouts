@@ -13,7 +13,6 @@ import AddPromoter from '@/components/AddPromoter';
 
 interface Props {
   initialConfirmedEvents?: Event[];
-  initialPendingEvents?: Event[];
   ikfEvents?: Event[];
   ikfPromoters?: Promoter[];
   pmtPromoters?: Promoter[];
@@ -66,7 +65,6 @@ const isNorCalLocation = (city: string, state: string): boolean => {
 
 const PromoterDashboard = ({ 
   initialConfirmedEvents = [], 
-  initialPendingEvents = [],
   ikfEvents = [],
   ikfPromoters = [],
   pmtPromoters = [],
@@ -235,7 +233,7 @@ const PromoterDashboard = ({
       return [...initialConfirmedEvents, ...initialPendingEvents];
     }
     return ikfEvents;
-  }, [activeSystem, initialConfirmedEvents, initialPendingEvents, ikfEvents]);
+  }, [activeSystem, initialConfirmedEvents, ikfEvents]);
 
 
 

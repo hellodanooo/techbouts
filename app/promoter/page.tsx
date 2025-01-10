@@ -10,24 +10,18 @@ async function fetchAllPMTEvents() {
     const host = headersList.get('host');
     
     // Fetch both confirmed and pending events
-    const [confirmedResponse, pendingResponse] = await Promise.all([
+    const [confirmedResponse] = await Promise.all([
       fetch(`http://${host}/api/pmt/events`, { 
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
         },
       }),
-      fetch(`http://${host}/api/pmt/promoterEvents`, { 
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+    
     ]);
 
     // Log responses for debugging
     console.log('Confirmed Events Status:', confirmedResponse.status);
-    console.log('Pending Events Status:', pendingResponse.status);
 
     let confirmedEvents: Event[] = [];
     let pendingEvents: Event[] = [];
@@ -41,26 +35,17 @@ async function fetchAllPMTEvents() {
       }
     }
 
-    if (pendingResponse.ok) {
-      try {
-        const pendingData = await pendingResponse.json();
-        pendingEvents = pendingData.events || [];
-      } catch (error) {
-        console.error('Error parsing pending events:', error);
-      }
-    }
+  
 
     return {
       confirmedEvents,
-      pendingEvents
+      
     };
   } catch (error) {
     console.error('Error fetching events:', error);
     return { confirmedEvents: [], pendingEvents: [] };
   }
 }
-
-
 async function fetchAllIKFEvents() {
   try {
     console.log('Starting IKF Event Fetch')
@@ -95,8 +80,6 @@ async function fetchAllIKFEvents() {
     return { ikfEvents: [] }; // Always return a default structure
   }
 }
-
-
 async function fetchAllIKFPromoters() {
   try {
     const headersList = await headers();
@@ -130,8 +113,6 @@ async function fetchAllIKFPromoters() {
     return { ikfPromoters: [] }; // Always return a default structure
   }
 }
-
-
 async function fetchAllPMTPromoters() {
   try {
     const headersList = await headers();
@@ -179,7 +160,6 @@ export default async function PromoterEventsPage() {
 
   // Log the results for debugging
   console.log('Fetched confirmed events:', confirmedEvents.length);
-  console.log('Fetched pending events:', pendingEvents.length);
   console.log('Fetched IKF events:', ikfEvents.length);
   console.log('Fetched IKF promoters:', ikfPromoters.length);
   console.log('Fetched PMT promoters:', pmtPromoters.length);
@@ -187,7 +167,6 @@ export default async function PromoterEventsPage() {
   return (
     <PromoterDashboard 
     initialConfirmedEvents={confirmedEvents}
-    initialPendingEvents={pendingEvents}
     ikfEvents={ikfEvents}
     ikfPromoters={ikfPromoters}
     pmtPromoters={pmtPromoters}
