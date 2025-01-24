@@ -27,8 +27,7 @@ type FighterTableProps = {
   onDeleteFighter?: (fighterId: string) => void;
 };
 
-const defaultPhotoUrl =
-  'https://firebasestorage.googleapis.com/v0/b/pmt-app2.appspot.com/o/Fighter_Photos%2FIcon_grey.png?alt=media&token=8e8beffa-a6b3-4329-93fc-db64b7045c0a';
+const defaultPhotoUrl ='/images/techbouts_fighter_icon.png';
 
 const isValidUrl = (url: string): boolean => {
   try {

@@ -29,6 +29,8 @@ interface AthleteWin {
     name: string;
     wins: number;
     events: EventLocation[];
+    gender?: string;
+    age?: number;
 }
 
 interface GymStats {
@@ -277,7 +279,12 @@ function processAthleteData(fighters: Fighter[]) {
                     athleteStateWins[fighter.event_state][fighter.pmt_id] = {
                         name: `${fighter.first} ${fighter.last}`.trim() || 'Unknown',
                         wins: 0,
-                        events: []
+                        events: [],
+                        gender: fighter.gender,
+                        age: fighter.age
+
+                        
+                        
                     };
                 }
                 athleteStateWins[fighter.event_state][fighter.pmt_id].wins += 1;
@@ -345,9 +352,10 @@ function processAthleteData(fighters: Fighter[]) {
                     state,
                     Object.values(athletes)
                         .sort((a, b) => b.wins - a.wins)
-                        .slice(0, 10)
+                        .slice(0, 50)
                 ])
             ),
+
             gymWinsByState: Object.fromEntries(
                 Object.entries(gymStateWins).map(([state, gyms]) => [
                     state,
@@ -364,9 +372,6 @@ function processAthleteData(fighters: Fighter[]) {
         }
     };
 }
-
-
-
 
 
 function processGenderDistribution(fighters: Fighter[]) {

@@ -3,21 +3,19 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Event, Promoter } from '../../utils/types';
 import Calendar from './Calendar';
-import MonthTable from './MonthTable';
+import MonthTable from '../../components/MonthTable';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { FaLock } from "react-icons/fa6";
 import AddPromoter from '@/components/AddPromoter'; 
 
-
-
 interface Props {
   initialConfirmedEvents?: Event[];
+  initialPendingEvents?: Event[];
   ikfEvents?: Event[];
   ikfPromoters?: Promoter[];
   pmtPromoters?: Promoter[];
 }
-
 
 const NORCAL_CITIES = new Set([
   'sacramento',
@@ -41,7 +39,6 @@ const NORCAL_CITIES = new Set([
   'chico'
 ]);
 
-
 const isNorCalLocation = (city: string, state: string): boolean => {
   // Normalize the city name for comparison
   const normalizedCity = city.toLowerCase().trim();
@@ -62,9 +59,9 @@ const isNorCalLocation = (city: string, state: string): boolean => {
          normalizedCity.includes('norcal');
 };
 
-
 const PromoterDashboard = ({ 
   initialConfirmedEvents = [], 
+  initialPendingEvents = [],
   ikfEvents = [],
   ikfPromoters = [],
   pmtPromoters = [],
@@ -74,7 +71,6 @@ const PromoterDashboard = ({
   const { user } = useAuth();
   const [activeSystem, setActiveSystem] = useState<'PMT' | 'IKF'>('PMT');
   const [showPromoterModal, setShowPromoterModal] = useState(false); // Controls AddPromoter visibility
-
   const [isPromoter, setIsPromoter] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
@@ -230,10 +226,19 @@ const PromoterDashboard = ({
 
   const activeEvents = useMemo(() => {
     if (activeSystem === 'PMT') {
-      return [...initialConfirmedEvents];
+      // Add a prefix to distinguish between confirmed and pending events
+      const confirmedWithPrefix = initialConfirmedEvents.map(event => ({
+        ...event,
+        uniqueId: `confirmed_${event.eventId}`
+      }));
+      const pendingWithPrefix = initialPendingEvents.map(event => ({
+        ...event,
+        uniqueId: `pending_${event.eventId}`
+      }));
+      return [...confirmedWithPrefix, ...pendingWithPrefix];
     }
     return ikfEvents;
-  }, [activeSystem, initialConfirmedEvents, ikfEvents]);
+  }, [activeSystem, initialConfirmedEvents, ikfEvents, initialPendingEvents]);
 
 
 
@@ -327,6 +332,7 @@ style={{
               </p>
               <p style={styles.cardSubText}>
                 {promoterEvents.length} upcoming events
+                
               </p>
             </div>
           );
@@ -341,8 +347,9 @@ style={{
       }}>
         <MonthTable 
           events={activeEvents}
-          promoters={activePromoters}
-          isAuthorized={isPromoter}
+          // promoters={activePromoters}
+          // isPromoter={isPromoter}
+          // isAdmin={isAdmin}
         />
         <Calendar />
       </div>

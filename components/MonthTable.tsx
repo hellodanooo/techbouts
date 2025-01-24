@@ -3,21 +3,35 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Event } from "../utils/types";
 import { format, parseISO, eachMonthOfInterval, startOfYear, endOfYear } from "date-fns";
+import EventOptions from "@/components/edit/EditEvent";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 interface MonthTableProps {
   events: Event[];
 }
 
 const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
-  const pmtLogo = '/logos/pmt_logo_2024_sm.png';
-
-
-
+ // const pmtLogo = '/logos/pmt_logo_2024_sm.png';
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [lastTap, setLastTap] = useState<number>(0);
+  const [eventTypeFilter, setEventTypeFilter] = useState("all");
+  const DOUBLE_CLICK_DELAY = 300;
   const [eventsByStateAndMonth, setEventsByStateAndMonth] = useState<{
     [state: string]: { [month: string]: Event[] };
   }>({});
-
-  const states = useMemo(() => ["CA", "TX", "CO", "ID"], []); // Displayed states
+  const states = useMemo(() => ["CA", "TX", "CO", "ID"], []); 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const months = useMemo(
     () =>
@@ -28,11 +42,20 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
     [currentYear]
   );
 
+  const handleEventClick = (event: Event) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+
+    if (tapLength < DOUBLE_CLICK_DELAY && tapLength > 0) {
+      setSelectedEvent(event);
+      setIsDialogOpen(true);
+    }
+    setLastTap(currentTime);
+  };
+
   useEffect(() => {
-    // Compute the organized events only once or when dependencies change
     const organizedEvents: { [state: string]: { [month: string]: Event[] } } = {};
 
-    // Initialize the structure based on states and months
     states.forEach((state) => {
       organizedEvents[state] = {};
       months.forEach((month) => {
@@ -40,11 +63,30 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
       });
     });
 
-    // Organize events by state and month
-    events.forEach((event) => {
-      if (event.state && event.date) {
-        const state = event.state.toUpperCase(); // Ensure state matches format
+    // Filter events based on date and status
+    const filteredEvents = events.filter(event => {
+      const eventDate = parseISO(event.date);
+      const isFutureEvent = eventDate >= new Date();
+      if (!isFutureEvent) return false;
+
+      if (eventTypeFilter === "all") return true;
+      if (eventTypeFilter === "confirmed") return event.status === "confirmed";
+      if (eventTypeFilter === "pending") return event.status === "pending";
+      return true;
+    });
+
+    filteredEvents.forEach((event) => {
+      if (event.date) {
+        const state = (event.state || '').toUpperCase();
         const monthKey = format(parseISO(event.date), "MMM");
+
+        // Add state if it doesn't exist
+        if (!organizedEvents[state]) {
+          organizedEvents[state] = {};
+          months.forEach((month) => {
+            organizedEvents[state][format(month, "MMM")] = [];
+          });
+        }
 
         if (organizedEvents[state]?.[monthKey]) {
           organizedEvents[state][monthKey].push(event);
@@ -53,75 +95,99 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
     });
 
     setEventsByStateAndMonth(organizedEvents);
-  }, [events, months, states]); // Dependencies are stable
+  }, [events, months, states, eventTypeFilter]); // Added eventTypeFilter as dependency
 
   return (
-    <div>
-      <h2 className="text-lg font-bold mb-4">Events Table</h2>
-      <div style={{ overflowX: "auto" }}>
-        <table className="table-auto w-full border-collapse border border-gray-300">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border border-gray-300 bg-gray-100">State</th>
-              {months.map((month) => (
-                <th
-                  key={format(month, "MMM")}
-                  className="px-4 py-2 border border-gray-300 bg-gray-100"
-                >
-                  {format(month, "MMM")}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {states.map((state) => (
-              <tr key={state}>
-                <td className="px-4 py-2 border border-gray-300 bg-gray-50">{state}</td>
-                {months.map((month) => {
-                  const monthKey = format(month, "MMM");
-                  const monthEvents = eventsByStateAndMonth[state]?.[monthKey] || [];
-                  return (
-                    <td key={monthKey} className="px-4 py-2 border border-gray-300">
-                     {monthEvents.length > 0 ? (
-  monthEvents.map((event) => (
-    <div
-      key={event.id}
-      className={`mb-2 p-4 border border-gray-200 rounded-md bg-white hover:bg-gray-50 shadow-sm relative`}
-    >
-      {event.sanctioning === "PMT" && (
-        <div
-          className="absolute inset-0 opacity-10 z-0"
-          style={{
-            backgroundImage: `url(${pmtLogo})`,
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-          }}
-        ></div>
-      )}
-      <div className="relative z-10">
-        <p className="font-semibold text-gray-800 flex items-center">
-          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-          {event.event_name}
-        </p>
-        <p className="text-sm text-gray-600">
-          {format(parseISO(event.date), "MMM d, yyyy")}
-        </p>
-      </div>
-    </div>
-  ))
-) : (
-  <span className="text-sm text-gray-400">No events</span>
-)}
-                    </td>
-                  );
-                })}
-              </tr>
+    <>
+      <div className="space-y-4">
+        <div className="flex items-center justify-start p-4 bg-white rounded-lg shadow-sm">
+          <div className="flex gap-8">
+            {['all', 'confirmed', 'pending'].map(filterType => (
+              <label key={filterType} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="eventType"
+                  value={filterType}
+                  checked={eventTypeFilter === filterType}
+                  onChange={(e) => setEventTypeFilter(e.target.value)}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-sm font-medium">
+                  {filterType.charAt(0).toUpperCase() + filterType.slice(1)} 
+                  {filterType !== 'all' ? ' Only' : ' Events'}
+                </span>
+              </label>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </div>
+
+        <div style={{ overflowX: "auto" }}>
+          <table className="table-auto w-full border-collapse border border-gray-300">
+            <thead>
+              <tr>
+                <th className="px-4 py-2 border border-gray-300 bg-gray-100">State</th>
+                {months.map((month) => (
+                  <th
+                    key={format(month, "MMM")}
+                    className="px-4 py-2 border border-gray-300 bg-gray-100"
+                  >
+                    {format(month, "MMM")}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {states.map((state) => (
+                <tr key={state}>
+                  <td className="px-4 py-2 border border-gray-300 bg-gray-50">{state}</td>
+                  {months.map((month) => {
+                    const monthKey = format(month, "MMM");
+                    const monthEvents = eventsByStateAndMonth[state]?.[monthKey] || [];
+                    return (
+                      <td key={monthKey} className="px-4 py-2 border border-gray-300">
+  {monthEvents.length > 0 ? (
+    <div className="space-y-2">
+      {monthEvents.map((event) => (
+        <Card
+          key={event.id}
+          className={`transition-colors ${
+            event.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' :
+            event.status === 'approved' ? 'bg-blue-50 hover:bg-blue-100' :
+            event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
+          }`}
+          onClick={() => handleEventClick(event)}
+        >
+          <CardHeader className="p-2">
+            <CardTitle className="text-sm">{event.event_name}</CardTitle>
+            <CardDescription>
+              {format(parseISO(event.date), "MMM d, yyyy")}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      ))}
     </div>
+  ) : (
+    <span className="text-sm text-gray-400">No events</span>
+  )}
+</td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Event Options</DialogTitle>
+          </DialogHeader>
+          {selectedEvent && <EventOptions event={selectedEvent} />}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

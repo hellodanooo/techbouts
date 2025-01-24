@@ -4,7 +4,47 @@ import PromoterDashboard from './Dashboard';
 import { Event, Promoter } from '../../utils/types';
 export const dynamic = 'force-dynamic';
 
-async function fetchAllPMTEvents() {
+async function fetchPendingPMTEvents() {
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host');
+    
+    // Fetch both confirmed and pending events
+    const [confirmedResponse] = await Promise.all([
+      fetch(`http://${host}/api/pmt/pending_events`, { 
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+    
+    ]);
+
+    // Log responses for debugging
+    console.log('Penidng Events Status:', confirmedResponse.status);
+
+    let pendingPMTEvents: Event[] = [];
+
+    if (confirmedResponse.ok) {
+      try {
+        const confirmedData = await confirmedResponse.json();
+        pendingPMTEvents = confirmedData.events || [];
+      } catch (error) {
+        console.error('Error parsing pending events:', error);
+      }
+    }
+
+    return {
+      pendingPMTEvents,
+      
+    };
+  } catch (error) {
+    console.error('Error fetching pending events:', error);
+    return { pendingPMTEvents: [] };
+  }
+}
+
+async function fetchConfirmedPMTEvents() {
   try {
     const headersList = await headers();
     const host = headersList.get('host');
@@ -23,12 +63,12 @@ async function fetchAllPMTEvents() {
     // Log responses for debugging
     console.log('Confirmed Events Status:', confirmedResponse.status);
 
-    let confirmedEvents: Event[] = [];
+    let confirmedPMTEvents: Event[] = [];
 
     if (confirmedResponse.ok) {
       try {
         const confirmedData = await confirmedResponse.json();
-        confirmedEvents = confirmedData.events || [];
+        confirmedPMTEvents = confirmedData.events || [];
       } catch (error) {
         console.error('Error parsing confirmed events:', error);
       }
@@ -37,14 +77,15 @@ async function fetchAllPMTEvents() {
   
 
     return {
-      confirmedEvents,
+      confirmedPMTEvents,
       
     };
   } catch (error) {
     console.error('Error fetching events:', error);
-    return { confirmedEvents: [] };
+    return { confirmedPMTEvents: [] };
   }
 }
+
 async function fetchAllIKFEvents() {
   try {
     console.log('Starting IKF Event Fetch')
@@ -149,7 +190,9 @@ async function fetchAllPMTPromoters() {
 
 export default async function PromoterEventsPage() {
 
-  const { confirmedEvents } = await fetchAllPMTEvents();
+  const { confirmedPMTEvents } = await fetchConfirmedPMTEvents();
+
+  const { pendingPMTEvents } = await fetchPendingPMTEvents();
 
   const { ikfEvents } = await fetchAllIKFEvents();
 
@@ -158,14 +201,16 @@ export default async function PromoterEventsPage() {
   const {pmtPromoters} = await fetchAllPMTPromoters();
 
   // Log the results for debugging
-  console.log('Fetched confirmed events:', confirmedEvents.length);
+  console.log('Fetched confirmed events:', confirmedPMTEvents.length);
+  console.log('Fetched pending events:', pendingPMTEvents.length);
   console.log('Fetched IKF events:', ikfEvents.length);
   console.log('Fetched IKF promoters:', ikfPromoters.length);
   console.log('Fetched PMT promoters:', pmtPromoters.length);
 
   return (
     <PromoterDashboard 
-    initialConfirmedEvents={confirmedEvents}
+    initialConfirmedEvents={confirmedPMTEvents}
+    initialPendingEvents={pendingPMTEvents}
     ikfEvents={ikfEvents}
     ikfPromoters={ikfPromoters}
     pmtPromoters={pmtPromoters}

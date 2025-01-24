@@ -1,3 +1,5 @@
+//app/api/fighters/[fighterId]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { collection, getDocs, QueryDocumentSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase_pmt/config";

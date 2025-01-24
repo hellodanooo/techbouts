@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase_pmt/config';
 type Fighter = {
   fighter_id: string;
   mtp_id?: string;
+  pmt_id?: string;
   first: string;
   last: string;
   weightclass: string;

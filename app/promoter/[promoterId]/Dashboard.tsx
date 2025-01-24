@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Event, Promoter } from '../../../utils/types';
 import { parseISO, format } from 'date-fns';
 import Calendar from '../Calendar';
-import MonthTable from '../MonthTable';
+import MonthTable from '../../../components/MonthTable';
 import { FaLock } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -32,6 +32,8 @@ export default function PromoterDashboard({
   console.log('Promoter data in dashboard:', promoter); // Add this log
 
  const { user, loading } = useAuth();
+
+ 
   const router = useRouter();
   const [isPromoter, setIsPromoter] = useState<boolean | null>(false);
 const [showEventModal, setShowEventModal] = useState(false); // Controls AddEventForm visibility
@@ -155,8 +157,8 @@ const [showEventModal, setShowEventModal] = useState(false); // Controls AddEven
      
       <MonthTable 
           events={allEvents}
-          promoters={[promoter]}
-          isAuthorized={isPromoter ?? false}
+          // promoters={[promoter]}
+          // isAuthorized={isPromoter ?? false}
         />
 
 

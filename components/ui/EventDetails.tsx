@@ -13,16 +13,15 @@ import modals from '@/styles/modals.module.css';
 import Register from '@/components/ui/Register';
 import { FaUserPlus } from "react-icons/fa";
 import { app } from '@/lib/firebase_techbouts/config';
+
 interface EventDetailsProps {
   eventData: Event;
   eventId: string;
   isOpen: boolean;
   ticketsEnabled: boolean;
   ticketPrice: number;
-
   coachEnabled: boolean;
   coachPrice: number;
-  
   eventName: string;
   gymNames: string[];
   eventDetails: string;

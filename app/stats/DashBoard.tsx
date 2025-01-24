@@ -114,6 +114,9 @@ interface Athlete {
     wins: number;
     events?: AthleteEvent[];
     pmt_id?: string;
+    gender?: string;
+    age?: number;
+    gym?: string;
 }
 
 interface Gym {
@@ -149,6 +152,10 @@ const StatisticsDashboard = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
     const [showLogs, setShowLogs] = useState(true);
+
+    const [genderFilter, setGenderFilter] = useState<'All' | 'Men' | 'Women' | 'Boys' | 'Girls'>('All');
+
+
 
     const [stats, setStats] = useState<Stats>({
         genderDistribution: [],
@@ -320,17 +327,33 @@ const StatisticsDashboard = () => {
         }
     };
 
+
+
     const filteredStats = React.useMemo(() => {
         if (selectedStates.length === 0) return stats;
     
-        const stateAthletes = selectedStates.flatMap(state => 
+        const stateAthletes = selectedStates.flatMap(state =>
             stats.eventStats.athleteWinsByState[state] || []
-        ).sort((a, b) => b.wins - a.wins)
+        )
+        .filter(athlete => {
+            if (genderFilter === 'All') return true;
+            if (genderFilter === 'Men') return athlete.gender?.toLowerCase() === 'male' && athlete.age && athlete.age >= 18;
+            if (genderFilter === 'Women') return athlete.gender?.toLowerCase() === 'female' && athlete.age && athlete.age >= 18;
+            if (genderFilter === 'Boys') return athlete.gender?.toLowerCase() === 'male' && athlete.age && athlete.age < 18;
+            if (genderFilter === 'Girls') return athlete.gender?.toLowerCase() === 'ƒemale' && athlete.age && athlete.age < 18;
+            return false;
+        })
+        .sort((a, b) => b.wins - a.wins)
         .slice(0, 10);
     
-        const stateGyms = selectedStates.flatMap(state => 
+
+
+
+
+        const stateGyms = selectedStates.flatMap(state =>
             stats.eventStats.gymWinsByState[state] || []
-        ).sort((a, b) => b.wins - a.wins)
+        )
+        .sort((a, b) => b.wins - a.wins)
         .slice(0, 10);
     
         const totalBoutsInStates = Object.entries(stats.eventStats.stateDistribution)
@@ -350,7 +373,7 @@ const StatisticsDashboard = () => {
                 )
             }
         };
-    }, [stats, selectedStates]);
+    }, [stats, selectedStates, genderFilter]);
 
     return (
         <div style={styles.container}>
@@ -453,6 +476,34 @@ const StatisticsDashboard = () => {
                     )}
                 </div>
             </div>
+
+
+{/* //////////////////////////////////////////////////////// */}
+<div style={{ 
+    display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem', margin: '20px', marginTop:'40px'
+     }}>
+           
+            {['All', 'Men', 'Women', 'Boys', 'Girls'].map(filter => (
+                <button
+                    key={filter}
+                    onClick={() => setGenderFilter(filter as 'All' | 'Men' | 'Women' | 'Boys' | 'Girls')}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '0.5rem',
+                        backgroundColor: genderFilter === filter ? '#2563eb' : '#ffffff',
+                        color: genderFilter === filter ? '#ffffff' : '#4b5563',
+                        border: '1px solid #e5e7eb',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                    }}
+                >
+                    {filter}
+                </button>
+            ))}
+        </div>
+
+
+
 
             <div style={styles.chartContainer}>
                 <h3 style={styles.statsTitle}>Top 10 Athletes by Wins</h3>

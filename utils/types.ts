@@ -1,6 +1,3 @@
-
-
-
 export interface Event {
   competition_type: 'FightCard' | 'Tournament';
   event_name: string;
@@ -54,7 +51,6 @@ export interface Event {
   numMats?: number;
 }
 
-
 export interface Promoter  {
   city: string;
   email: string;
@@ -92,24 +88,117 @@ export interface DetailedSanctioningBody extends BasicSanctioningBody {
   emergencyContact: string;
 }
 
+export interface BaseFighter {
+  first: string;
+  last: string;
+  gym: string;
+  gender: string;
+  win: number;
+  loss: number;
+  age: number;
+  dob: string;
+  email: string;
+  weightclass: number;
+  coach_email: string;
+}
 
-export type FighterProfile = {
-first: string;
-last: string;
-gym: string;
-dob: string;
-gender: string;
-win: number;
-loss: number;
-dq: string;
-ex: string;
-weightclass: number;
-mtp_id: string;
-email: string;
-mtp_rank: number;
-age: number;
-coach_email: string;
-} 
+export interface FighterProfile extends BaseFighter {
+  mtp_id: string;
+  dq: string;
+  ex: string;
+  mtp_rank: number;
+  winsByCityState: CityStateWinCount[];
+  photo?: string;
+
+}
+
+// Competition result specific properties
+export interface ResultsFighter extends BaseFighter {
+  // IDs and References
+  pmt_id: string;
+  id: string;
+  docId: string;
+  eventDocId: string;
+  gym_id: string;
+  
+  // Bout specific information
+  weighin: number;
+  result: string;
+  opponent_id: string;
+  event: string;
+  boutid: string;
+  boutmat: string;
+  bout: number;
+  mat: number;
+  bout_type: string;
+  
+  // Location information
+  comp_city: string;
+  comp_state: string;
+  street1?: string;
+  city?: string;
+  state: string;
+  post_code?: string;
+  
+  // Contact information
+  phone?: string;
+  coach_name: string;
+  coach_phone?: string;
+  trainer?: string;
+  website?: string;
+  
+  // Physical attributes
+  height?: number;
+  
+  // Competition details
+  fighternum: 'fighter1' | 'fighter2' | 'unmatched' | 'bye';
+  ammy: number;
+  years_exp: number;
+  registrationFee?: number;
+  paymentIntentId?: string;
+  paired?: boolean;
+  photo_package: boolean;
+  class: 'A' | 'B' | 'C';
+  confirmed: boolean;
+  day: number;
+  age_gender: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
+  
+  // Skill metrics
+  legkick: number;
+  bodykick: number;
+  headkick: number;
+  clinch: number;
+  defense: number;
+  kicks: number;
+  footwork: number;
+  boxing: number;
+  knees: number;
+  ringawareness: number;
+  
+  // Additional information
+  address?: string;
+  photo?: string;
+  other?: string;
+  championship_result?: string;
+  bracket?: number;
+  ikf_wins?: number;
+  ikf_losses?: number;
+}
+
+// Helper type for fighter display in the profile page
+export interface FighterDisplay extends BaseFighter {
+  fighter_id: string;
+  photo?: string;
+  city?: string;
+  state?: string;
+  bouts?: {
+    result: string;
+    opponentName: string;
+    date: string;
+    promotionName: string;
+    sanctioningBody: string;
+  }[];
+}
 
 // export type PuristFighter = {
 //   first: string;
@@ -169,76 +258,6 @@ coach_email: string;
 
 //   } 
 
-  export type ResultsFighter = {
-    pmt_id: string;
-    first: string;
-    last: string;
-    gym: string;
-    gym_id: string;
-    gender: string;
-    weighin: number;
-    weightclass: number;
-    win: number;
-    loss: number;
-    age: number;
-    id: string;
-    dob: string;
-    result: string;
-    opponent_id: string;
-    event: string;
-    boutid: string;
-    email: string;
-    height?: number;
-    trainer?: string;
-    coach_phone?: string;
-    street1?: string;
-    city?: string;
-    state: string;
-    post_code?: string;
-    phone?: string;
-    fighternum: 'fighter1' | 'fighter2' | 'unmatched' | 'bye';
-    boutmat: string;
-    bout: number;
-    mat: number;
-    docId: string;
-    eventDocId: string;
-    comp_city: string;
-    comp_state: string;
-    bout_type: string;
-    registrationFee?: number;
-    ammy: number;
-    years_exp: number;
-    other?: string;
-    paymentIntentId?: string;
-    paired?: boolean;
-    legkick: number;
-    bodykick: number;
-    headkick: number;
-    clinch: number;
-    defense: number;
-    kicks: number;
-    footwork: number;
-    boxing: number;
-    knees: number;
-    ringawareness: number;
-  photo_package: boolean;
-  class: 'A' | 'B' | 'C';
-  confirmed: boolean;
-  day: number;
-  age_gender: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
-  coach_email: string;
-  coach_name: string;
-  address?: string;
-  website?: string;
-  photo?: string;
-  championship_result?: string;
-  bracket?: number;
-  ikf_wins?: number;
-  ikf_losses?: number;
-
-
-  }
-
   export type GymProfile = {
     gym: string;
     win: number;
@@ -265,8 +284,8 @@ coach_email: string;
     suspensionDate: string;
     suspensionReason: string;
     athletes: ResultsFighter[];
-    coach_name: string;
-    coach_phone: string;
+    coach_name?: string;
+    coach_phone?: string;
     coach_email: string;
   }
 
@@ -305,3 +324,9 @@ export interface FighterFormData {
   website?: string;
   address?: string;
 }
+
+export type CityStateWinCount = {
+  city: string;
+  state: string;
+  winCount: number;
+};

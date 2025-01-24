@@ -3,8 +3,6 @@ import { Event } from '../../../utils/types';
 import PromoterDashboard from './Dashboard';
 import Head from 'next/head';
 
-
-
 async function fetchPromoter(promoterId: string) {
   try {
     const headersList = await headers();
@@ -80,13 +78,13 @@ async function fetchPMTEvents(promoterId: string) {
     const headersList = await headers();
     const host = headersList.get('host');
     
-    // Fetch both responses first
+    // Fetch both confirmed and pending events in parallel
     const [confirmedResponse, pendingResponse] = await Promise.all([
       fetch(`http://${host}/api/pmt/events`, {
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
       }),
-      fetch(`http://${host}/api/pmt/promoterEvents`, {
+      fetch(`http://${host}/api/pmt/pending_events`, {  // Add this endpoint
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
       })
@@ -128,8 +126,6 @@ async function fetchPMTEvents(promoterId: string) {
   }
 }
 
-
-
 export default async function PromoterPage(props: { params: Promise<{ promoterId: string }> }) {
   const { promoterId } = await props.params;
   
@@ -169,3 +165,4 @@ export default async function PromoterPage(props: { params: Promise<{ promoterId
     </>
   );
 }
+
