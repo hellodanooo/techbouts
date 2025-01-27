@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { setDoc, doc } from 'firebase/firestore';
-import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
-import { useAuth } from '@/context/AuthContext';
-import { auth } from '@/lib/firebase_techbouts/config';
+//import { setDoc, doc } from 'firebase/firestore';
+//import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
+//import { useAuth } from '@/context/AuthContext';
+//import { auth } from '@/lib/firebase_techbouts/config';
 
 type Fighter = {
   address: string;
@@ -54,90 +54,91 @@ const isValidUrl = (url: string): boolean => {
 
 const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditFighter, onDeleteFighter }) => {
   const router = useRouter();
-  const [isTransferring, setIsTransferring] = useState(false);
-  const [transferStatus, setTransferStatus] = useState<string>('');
-  const { user } = useAuth();
+  //const [isTransferring, setIsTransferring] = useState(false);
+  //const [transferStatus, setTransferStatus] = useState<string>('');
+  //const { user } = useAuth();
 
-  const transferFightersToDB = async () => {
-    if (!user || !auth.currentUser) {
-      setTransferStatus('Please sign in to transfer fighters');
-      return;
-    }
+//   const transferFightersToDB = async () => {
+//     if (!user || !auth.currentUser) {
+//       setTransferStatus('Please sign in to transfer fighters');
+//       return;
+//     }
 
-    if (!confirm('Are you sure you want to transfer all fighters to Techbouts database?')) {
-      return;
-    }
+//     if (!confirm('Are you sure you want to transfer all fighters to Techbouts database?')) {
+//       return;
+//     }
 
-    setIsTransferring(true);
-    setTransferStatus('Starting transfer...');
+//     setIsTransferring(true);
+//     setTransferStatus('Starting transfer...');
 
-    try {
+//     try {
 
-      const groupedFighters = fighters.reduce((acc, fighter) => {
-        const gymId = fighter.gym_id || 'NO_GYM';
-        if (!acc[gymId]) {
-          acc[gymId] = [];
-        }
-        acc[gymId].push({
-          address: fighter.address || '',
-          age: Number(fighter.age) || 0,
-          city: fighter.city || '',
-          coach: fighter.coach || '',
-          coach_phone: fighter.coach_phone || '',
-          dob: fighter.dob || '',
-          docId: fighter.docId || fighter.fighter_id || '',
-          fighter_id: fighter.fighter_id || '',
-          first: fighter.first || '',
-          gender: fighter.gender || '',
-          gym: fighter.gym || '',
-          gym_id: fighter.gym_id || '',
-          height: Number(fighter.height) || 0,
-          last: fighter.last || '',
-          loss: Number(fighter.loss) || 0,
-          mtp_id: fighter.mtp_id || '',
-          photo: fighter.photo || '',
-          state: fighter.state || '',
-          website: fighter.website || '',
-          weightclass: Number(fighter.weightclass) || 0,
-          win: fighter.win || 0,
-          email: fighter.email || '',
-          coach_email: fighter.coach_email || '',
-        });
-        return acc;
-      }, {} as Record<string, Fighter[]>);
+//       const groupedFighters = fighters.reduce((acc, fighter) => {
+//         const gymId = fighter.gym_id || 'NO_GYM';
+//         if (!acc[gymId]) {
+//           acc[gymId] = [];
+//         }
+//         acc[gymId].push({
+//           address: fighter.address || '',
+//           age: Number(fighter.age) || 0,
+//           city: fighter.city || '',
+//           coach: fighter.coach || '',
+//           coach_phone: fighter.coach_phone || '',
+//           dob: fighter.dob || '',
+//           docId: fighter.docId || fighter.fighter_id || '',
+//           fighter_id: fighter.fighter_id || '',
+//           first: fighter.first || '',
+//           gender: fighter.gender || '',
+//           gym: fighter.gym || '',
+//           gym_id: fighter.gym_id || '',
+//           height: Number(fighter.height) || 0,
+//           last: fighter.last || '',
+//           loss: Number(fighter.loss) || 0,
+//           mtp_id: fighter.mtp_id || '',
+//           photo: fighter.photo || '',
+//           state: fighter.state || '',
+//           website: fighter.website || '',
+//           weightclass: Number(fighter.weightclass) || 0,
+//           win: fighter.win || 0,
+//           email: fighter.email || '',
+//           coach_email: fighter.coach_email || '',
+//         });
+//         return acc;
+//       }, {} as Record<string, Fighter[]>);
 
 
 
-      let completed = 0;
-  for (const [gymId, gymFighters] of Object.entries(groupedFighters)) {
-    const docRef = doc(techboutsDb, 'fighters_database', gymId);
-    await setDoc(docRef, {
-      fighters: gymFighters,
-      gym_name: gymFighters[0].gym,
-      total_fighters: gymFighters.length,
-      last_updated: new Date().toISOString(),
-      updated_by: user.email
-    });
+//       let completed = 0;
+//   for (const [gymId, gymFighters] of Object.entries(groupedFighters)) {
+//     const docRef = doc(techboutsDb, 'fighters_database', gymId);
+//     await setDoc(docRef, {
+//       fighters: gymFighters,
+//       gym_name: gymFighters[0].gym,
+//       total_fighters: gymFighters.length,
+//       last_updated: new Date().toISOString(),
+//       updated_by: user.email
+//     });
 
-    completed += gymFighters.length;
-    setTransferStatus(`Transferred ${completed} of ${fighters.length} fighters...`);
-  }
+//     completed += gymFighters.length;
+//     setTransferStatus(`Transferred ${completed} of ${fighters.length} fighters...`);
+//   }
 
-  setTransferStatus(`Successfully transferred ${fighters.length} fighters!`);
-  setTimeout(() => setTransferStatus(''), 5000);
-} catch (error) {
-  console.error('Transfer error:', error);
-  setTransferStatus('Transfer failed. Please check console for details.');
-} finally {
-  setIsTransferring(false);
-}
-  }
+//   setTransferStatus(`Successfully transferred ${fighters.length} fighters!`);
+//   setTimeout(() => setTransferStatus(''), 5000);
+// } catch (error) {
+//   console.error('Transfer error:', error);
+//   setTransferStatus('Transfer failed. Please check console for details.');
+// } finally {
+//   setIsTransferring(false);
+// }
+//   }
 
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <button
+        
+        {/* <button
           onClick={transferFightersToDB}
           disabled={isTransferring || !user}
           className={`px-4 py-2 rounded ${
@@ -147,8 +148,9 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
           }`}
         >
           {isTransferring ? 'Transferring...' : 'Send All Fighters to Techbouts'}
-        </button>
-        {transferStatus && (
+        </button> */}
+        
+        {/* {transferStatus && (
           <span className={`ml-4 ${
             transferStatus.includes('failed') || transferStatus.includes('Please sign in')
               ? 'text-red-500' 
@@ -156,7 +158,7 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
           }`}>
             {transferStatus}
           </span>
-        )}
+        )} */}
       </div>
 
       <div style={{ overflowX: 'auto' }}>

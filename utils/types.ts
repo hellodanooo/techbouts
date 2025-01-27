@@ -100,7 +100,6 @@ export interface BaseFighter {
   email: string;
   weightclass: number;
   coach_email: string;
-  // Added fields
   address: string;
   city: string;
   coach: string;
