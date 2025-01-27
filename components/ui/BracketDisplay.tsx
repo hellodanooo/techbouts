@@ -887,6 +887,14 @@ const renderBout = (bout: number, fighters: ResultsFighter[]) => {
     bracket: 0,
     ikf_wins: 0,
     ikf_losses: 0,
+    coach_phone: '',
+    city: '',
+    address: '',
+    coach: '',
+    website: '',
+    height: 0,
+    fighter_id: '',
+
   };
 
   const displayFighters = fighters.length === 1

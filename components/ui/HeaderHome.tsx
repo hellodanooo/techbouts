@@ -12,7 +12,7 @@ const HeaderHome = () => {
       </h1>
       <nav className="flex gap-6">
         <Link
-          href="/promoter"
+          href="/promoters"
           className="text-sm sm:text-base hover:underline text-blue-500 dark:text-blue-400"
         >
           Promoters

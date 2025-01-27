@@ -1,3 +1,4 @@
+// utils/authUtils.ts
 import { getDatabase, ref, get } from 'firebase/database';
 
 /**

@@ -36,6 +36,7 @@ export default function PromoterDashboard({
  
   const router = useRouter();
   const [isPromoter, setIsPromoter] = useState<boolean | null>(false);
+
 const [showEventModal, setShowEventModal] = useState(false); // Controls AddEventForm visibility
 
 
@@ -157,8 +158,7 @@ const [showEventModal, setShowEventModal] = useState(false); // Controls AddEven
      
       <MonthTable 
           events={allEvents}
-          // promoters={[promoter]}
-          // isAuthorized={isPromoter ?? false}
+      
         />
 
 

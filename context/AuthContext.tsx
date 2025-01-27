@@ -1,9 +1,9 @@
+// context/AuthContext.tsx
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { 
   User,
-  signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
   signOut as firebaseSignOut,
@@ -15,42 +15,51 @@ import { useRouter } from 'next/navigation';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: (promoterId: string) => Promise<void>; // Updated to accept promoterId
+  isPromoter: boolean;
+  isAdmin: boolean;
+  checkUserAuthorization: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ user: User | null }>;
   signOut: () => Promise<void>;
 }
 
-const getAuthErrorMessage = (error: AuthError): string => {
-  switch (error.code) {
-    case 'auth/operation-not-allowed':
-      return 'Google sign-in is not enabled. Please contact the administrator.';
-    case 'auth/popup-closed-by-user':
-      return 'Sign-in popup was closed before completion.';
-    case 'auth/cancelled-popup-request':
-      return 'Another sign-in popup is already open.';
-    case 'auth/invalid-email':
-      return 'The email address is invalid.';
-    case 'auth/user-disabled':
-      return 'This account has been disabled.';
-    case 'auth/user-not-found':
-      return 'No account found with this email.';
-    case 'auth/wrong-password':
-      return 'Incorrect password.';
-    case 'auth/network-request-failed':
-      return 'Network error. Please check your connection.';
-    case 'auth/too-many-requests':
-      return 'Too many unsuccessful attempts. Please try again later.';
-    default:
-      return 'An error occurred during authentication. Please try again.';
-  }
-};
-
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ 
+  children,
+  pmtPromoters = [],
+  ikfPromoters = []
+}: { 
+  children: React.ReactNode;
+  pmtPromoters?: any[];
+  ikfPromoters?: any[];
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPromoter, setIsPromoter] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+
+  const checkUserAuthorization = async () => {
+    if (!user?.email) {
+      setIsPromoter(false);
+      setIsAdmin(false);
+      return;
+    }
+
+    const userEmail = user.email.toLowerCase();
+    const isAdminEmail = userEmail === 'info@nakmuay.foundation';
+    
+    if (isAdminEmail) {
+      setIsAdmin(true);
+      setIsPromoter(true);
+      return;
+    }
+
+    const pmtMatch = pmtPromoters.find(p => p.email?.toLowerCase() === userEmail);
+    const ikfMatch = ikfPromoters.find(p => p.email?.toLowerCase() === userEmail);
+    
+    setIsPromoter(!!(pmtMatch || ikfMatch));
+  };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -61,49 +70,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw new Error(getAuthErrorMessage(error as AuthError));
-    }
-  };
+  useEffect(() => {
+    checkUserAuthorization();
+  }, [user, pmtPromoters, ikfPromoters]);
 
-
-  
-  const signInWithGoogle = async (promoterId: string) => {
+  const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-  
       const result = await signInWithPopup(auth, provider);
-      console.log('Google Login Success:', result.user);
-  
-      // Redirect to the promoter-specific dashboard
-      router.push(`/promoter/${promoterId}`);
-
+      return { user: result.user };
     } catch (error) {
-      const err = error as AuthError;
-      console.error('Google sign-in error:', err);
-      throw new Error(getAuthErrorMessage(err));
+      console.error('Google sign-in error:', error);
+      return { user: null };
     }
   };
-  
-  
 
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
-      router.push('/auth/login');
+      setIsPromoter(false);
+      setIsAdmin(false);
+      router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
-      throw new Error(getAuthErrorMessage(error as AuthError));
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      isPromoter,
+      isAdmin,
+      checkUserAuthorization,
+      signInWithGoogle,
+      signOut 
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );

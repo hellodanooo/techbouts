@@ -19,9 +19,11 @@ import {
 
 interface MonthTableProps {
   events: Event[];
+  isPromoter?: boolean;
+  isAdmin?: boolean;
 }
 
-const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
+const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
  // const pmtLogo = '/logos/pmt_logo_2024_sm.png';
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -31,7 +33,7 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
   const [eventsByStateAndMonth, setEventsByStateAndMonth] = useState<{
     [state: string]: { [month: string]: Event[] };
   }>({});
-  const states = useMemo(() => ["CA", "TX", "CO", "ID"], []); 
+  const states = useMemo(() => ["CA", "TX", "CO", "ID", "WA"], []); 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const months = useMemo(
     () =>
@@ -42,16 +44,30 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
     [currentYear]
   );
 
-  const handleEventClick = (event: Event) => {
+
+
+
+   const handleEventClick = (event: Event) => {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTap;
 
-    if (tapLength < DOUBLE_CLICK_DELAY && tapLength > 0) {
+    if (tapLength < DOUBLE_CLICK_DELAY && tapLength > 0 && isAdmin) {
+      // Double click for admin options
       setSelectedEvent(event);
       setIsDialogOpen(true);
+    } else if (tapLength >= DOUBLE_CLICK_DELAY || lastTap === 0) {
+      // Single click for navigation
+      if (event.sanctioning === 'PMT') {
+        window.location.href = `/promoters/${event.promoterId}/pmt/${event.id}`;
+      } else if (event.sanctioning === 'PMT') {
+        window.location.href = `/promoters/${event.promoterId}/events/ikf/${event.id}`;
+      }
     }
     setLastTap(currentTime);
   };
+
+
+
 
   useEffect(() => {
     const organizedEvents: { [state: string]: { [month: string]: Event[] } } = {};
@@ -99,7 +115,14 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4 border border-zinc-600rounded-sm">
+
+{isAdmin && (
+  <div className="p-3">
+    Admin Enabled
+    </div>
+)}
+
         <div className="flex items-center justify-start p-4 bg-white rounded-lg shadow-sm">
           <div className="flex gap-8">
             {['all', 'confirmed', 'pending'].map(filterType => (
@@ -150,12 +173,13 @@ const MonthTable: React.FC<MonthTableProps> = ({ events }) => {
       {monthEvents.map((event) => (
         <Card
           key={event.id}
-          className={`transition-colors ${
+          className={`transition-colors cursor-pointer ${
             event.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' :
             event.status === 'approved' ? 'bg-blue-50 hover:bg-blue-100' :
             event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
           }`}
-          onClick={() => handleEventClick(event)}
+
+          {...(isAdmin && { onClick: () => handleEventClick(event) })}
         >
           <CardHeader className="p-2">
             <CardTitle className="text-sm">{event.event_name}</CardTitle>

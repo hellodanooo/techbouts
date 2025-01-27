@@ -1,4 +1,5 @@
 // app/api/pmt/events/[eventId]/route.ts
+// THIS ONE IS NOT WORKING TO FETCH ONE EVENTS DETAILS
 import { NextRequest, NextResponse } from 'next/server';
 import { Firestore } from '@google-cloud/firestore';
 import { Event } from '@/utils/types';
@@ -13,13 +14,8 @@ interface EventCalendarData {
     }>;
   }
 
-  
-
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
-
-
-
 
 export async function GET(
   request: NextRequest,
@@ -38,6 +34,7 @@ export async function GET(
   });
 
   try {
+    // First, get the document from the events collection
     const eventRef = db.collection("events").doc(eventId);
     const snapshot = await eventRef.get();
     console.log("API Route: Got Firestore snapshot");
@@ -50,51 +47,81 @@ export async function GET(
       );
     }
 
-    const eventData = snapshot.data() as Event;
-    const formattedEventData = {
+    const rawEventData = snapshot.data();
+    if (!rawEventData) {
+      throw new Error("Event data is empty");
+    }
+
+    // Format the event data with proper defaults
+    const formattedEventData: Event = {
       id: eventId,
-      eventId,
-      event_name: eventData.name ?? "Unnamed Event",
-      name: eventData.name ?? "Unnamed Event",
-      address: eventData.address ?? "No address provided",
-      city: eventData.city ?? "Unknown City",
-      state: eventData.state ?? "Unknown State",
-      date: eventData.date,
-      flyer: eventData.flyer && eventData.flyer !== "" ? eventData.flyer : "/default-flyer.png",
-      registration_fee: eventData.registration_fee ?? 0,
-      ticket_system_option: eventData.ticket_system_option ?? "none",
-      promoterId: eventData.promoterId ?? "",
-      status: eventData.status ?? "confirmed",
+      eventId: eventId,
       docId: eventId,
-      doors_open: eventData.doors_open ?? "07:30",
-      venue_name: eventData.venue_name ?? "",
-      weighin_date: eventData.date,
-      weighin_start_time: eventData.weighin_start_time ?? "08:00",
-      weighin_end_time: eventData.weighin_end_time ?? "09:00",
-      rules_meeting_time: eventData.rules_meeting_time ?? "09:15",
-      bouts_start_time: eventData.bouts_start_time ?? "10:00",
-      spectator_info: eventData.spectator_info ?? "",
-      registration_enabled: eventData.registration_enabled ?? false,
-      tickets_enabled: eventData.tickets_enabled ?? false,
-      ticket_enabled: eventData.ticket_enabled ?? false,
-      ticket_price: eventData.ticket_price ?? 0,
-      ticket_price_description: eventData.ticket_price_description ?? "General Admission",
-      ticket_price2: eventData.ticket_price2 ?? 0,
-      ticket_price2_description: eventData.ticket_price2_description ?? "VIP",
-      event_details: eventData.event_details ?? "",
-      coach_price: eventData.coach_price ?? 0,
-      coach_enabled: eventData.coach_enabled ?? false,
-      photos_enabled: eventData.photos_enabled ?? false,
-      photos_price: eventData.photos_price ?? 0,
-      sanctioning: eventData.sanctioning ?? "",
-      promotion: eventData.promotion ?? "",
-      email: eventData.email ?? "",
-      promoterEmail: eventData.promoterEmail ?? "",
-      competition_type: eventData.competition_type ?? "Tournament",
+      event_name: rawEventData.event_name || rawEventData.name || "Unnamed Event",
+      name: rawEventData.event_name || rawEventData.name || "Unnamed Event",
+      address: rawEventData.address || "",
+      city: rawEventData.city || "",
+      state: rawEventData.state || "",
+      date: rawEventData.date || "",
+      flyer: rawEventData.flyer || "/default-flyer.png",
+      sanctioning: rawEventData.sanctioning || "pmt",
+      competition_type: rawEventData.competition_type || "Tournament",
+      
+      // Location details
+      venue_name: rawEventData.venue_name || "",
+      street: rawEventData.street || "",
+      postal_code: rawEventData.postal_code || "",
+      country: rawEventData.country || "",
+      colonia: rawEventData.colonia || "",
+      municipality: rawEventData.municipality || "",
+      zip: rawEventData.zip || "",
+      
+      // Time details
+      doors_open: rawEventData.doors_open || "07:30",
+      weighin_date: rawEventData.weighin_date || rawEventData.date,
+      weighin_start_time: rawEventData.weighin_start_time || rawEventData.weighin_time || "08:00",
+      weighin_end_time: rawEventData.weighin_end_time || "09:00",
+      rules_meeting_time: rawEventData.rules_meeting_time || "09:15",
+      bouts_start_time: rawEventData.bouts_start_time || "10:00",
+      
+      // Event details
+      event_details: rawEventData.event_details || "",
+      spectator_info: rawEventData.spectator_info || "",
+      numMats: rawEventData.numMats || 1,
+      
+      // Registration
+      registration_enabled: !rawEventData.disableRegistration,
+      registration_fee: rawEventData.registration_fee || 0,
+      registration_link: rawEventData.registration_link || "",
+      
+      // Tickets
+      tickets_enabled: rawEventData.ticket_enabled || false,
+      ticket_enabled: rawEventData.ticket_enabled || false,
+      ticket_system_option: rawEventData.ticket_system_option || "none",
+      ticket_link: rawEventData.ticket_link || "",
+      ticket_price: rawEventData.ticket_price || 0,
+      ticket_price_description: rawEventData.ticket_price_description || "General Admission",
+      ticket_price2: rawEventData.ticket_price2 || 0,
+      ticket_price2_description: rawEventData.ticket_price2_description || "VIP",
+      
+      // Additional services
+      coach_enabled: rawEventData.coachRegEnabled || false,
+      coach_price: rawEventData.coachRegPrice || 0,
+      photos_enabled: rawEventData.photoPackageEnabled || false,
+      photos_price: rawEventData.photoPackagePrice || 0,
+      
+      // Promoter info
+      promotion: rawEventData.promotion || "",
+      email: rawEventData.promoterEmail || "",
+      promoterId: rawEventData.promoterId || "",
+      promoterEmail: rawEventData.promoterEmail || "",
+      
+      // Status
+      status: rawEventData.status || "confirmed",
     };
 
-    console.log("API Route: Sending event data:", formattedEventData);
-    return NextResponse.json({ eventData: formattedEventData });
+    console.log("API Route: Sending event data");
+    return NextResponse.json({ event: formattedEventData });
   } catch (error) {
     const err = error as Error;
     console.error("API Route: Error fetching event from Firestore:", err.message);
@@ -191,9 +218,6 @@ async function patchEventJson(
     events,
   });
 }
-
-
-
 
 export async function PATCH(
   request: NextRequest,

@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Event, Promoter } from '../../utils/types';
 import Calendar from './Calendar';
 import MonthTable from '../../components/MonthTable';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { FaLock } from "react-icons/fa6";
-import AddPromoter from '@/components/AddPromoter'; 
+import AddPromoter from '@/components/AddPromoter';
+import { IoMdLogOut } from "react-icons/io";
 
 interface Props {
   initialConfirmedEvents?: Event[];
@@ -42,7 +43,7 @@ const NORCAL_CITIES = new Set([
 const isNorCalLocation = (city: string, state: string): boolean => {
   // Normalize the city name for comparison
   const normalizedCity = city.toLowerCase().trim();
-  
+
   // Check if it's in California first
   if (state.toLowerCase() !== 'ca' && state.toLowerCase() !== 'california') {
     return false;
@@ -54,13 +55,13 @@ const isNorCalLocation = (city: string, state: string): boolean => {
   }
 
   // Additional checks for regions/areas that might be written differently
-  return normalizedCity.includes('bay area') || 
-         normalizedCity.includes('northern california') || 
-         normalizedCity.includes('norcal');
+  return normalizedCity.includes('bay area') ||
+    normalizedCity.includes('northern california') ||
+    normalizedCity.includes('norcal');
 };
 
-const PromoterDashboard = ({ 
-  initialConfirmedEvents = [], 
+const PromoterDashboard = ({
+  initialConfirmedEvents = [],
   initialPendingEvents = [],
   ikfEvents = [],
   ikfPromoters = [],
@@ -68,89 +69,42 @@ const PromoterDashboard = ({
 }: Props) => {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const { user } = useAuth();
-  const [activeSystem, setActiveSystem] = useState<'PMT' | 'IKF'>('PMT');
+  const [activeSanctioning, setActiveSanctioning] = useState<'PMT' | 'IKF'>('PMT');
   const [showPromoterModal, setShowPromoterModal] = useState(false); // Controls AddPromoter visibility
-  const [isPromoter, setIsPromoter] = useState<boolean>(false);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { isPromoter, isAdmin, signInWithGoogle, signOut } = useAuth();
 
-
-  useEffect(() => {
-    const checkAuthorization = () => {
-      if (user?.email) {
-        console.log('User email:', user.email);
-        
-        // Check for admin status
-        const isAdminEmail = user.email.toLowerCase() === 'info@pointmuaythaica.com';
-        setIsAdmin(isAdminEmail);
-        
-        // Check both PMT and IKF promoters for matching email
-        const pmtMatch = pmtPromoters.find(promoter => 
-          promoter.email?.toLowerCase() === user.email?.toLowerCase()
-        );
-        
-        const ikfMatch = ikfPromoters.find(promoter => 
-          promoter.email?.toLowerCase() === user.email?.toLowerCase()
-        );
-  
-        const matchingPromoter = pmtMatch || ikfMatch;
-  
-        if (matchingPromoter || isAdminEmail) {
-          setIsPromoter(true);
-          if (matchingPromoter) {
-            setActiveSystem(pmtMatch ? 'PMT' : 'IKF');
-          }
-          console.log('Promoter found:', matchingPromoter);
-          console.log('Is Admin:', isAdminEmail);
-        } else {
-          setIsPromoter(false);
-        }
-      } else {
-        setIsPromoter(false);
-        setIsAdmin(false);
-      }
-    };
-  
-    if (user) {
-      checkAuthorization();
-    } else {
-      setIsPromoter(false);
-      setIsAdmin(false);
-    }
-  }, [user, pmtPromoters, ikfPromoters]);
-
-
-  
-  const handleLogin = () => {
-    router.push(`/auth/login`);
+  const handleLockClick = async () => {
+    await signInWithGoogle();
   };
 
-
-
-
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const activePromoters = useMemo(() => {
-    const promoters = activeSystem === 'PMT' ? pmtPromoters : ikfPromoters;
-    
+    const promoters = activeSanctioning === 'PMT' ? pmtPromoters : ikfPromoters;
+
     return promoters
       .map(promoter => ({
         ...promoter,
-        isNorCal: activeSystem === 'PMT' ? 
-          isNorCalLocation(promoter.city, promoter.state) : 
+        isNorCal: activeSanctioning === 'PMT' ?
+          isNorCalLocation(promoter.city, promoter.state) :
           false
       }))
       .sort((a, b) => {
         // Sort NorCal promoters first for PMT system
-        if (activeSystem === 'PMT') {
+        if (activeSanctioning === 'PMT') {
           if (a.isNorCal && !b.isNorCal) return -1;
           if (!a.isNorCal && b.isNorCal) return 1;
         }
         // Then sort by name
         return a.name.localeCompare(b.name);
       });
-  }, [activeSystem, pmtPromoters, ikfPromoters]);
-
-
+  }, [activeSanctioning, pmtPromoters, ikfPromoters]);
 
   const toggleButton = (isActive: boolean) => ({
     padding: '8px 16px',
@@ -215,7 +169,7 @@ const PromoterDashboard = ({
 
 
   const handlePromoterClick = (promoter: Promoter) => {
-    if (activeSystem === 'PMT') {
+    if (activeSanctioning === 'PMT') {
       router.push(`/promoter/${promoter.name.toLowerCase()}`);
     } else {
       // For IKF, use the promoterId
@@ -225,20 +179,24 @@ const PromoterDashboard = ({
 
 
   const activeEvents = useMemo(() => {
-    if (activeSystem === 'PMT') {
-      // Add a prefix to distinguish between confirmed and pending events
+    if (activeSanctioning === 'PMT') {
       const confirmedWithPrefix = initialConfirmedEvents.map(event => ({
         ...event,
-        uniqueId: `confirmed_${event.eventId}`
+        uniqueId: `confirmed_${event.eventId}`,
+         sanctioning: 'PMT'
       }));
       const pendingWithPrefix = initialPendingEvents.map(event => ({
         ...event,
-        uniqueId: `pending_${event.eventId}`
+        uniqueId: `pending_${event.eventId}`,
+         sanctioning: 'PMT'
       }));
       return [...confirmedWithPrefix, ...pendingWithPrefix];
     }
-    return ikfEvents;
-  }, [activeSystem, initialConfirmedEvents, ikfEvents, initialPendingEvents]);
+    return ikfEvents.map(event => ({
+      ...event,
+      sanctioning: 'IKF'
+    }));
+  }, [activeSanctioning, initialConfirmedEvents, ikfEvents, initialPendingEvents]);
 
 
 
@@ -249,52 +207,69 @@ const PromoterDashboard = ({
   return (
     <div style={styles.container}>
       <h1>Promoter Dashboard</h1>
-      
-      
-      {!isPromoter && (
-       
-        <button 
-          onClick={handleLogin} 
-          className=" text-gray-500 hover:text-gray-700">
+
+
+      {!isPromoter && !isAdmin && (
+        <button
+          onClick={handleLockClick}
+          className="text-gray-500 hover:text-gray-700">
           <FaLock size={20} />
         </button>
       )}
 
-{isAdmin && (
+      {isPromoter && (
+        <div className='flex items-center'>
+          <div>logout</div>
+          <button
+            onClick={handleLogout}
+            className=" text-gray-500 hover:text-gray-700">
 
-<div
-style={{
-  width:'50%'
-}}
->
-           <button
-           className=" mt-2 px-4 py-2 bg-green-500 text-white rounded"
-           onClick={openAddPromoter}
-         >
-           Add Promoter
-         </button>
-         </div>
-        )}
+            <IoMdLogOut size={20} />
+          </button>       </div>
+      )}
 
-{showPromoterModal && (
-  <AddPromoter
-    onClose={() => setShowPromoterModal(false)}
-    promoters={activePromoters}
-    isAdmin={isAdmin} // Pass the isAdmin status
-  />
-)}
+
+
+      {isAdmin && (
+
+        <div
+          style={{
+            width: '50%'
+          }}
+        >
+          <div>
+            Admin Enabled
+          </div>
+          <button
+            className=" mt-2 px-4 py-2 bg-green-500 text-white rounded"
+            onClick={openAddPromoter}
+          >
+            Add Promoter
+          </button>
+        </div>
+      )}
+
+      {showPromoterModal && (
+
+
+        <AddPromoter
+          onClose={() => setShowPromoterModal(false)}
+          promoters={activePromoters}
+          isAdmin={isAdmin} // Pass the isAdmin status
+        />
+      )}
 
 
       <div style={toggleButtons}>
         <button
-          style={toggleButton(activeSystem === 'PMT')}
-          onClick={() => setActiveSystem('PMT')}
+          style={toggleButton(activeSanctioning === 'PMT')}
+          onClick={() => setActiveSanctioning('PMT')}
         >
           PMT
         </button>
         <button
-          style={toggleButton(activeSystem === 'IKF')}
-          onClick={() => setActiveSystem('IKF')}
+          style={toggleButton(activeSanctioning === 'IKF')}
+          onClick={() => setActiveSanctioning('IKF')}
         >
           IKF
         </button>
@@ -303,36 +278,36 @@ style={{
       <div style={styles.grid}>
         {activePromoters.map((promoter) => {
 
-        const promoterEvents = activeEvents.filter(event => {
-  if (activeSystem === 'PMT') {
-    return event.promoterId === promoter.name.toLowerCase();
-  } else {
-    // For IKF, match on promoterId
-    // Add console.log to debug the matching
-    console.log('Event promoterId:', event.promoterId);
-    console.log('Promoter promoterId:', promoter.promoterId);
-    return event.promoterId === promoter.promoterId;
-  }
-});
+          const promoterEvents = activeEvents.filter(event => {
+            if (activeSanctioning === 'PMT') {
+              return event.promoterId === promoter.name.toLowerCase();
+            } else {
+              // For IKF, match on promoterId
+              // Add console.log to debug the matching
+              console.log('Event promoterId:', event.promoterId);
+              console.log('Promoter promoterId:', promoter.promoterId);
+              return event.promoterId === promoter.promoterId;
+            }
+          });
 
           return (
             <div
-            key={promoter.name}
-            onClick={() => handlePromoterClick(promoter)} // Pass the entire promoter object
-            onMouseEnter={() => setHoveredCard(promoter.name)}
-            onMouseLeave={() => setHoveredCard(null)}
-            style={styles.card(
-              promoter.isNorCal,
-              hoveredCard === promoter.name
-            )}
-          >
+              key={promoter.name}
+              onClick={() => handlePromoterClick(promoter)} // Pass the entire promoter object
+              onMouseEnter={() => setHoveredCard(promoter.name)}
+              onMouseLeave={() => setHoveredCard(null)}
+              style={styles.card(
+                promoter.isNorCal,
+                hoveredCard === promoter.name
+              )}
+            >
               <h2 style={styles.cardTitle}>{promoter.name}</h2>
               <p style={styles.cardSubText}>
                 {promoter.city}, {promoter.state}
               </p>
               <p style={styles.cardSubText}>
                 {promoterEvents.length} upcoming events
-                
+
               </p>
             </div>
           );
@@ -345,11 +320,10 @@ style={{
         flexDirection: 'column',
         gap: '20px',
       }}>
-        <MonthTable 
+        <MonthTable
           events={activeEvents}
-          // promoters={activePromoters}
-          // isPromoter={isPromoter}
-          // isAdmin={isAdmin}
+          isPromoter={isPromoter}
+          isAdmin={isAdmin}
         />
         <Calendar />
       </div>

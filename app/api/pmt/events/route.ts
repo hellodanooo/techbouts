@@ -1,3 +1,5 @@
+// app/api/pmt/events/route.ts
+// THIS ONE IS WORKING
 import { NextResponse } from 'next/server';
 import { Firestore } from '@google-cloud/firestore';
 import { Event } from '../../../../utils/types';

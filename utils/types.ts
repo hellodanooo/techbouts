@@ -100,6 +100,17 @@ export interface BaseFighter {
   email: string;
   weightclass: number;
   coach_email: string;
+  // Added fields
+  address: string;
+  city: string;
+  coach: string;
+  coach_phone: string;
+  docId: string;
+  fighter_id: string;
+  gym_id: string;
+  height: number;
+  state: string;
+  website: string;
 }
 
 export interface FighterProfile extends BaseFighter {
@@ -109,7 +120,6 @@ export interface FighterProfile extends BaseFighter {
   mtp_rank: number;
   winsByCityState: CityStateWinCount[];
   photo?: string;
-
 }
 
 // Competition result specific properties
@@ -136,19 +146,14 @@ export interface ResultsFighter extends BaseFighter {
   comp_city: string;
   comp_state: string;
   street1?: string;
-  city?: string;
   state: string;
   post_code?: string;
   
   // Contact information
   phone?: string;
   coach_name: string;
-  coach_phone?: string;
   trainer?: string;
-  website?: string;
   
-  // Physical attributes
-  height?: number;
   
   // Competition details
   fighternum: 'fighter1' | 'fighter2' | 'unmatched' | 'bye';
@@ -176,7 +181,6 @@ export interface ResultsFighter extends BaseFighter {
   ringawareness: number;
   
   // Additional information
-  address?: string;
   photo?: string;
   other?: string;
   championship_result?: string;
@@ -189,9 +193,7 @@ export interface ResultsFighter extends BaseFighter {
 export interface FighterDisplay extends BaseFighter {
   fighter_id: string;
   photo?: string;
-  city?: string;
-  state?: string;
-  bouts?: {
+ bouts?: {
     result: string;
     opponentName: string;
     date: string;

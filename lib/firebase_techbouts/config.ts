@@ -1,4 +1,5 @@
 // lib/firebase_techbouts/config.ts
+
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
