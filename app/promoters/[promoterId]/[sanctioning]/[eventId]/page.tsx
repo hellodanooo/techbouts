@@ -3,6 +3,8 @@
 import { headers } from 'next/headers';
 import PageContent from './PageContent';
 import Head from 'next/head';
+import RosterContainer from './components/rosterContainer';
+import { Suspense } from 'react';
 
 async function fetchEvent(sanctioning: string, eventId: string, promoterId: string) {
   try {
@@ -29,7 +31,9 @@ async function fetchEvent(sanctioning: string, eventId: string, promoterId: stri
 
     // Verify the event belongs to the promoter
     if (data.event.promoterId !== promoterId) {
+      console.log('EventDetails:', data.event); 
       throw new Error('Event does not belong to this promoter');
+
     }
 
     return data.event;
@@ -76,6 +80,12 @@ export default async function EventPage(props: {
         event={event}
         sanctioning={sanctioning.toLowerCase()}
       />
+
+<Suspense fallback={<div>Loading roster...</div>}>
+        <RosterContainer eventId={eventId} />
+      </Suspense>
+
+
     </>
   );
 }

@@ -1,3 +1,146 @@
+
+export interface PmtFighterRecord {
+  pmt_id: string;
+  first: string;
+  last: string;
+  gym?: string;
+  email?: string;
+  age?: number;
+  weightclass?: number; // Single weight class instead of an array
+  wins?: number;
+  win?: number;
+  losses?: number;
+  loss?: number;
+  tournament_wins?: number;
+  tournament_losses?: number;
+  nc?: number;
+  dq?: number;
+  lastUpdated?: string;
+
+  // Skill Ratings (Optional)
+  bodykick?: number;
+  boxing?: number;
+  clinch?: number;
+  defense?: number;
+  footwork?: number;
+  headkick?: number;
+  kicks?: number;
+  knees?: number;
+  legkick?: number;
+  ringawareness?: number;
+
+  // Fight History
+  fights?: Array<{
+    eventId: string;
+    eventName: string;
+    date: string;
+    result: string;
+    weightclass: number;
+    opponent_id?: string;
+    bout_type: string;
+    bodykick?: number;
+    boxing?: number;
+    clinch?: number;
+    defense?: number;
+    footwork?: number;
+    headkick?: number;
+    kicks?: number;
+    knees?: number;
+    legkick?: number;
+    ringawareness?: number;
+  }>;
+}
+
+export interface FullContactFighter {
+  // Basic Information
+  pmt_id: string;
+  id: string;
+  first: string;
+  last: string;
+  dob: string;
+  age: number;
+  gender: string;
+  email?: string;
+  
+  // Gym Information
+  gym: string;
+  gym_id: string;
+  coach?: string;
+  coach_email?: string;
+  coach_name?: string;
+  coach_phone?: string;
+  
+  // Location Information
+  state: string;
+  city?: string;
+  address?: string;
+  comp_city?: string;
+  comp_state?: string;
+  
+  // Physical Information
+  weighin: number;
+  weightclass: number;
+  height?: number;
+  
+  // Record
+  wins: number;
+  losses: number;
+  win: number;
+  loss: number;
+  tournament_wins?: number;
+  tournament_losses?: number;
+  ikf_wins: number;
+  ikf_losses: number;
+  nc?: number;
+  dq?: number;
+  ammy: number;
+  
+  // Event Information
+  event?: string;
+  eventDocId?: string;
+  bout: number;
+  bout_type?: string;
+  boutid?: string;
+  boutmat?: string;
+  mat: number;
+  bracket: number;
+  day: number;
+  fighternum: string;
+  opponent_id?: string;
+  result?: string;
+  championship_result?: string;
+  
+  // Experience & Classification
+  years_exp: number;
+  class: 'A' | 'B' | 'C';
+  age_gender: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
+  confirmed: boolean;
+  
+  // Skills Rating
+  legkick: number;
+  bodykick: number;
+  headkick: number;
+  clinch: number;
+  defense: number;
+  kicks: number;
+  footwork: number;
+  boxing: number;
+  knees: number;
+  ringawareness: number;
+  
+  // Media & Documentation
+  photo?: string;
+  photo_package: boolean;
+  docId: string;
+  fighter_id: string;
+  website?: string;
+}
+
+
+
+
+
+
 export interface Event {
   competition_type: 'FightCard' | 'Tournament';
   event_name: string;
@@ -93,8 +236,8 @@ export interface BaseFighter {
   last: string;
   gym: string;
   gender: string;
-  win: number;
-  loss: number;
+  wins: number;
+  losses: number;
   age: number;
   dob: string;
   email: string;
@@ -112,16 +255,6 @@ export interface BaseFighter {
   website: string;
 }
 
-export interface FighterProfile extends BaseFighter {
-  mtp_id: string;
-  dq: string;
-  ex: string;
-  mtp_rank: number;
-  winsByCityState: CityStateWinCount[];
-  photo?: string;
-}
-
-// Competition result specific properties
 export interface ResultsFighter extends BaseFighter {
   // IDs and References
   pmt_id: string;
@@ -186,7 +319,27 @@ export interface ResultsFighter extends BaseFighter {
   bracket?: number;
   ikf_wins?: number;
   ikf_losses?: number;
+  win?: number;
+  loss?: number;
 }
+
+export interface FighterProfile {
+  fighter_id: string;
+  first: string;
+  last: string;
+  photo?: string;
+  wins: number;
+  losses: number;
+  gym: string;
+  weightclass: number;
+  age: number;
+  gender: string;
+  style: 'Full-Contact' | 'Semi-Contact' | 'Both'; // Indicate competition style
+  pmt_data?: PmtFighterRecord; // Store PMT-specific fighter data
+}
+
+// Competition result specific properties
+
 
 // Helper type for fighter display in the profile page
 export interface FighterDisplay extends BaseFighter {
@@ -201,7 +354,7 @@ export interface FighterDisplay extends BaseFighter {
   }[];
 }
 
-// export type PuristFighter = {
+
 //   first: string;
 //   last: string;
 //   gym: string;
@@ -289,11 +442,6 @@ export interface FighterDisplay extends BaseFighter {
     coach_phone?: string;
     coach_email: string;
   }
-
-
-
-
-
 
 
 export interface FighterFormData {

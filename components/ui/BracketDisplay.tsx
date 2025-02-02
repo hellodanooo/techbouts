@@ -1,6 +1,6 @@
 //components/BracketDisplay.tsx
 import React, { useState, useEffect } from 'react';
-import { ResultsFighter } from '@/utils/types';
+import { FullContactFighter } from '@/utils/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaYoutube } from 'react-icons/fa';
@@ -19,7 +19,7 @@ import { FaChevronUp } from "react-icons/fa";
 type PopupMessageType = 'SWAP' | 'RELOAD' | 'OTHER';
 
 interface BracketDisplayProps {
-  fightcardData: ResultsFighter[];
+  fightcardData: FullContactFighter[];
   selectedClass: 'A' | 'B' | 'C' | 'ALL';
   selectedDivision: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS' | 'ALL';
   selectedWeightClasses: number[];
@@ -27,12 +27,12 @@ interface BracketDisplayProps {
 
   isEditable: boolean;
 
-  handleFighterClick?: (fighter: ResultsFighter, newFighter: boolean) => void;
-  swapFighters?: (fighter1: ResultsFighter, fighter2: ResultsFighter) => void;
+  handleFighterClick?: (fighter: FullContactFighter, newFighter: boolean) => void;
+  swapFighters?: (fighter1: FullContactFighter, fighter2: FullContactFighter) => void;
 
-  onEditBracket?: (bracketNum: number, fighters: ResultsFighter[]) => void;
+  onEditBracket?: (bracketNum: number, fighters: FullContactFighter[]) => void;
 
-  onRecordChampionResult?: (fighter: ResultsFighter, result: 'W' | 'L' | 'NC' | 'DQ') => void;
+  onRecordChampionResult?: (fighter: FullContactFighter, result: 'W' | 'L' | 'NC' | 'DQ') => void;
   displayMessagePopup?: boolean;
   popupMessage?: string;
   popupMessageType?: PopupMessageType;
@@ -81,10 +81,10 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
 }) => {
 
   const [organizedBrackets, setOrganizedBrackets] = useState<{
-    [day: number]: { [key: number]: { [key: number]: ResultsFighter[] } }
+    [day: number]: { [key: number]: { [key: number]: FullContactFighter[] } }
   }>({});
 
-  const [organizedBouts, setOrganizedBouts] = useState<{ [key: number]: ResultsFighter[] }>({});
+  const [organizedBouts, setOrganizedBouts] = useState<{ [key: number]: FullContactFighter[] }>({});
   const [visibleChampions, setVisibleChampions] = useState<{ [key: string]: boolean }>({});
   const [matchingBrackets, setMatchingBrackets] = useState<string[]>([]);
 
@@ -146,11 +146,11 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
 
 
 
-  const organizeBrackets = (fighters: ResultsFighter[]) => {
+  const organizeBrackets = (fighters: FullContactFighter[]) => {
     const organized: {
-      [day: number]: { [key: number]: { [key: number]: ResultsFighter[] } }
+      [day: number]: { [key: number]: { [key: number]: FullContactFighter[] } }
     } = {};
-    const bouts: { [key: number]: ResultsFighter[] } = {};
+    const bouts: { [key: number]: FullContactFighter[] } = {};
   
     fighters.forEach(fighter => {
       if (fighter.bracket && fighter.bracket !== 0 && fighter.bout) {
@@ -219,7 +219,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
   }, [textFilter, organizedBrackets]);
 
 
-  const getBracketInfo = (fighters: ResultsFighter[]) => {
+  const getBracketInfo = (fighters: FullContactFighter[]) => {
     if (fighters.length === 0) return { weightclass: '', class: '', ageGender: '' };
 
     const weightclass = fighters[0].weightclass;
@@ -231,7 +231,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
 
 
 
- const renderBracket = (day: number, bracketNum: number, bouts: { [key: number]: ResultsFighter[] }) => {
+ const renderBracket = (day: number, bracketNum: number, bouts: { [key: number]: FullContactFighter[] }) => {
   const isCClass = Object.values(bouts).flat().some(fighter => fighter.class === 'C');
   const { weightclass, class: fighterClass, ageGender } = getBracketInfo(Object.values(bouts).flat());
   const firstFighter = Object.values(bouts).flat()[0];
@@ -270,7 +270,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
 
     if (filteredBouts.length === 0) return null;
 
-    const getWinner = (boutFighters: ResultsFighter[]) => {
+    const getWinner = (boutFighters: FullContactFighter[]) => {
       return boutFighters.find(fighter => fighter.result === 'W');
     };
 
@@ -282,7 +282,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     const key = `${day}-${bracketNum}`;
 
 
-    const getVideoForBout = (fighter1: ResultsFighter, fighter2: ResultsFighter) => {
+    const getVideoForBout = (fighter1: FullContactFighter, fighter2: FullContactFighter) => {
       const fighterIds = [fighter1.id, fighter2.id].sort().join('-VS-');
       return videos.find(video =>
         video.id === fighterIds &&
@@ -833,38 +833,70 @@ CONFIRMED:
 
 
 
-const renderBout = (bout: number, fighters: ResultsFighter[]) => {
-  const defaultFighter: ResultsFighter = {
+const renderBout = (bout: number, fighters: FullContactFighter[]) => {
+  const defaultFighter: FullContactFighter = {
+    // Basic Information
     pmt_id: '',
+    id: 'placeholder',
     first: 'OPEN',
     last: '',
+    dob: '',
+    age: 0,
+    gender: '',
+    email: '',
+    
+    // Gym Information
     gym: '',
     gym_id: '',
-    gender: '',
-    weighin: 0,
-    weightclass: 0,
-    win: 0,
-    loss: 0,
-    age: 0,
-    id: 'placeholder',
-    dob: '',
-    result: '',
-    opponent_id: '',
-    event: '',
-    boutid: '',
-    email: '',
+    coach: '',
+    coach_email: '',
+    coach_name: '',
+    coach_phone: '',
+    
+    // Location Information
     state: '',
-    fighternum: 'unmatched',
-    boutmat: '',
-    bout: 0,
-    mat: 0,
-    docId: '',
-    eventDocId: '',
+    city: '',
+    address: '',
     comp_city: '',
     comp_state: '',
-    bout_type: '',
+    
+    // Physical Information
+    weighin: 0,
+    weightclass: 0,
+    height: 0,
+    
+    // Record
+    wins: 0,
+    losses: 0,
+    win: 0,
+    loss: 0,
+    tournament_wins: 0,
+    tournament_losses: 0,
+    ikf_wins: 0,
+    ikf_losses: 0,
+    nc: 0,
+    dq: 0,
     ammy: 0,
+    
+    // Event Information
+    bout: 0,
+    bout_type: '',
+    boutmat: '',
+    mat: 0,
+    bracket: 0,
+    day: 0,
+    fighternum: 'unmatched',
+    opponent_id: '',
+    result: '',
+    championship_result: '',
+    
+    // Experience & Classification
     years_exp: 0,
+    class: 'C',
+    age_gender: 'MEN',
+    confirmed: false,
+    
+    // Skills Rating
     legkick: 0,
     bodykick: 0,
     headkick: 0,
@@ -875,26 +907,13 @@ const renderBout = (bout: number, fighters: ResultsFighter[]) => {
     boxing: 0,
     knees: 0,
     ringawareness: 0,
+    
+    // Media & Documentation
+    photo: '/Icon_grey.png',
     photo_package: false,
-    class: 'C',
-    confirmed: false,
-    day: 0,
-    age_gender: 'MEN',
-    coach_email: '',
-    coach_name: '',
-    photo: '/Icon_grey.png', // Optional default photo
-    championship_result: '',
-    bracket: 0,
-    ikf_wins: 0,
-    ikf_losses: 0,
-    coach_phone: '',
-    city: '',
-    address: '',
-    coach: '',
-    website: '',
-    height: 0,
+    docId: '',
     fighter_id: '',
-
+    website: ''
   };
 
   const displayFighters = fighters.length === 1

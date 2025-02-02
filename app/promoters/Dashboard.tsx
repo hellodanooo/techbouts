@@ -170,7 +170,7 @@ const PromoterDashboard = ({
 
   const handlePromoterClick = (promoter: Promoter) => {
     if (activeSanctioning === 'PMT') {
-      router.push(`/promoter/${promoter.name.toLowerCase()}`);
+      router.push(`/promoters/${promoter.name.toLowerCase()}`);
     } else {
       // For IKF, use the promoterId
       router.push(`/promoter/${promoter.promoterId}`);
@@ -209,6 +209,7 @@ const PromoterDashboard = ({
       <h1>Promoter Dashboard</h1>
 
 
+
       {!isPromoter && !isAdmin && (
         <button
           onClick={handleLockClick}
@@ -228,8 +229,6 @@ const PromoterDashboard = ({
           </button>       </div>
       )}
 
-
-
       {isAdmin && (
 
         <div
@@ -248,6 +247,8 @@ const PromoterDashboard = ({
           </button>
         </div>
       )}
+
+
 
       {showPromoterModal && (
 
@@ -324,6 +325,7 @@ const PromoterDashboard = ({
           events={activeEvents}
           isPromoter={isPromoter}
           isAdmin={isAdmin}
+          activeSanctioning={activeSanctioning}
         />
         <Calendar />
       </div>

@@ -33,6 +33,7 @@ type Fighter = {
 
 
 const fetchFighters = async (): Promise<Fighter[]> => {
+
   try {
     const fightersRef = collection(db, 'fighters_database');
     const fightersSnapshot = await getDocs(fightersRef);
@@ -52,6 +53,8 @@ const fetchFighters = async (): Promise<Fighter[]> => {
   }
 };
 
+
+
 export async function generateMetadata(): Promise<Metadata> {
   const fighters = await fetchFighters();
   return {
@@ -59,6 +62,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `Explore our fighter database with ${fighters.length} fighters grouped by weight class, gym, and more.`,
   };
 }
+
+
 
 export default async function FighterDatabase() {
   const fighters = await fetchFighters();

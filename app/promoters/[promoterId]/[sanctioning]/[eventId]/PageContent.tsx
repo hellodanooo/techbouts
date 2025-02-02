@@ -5,6 +5,7 @@
 import { Event } from '../../../../../utils/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+
 interface PageContentProps {
   event: Event;
   sanctioning: string;
@@ -12,6 +13,8 @@ interface PageContentProps {
 
 export default function PageContent({ event, sanctioning }: PageContentProps) {
   
+
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -132,6 +135,9 @@ export default function PageContent({ event, sanctioning }: PageContentProps) {
           </div>
         </CardContent>
       </Card>
+
+
+      
     </div>
   );
 }

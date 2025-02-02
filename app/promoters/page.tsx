@@ -43,7 +43,6 @@ async function fetchPendingPMTEvents() {
     return { pendingPMTEvents: [] };
   }
 }
-
 async function fetchConfirmedPMTEvents() {
   try {
     const headersList = await headers();
@@ -85,7 +84,6 @@ async function fetchConfirmedPMTEvents() {
     return { confirmedPMTEvents: [] };
   }
 }
-
 async function fetchAllIKFEvents() {
   try {
     console.log('Starting IKF Event Fetch')

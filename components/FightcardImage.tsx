@@ -3,11 +3,11 @@ import html2canvas from 'html2canvas';
 import { GiSave } from "react-icons/gi";
 import { FaPrint } from "react-icons/fa";
 import buttons from '../styles/buttons.module.css';
-import { ResultsFighter } from '@/utils/types';
+import { FullContactFighter } from '@/utils/types';
 
 
 interface FightcardImageProps {
-  fightcardData: ResultsFighter[];
+  fightcardData: FullContactFighter[];
 }
 
 const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
@@ -15,8 +15,8 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const organizeData = () => {
-    const organizedData: { [key: number]: { [key: number]: ResultsFighter[] } } = {};
-    const bouts: { [key: number]: ResultsFighter[] } = {};
+    const organizedData: { [key: number]: { [key: number]: FullContactFighter[] } } = {};
+    const bouts: { [key: number]: FullContactFighter[] } = {};
 
     fightcardData.forEach(fighter => {
       if (fighter.bracket && fighter.bracket !== 0 && fighter.bout) {
@@ -38,7 +38,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
     return { organizedData, bouts };
   };
 
-  const renderFighter = (fighter: ResultsFighter) => (
+  const renderFighter = (fighter: FullContactFighter) => (
     <div style={{
       border: '1px solid black',
       padding: '5px',
@@ -54,7 +54,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
     </div>
   );
 
-  const renderBout = (boutNum: number, fighters: ResultsFighter[]) => (
+  const renderBout = (boutNum: number, fighters: FullContactFighter[]) => (
     <div key={boutNum} style={{ margin: '10px 0', border: '1px solid black', padding: '10px' }}>
       <h4 style={{backgroundColor: '#ede5cc', padding: '5px', borderRadius: '5px'}}>Bout {boutNum}</h4>
       <div style={{ display: 'flex', justifyContent: 'space-around' }}>
@@ -71,7 +71,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
     </div>
   );
 
-  const renderBracket = (bracketNum: number, bouts: { [key: number]: ResultsFighter[] }) => {
+  const renderBracket = (bracketNum: number, bouts: { [key: number]: FullContactFighter[] }) => {
     const fighters = Object.values(bouts).flat();
     const weightclass = fighters[0]?.weightclass;
     const ageGender = fighters[0]?.age_gender;
@@ -111,7 +111,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
     }
   };
 
-  const renderFighterForPrint = (fighter: ResultsFighter) => `
+  const renderFighterForPrint = (fighter: FullContactFighter) => `
     <div style="
       border: 1px solid black;
       padding: 5px;
@@ -127,7 +127,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
     </div>
   `;
 
-  const renderBoutForPrint = (boutNum: number, fighters: ResultsFighter[]) => `
+  const renderBoutForPrint = (boutNum: number, fighters: FullContactFighter[]) => `
     <div class="bout" style="
       margin: 10px 0;
       border: 1px solid black;
