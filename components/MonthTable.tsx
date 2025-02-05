@@ -3,13 +3,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Event } from "../utils/types";
 import { format, parseISO, eachMonthOfInterval, startOfYear, endOfYear, isPast } from "date-fns";
-//import EventOptions from "@/components/edit/EditEvent";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-// } from "@/components/ui/dialog";
 import {
   Card,
   CardHeader,
@@ -24,17 +17,26 @@ interface MonthTableProps {
   activeSanctioning?: string;
 }
 
-const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin, isPromoter, activeSanctioning }) => {
- // const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  //const [isDialogOpen, setIsDialogOpen] = useState(false);
-  //const [lastTap, setLastTap] = useState<number>(0);
+// Helper function to determine if a city is in Northern or Southern California
+const isNorthernCalifornia = (city: string): boolean => {
+  // List of major Northern California cities (can be expanded)
+  const northernCities = [
+    'sacramento', 'san francisco', 'oakland', 'san jose', 'fresno','gilroy','alameda',
+    'modesto', 'stockton', 'santa rosa', 'redding', 'eureka',
+    'chico', 'santa cruz', 'monterey', 'berkeley', 'watsonville', 'roseville', 'el cerrito','santa clara'
+  ];
+  return northernCities.includes(city.toLowerCase());
+};
+
+const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
-  const [timeFilter, setTimeFilter] = useState("all"); // New time filter state
- // const DOUBLE_CLICK_DELAY = 300;
+  const [timeFilter, setTimeFilter] = useState("upcoming");
   const [eventsByStateAndMonth, setEventsByStateAndMonth] = useState<{
     [state: string]: { [month: string]: Event[] };
   }>({});
-  const states = useMemo(() => ["CA", "TX", "CO", "ID", "WA"], []);
+
+  // Modified states array to include NorCal and SoCal
+  const states = useMemo(() => ["NorCal", "SoCal", "TX", "CO", "ID", "WA"], []);
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const months = useMemo(
     () =>
@@ -46,43 +48,18 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin, isPromoter, ac
   );
 
   const handleEventClick = (event: Event) => {
-
-
- event.sanctioning = 'PMT';
-
-    console.log('isAdmin', isAdmin);
-    console.log('isPromoter', isPromoter);
-    console.log('event', event);
-    console.log ('PromoterId', event.promoterId);
-    console.log ('EventId', event.id);
-    console.log ('Sanctioning', activeSanctioning);
-
-    // const currentTime = new Date().getTime();
-    // const tapLength = currentTime - lastTap;
-    // if (tapLength < DOUBLE_CLICK_DELAY && tapLength > 0 && isAdmin) {
-    //   setSelectedEvent(event);
-    //   setIsDialogOpen(true);
-    // } else if (tapLength >= DOUBLE_CLICK_DELAY || lastTap === 0) {
-    //   if (event.sanctioning === 'PMT') {
-    //     window.location.href = `/promoters/${event.promoterId}/pmt/${event.id}`;
-    //   } else if (event.sanctioning === 'PMT') {
-    //     window.location.href = `/promoters/${event.promoterId}/events/ikf/${event.id}`;
-    //   }
-    // }
-    // setLastTap(currentTime);
-
+    event.sanctioning = 'PMT';
     if (event.sanctioning === 'PMT') {
-           window.location.href = `/promoters/${event.promoterId}/pmt/${event.id}`;
-         } else if (event.sanctioning === 'PMT') {
-           window.location.href = `/promoters/${event.promoterId}/events/ikf/${event.id}`;
-         }
-
-
+      window.location.href = `/promoters/${event.promoterId}/pmt/${event.id}`;
+    } else if (event.sanctioning === 'PMT') {
+      window.location.href = `/promoters/${event.promoterId}/events/ikf/${event.id}`;
+    }
   };
 
   useEffect(() => {
     const organizedEvents: { [state: string]: { [month: string]: Event[] } } = {};
 
+    // Initialize the structure for all states including NorCal and SoCal
     states.forEach((state) => {
       organizedEvents[state] = {};
       months.forEach((month) => {
@@ -95,11 +72,8 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin, isPromoter, ac
       const eventDate = parseISO(event.date);
       const isPastEvent = isPast(eventDate);
 
-      // Apply time filter
       if (timeFilter === "upcoming" && isPastEvent) return false;
       if (timeFilter === "past" && !isPastEvent) return false;
-
-      // Apply status filter
       if (eventTypeFilter === "confirmed") return event.status === "confirmed";
       if (eventTypeFilter === "pending") return event.status === "pending";
       return true;
@@ -107,24 +81,24 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin, isPromoter, ac
 
     filteredEvents.forEach((event) => {
       if (event.date) {
-        const state = (event.state || '').toUpperCase();
-        const monthKey = format(parseISO(event.date), "MMM");
-
-        if (!organizedEvents[state]) {
-          organizedEvents[state] = {};
-          months.forEach((month) => {
-            organizedEvents[state][format(month, "MMM")] = [];
-          });
+        let stateKey;
+        if (event.state?.toUpperCase() === 'CA') {
+          // Determine if the event is in NorCal or SoCal
+          stateKey = isNorthernCalifornia(event.city) ? 'NorCal' : 'SoCal';
+        } else {
+          stateKey = event.state?.toUpperCase() || '';
         }
 
-        if (organizedEvents[state]?.[monthKey]) {
-          organizedEvents[state][monthKey].push(event);
+        const monthKey = format(parseISO(event.date), "MMM");
+
+        if (organizedEvents[stateKey]?.[monthKey]) {
+          organizedEvents[stateKey][monthKey].push(event);
         }
       }
     });
 
     setEventsByStateAndMonth(organizedEvents);
-  }, [events, months, states, eventTypeFilter, timeFilter]); // Added timeFilter as dependency
+  }, [events, months, states, eventTypeFilter, timeFilter]);
 
   return (
     <>
@@ -213,12 +187,12 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin, isPromoter, ac
                                     event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
                                   } ${isPastEvent ? 'opacity-50' : ''}`}
                                   onClick={() => handleEventClick(event)}
-
                                 >
                                   <CardHeader className="p-2">
                                     <CardTitle className="text-sm">{event.event_name}</CardTitle>
                                     <CardDescription>
-                                      {format(parseISO(event.date), "MMM d, yyyy")}
+                                      {format(parseISO(event.date), "MMM d, yyyy")}<br />
+                                      {event.city}
                                     </CardDescription>
                                   </CardHeader>
                                 </Card>
@@ -237,18 +211,6 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin, isPromoter, ac
           </table>
         </div>
       </div>
-
-
-{/* DOUBLE CLICK QUICK EDIT FOR ADMIN */}
-
-      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Event Options</DialogTitle>
-          </DialogHeader>
-          {selectedEvent && <EventOptions event={selectedEvent} />}
-        </DialogContent>
-      </Dialog> */}
     </>
   );
 };

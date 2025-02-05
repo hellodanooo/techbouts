@@ -24,6 +24,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+const fetchPMTPromoters = async () => {
+  try {
+    const response = await fetch('/api/pmt/promoters');
+    const data = await response.json();
+    if (data.promoters) {
+      return data.promoters.map((promoter: any) => promoter.email).filter(Boolean);
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching PMT promoters:', error);
+    return [];
+  }
+};
+
 export const AuthProvider = ({ 
   children,
   pmtPromoters = [],
@@ -37,7 +51,17 @@ export const AuthProvider = ({
   const [loading, setLoading] = useState(true);
   const [isPromoter, setIsPromoter] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [pmtPromoterEmails, setPmtPromoterEmails] = useState<string[]>([]);
+
   const router = useRouter();
+
+  useEffect(() => {
+    const loadPromoters = async () => {
+      const emails = await fetchPMTPromoters();
+      setPmtPromoterEmails(emails);
+    };
+    loadPromoters();
+  }, []);
 
   const checkUserAuthorization = async () => {
     if (!user?.email) {
@@ -51,14 +75,11 @@ export const AuthProvider = ({
     
     if (isAdminEmail) {
       setIsAdmin(true);
-      setIsPromoter(true);
       return;
     }
 
-    const pmtMatch = pmtPromoters.find(p => p.email?.toLowerCase() === userEmail);
-    const ikfMatch = ikfPromoters.find(p => p.email?.toLowerCase() === userEmail);
-    
-    setIsPromoter(!!(pmtMatch || ikfMatch));
+    const isPMTPromoter = pmtPromoterEmails.includes(userEmail);
+    setIsPromoter(isPMTPromoter);
   };
 
   useEffect(() => {
@@ -72,7 +93,7 @@ export const AuthProvider = ({
 
   useEffect(() => {
     checkUserAuthorization();
-  }, [user, pmtPromoters, ikfPromoters]);
+  }, [user, pmtPromoterEmails]);
 
   const signInWithGoogle = async () => {
     try {

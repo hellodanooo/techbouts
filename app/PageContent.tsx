@@ -1,4 +1,4 @@
-// app/PageContent.tsx (Client Component)
+// app/PageContent.tsx
 'use client';
 
 import Image from "next/image";
@@ -7,26 +7,31 @@ import HeaderHome from "@/components/ui/HeaderHome";
 import { useAuth } from '../context/AuthContext';
 import LoadingScreen from '@/components/loading_screens/LandingLoading';
 
-
 export default function PageContent() {
-    const { isAdmin, loading } = useAuth();
+  const { loading, user } = useAuth();
 
-    if (loading) {
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        );
-      }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
-      if (!isAdmin) {
-        return <LoadingScreen />;
-      }
-    
+  if (!user) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      {/* Top Header */}
+    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] relative">
+      {/* User Email Display */}
+      <div className="fixed bottom-4 right-4 bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg shadow-md">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {user.email}
+        </p>
+      </div>
+
+      {/* Rest of your existing content */}
       <HeaderHome />
 
       {/* Hero Section */}
