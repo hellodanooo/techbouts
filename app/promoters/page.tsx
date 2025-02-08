@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import PromoterDashboard from './Dashboard';
 import { Event, Promoter } from '../../utils/types';
 export const dynamic = 'force-dynamic';
+import AuthDisplay from '@/components/ui/AuthDisplay';
 
 async function fetchPendingPMTEvents() {
   try {
@@ -205,7 +206,9 @@ export default async function PromoterEventsPage() {
   console.log('Fetched IKF promoters:', ikfPromoters.length);
   console.log('Fetched PMT promoters:', pmtPromoters.length);
 
+  
   return (
+    <>
     <PromoterDashboard 
     initialConfirmedEvents={confirmedPMTEvents}
     initialPendingEvents={pendingPMTEvents}
@@ -213,5 +216,8 @@ export default async function PromoterEventsPage() {
     ikfPromoters={ikfPromoters}
     pmtPromoters={pmtPromoters}
   />
+
+<AuthDisplay />
+</>
   );
 }

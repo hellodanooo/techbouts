@@ -47,8 +47,10 @@ export default async function FighterDatabase(props: {
   if (sanctioning === 'pmt') {
     selectedYear = searchParams.year || '2024';
     fighters = await fetchPMTFighters(selectedYear);
-  } else {
+  } else if (sanctioning === 'ikf') {
     fighters = await fetchIKFFighters();
+  } else {
+    return <div>Invalid sanctioning body specified</div>
   }
 
   return (

@@ -3,6 +3,7 @@ import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAnalytics, Analytics } from "firebase/analytics";
 import { getStorage, FirebaseStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAwHf04nr0bu-2osmdLIDkAD0vMHGc6Nvk",
@@ -35,5 +36,6 @@ if (!getApps().length) {
   storage = getStorage(app);
   db = getFirestore(app); // Reuse the Firestore instance
 }
+const auth = getAuth(app);
 
-export { app, analytics, storage, db }; // Export db
+export { app, analytics, storage, db, auth }; // Export db

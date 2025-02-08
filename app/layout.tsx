@@ -1,9 +1,11 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { AuthProvider } from '../context/AuthContext';
-import GoogleMapsProvider from '../components/ui/GoogleMapsProvider';
+
+
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -90,11 +92,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <GoogleMapsProvider>
             {children}
-          </GoogleMapsProvider>
-        </AuthProvider>
       </body>
     </html>
   );

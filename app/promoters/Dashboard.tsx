@@ -1,3 +1,4 @@
+// app/promoters/Dashboard.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -5,10 +6,8 @@ import { Event, Promoter } from '../../utils/types';
 import Calendar from './Calendar';
 import MonthTable from '../../components/MonthTable';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../context/AuthContext';
-import { FaLock } from "react-icons/fa6";
 import AddPromoter from '@/components/AddPromoter';
-import { IoMdLogOut } from "react-icons/io";
+import { useMultiFirebase } from '@/context/MultiFirebaseContext';
 
 interface Props {
   initialConfirmedEvents?: Event[];
@@ -71,19 +70,23 @@ const PromoterDashboard = ({
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [activeSanctioning, setActiveSanctioning] = useState<'PMT' | 'IKF'>('PMT');
   const [showPromoterModal, setShowPromoterModal] = useState(false); // Controls AddPromoter visibility
-  const { isPromoter, isAdmin, signInWithGoogle, signOut } = useAuth();
+  const { authState, user } = useMultiFirebase();
+  console.log('Auth State in Dashboard:', authState);
+  console.log('User in Dashboard:', user);
+  const { isAdmin, isPromoter } = authState;
 
-  const handleLockClick = async () => {
-    await signInWithGoogle();
-  };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  // const debugSection = (
+  //   <div className="mb-4 p-4 bg-gray-100 rounded">
+  //     <h2 className="font-bold mb-2">Auth Debug Info:</h2>
+  //     <p>Is Admin: {isAdmin ? 'Yes' : 'No'}</p>
+  //     <p>Is Promoter: {isPromoter ? 'Yes' : 'No'}</p>
+  //     <p>User Email: {user.techbouts?.email || 'Not logged in'}</p>
+  //     <p>Auth State: {JSON.stringify(authState)}</p>
+  //   </div>
+  // );
+
+
 
   const activePromoters = useMemo(() => {
     const promoters = activeSanctioning === 'PMT' ? pmtPromoters : ikfPromoters;
@@ -209,25 +212,8 @@ const PromoterDashboard = ({
       <h1>Promoter Dashboard</h1>
 
 
+{/* {debugSection} */}
 
-      {!isPromoter && !isAdmin && (
-        <button
-          onClick={handleLockClick}
-          className="text-gray-500 hover:text-gray-700">
-          <FaLock size={20} />
-        </button>
-      )}
-
-      {isPromoter && (
-        <div className='flex items-center'>
-          <div>logout</div>
-          <button
-            onClick={handleLogout}
-            className=" text-gray-500 hover:text-gray-700">
-
-            <IoMdLogOut size={20} />
-          </button>       </div>
-      )}
 
       {isAdmin && (
 
