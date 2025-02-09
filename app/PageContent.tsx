@@ -5,16 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from '@/context/AuthContext';
 import HeaderHome from "@/components/ui/HeaderHome";
-//import LoadingScreen from '@/components/loading_screens/LandingLoading';
 import AuthDisplay from '@/components/ui/AuthDisplay';
+
+import LoadingScreen from '@/components/loading_screens/LandingLoading';
 
 export default function PageContent() {
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
- // const { loading } = useAuth();
+ const { loading } = useAuth();
 
-  // if (loading) {
-  //   return <LoadingScreen />;
-  // }
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] relative">

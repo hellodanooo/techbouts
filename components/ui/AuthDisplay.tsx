@@ -1,6 +1,8 @@
 // components/ui/AuthDisplay.tsx
 'use client';
 
+import GoogleAuthButton from './GoogleAuthButton';
+
 interface AuthDisplayProps {
   user: { email: string | null } | null;
   isAdmin: boolean;
@@ -12,8 +14,9 @@ export default function AuthDisplay({ user, isAdmin, isPromoter }: AuthDisplayPr
   if (!user?.email) {
     return (
       <aside aria-hidden="true" className="fixed bottom-4 right-4 z-50">
-        <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg shadow-md">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Non User</p>
+        <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg shadow-md">   
+    <GoogleAuthButton />
+
         </div>
       </aside>
     );
