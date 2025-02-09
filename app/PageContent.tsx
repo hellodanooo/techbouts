@@ -5,11 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from '@/context/AuthContext';
 import HeaderHome from "@/components/ui/HeaderHome";
-import LoadingScreen from '@/components/loading_screens/LandingLoading';
+//import LoadingScreen from '@/components/loading_screens/LandingLoading';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 
 export default function PageContent() {
-  const { user, loading, isAdmin, isPromoter, isNewUser } = useAuth();
+  const { user, isAdmin, isPromoter, isNewUser } = useAuth();
+ // const { loading } = useAuth();
 
   // if (loading) {
   //   return <LoadingScreen />;
