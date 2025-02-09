@@ -35,17 +35,40 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Year parameter is required' }, { status: 400 });
     }
 
-    // Using the PMT Firebase API key directly
-    const response = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID_PMT}/databases/(default)/documents/emails_pmt_${year}/emails_json?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY_PMT}`
-    );
+    // Validate environment variables
+    const projectId = process.env.FIREBASE_PROJECT_ID_PMT || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID_PMT;
+    const apiKey = process.env.FIREBASE_API_KEY_PMT || process.env.NEXT_PUBLIC_FIREBASE_API_KEY_PMT;
+
+    if (!projectId || !apiKey) {
+      console.error('Missing environment variables:', {
+        hasProjectId: !!projectId,
+        hasApiKey: !!apiKey
+      });
+      return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
+    }
+
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/emails_pmt_${year}/emails_json?key=${apiKey}`;
+
+    const response = await fetch(url);
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Firebase API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+        url: url.replace(apiKey, '[REDACTED]') // Log URL without API key
+      });
       throw new Error(`Firebase API error: ${response.statusText}`);
     }
 
     const data = (await response.json()) as FirestoreDocument;
     
+    if (!data.fields?.emails?.arrayValue?.values) {
+      console.error('Unexpected data structure:', JSON.stringify(data));
+      throw new Error('Invalid data structure received from Firebase');
+    }
+
     // Transform Firestore document format to our app format
     const emailData = data.fields.emails.arrayValue.values.map((item: FirestoreMapValue) => ({
       pmt_id: item.mapValue.fields.pmt_id.stringValue,
@@ -60,7 +83,18 @@ export async function GET(request: Request) {
       lastUpdated: data.fields.lastUpdated?.timestampValue || new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error fetching emails:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Enhanced error logging
+    console.error('Detailed error:', {
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack
+      } : error,
+      timestamp: new Date().toISOString()
+    });
+    
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
