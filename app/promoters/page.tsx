@@ -3,7 +3,6 @@ import { headers } from 'next/headers';
 import PromoterDashboard from './Dashboard';
 import { Event, Promoter } from '../../utils/types';
 export const dynamic = 'force-dynamic';
-import AuthDisplay from '@/components/ui/AuthDisplay';
 
 async function fetchPendingPMTEvents() {
   try {
@@ -217,7 +216,6 @@ export default async function PromoterEventsPage() {
     pmtPromoters={pmtPromoters}
   />
 
-<AuthDisplay />
 </>
   );
 }

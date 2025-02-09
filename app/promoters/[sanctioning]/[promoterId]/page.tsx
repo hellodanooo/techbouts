@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { Event } from '../../../utils/types';
+import { Event } from '../../../../utils/types';
 import PromoterDashboard from './Dashboard';
 import Head from 'next/head';
 

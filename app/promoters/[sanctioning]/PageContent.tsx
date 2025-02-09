@@ -1,14 +1,15 @@
-// app/promoters/Dashboard.tsx
+// app/promoters/[sanctioning]/PageContent.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Event, Promoter } from '../../utils/types';
-import Calendar from './Calendar';
-import MonthTable from '../../components/MonthTable';
-import { useRouter } from 'next/navigation';
+import { Event, Promoter } from '../../../utils/types';
+import Calendar from '../Calendar';
+import MonthTable from '../../../components/MonthTable';
+import { useRouter, useParams } from 'next/navigation';
 import AddPromoter from '@/components/AddPromoter';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
+
 
 interface Props {
   initialConfirmedEvents?: Event[];
@@ -60,18 +61,23 @@ const isNorCalLocation = (city: string, state: string): boolean => {
     normalizedCity.includes('norcal');
 };
 
-const PromoterDashboard = ({
+function PromoterDashboard({
   initialConfirmedEvents = [],
   initialPendingEvents = [],
   ikfEvents = [],
   ikfPromoters = [],
   pmtPromoters = [],
-}: Props) => {
+}: Props) {
+  const params = useParams();
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [activeSanctioning, setActiveSanctioning] = useState<'PMT' | 'IKF'>('PMT');
-  const [showPromoterModal, setShowPromoterModal] = useState(false); // Controls AddPromoter visibility
+  const [showPromoterModal, setShowPromoterModal] = useState(false);
+  
+  const activeSanctioning = (params?.sanctioning as string)?.toUpperCase() === 'IKF' ? 'IKF' : 'PMT';
+  
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
+
+
 
 
 
@@ -96,23 +102,9 @@ const PromoterDashboard = ({
       });
   }, [activeSanctioning, pmtPromoters, ikfPromoters]);
 
-  const toggleButton = (isActive: boolean) => ({
-    padding: '8px 16px',
-    borderRadius: '4px',
-    border: 'none',
-    backgroundColor: isActive ? '#fee2e2' : '#f3f4f6',
-    cursor: 'pointer',
-    fontWeight: isActive ? '600' : '400',
-    transition: 'all 0.2s ease',
-  });
+ 
 
-
-
-  const toggleButtons = {
-    display: 'flex',
-    gap: '10px',
-    marginBottom: '20px',
-  };
+ 
 
   const styles = {
     container: {
@@ -157,28 +149,25 @@ const PromoterDashboard = ({
     },
   };
 
-
   const handlePromoterClick = (promoter: Promoter) => {
     if (activeSanctioning === 'PMT') {
       router.push(`/promoters/${promoter.name.toLowerCase()}`);
     } else {
-      // For IKF, use the promoterId
       router.push(`/promoter/${promoter.promoterId}`);
     }
   };
-
 
   const activeEvents = useMemo(() => {
     if (activeSanctioning === 'PMT') {
       const confirmedWithPrefix = initialConfirmedEvents.map(event => ({
         ...event,
         uniqueId: `confirmed_${event.eventId}`,
-         sanctioning: 'PMT'
+        sanctioning: 'PMT'
       }));
       const pendingWithPrefix = initialPendingEvents.map(event => ({
         ...event,
         uniqueId: `pending_${event.eventId}`,
-         sanctioning: 'PMT'
+        sanctioning: 'PMT'
       }));
       return [...confirmedWithPrefix, ...pendingWithPrefix];
     }
@@ -188,82 +177,43 @@ const PromoterDashboard = ({
     }));
   }, [activeSanctioning, initialConfirmedEvents, ikfEvents, initialPendingEvents]);
 
-
-
-  const openAddPromoter = () => {
-    setShowPromoterModal(true); // Open AddPromoter modal
-  };
-
   return (
     <div style={styles.container}>
-  <AuthDisplay 
-        user={user}
-        isAdmin={isAdmin}
-        isPromoter={isPromoter}
-        isNewUser={isNewUser}
-      />
-      <h1>Promoter Dashboard</h1>
-
-
-
+    <AuthDisplay 
+      user={user}
+      isAdmin={isAdmin}
+      isPromoter={isPromoter}
+      isNewUser={isNewUser}
+    />
+    <h1>{activeSanctioning} Promoter Dashboard</h1>
 
 
       {isAdmin && (
-
-        <div
-          style={{
-            width: '50%'
-          }}
-        >
-          <div>
-            Admin Enabled
-          </div>
+        <div style={{ width: '50%' }}>
+          <div>Admin Enabled</div>
           <button
-            className=" mt-2 px-4 py-2 bg-green-500 text-white rounded"
-            onClick={openAddPromoter}
+            className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
+            onClick={() => setShowPromoterModal(true)}
           >
             Add Promoter
           </button>
         </div>
       )}
 
-
-
       {showPromoterModal && (
-
-
         <AddPromoter
           onClose={() => setShowPromoterModal(false)}
           promoters={activePromoters}
-          isAdmin={isAdmin} // Pass the isAdmin status
+          isAdmin={isAdmin}
         />
       )}
 
-
-      <div style={toggleButtons}>
-        <button
-          style={toggleButton(activeSanctioning === 'PMT')}
-          onClick={() => setActiveSanctioning('PMT')}
-        >
-          PMT
-        </button>
-        <button
-          style={toggleButton(activeSanctioning === 'IKF')}
-          onClick={() => setActiveSanctioning('IKF')}
-        >
-          IKF
-        </button>
-      </div>
-
       <div style={styles.grid}>
         {activePromoters.map((promoter) => {
-
           const promoterEvents = activeEvents.filter(event => {
             if (activeSanctioning === 'PMT') {
               return event.promoterId === promoter.name.toLowerCase();
             } else {
-              // For IKF, match on promoterId
-              // Add console.log to debug the matching
               console.log('Event promoterId:', event.promoterId);
               console.log('Promoter promoterId:', promoter.promoterId);
               return event.promoterId === promoter.promoterId;
@@ -273,7 +223,7 @@ const PromoterDashboard = ({
           return (
             <div
               key={promoter.name}
-              onClick={() => handlePromoterClick(promoter)} // Pass the entire promoter object
+              onClick={() => handlePromoterClick(promoter)}
               onMouseEnter={() => setHoveredCard(promoter.name)}
               onMouseLeave={() => setHoveredCard(null)}
               style={styles.card(
@@ -287,7 +237,6 @@ const PromoterDashboard = ({
               </p>
               <p style={styles.cardSubText}>
                 {promoterEvents.length} upcoming events
-
               </p>
             </div>
           );

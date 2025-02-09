@@ -2,98 +2,96 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  User,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut as firebaseSignOut,
-  AuthError
-} from 'firebase/auth';
-import { auth } from '../lib/firebase_techbouts/config';
+import { User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase_techbouts/config';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  isPromoter: boolean;
   isAdmin: boolean;
-  checkUserAuthorization: () => Promise<void>;
+  isPromoter: boolean;
+  isNewUser: boolean;
   signInWithGoogle: () => Promise<{ user: User | null }>;
   signOut: () => Promise<void>;
 }
 
+const ADMIN_EMAIL = 'info@nakmuay.foundation';
+
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-const fetchPMTPromoters = async () => {
-  try {
-    const response = await fetch('/api/pmt/promoters');
-    const data = await response.json();
-    if (data.promoters) {
-      return data.promoters.map((promoter: any) => promoter.email).filter(Boolean);
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching PMT promoters:', error);
-    return [];
-  }
-};
-
-export const AuthProvider = ({ 
-  children,
-  pmtPromoters = [],
-  ikfPromoters = []
-}: { 
-  children: React.ReactNode;
-  pmtPromoters?: any[];
-  ikfPromoters?: any[];
-}) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPromoter, setIsPromoter] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [pmtPromoterEmails, setPmtPromoterEmails] = useState<string[]>([]);
-
+  const [isPromoter, setIsPromoter] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const loadPromoters = async () => {
-      const emails = await fetchPMTPromoters();
-      setPmtPromoterEmails(emails);
-    };
-    loadPromoters();
-  }, []);
-
-  const checkUserAuthorization = async () => {
-    if (!user?.email) {
-      setIsPromoter(false);
-      setIsAdmin(false);
-      return;
+  // Check if email exists in promoters using the API
+  const checkPromoterStatus = async (email: string) => {
+    try {
+      console.log('Checking promoter status for email:', email);
+      
+      const response = await fetch('/api/promoters');
+      if (!response.ok) {
+        throw new Error('Failed to fetch promoters');
+      }
+      
+      const data = await response.json();
+      console.log('Promoters data from API:', data);
+      
+      if (data.promoters) {
+        // Log all promoter emails for comparison
+        const promoterEmails = data.promoters.map((p: any) => p.email.toLowerCase());
+        console.log('All promoter emails:', promoterEmails);
+        
+        const isPromoter = data.promoters.some(
+          (promoter: any) => promoter.email.toLowerCase() === email.toLowerCase()
+        );
+        
+        console.log('Is promoter result:', isPromoter);
+        return isPromoter;
+      }
+      
+      console.log('No promoters data found');
+      return false;
+    } catch (error) {
+      console.error('Error checking promoter status:', error);
+      return false;
     }
-
-    const userEmail = user.email.toLowerCase();
-    const isAdminEmail = userEmail === 'info@nakmuay.foundation';
-    
-    if (isAdminEmail) {
-      setIsAdmin(true);
-      return;
-    }
-
-    const isPMTPromoter = pmtPromoterEmails.includes(userEmail);
-    setIsPromoter(isPMTPromoter);
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      setUser(currentUser);
+      
+      if (currentUser?.email) {
+        const email = currentUser.email.toLowerCase();
+        console.log('Current user email:', email);
+        
+        // Check admin status
+        const adminStatus = email === ADMIN_EMAIL;
+        setIsAdmin(adminStatus);
+        console.log('Is admin:', adminStatus);
+        
+        // Check promoter status
+        if (!adminStatus) {
+          const promoterStatus = await checkPromoterStatus(email);
+          setIsPromoter(promoterStatus);
+          console.log('Setting isPromoter to:', promoterStatus);
+        } else {
+          setIsPromoter(false);
+        }
+      } else {
+        setIsAdmin(false);
+        setIsPromoter(false);
+      }
+      
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    checkUserAuthorization();
-  }, [user, pmtPromoterEmails]);
 
   const signInWithGoogle = async () => {
     try {
@@ -110,8 +108,8 @@ export const AuthProvider = ({
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
-      setIsPromoter(false);
       setIsAdmin(false);
+      setIsPromoter(false);
       router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
@@ -122,15 +120,15 @@ export const AuthProvider = ({
     <AuthContext.Provider value={{ 
       user, 
       loading, 
-      isPromoter,
       isAdmin,
-      checkUserAuthorization,
+      isPromoter,
+      isNewUser: !(isAdmin || isPromoter),
       signInWithGoogle,
       signOut 
     }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => useContext(AuthContext);

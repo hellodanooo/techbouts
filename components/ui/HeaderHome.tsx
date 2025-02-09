@@ -1,10 +1,14 @@
-// components/ui/HeaderHome.tsx
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 
-const HeaderHome = () => {
+interface HeaderHomeProps {
+  isAdmin?: boolean;
+  isPromoter?: boolean;
+}
+
+const HeaderHome = ({ isAdmin }: HeaderHomeProps) => {
   return (
     <header className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-900 p-4 sm:p-6 shadow-md">
       <h1 className="text-lg sm:text-2xl font-semibold">
@@ -35,6 +39,14 @@ const HeaderHome = () => {
         >
           Create Event
         </Link>
+        {isAdmin && (
+          <Link
+            href="/emails/pmt"
+            className="text-sm sm:text-base hover:underline text-blue-500 dark:text-blue-400"
+          >
+            Emails
+          </Link>
+        )}
       </nav>
     </header>
   );

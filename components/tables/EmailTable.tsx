@@ -1,9 +1,6 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FirebaseService } from '@/lib/services/firebase';
-
 import {
   Table,
   TableBody,
@@ -58,16 +55,23 @@ export default function EmailsTable() {
       setLoading(true);
       setError(null);
       try {
-        const result = await FirebaseService.getPMTEmails(selectedYear);
-        if (result) {
-          setEmailData(result as EmailData);
-        } else {
-          setError(`No email data found for ${selectedYear}`);
-          setEmailData(null);
+        const response = await fetch(`/api/emails/fetchPMT?year=${selectedYear}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const result = await response.json();
+        
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        setEmailData(result as EmailData);
       } catch (err) {
-        setError('Error fetching email data');
+        setError(err instanceof Error ? err.message : 'Error fetching email data');
         console.error('Error fetching emails:', err);
+        setEmailData(null);
       } finally {
         setLoading(false);
       }

@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Event, Promoter } from '../../../utils/types';
+import { Event, Promoter } from '../../../../utils/types';
 import { parseISO, format } from 'date-fns';
-import Calendar from '../Calendar';
-import MonthTable from '../../../components/MonthTable';
+import Calendar from '../../Calendar';
+import MonthTable from '../../../../components/MonthTable';
 import { FaLock } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { checkDashboardAuthorization } from '../../../utils/authUtils';
-import { useAuth } from '../../../context/AuthContext'; 
+import { checkDashboardAuthorization } from '../../../../utils/authUtils';
+import { useAuth } from '../../../../context/AuthContext'; 
  import AddEventForm from '@/components/AddEventForm'; // Add this import
 
 interface PromoterDashboardProps {
