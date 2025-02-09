@@ -1,11 +1,9 @@
 // components/loading_screens/LandingLoading.tsx
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 
 export default function LandingLoading() {
-  const { signInWithGoogle } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
