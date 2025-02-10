@@ -6,11 +6,11 @@ import GoogleAuthButton from './GoogleAuthButton';
 interface AuthDisplayProps {
   user: { email: string | null } | null;
   isAdmin: boolean;
-  isPromoter: boolean;
   isNewUser: boolean;
+  isPromoter?: boolean;
 }
 
-export default function AuthDisplay({ user, isAdmin, isPromoter }: AuthDisplayProps) {
+export default function AuthDisplay({ user, isAdmin }: AuthDisplayProps) {
   if (!user?.email) {
     return (
       <aside aria-hidden="true" className="fixed bottom-4 right-4 z-50">
@@ -30,10 +30,6 @@ export default function AuthDisplay({ user, isAdmin, isPromoter }: AuthDisplayPr
     displayText = `Admin: ${user.email}`;
     bgColor = 'bg-red-100 dark:bg-red-900';
     textColor = 'text-red-600 dark:text-red-300';
-  } else if (isPromoter) {
-    displayText = `Promoter: ${user.email}`;
-    bgColor = 'bg-blue-100 dark:bg-blue-900';
-    textColor = 'text-blue-600 dark:text-blue-300';
   }
 
   return (

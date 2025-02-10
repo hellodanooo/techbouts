@@ -73,8 +73,6 @@ const PromoterDashboard = ({
   const [showPromoterModal, setShowPromoterModal] = useState(false); // Controls AddPromoter visibility
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
-
-
   const activePromoters = useMemo(() => {
     const promoters = activeSanctioning === 'PMT' ? pmtPromoters : ikfPromoters;
 
@@ -160,7 +158,7 @@ const PromoterDashboard = ({
 
   const handlePromoterClick = (promoter: Promoter) => {
     if (activeSanctioning === 'PMT') {
-      router.push(`/promoters/${promoter.name.toLowerCase()}`);
+      router.push(`/promoters/${promoter.promoterId.toLowerCase()}`);
     } else {
       // For IKF, use the promoterId
       router.push(`/promoter/${promoter.promoterId}`);
@@ -260,7 +258,7 @@ const PromoterDashboard = ({
 
           const promoterEvents = activeEvents.filter(event => {
             if (activeSanctioning === 'PMT') {
-              return event.promoterId === promoter.name.toLowerCase();
+              return event.promoterId === promoter.promoterId.toLowerCase();
             } else {
               // For IKF, match on promoterId
               // Add console.log to debug the matching
@@ -272,7 +270,7 @@ const PromoterDashboard = ({
 
           return (
             <div
-              key={promoter.name}
+              key={promoter.promoterId}
               onClick={() => handlePromoterClick(promoter)} // Pass the entire promoter object
               onMouseEnter={() => setHoveredCard(promoter.name)}
               onMouseLeave={() => setHoveredCard(null)}

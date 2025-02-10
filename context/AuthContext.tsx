@@ -31,28 +31,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkPromoterStatus = async (email: string) => {
     try {
       console.log('Checking promoter status for email:', email);
-      
+
       const response = await fetch('/api/promoters');
       if (!response.ok) {
         throw new Error('Failed to fetch promoters');
       }
-      
+
       const data = await response.json();
       console.log('Promoters data from API:', data);
-      
+
       if (data.promoters) {
         // Log all promoter emails for comparison
         const promoterEmails = data.promoters.map((p: any) => p.email.toLowerCase());
         console.log('All promoter emails:', promoterEmails);
-        
+
         const isPromoter = data.promoters.some(
           (promoter: any) => promoter.email.toLowerCase() === email.toLowerCase()
         );
-        
+
         console.log('Is promoter result:', isPromoter);
         return isPromoter;
       }
-      
+
       console.log('No promoters data found');
       return false;
     } catch (error) {
@@ -64,16 +64,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
-      
+
       if (currentUser?.email) {
         const email = currentUser.email.toLowerCase();
         console.log('Current user email:', email);
-        
+
         // Check admin status
         const adminStatus = email === ADMIN_EMAIL;
         setIsAdmin(adminStatus);
         console.log('Is admin:', adminStatus);
-        
+
         // Check promoter status
         if (!adminStatus) {
           const promoterStatus = await checkPromoterStatus(email);
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAdmin(false);
         setIsPromoter(false);
       }
-      
+
       setLoading(false);
     });
 
