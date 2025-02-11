@@ -1,93 +1,62 @@
+// app/promoters/[promoterId]/[eventId]/PageContent.tsx
+
 'use client';
 
-import React, { useState } from 'react';
-import { Event } from '../../../../utils/types';
-import { parseISO, format } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import React, { useState, useMemo } from 'react';
+import { Event, Promoter } from '../../../../utils/types';
 import Image from 'next/image';
-import EditEventModal from '@/components/popups/EditEvent';
+import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import AuthDisplay from '@/components/ui/AuthDisplay';
 
 interface TournamentDashboardProps {
+  eventId: string;
   promoterId: string;
   promoterEmail: string;
   eventData: Event;
+  promoter: Promoter;
 }
 
 export default function PageContentEvent({
-  eventData
+  promoterId,
+  eventData,
+  promoter,
+  eventId,
 }: TournamentDashboardProps) {
-  const router = useRouter();
-  //const [isPromoter, setIsPromoter] = useState<boolean | null>(false);
   const [imageError, setImageError] = useState(false);
-  const [editEventModalOpen, setEditEventModalOpen] = useState(false);
+  const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
- 
-
-
-
-
+  // Check if the user's email matches the promoter's email
+  const isAuthorizedPromoter = useMemo(() => {
+    if (isAdmin) return true; // Admin can always edit
+    return user?.email && promoter?.email && user.email === promoter.email;
+  }, [user?.email, promoter?.email, isAdmin]);
 
   const handleImageError = () => {
     setImageError(true);
   };
 
-  // const openEditEventModal = () => {
-  //   setEditEventModalOpen(true);
-  // }
-
-  const handleSaveEvent = async (updatedEvent: Event) => {
-    console.log('eventId', updatedEvent.eventId);
-
-    try {
-      const response = await fetch(`/api/pmt/events/${eventData.eventId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedEvent),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update event');
-      }
-  
-      
-      // Update local state or refresh the page
-      router.refresh();
-      
-      // Close the modal
-      setEditEventModalOpen(false);
-      
-    } catch (error) {
-      console.error('Error saving event:', error);
-      // You might want to show an error notification here
-    }
-  }
-
-  // if (loading) {
-  //   return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
-  // }
-
   return (
     <div className="p-5">
+       <AuthDisplay 
+        user={user}
+        isAdmin={isAdmin}
+        isPromoter={isPromoter}
+        isNewUser={isNewUser}
+      />
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">{eventData.name}</h1>
-         
-        
-
-          {/* {isPromoter && (
-            <button
-              onClick={openEditEventModal}
-              className="text-gray-500 hover:text-gray-700"
-            >
-             Edit Event
-            </button>
-          )} */}
-
-
+          
+          {isAuthorizedPromoter && (
+  <Link
+    href={`/promoters/${promoterId}/${eventId}/edit`}
+    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+  >
+    Edit Event
+  </Link>
+)}
         </div>
 
         {/* Event Flyer Section */}
@@ -110,41 +79,6 @@ export default function PageContentEvent({
             </div>
           )}
         </div>
-
-        {/* Event Details Section */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Event Details</h2>
-            <div className="space-y-3">
-              <p><span className="font-medium">Date:</span> {format(parseISO(eventData.date), 'MMMM d, yyyy')}</p>
-              <p><span className="font-medium">Location:</span> {eventData.city}, {eventData.state}</p>
-              <p><span className="font-medium">Registration Fee:</span> ${eventData.registration_fee}</p>
-              <p><span className="font-medium">Competition Type:</span> {eventData.competition_type}</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Schedule</h2>
-            <div className="space-y-3">
-              <p><span className="font-medium">Doors Open:</span> {eventData.doors_open}</p>
-              <p><span className="font-medium">Weigh-in Time:</span> {eventData.weighin_start_time} - {eventData.weighin_end_time}</p>
-              {eventData.rules_meeting_time && (
-                <p><span className="font-medium">Rules Meeting:</span> {eventData.rules_meeting_time}</p>
-              )}
-              {eventData.bouts_start_time && (
-                <p><span className="font-medium">Start Time:</span> {eventData.bouts_start_time}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Edit Event Modal */}
-        <EditEventModal
-          isOpen={editEventModalOpen}
-          onClose={() => setEditEventModalOpen(false)}
-          event={eventData}
-          onSave={handleSaveEvent}
-        />
       </div>
     </div>
   );

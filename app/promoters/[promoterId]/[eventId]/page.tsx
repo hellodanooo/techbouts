@@ -1,3 +1,4 @@
+// app/promoters/[promoterId]/[eventId]/page.tsx
 import PageContentEvent from './PageContent';
 import Head from 'next/head';
 import { fetchPromoter } from '@/utils/apiFunctions/fetchPromoter';
@@ -11,8 +12,8 @@ export default async function EventPage({
   const { promoterId, eventId } = await params; 
   
   // Fetch promoter data first
-  const promoterData = await fetchPromoter(promoterId);
-  const sanctioning = promoterData?.sanctioning;
+  const promoter = await fetchPromoter(promoterId);
+  const sanctioning = promoter?.sanctioning;
 
   console.log('promoterId', promoterId);
   console.log('sanctioning', sanctioning);
@@ -38,9 +39,11 @@ console.log('eventId', eventId);
         <title>{pageTitle}</title>
       </Head>
       <PageContentEvent
+      eventId={eventId}
         eventData={eventData}
-        promoterId={eventData.promoterId}
-        promoterEmail={eventData.promoterEmail}
+        promoterId={promoterId}
+        promoterEmail={promoter?.email}
+        promoter={promoter}
       />
     </>
   );

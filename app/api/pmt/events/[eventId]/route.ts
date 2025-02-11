@@ -3,14 +3,9 @@ import { Firestore } from '@google-cloud/firestore';
 
 export const runtime = 'nodejs';
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ eventId: string }> }
-) {
-  const { eventId } = await params;
-  console.log("API Route Hit: Fetching event", eventId);
-
-  const db = new Firestore({
+// Helper function to initialize Firestore
+const getFirestore = () => {
+  return new Firestore({
     projectId: process.env.FIREBASE_PROJECT_ID_PMT,
     credentials: {
       client_email: process.env.FIREBASE_CLIENT_EMAIL_PMT,
@@ -18,6 +13,16 @@ export async function GET(
     },
     preferRest: true,
   });
+};
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ eventId: string }> }
+) {
+  const { eventId } = await params;
+  console.log("API Route Hit: Fetching event", eventId);
+
+  const db = getFirestore();
 
   try {
     console.log("API Route: Getting document reference");
@@ -41,6 +46,48 @@ export async function GET(
     console.error("API Route Error:", error);
     return NextResponse.json(
       { error: "Failed to fetch event" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ eventId: string }> }
+) {
+  const { eventId } = await params;
+  console.log("API Route Hit: Updating event", eventId);
+
+  try {
+    const updatedData = await request.json();
+    const db = getFirestore();
+    const eventRef = db.collection("events").doc(eventId);
+
+    // Verify the event exists
+    const snapshot = await eventRef.get();
+    if (!snapshot.exists) {
+      return NextResponse.json(
+        { error: "Event not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update the document
+    await eventRef.update(updatedData);
+    
+    // Fetch and return the updated document
+    const updatedSnapshot = await eventRef.get();
+    const updatedEventData = updatedSnapshot.data();
+
+    return NextResponse.json({ 
+      message: "Event updated successfully",
+      event: updatedEventData 
+    });
+
+  } catch (error) {
+    console.error("API Route Error:", error);
+    return NextResponse.json(
+      { error: "Failed to update event" },
       { status: 500 }
     );
   }

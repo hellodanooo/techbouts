@@ -1,0 +1,202 @@
+// app/promoters/[promoterId]/[eventId]/edit/EditEventForm.tsx
+'use client';
+
+import React, { useState } from 'react';
+import { Event } from '@/utils/types';
+import { editPmtEvent } from '@/utils/apiFunctions/editPmtEvent';
+import { useRouter } from 'next/navigation';
+
+interface EditEventFormProps {
+    eventData: Event;  // Since we handle null in the page component
+    promoterId: string;
+  }
+
+export default function EditEventForm({ eventData, promoterId }: EditEventFormProps) {
+  const router = useRouter();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [formData, setFormData] = useState(eventData);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+  
+    try {
+      const updatedEvent = await editPmtEvent(eventData.eventId, formData);
+      
+      if (!updatedEvent) {
+        throw new Error('Failed to update event');
+      }
+  
+      // Redirect back to event page
+      router.push(`/promoters/${promoterId}/${eventData.eventId}`);
+      router.refresh();
+    } catch (error) {
+      console.error('Error updating event:', error);
+      // You might want to add error handling UI here
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancel = () => {
+    router.back();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Event Details</h2>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Event Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Date</label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">City</label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">State</label>
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Registration Fee</label>
+            <input
+              type="number"
+              name="registration_fee"
+              value={formData.registration_fee}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Schedule</h2>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Doors Open</label>
+            <input
+              type="time"
+              name="doors_open"
+              value={formData.doors_open}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Weigh-in Start</label>
+            <input
+              type="time"
+              name="weighin_start_time"
+              value={formData.weighin_start_time}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Weigh-in End</label>
+            <input
+              type="time"
+              name="weighin_end_time"
+              value={formData.weighin_end_time}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Rules Meeting</label>
+            <input
+              type="time"
+              name="rules_meeting_time"
+              value={formData.rules_meeting_time || ''}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Start Time</label>
+            <input
+              type="time"
+              name="bouts_start_time"
+              value={formData.bouts_start_time || ''}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end space-x-4 pt-4">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          disabled={isUpdating}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          disabled={isUpdating}
+        >
+          {isUpdating ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+}

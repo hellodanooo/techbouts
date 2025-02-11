@@ -110,7 +110,6 @@ export default async function PromoterPage(props: { params: Promise<{ promoterId
     fetchPromoter(promoterId),
     fetchPMTEvents(promoterId),
     fetchPromoterIKFEvents(promoterId),
-
   ]);
 
   // If no promoter is found, you might want to handle this case
