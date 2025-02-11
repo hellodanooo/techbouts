@@ -48,12 +48,9 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
   );
 
   const handleEventClick = (event: Event) => {
-    event.sanctioning = 'PMT';
-    if (event.sanctioning === 'PMT') {
-      window.location.href = `/promoters/${event.promoterId}/pmt/${event.id}`;
-    } else if (event.sanctioning === 'PMT') {
-      window.location.href = `/promoters/${event.promoterId}/events/ikf/${event.id}`;
-    }
+   
+      window.location.href = `/promoters/${event.promoterId}/${event.id}`;
+   
   };
 
   useEffect(() => {

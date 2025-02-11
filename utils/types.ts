@@ -203,8 +203,8 @@ export interface Promoter  {
   phone: string;
   promoterId: string;
   promotion: string;
-  sanctioning: string;
-  state: string;
+  sanctioning: string[];
+    state: string;
   createdAt?: string;
 };
 

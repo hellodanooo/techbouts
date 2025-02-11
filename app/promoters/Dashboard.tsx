@@ -70,7 +70,7 @@ const PromoterDashboard = ({
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [activeSanctioning, setActiveSanctioning] = useState<'PMT' | 'IKF'>('PMT');
-  const [showPromoterModal, setShowPromoterModal] = useState(false); // Controls AddPromoter visibility
+  const [showPromoterModal, setShowPromoterModal] = useState(false); 
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
   const activePromoters = useMemo(() => {

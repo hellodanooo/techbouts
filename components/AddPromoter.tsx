@@ -25,7 +25,7 @@ const initialFormData: Promoter = {
   email: '',
   promoterId: '',
   promotion: '',
-  sanctioning: '',
+  sanctioning: [],
   createdAt: new Date().toISOString() 
 
 };

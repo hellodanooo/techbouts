@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Event, Promoter } from '../../../../utils/types';
+import React, { useState, useMemo } from 'react';
+import { Event, Promoter } from '../../../utils/types';
 import { parseISO, format } from 'date-fns';
-import Calendar from '../../Calendar';
-import MonthTable from '../../../../components/MonthTable';
-import { FaLock } from "react-icons/fa6";
-import { useRouter } from 'next/navigation';
+import Calendar from '../Calendar';
+import MonthTable from '../../../components/MonthTable';
 import Image from 'next/image';
-import { checkDashboardAuthorization } from '../../../../utils/authUtils';
-import { useAuth } from '../../../../context/AuthContext'; 
- import AddEventForm from '@/components/AddEventForm'; // Add this import
+ import AddEventForm from '@/components/AddEventForm';
+ import { useAuth } from '@/context/AuthContext';
+import AuthDisplay from '@/components/ui/AuthDisplay';
 
 interface PromoterDashboardProps {
   promoter: Promoter;  // Changed from Promoter[] to Promoter
@@ -22,24 +20,21 @@ interface PromoterDashboardProps {
 }
 
 export default function PromoterDashboard({ 
-  promoterId, 
+  
   initialConfirmedEvents, 
   initialPendingEvents, 
   logoUrl,
   promoter,
   ikfEvents
 }: PromoterDashboardProps) {
-  console.log('Promoter data in dashboard:', promoter); // Add this log
+  console.log('Promoter data in dashboard:', promoter);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
- const { user, loading } = useAuth();
-
- 
-  const router = useRouter();
-  const [isPromoter, setIsPromoter] = useState<boolean | null>(false);
-
-const [showEventModal, setShowEventModal] = useState(false); // Controls AddEventForm visibility
-
-
+  // Check if the user's email matches the promoter's email
+  const isAuthorizedPromoter = useMemo(() => {
+    return user?.email && promoter?.email && user.email === promoter.email;
+  }, [user?.email, promoter?.email]);
 
   // Process events with status
   const allEvents = useMemo(() => {
@@ -67,49 +62,14 @@ const [showEventModal, setShowEventModal] = useState(false); // Controls AddEven
     return [...confirmed, ...pending, ...ikf];
   }, [initialConfirmedEvents, initialPendingEvents, ikfEvents]);
 
-
-
-
-  // Authentication & Authorization
-
-  useEffect(() => {
-    const authorizeUser = async () => {
-      console.log('Starting dashboard authorization process:', {
-        userEmail: user?.email,
-        promoterEmail: promoter.email,
-        promoterId: promoterId
-      });
-  
-      if (user?.email) {
-        const isAuthorized = checkDashboardAuthorization(promoter.email, user.email);
-        console.log('Dashboard authorization completed:', {
-          isAuthorized,
-          userEmail: user.email,
-          promoterEmail: promoter.email
-        });
-        setIsPromoter(isAuthorized);
-      } else {
-        console.log('No user email available, setting isPromoter to false');
-        setIsPromoter(false);
-      }
-    };
-  
-    authorizeUser();
-  }, [user, promoterId, promoter]);
-
-
-  const handleLogin = () => {
-    router.push(`/auth/login?promoterId=${promoterId}`);
-  };
-
-
-
-   if (loading) {
-     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
-   }
-
-   return (
+  return (
     <div className="p-5">
+      <AuthDisplay 
+        user={user}
+        isAdmin={isAdmin}
+        isPromoter={isPromoter}
+        isNewUser={isNewUser}
+      />
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <div className="relative h-10 w-10">
@@ -124,47 +84,30 @@ const [showEventModal, setShowEventModal] = useState(false); // Controls AddEven
             {promoter.promotion || `${promoter.firstName} ${promoter.lastName}`}s Events
           </h1>
         </div>
-        {!isPromoter && (
-          <button 
-            onClick={handleLogin} 
-            className="text-gray-500 hover:text-gray-700">
-            <FaLock size={20} />
-          </button>
-        )}
       </div>
 
+      {/* Only show Create Event button if user email matches promoter email */}
+      {isAuthorizedPromoter && (
+        <button
+          onClick={() => setShowEventModal(true)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Create Event
+        </button>
+      )}
 
-      {isPromoter && (
-  <button
-    onClick={() => setShowEventModal(true)}
-    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-  >
-    Create Event
-  </button>
-)}
-  {/* Add Event Modal */}
-  {showEventModal && (
-        console.log('promoter page:', promoter),
+      {showEventModal && (
         <AddEventForm
-          onClose={() => setShowEventModal(false)} // Close the AddEventForm modal
-          promoter={promoter} // Pass promoters to AddEventForm
+          onClose={() => setShowEventModal(false)}
+          promoter={promoter}
         />
       )}
 
-
-
       <div className="mt-8">
-     
-     
-      <MonthTable 
+        <MonthTable 
           events={allEvents}
-      
         />
-
-
-
         <Calendar />
-      
       </div>
 
       {isPromoter && (

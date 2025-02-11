@@ -15,7 +15,7 @@ interface AddEventFormProps {
     name: string;
     email: string;
     promotion: string;
-    sanctioning: string;
+    sanctioning: string[]; 
   }>;
   promoter?: Promoter;
 
@@ -67,14 +67,14 @@ const AddEventForm: React.FC<AddEventFormProps> = ({
         name: `${promoter.firstName} ${promoter.lastName}`,
         email: promoter.email,
         promotion: promoter.promotion,
-        sanctioning: promoter.sanctioning
+        sanctioning: promoter.sanctioning // This is now string[]
       };
       
       setSelectedPromotion(promotion);
-      setSanctioning(promoter.sanctioning);
+      setSanctioning(promoter.sanctioning[0] || ''); // Take first sanctioning or empty string
       setPromoterId(promoter.promoterId);
       setPromotionQuery(promoter.promotion);
-      setIsAuthenticated(true); // Auto-authenticate for single promoter case
+      setIsAuthenticated(true);
     }
   }, [promoter, promoters.length]);
 
@@ -82,20 +82,18 @@ const AddEventForm: React.FC<AddEventFormProps> = ({
 
 
   useEffect(() => {
-    // For single promoter case (dashboard)
     if (promoter) {
       const singlePromoterArray = [{
         promoterId: promoter.promoterId,
         name: `${promoter.firstName} ${promoter.lastName}`,
         email: promoter.email,
         promotion: promoter.promotion,
-        sanctioning: promoter.sanctioning
+        sanctioning: promoter.sanctioning // This is now string[]
       }];
       
-      // Set initial states without causing loops
       if (!selectedPromotion) {
         setSelectedPromotion(singlePromoterArray[0]);
-        setSanctioning(promoter.sanctioning);
+        setSanctioning(promoter.sanctioning[0] || ''); // Take first sanctioning or empty string
         setPromoterId(promoter.promoterId);
         setPromotionQuery(promoter.promotion);
         setFilteredPromoters(singlePromoterArray);
@@ -127,17 +125,16 @@ const AddEventForm: React.FC<AddEventFormProps> = ({
     name: string;
     email: string;
     promotion: string;
-    sanctioning: string;
+    sanctioning: string[];
   }) => {
     if (isAuthenticated) return;
   
-    // Set all states at once
     setPromotionQuery(promotion.promotion);
     setSelectedPromotion(promotion);
-    setSanctioning(promotion.sanctioning);
+    setSanctioning(promotion.sanctioning[0] || ''); // Take first sanctioning or empty string
     setPromoterId(promotion.promoterId);
     setShowDropdown(false);
-    setFilteredPromoters([promotion]); // Set to single item array
+    setFilteredPromoters([promotion]);
   
     try {
       setLoading(true);
@@ -292,6 +289,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({
     setSanctioning(e.target.value);
     setSanctionPopupOpen(true);
   };
+
 
 
   return (
