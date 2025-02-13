@@ -17,7 +17,7 @@ export default function PageContent() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] relative">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-16 sm:p-5 font-[family-name:var(--font-geist-sans)] relative bg-gradient-to-b from-white to-[#4793AF]/10">
       <AuthDisplay 
         user={user}
         isAdmin={isAdmin}
@@ -27,20 +27,20 @@ export default function PageContent() {
       <HeaderHome isAdmin={isAdmin} />
 
       {/* Hero Section with Conditional Content */}
-      <section className="text-center sm:text-left max-w-4xl">
-        <h1 className="text-3xl sm:text-5xl font-bold leading-snug mb-4">
+      <section className="text-center sm:text-left max-w-4xl px-4">
+        <h1 className="text-3xl sm:text-5xl font-bold leading-snug mb-4 text-[#8B322C]">
           {isAdmin ? (
             "Welcome to TechBouts Admin"
           ) : (
-            "Revolutionize Your Boxing Events and Rankings"
+            "Streamline Your Muay Thai & Boxing Events Management"
           )}
         </h1>
         
-        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-8">
+        <p className="text-lg sm:text-xl text-[#4793AF] mb-8">
           {isAdmin ? (
-            "Manage platform settings, users, and content from your central dashboard."
+            "Manage system settings, users, and combat sports events from your central dashboard."
           ) : (
-            "Manage fighters, gyms, and events with ease. Track rankings and grow your boxing community."
+            "All-in-one solution for sanctioning bodies, promoters, and gyms to manage fighters, events, and rankings in Muay Thai and boxing."
           )}
         </p>
 
@@ -48,20 +48,20 @@ export default function PageContent() {
         <div className="flex flex-col sm:flex-row gap-4">
           {isAdmin ? (
             <>
-              <Link href="/events" className="bg-blue-500 text-white py-3 px-6 rounded shadow hover:bg-blue-600">
+              <Link href="/events" className="bg-[#DD5746] text-white py-3 px-6 rounded shadow hover:bg-[#8B322C] transition-colors">
                 Manage Events
               </Link>
-              <Link href="/users" className="border border-blue-500 text-blue-500 py-3 px-6 rounded shadow hover:bg-blue-50">
+              <Link href="/users" className="border-2 border-[#DD5746] text-[#DD5746] py-3 px-6 rounded shadow hover:bg-[#DD5746] hover:text-white transition-colors">
                 Manage Users
               </Link>
             </>
           ) : (
             <>
-              <Link href="/create" className="bg-blue-500 text-white py-3 px-6 rounded shadow hover:bg-blue-600">
-                Get Started for Free
+              <Link href="/create" className="bg-[#DD5746] text-white py-3 px-6 rounded shadow hover:bg-[#8B322C] transition-colors">
+                Start Managing Events
               </Link>
-              <Link href="/auth/login" className="border border-blue-500 text-blue-500 py-3 px-6 rounded shadow hover:bg-blue-50">
-                Book a Demo
+              <Link href="/auth/login" className="border-2 border-[#DD5746] text-[#DD5746] py-3 px-6 rounded shadow hover:bg-[#DD5746] hover:text-white transition-colors">
+                Schedule Demo
               </Link>
             </>
           )}
@@ -69,37 +69,36 @@ export default function PageContent() {
       </section>
 
       {/* Features Section with Conditional Content */}
-      <section className="w-full max-w-6xl grid gap-16">
+      <section className="w-full max-w-6xl grid gap-16 px-4">
         <div className="text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-8">
-            {isAdmin ? "Admin Tools" : "Key Features"}
+          <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-[#8B322C]">
+            {isAdmin ? "Admin Tools" : "System Features"}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {isAdmin ? (
               <>
-                <FeatureCard title="User Management" description="Manage user roles and permissions" />
-                <FeatureCard title="Event Oversight" description="Monitor and manage all platform events" />
-                <FeatureCard title="Analytics Dashboard" description="Track platform-wide metrics and usage" />
+                <FeatureCard title="Event Management" description="Oversee Muay Thai and boxing events across the system" />
+                <FeatureCard title="Sanctioning Tools" description="Manage fighter records, matchups, and weight classes" />
+                <FeatureCard title="Performance Analytics" description="Track event metrics and fighter statistics" />
               </>
             ) : (
               <>
-                <FeatureCard title="Event Management" description="Plan and schedule fights effortlessly" />
-                <FeatureCard title="Rankings System" description="Track fighters and gym rankings" />
-                <FeatureCard title="Gym Profiles" description="Monitor gym stats and performance" />
-                <FeatureCard title="Fighter Stats" description="Detailed fighter profiles and history" />
-                <FeatureCard title="Secure Payments" description="Integrated ticketing solutions" />
-                <FeatureCard title="Analytics" description="Comprehensive performance tracking" />
+                <FeatureCard title="Fight Management" description="Schedule and manage both Muay Thai and boxing matches with ease" />
+                <FeatureCard title="Fighter Database" description="Comprehensive records for Muay Thai and boxing athletes" />
+                <FeatureCard title="Matchmaking Tools" description="Find and arrange suitable matchups across weight classes" />
+                <FeatureCard title="Digital Records" description="Track fight history, medical clearances, and required documentation" />
+                <FeatureCard title="Event Planning" description="Venue management, ticket sales, and event logistics" />
+                <FeatureCard title="Performance Tracking" description="Monitor fighter rankings and gym success rates" />
               </>
             )}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="w-full flex gap-6 flex-wrap items-center justify-center">
+      <footer className="w-full flex gap-6 flex-wrap items-center justify-center pb-8">
         <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org"
+          className="flex items-center gap-2 text-[#4793AF] hover:text-[#DD5746] transition-colors"
+          href="https://techbouts.com"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -110,23 +109,18 @@ export default function PageContent() {
             width={16}
             height={16}
           />
-          Learn More
+          Learn More About TechBouts
         </a>
       </footer>
     </div>
   );
 }
 
-interface FeatureCardProps {
-  title: string;
-  description: string;
-}
-
-function FeatureCard({ title, description }: FeatureCardProps) {
+function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded shadow-md">
-      <h3 className="text-lg font-bold mb-2">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-400">{description}</p>
+    <div className="p-6 bg-white rounded shadow-md border border-[#FFC470]/30 hover:border-[#FFC470] transition-colors">
+      <h3 className="text-lg font-bold mb-2 text-[#DD5746]">{title}</h3>
+      <p className="text-[#4793AF]">{description}</p>
     </div>
   );
 }

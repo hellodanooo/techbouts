@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Event, Promoter } from '../../../../utils/types';
+import { EventType, Promoter } from '../../../../utils/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +17,7 @@ interface TournamentDashboardProps {
   eventId: string;
   promoterId: string;
   promoterEmail: string;
-  eventData: Event;
+  eventData: EventType;
   promoter: Promoter;
 }
 
@@ -125,12 +125,28 @@ export default function PageContentEvent({
                 <CardTitle>Schedule</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <p><strong>Doors Open:</strong> {formatTime(eventData.doors_open)}</p>
-                <p><strong>Weigh-in:</strong> {formatTime(eventData.weighin_start_time)} - {formatTime(eventData.weighin_end_time)}</p>
-                {eventData.rules_meeting_time && (
-                  <p><strong>Rules Meeting:</strong> {formatTime(eventData.rules_meeting_time)}</p>
-                )}
-                <p><strong>Event Start:</strong> {formatTime(eventData.bouts_start_time)}</p>
+              {eventData.doors_open && (
+  <p><strong>Doors Open:</strong> {formatTime(eventData.doors_open)}</p>
+)}
+
+{/* Only render if both `weighin_start_time` and `weighin_end_time` exist */}
+{eventData.weighin_start_time && eventData.weighin_end_time && (
+  <p><strong>Weigh-in:</strong> {formatTime(eventData.weighin_start_time)} - {formatTime(eventData.weighin_end_time)}</p>
+)}
+
+{/* Only render if `rules_meeting_time` exists */}
+{eventData.rules_meeting_time && (
+  <p><strong>Rules Meeting:</strong> {formatTime(eventData.rules_meeting_time)}</p>
+)}
+{/* Only render if `bouts_start_time` exists */}
+{eventData.bouts_start_time && (
+  <p><strong>Bouts Start:</strong> {formatTime(eventData.bouts_start_time)}</p>
+)}
+
+
+
+
+               
               </CardContent>
             </Card>
 
@@ -153,9 +169,9 @@ export default function PageContentEvent({
                       <span>{eventData.ticket_price_description || 'General Admission'}</span>
                       <Badge variant="secondary">${eventData.ticket_price}</Badge>
                     </div>
-                    {eventData.ticket_price2 > 0 && (
+                    {eventData.ticket_price2 && (
                       <div className="flex justify-between items-center">
-                        <span>{eventData.ticket_price2_description}</span>
+                        <span>{eventData.ticket_price2_description || 'VIP Admission'}</span>
                         <Badge variant="secondary">${eventData.ticket_price2}</Badge>
                       </div>
                     )}

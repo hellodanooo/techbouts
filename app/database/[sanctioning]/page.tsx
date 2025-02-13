@@ -1,8 +1,9 @@
 import React from 'react';
 import { Metadata } from 'next';
 import YearSelector from '@/components/selectors/YearSelector';
-import MultiTermSearch from '@/components/searchbars/FighterSearch';
+import FighterSearchTable from '@/components/tables/FighterSearchTable';
 import { fetchPMTFighters, fetchIKFFighters, Fighter } from '@/utils/records/fetchFighters';
+import Image from 'next/image';
 
 export async function generateMetadata(props: { 
   params: Promise<{ sanctioning: string }>;
@@ -54,16 +55,47 @@ export default async function FighterDatabase(props: {
   }
 
   return (
-    <div className="database_page">
-      <h1>{sanctioning.toUpperCase()} Fighter Database</h1>
+    <div className="w-full flex flex-col items-center space-y-6">
+      <h1 className="text-2xl font-bold">{sanctioning.toUpperCase()} Fighter Database</h1>
+      
       {sanctioning === 'pmt' && (
-        <div>
-          <YearSelector />
-          <p>Total Fighters for {selectedYear}: {fighters.length}</p>
-        </div>
+        <Image
+          src="/logos/pmt_logo_2024_sm.png"
+          alt="PMT Database"
+          width={250}
+          height={125}
+          className="rounded-lg shadow-lg"
+        />
       )}
-      {sanctioning === 'ikf' && <p>Total Fighters: {fighters.length}</p>}
-      <MultiTermSearch initialFighters={fighters} sanctioning={sanctioning} year={selectedYear} />
+      
+      {sanctioning === 'ikf' && (
+        <Image
+          src="/logos/ikf_logo.png"
+          alt="IKF Database"
+          width={250}
+          height={125}
+          className="rounded-lg shadow-lg"
+        />
+      )}
+
+      <YearSelector />
+      
+      <div className="text-center">
+        {sanctioning === 'pmt' && (
+          <p>Total Fighters for {selectedYear}: {fighters.length}</p>
+        )}
+        {sanctioning === 'ikf' && (
+          <p>Total Fighters: {fighters.length}</p>
+        )}
+      </div>
+
+      <div className="w-full overflow-x-auto">
+        <FighterSearchTable 
+          initialFighters={fighters} 
+          sanctioning={sanctioning} 
+          year={selectedYear} 
+        />
+      </div>
     </div>
-  );
+);
 }

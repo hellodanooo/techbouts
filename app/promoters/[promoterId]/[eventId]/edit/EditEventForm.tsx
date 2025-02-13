@@ -2,12 +2,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Event } from '@/utils/types';
+import { EventType } from '@/utils/types';
 import { editPmtEvent } from '@/utils/apiFunctions/editPmtEvent';
 import { useRouter } from 'next/navigation';
 
 interface EditEventFormProps {
-    eventData: Event;  // Since we handle null in the page component
+    eventData: EventType; 
     promoterId: string;
   }
 

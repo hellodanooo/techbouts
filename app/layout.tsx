@@ -2,8 +2,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { AuthProvider } from "@/context/AuthContext";
-import "./globals.css";
+import "@/styles/globals.css";
 import 'mapbox-gl/dist/mapbox-gl.css';
+import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider"; // Import our provider
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -87,10 +89,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+     <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full`}>
+        <div className="min-h-full flex flex-col">
+          <main className="flex-1 w-full">
+            <AuthProvider>
+            <GoogleMapsProvider> 
+              {children}
+              </GoogleMapsProvider>
+            </AuthProvider>
+          </main>
+        </div>
       </body>
     </html>
   );

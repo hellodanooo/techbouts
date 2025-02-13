@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Event } from '../../../utils/types';
+import { EventType } from '../../../utils/types';
 import { parseISO, format } from 'date-fns';
 import { FaLock } from "react-icons/fa6";
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ import EditEventModal from '@/components/popups/EditEvent';
 interface TournamentDashboardProps {
   promoterId: string;
   promoterEmail: string;
-  eventData: Event;
+  eventData: EventType;
 }
 
 export default function TournamentDashboard({
@@ -53,7 +53,7 @@ export default function TournamentDashboard({
     setEditEventModalOpen(true);
   }
 
-  const handleSaveEvent = async (updatedEvent: Event) => {
+  const handleSaveEvent = async (updatedEvent: EventType) => {
     console.log('eventId', updatedEvent.eventId);
 
     try {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { Event } from '@/utils/types';
+import { EventType } from '@/utils/types';
 import buttons from '@/styles/buttons.module.css';
 import { SiGooglemaps } from "react-icons/si";
 import { FaCopy } from "react-icons/fa";
@@ -15,7 +15,7 @@ import { FaUserPlus } from "react-icons/fa";
 import { app } from '@/lib/firebase_techbouts/config';
 
 interface EventDetailsProps {
-  eventData: Event;
+  eventData: EventType;
   eventId: string;
   isOpen: boolean;
   ticketsEnabled: boolean;
@@ -29,7 +29,7 @@ interface EventDetailsProps {
 }
 
 const EventDetails: React.FC<EventDetailsProps> = ({ eventId, isOpen, onClose, ticketPrice, ticketsEnabled, coachPrice, eventName, gymNames, eventData, coachEnabled }) => {
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<EventType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("1");
@@ -65,7 +65,7 @@ const EventDetails: React.FC<EventDetailsProps> = ({ eventId, isOpen, onClose, t
       try {
         const eventSnap = await getDoc(eventRef);
         if (eventSnap.exists()) {
-          setEvent(eventSnap.data() as Event);
+          setEvent(eventSnap.data() as EventType);
         } else {
           setError('Event not found');
         }
@@ -222,15 +222,19 @@ const EventDetails: React.FC<EventDetailsProps> = ({ eventId, isOpen, onClose, t
 
 
 
+            {event.doors_open && (
+              <div
+              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '1px solid black', borderRadius: '5px', padding: '5px', margin: '5px' }}
+              >
+              Doors Open: {convertTo12HourFormat(event.doors_open)}
+              </div>
+            )}
+
             <div
               style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '1px solid black', borderRadius: '5px', padding: '5px', margin: '5px' }}
-
-            >Doors Open: {convertTo12HourFormat(event.doors_open)}</div>
-
-            <div
-              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '1px solid black', borderRadius: '5px', padding: '5px', margin: '5px' }}
-
-            >Bouts Start: {convertTo12HourFormat(event.bouts_start_time)}</div>
+            >
+              Bouts Start: {event.bouts_start_time ? convertTo12HourFormat(event.bouts_start_time) : 'N/A'}
+            </div>
 
 
             {/* TAB CONTROLS */}
@@ -337,8 +341,9 @@ const EventDetails: React.FC<EventDetailsProps> = ({ eventId, isOpen, onClose, t
                       Weigh-ins
 
                       <br></br>
-                      <div >{formatDate3(event.weighin_date)}</div>
-                      {`   ${convertTo12HourFormat(event.weighin_start_time)} - ${convertTo12HourFormat(event.weighin_end_time)}`}
+                        <div >{event.weighin_date ? formatDate3(event.weighin_date) : 'N/A'}</div>
+                        {event.weighin_start_time && event.weighin_end_time ? 
+                        `${convertTo12HourFormat(event.weighin_start_time)} - ${convertTo12HourFormat(event.weighin_end_time)}` : 'N/A'}
 
                     </div>
 
@@ -456,8 +461,9 @@ const EventDetails: React.FC<EventDetailsProps> = ({ eventId, isOpen, onClose, t
                       Weigh-ins
 
                       <br></br>
-                      <div >{formatDate3(event.weighin_date)}</div>
-                      {`   ${convertTo12HourFormat(event.weighin_start_time)} - ${convertTo12HourFormat(event.weighin_end_time)}`}
+                        <div >{event.weighin_date ? formatDate3(event.weighin_date) : 'N/A'}</div>
+                        {event.weighin_start_time && event.weighin_end_time ? 
+                        `${convertTo12HourFormat(event.weighin_start_time)} - ${convertTo12HourFormat(event.weighin_end_time)}` : 'N/A'}
 
                     </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Event } from "../utils/types";
+import { EventType } from "../utils/types";
 import { format, parseISO, eachMonthOfInterval, startOfYear, endOfYear, isPast } from "date-fns";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 
 interface MonthTableProps {
-  events: Event[];
+  events: EventType[];
   isPromoter?: boolean;
   isAdmin?: boolean;
   activeSanctioning?: string;
@@ -32,7 +32,7 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("upcoming");
   const [eventsByStateAndMonth, setEventsByStateAndMonth] = useState<{
-    [state: string]: { [month: string]: Event[] };
+    [state: string]: { [month: string]: EventType[] };
   }>({});
 
   // Modified states array to include NorCal and SoCal
@@ -47,14 +47,14 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
     [currentYear]
   );
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = (event: EventType) => {
    
       window.location.href = `/promoters/${event.promoterId}/${event.id}`;
    
   };
 
   useEffect(() => {
-    const organizedEvents: { [state: string]: { [month: string]: Event[] } } = {};
+    const organizedEvents: { [state: string]: { [month: string]: EventType[] } } = {};
 
     // Initialize the structure for all states including NorCal and SoCal
     states.forEach((state) => {

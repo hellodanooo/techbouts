@@ -11,7 +11,7 @@ interface MultiTermSearchProps {
   year: string;
 }
 
-const MultiTermSearch: React.FC<MultiTermSearchProps> = ({ initialFighters, sanctioning, year }) => {
+const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, sanctioning, year }) => {
   const [terms, setTerms] = useState<string[]>([]);
   const [currentTerm, setCurrentTerm] = useState('');
   const [fighters, setFighters] = useState<Fighter[]>(initialFighters);
@@ -98,4 +98,4 @@ const MultiTermSearch: React.FC<MultiTermSearchProps> = ({ initialFighters, sanc
   );
 };
 
-export default MultiTermSearch;
+export default FighterSearchTable;

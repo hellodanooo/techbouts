@@ -1,91 +1,49 @@
 import { headers } from 'next/headers';
-import { Event } from '../../../utils/types';
+import { EventType } from '../../../utils/types';
 import PromoterDashboard from './Dashboard';
 import Head from 'next/head';
 import { fetchPromoter } from '@/utils/apiFunctions/fetchPromoter';
 
-async function fetchPromoterIKFEvents(promoterId: string) {
-  try {
-    console.log('Starting IKF Event Fetch')
-    const headersList = await headers();
-    const host = headersList.get('host');
-    
-    const [confirmedResponse] = await Promise.all([
-      fetch(`http://${host}/api/ikf/events`, { 
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    ]);
-
-    console.log('Fetch IKF Events Status:', confirmedResponse.status);
-
-    let ikfEvents: Event[] = [];
-
-    if (confirmedResponse.ok) {
-      try {
-        const confirmedData = await confirmedResponse.json();
-        
-        
-        ikfEvents = confirmedData.events?.filter(
-          (event: Event) => event.promoterId === promoterId
-        ) || [];
-     
-
-      } catch (error) {
-        console.error('Error parsing confirmed events:', error);
-      }
-    }
-
-    return { ikfEvents };
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    return { ikfEvents: [] }; // Always return a default structure
-  }
+type EventsResponse = {
+  confirmedEvents: EventType[];
+  pendingEvents: EventType[];
 }
 
-async function fetchPMTEvents(promoterId: string) {
+type IKFEventsResponse = {
+  ikfEvents: EventType[];
+}
+
+async function fetchPMTEvents(promoterId: string): Promise<EventsResponse> {
   try {
     const headersList = await headers();
     const host = headersList.get('host');
     
-    // Fetch both confirmed and pending events in parallel
     const [confirmedResponse, pendingResponse] = await Promise.all([
       fetch(`http://${host}/api/pmt/events`, {
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
       }),
-      fetch(`http://${host}/api/pmt/pending_events`, {  // Add this endpoint
+      fetch(`http://${host}/api/pmt/pending_events`, {
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
       })
     ]);
 
-    // Initialize arrays
-    let confirmedEvents: Event[] = [];
-    let pendingEvents: Event[] = [];
+    let confirmedEvents: EventType[] = [];
+    let pendingEvents: EventType[] = [];
 
-    // Handle confirmed events
     if (confirmedResponse.ok) {
       const confirmedData = await confirmedResponse.json();
       confirmedEvents = confirmedData.events?.filter(
-        (event: Event) => event.promoterId === promoterId
+        (event: EventType) => event.promoterId === promoterId
       ) || [];
-    } else {
-      const errorText = await confirmedResponse.text();
-      console.error('Failed to fetch confirmed events:', errorText);
     }
 
-    // Handle pending events
     if (pendingResponse.ok) {
       const pendingData = await pendingResponse.json();
       pendingEvents = pendingData.events?.filter(
-        (event: Event) => event.promoterId === promoterId
+        (event: EventType) => event.promoterId === promoterId
       ) || [];
-    } else {
-      const errorText = await pendingResponse.text();
-      console.error('Failed to fetch pending events:', errorText);
     }
 
     return {
@@ -93,29 +51,60 @@ async function fetchPMTEvents(promoterId: string) {
       pendingEvents,
     };
   } catch (error) {
-    console.error('Error fetching events:', error);
+    console.error('Error fetching PMT events:', error);
     return { confirmedEvents: [], pendingEvents: [] };
+  }
+}
+
+async function fetchIKFEvents(promoterId: string): Promise<IKFEventsResponse> {
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host');
+    
+    const response = await fetch(`http://${host}/api/ikf/events`, { 
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        ikfEvents: data.events?.filter(
+          (event: EventType) => event.promoterId === promoterId
+        ) || []
+      };
+    }
+    
+    return { ikfEvents: [] };
+  } catch (error) {
+    console.error('Error fetching IKF events:', error);
+    return { ikfEvents: [] };
   }
 }
 
 export default async function PromoterPage(props: { params: Promise<{ promoterId: string }> }) {
   const { promoterId } = await props.params;
   
-  // Fetch all data in parallel
-  const [
-    promoter,
-    { confirmedEvents, pendingEvents },
-    { ikfEvents },
-  ] = await Promise.all([
-    fetchPromoter(promoterId),
-    fetchPMTEvents(promoterId),
-    fetchPromoterIKFEvents(promoterId),
-  ]);
+  // First fetch the promoter to check sanctioning
+  const promoter = await fetchPromoter(promoterId);
 
-  // If no promoter is found, you might want to handle this case
   if (!promoter) {
-    // You could redirect to a 404 page or show an error message
     return <div>Promoter not found</div>;
+  }
+
+  // Initialize event data with proper types
+  let pmtEvents: EventsResponse = { confirmedEvents: [], pendingEvents: [] };
+  let ikfEvents: IKFEventsResponse = { ikfEvents: [] };
+
+  // Conditionally fetch events based on sanctioning
+  if (promoter.sanctioning?.includes('PMT')) {
+    pmtEvents = await fetchPMTEvents(promoterId);
+  }
+  
+  if (promoter.sanctioning?.includes('IKF')) {
+    ikfEvents = await fetchIKFEvents(promoterId);
   }
 
   const pageTitle = promoter.promotion || `${promoter.firstName} ${promoter.lastName}'s Events`;
@@ -128,12 +117,11 @@ export default async function PromoterPage(props: { params: Promise<{ promoterId
       <PromoterDashboard
         promoter={promoter}
         promoterId={promoterId}
-        initialConfirmedEvents={confirmedEvents}
-        initialPendingEvents={pendingEvents}
+        initialConfirmedEvents={pmtEvents.confirmedEvents}
+        initialPendingEvents={pmtEvents.pendingEvents}
         logoUrl={"/logos/techboutslogoFlat.png"}
-        ikfEvents={ikfEvents}
+        ikfEvents={ikfEvents.ikfEvents}
       />
     </>
   );
 }
-

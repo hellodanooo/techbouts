@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from 'use-places-autocomplete';
+import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete';
 
 interface GoogleAutocompleteProps {
   onSelect: (address: string, coordinates: { lat: number; lng: number }) => void;
@@ -12,7 +9,8 @@ interface GoogleAutocompleteProps {
 
 const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => {
   const [error, setError] = useState<string | null>(null);
-  
+  const [country, setCountry] = useState<'us' | 'mx'>('us'); // Default to US
+
   const {
     ready,
     value,
@@ -22,7 +20,7 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
   } = usePlacesAutocomplete({
     requestOptions: {
       types: ['address'],
-      componentRestrictions: { country: 'us' }
+      componentRestrictions: { country }, // Dynamically restrict search to selected country
     },
     debounce: 300,
   });
@@ -31,50 +29,30 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
     try {
       setValue(description, false);
       clearSuggestions();
-
-      // First try to get coordinates using getGeocode
-      try {
-        const results = await getGeocode({ address: description });
-        const { lat, lng } = await getLatLng(results[0]);
-        setError(null);
-        onSelect(description, { lat, lng });
-      } catch (geocodeError) {
-        console.error('Geocode error:', geocodeError);
-        // If geocoding fails, try to get coordinates from Places API directly
-        const placesService = new google.maps.places.PlacesService(
-          document.createElement('div')
-        );
-
-        placesService.findPlaceFromQuery(
-          {
-            query: description,
-            fields: ['formatted_address', 'geometry']
-          },
-          (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results?.[0]) {
-              const place = results[0];
-              if (place.geometry?.location) {
-                const lat = place.geometry.location.lat();
-                const lng = place.geometry.location.lng();
-                setError(null);
-                onSelect(description, { lat, lng });
-              } else {
-                setError('Could not determine location coordinates');
-              }
-            } else {
-              setError('Could not find location details');
-            }
-          }
-        );
-      }
+  
+      const results = await getGeocode({ address: description });
+      const { lat, lng } = await getLatLng(results[0]);
+  
+      onSelect(description, { lat, lng });
     } catch (error) {
-      console.error('Error selecting place:', error);
-      setError('Error selecting location. Please try again.');
+      console.error("Error selecting place:", error);
+      setError("Error selecting location. Please try again.");
     }
   };
 
   return (
     <div className="relative">
+      {/* Country Selector */}
+      <select
+        className="w-full p-2 border rounded mb-2"
+        value={country}
+        onChange={(e) => setCountry(e.target.value as 'us' | 'mx')}
+      >
+        <option value="us">United States</option>
+        <option value="mx">Mexico</option>
+      </select>
+
+      {/* Address Input */}
       <input
         type="text"
         value={value}
@@ -83,9 +61,11 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
           setError(null);
         }}
         disabled={!ready}
-        placeholder="Search address"
+        placeholder={`Search address in ${country === 'us' ? 'United States' : 'Mexico'}`}
         className="w-full p-2 border rounded"
       />
+
+      {/* Suggestions Dropdown */}
       {status === 'OK' && (
         <ul className="absolute z-10 border rounded bg-white w-full max-h-40 overflow-y-auto">
           {data.map(({ place_id, description }) => (
@@ -99,11 +79,9 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
           ))}
         </ul>
       )}
-      {error && (
-        <div className="text-red-500 text-sm mt-1">
-          {error}
-        </div>
-      )}
+
+      {/* Error Message */}
+      {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
     </div>
   );
 };

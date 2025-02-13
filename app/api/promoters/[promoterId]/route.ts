@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/firebase_techbouts/config';
-import { collection, query, where, getDocs } from 'firebase/firestore'; // Updated imports
-import { Promoter } from '@/utils/types';
+import { db } from '../../../../lib/firebase_techbouts/config'; // Change to use the same db instance
+import { doc, getDoc } from 'firebase/firestore'; // Add these imports
+import { Promoter } from '@/utils/types'; // Import the Promoter type
 
 export async function GET(
   request: Request,
@@ -12,38 +12,48 @@ export async function GET(
   console.log(`Fetching promoter with ID: ${promoterId}`);
 
   try {
-    // Create a query against the promoters collection
-    const promotersRef = collection(db, 'promotions');
-    const q = query(promotersRef, where('promoterId', '==', promoterId));
-    const querySnapshot = await getDocs(q);
+    const jsonDocRef = doc(db, 'promotions', 'promotions_json'); // Changed to match working API
+    const snapshot = await getDoc(jsonDocRef); // Changed to use getDoc
 
-    if (querySnapshot.empty) {
-      console.log("No matching promoter found");
+    if (!snapshot.exists()) { // Changed to use exists()
+      console.log("Document does not exist");
+      return NextResponse.json(
+        { error: "Promoter document not found" },
+        { status: 404 }
+      );
+    }
+
+    const data = snapshot.data() as { promoters: Promoter[] }; // Explicitly type the data as containing an array of Promoters
+
+    if (!data?.promoters) {
+      return NextResponse.json(
+        { error: "No promoters data found" },
+        { status: 404 }
+      );
+    }
+
+    const promoter = data.promoters.find((p) => p.promoterId === promoterId);
+
+    if (!promoter) {
       return NextResponse.json(
         { error: "Promoter not found" },
         { status: 404 }
       );
     }
 
-    // Since promoterId should be unique, we'll take the first match
-    const promoterDoc = querySnapshot.docs[0];
-    const promoterData = promoterDoc.data() as Omit<Promoter, 'sanctioning'> & { sanctioning: string | string[] };
-
-    // Ensure sanctioning is always an array
+    // Format the response to match the structure used in the list API
     const formattedPromoter = {
-      id: promoterData.promoterId,
-      city: promoterData.city,
-      email: promoterData.email,
-      firstName: promoterData.firstName,
-      lastName: promoterData.lastName,
-      name: promoterData.promotion,
-      phone: promoterData.phone,
-      promoterId: promoterData.promoterId,
-      promotion: promoterData.promotion,
-      sanctioning: Array.isArray(promoterData.sanctioning) 
-        ? promoterData.sanctioning 
-        : [promoterData.sanctioning], // Convert string to array if necessary
-      state: promoterData.state,
+      id: promoter.promoterId,
+      city: promoter.city,
+      email: promoter.email,
+      firstName: promoter.firstName,
+      lastName: promoter.lastName,
+      name: promoter.promotion,
+      phone: promoter.phone,
+      promoterId: promoter.promoterId,
+      promotion: promoter.promotion,
+      sanctioning: promoter.sanctioning,
+      state: promoter.state,
     };
 
     return NextResponse.json({ promoter: formattedPromoter });

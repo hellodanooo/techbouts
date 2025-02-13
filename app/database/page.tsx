@@ -1,78 +1,42 @@
 import React from 'react';
-import { Metadata } from 'next';
-import FighterTable from '../../components/FightersTable';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase_techbouts/config';
+import Link from 'next/link';
+import Image from 'next/image';
 
-
-type Fighter = {
-  address: string;
-  age: number;
-  city: string;
-  coach: string;
-  coach_phone: string;
-  coach_email: string;
-  email: string;
-  dob: string;
-  docId: string;
-  fighter_id: string;
-  first: string;
-  gender: string;
-  gym: string;
-  gym_id: string;
-  height: number;
-  last: string;
-  loss: number;
-  mtp_id: string;
-  photo: string;
-  state: string;
-  website: string;
-  weightclass: number;
-  win: string | number;
+export const metadata = {
+  title: 'Fighter Database Organizations',
+  description: 'Choose between IKF and PMT fighter databases',
 };
 
-
-const fetchFighters = async (): Promise<Fighter[]> => {
-
-  try {
-    const fightersRef = collection(db, 'fighters_database');
-    const fightersSnapshot = await getDocs(fightersRef);
-
-    const allFighters: Fighter[] = [];
-    fightersSnapshot.forEach((doc) => {
-      const data = doc.data();
-      if (data.fighters) {
-        allFighters.push(...data.fighters);
-      }
-    });
-
-    return allFighters;
-  } catch (error) {
-    console.error('Error fetching fighters:', error);
-    return [];
-  }
-};
-
-
-
-export async function generateMetadata(): Promise<Metadata> {
-  const fighters = await fetchFighters();
-  return {
-    title: `Fighter Database - ${fighters.length} Fighters`,
-    description: `Explore our fighter database with ${fighters.length} fighters grouped by weight class, gym, and more.`,
-  };
-}
-
-
-
-export default async function FighterDatabase() {
-  const fighters = await fetchFighters();
-
+export default function FighterDatabase() {
   return (
-    <div className="database_page">
-      <h1>Fighter Database</h1>
-      <p>Total Fighters: {fighters.length}</p>
-      <FighterTable fighters={fighters} />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold mb-12">Select Organization Database</h1>
+      <div className="flex flex-col md:flex-row gap-8 items-center">
+        <Link 
+          href="/database/ikf" 
+          className="transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+        >
+          <Image
+            src="/logos/ikf_logo.png"
+            alt="IKF Database"
+            width={250}
+            height={125}
+            className="rounded-lg shadow-lg"
+          />
+        </Link>
+        <Link 
+          href="/database/pmt" 
+          className="transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+        >
+          <Image
+            src="/logos/pmt_logo_2024_sm.png"
+            alt="PMT Database"
+            width={250}
+            height={125}
+            className="rounded-lg shadow-lg"
+          />
+        </Link>
+      </div>
     </div>
   );
 }

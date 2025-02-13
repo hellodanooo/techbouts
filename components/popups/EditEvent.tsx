@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Event } from '@/utils/types';
+import { EventType } from '@/utils/types';
 import { parseISO, format } from 'date-fns';
 import { storage } from '@/lib/firebase_pmt/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -8,8 +8,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 interface EditEventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  event: Event;
-  onSave: (updatedEvent: Event) => Promise<void>;
+  event: EventType;
+  onSave: (updatedEvent: EventType) => Promise<void>;
 }
 
 const modalOverlayStyle: React.CSSProperties = {
@@ -99,7 +99,7 @@ export default function EditEventModal({
   event,
   onSave 
 }: EditEventModalProps) {
-  const [formData, setFormData] = useState<Event>(event);
+  const [formData, setFormData] = useState<EventType>(event);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

@@ -1,0 +1,91 @@
+// utils/apiFunctions/fetchIkfEvent.ts
+import { EventType } from '../types';
+import { headers } from 'next/headers';
+
+export async function fetchIkfEvent(eventId: string): Promise<EventType | null> {
+  console.log('fetchIkfEvent - Starting fetch for eventId:', eventId);
+  
+  try {
+    // Get the host from headers for server-side requests
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    
+    const apiUrl = `${protocol}://${host}/api/ikf/events/${eventId}`;
+    console.log('fetchIkfEvent - Calling API:', apiUrl);
+    
+    const response = await fetch(apiUrl, { cache: 'no-store' }); // Added no-store to prevent caching
+    console.log('fetchIkfEvent - API response status:', response.status);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log('fetchIkfEvent - Event not found in IKF database');
+        return null;
+      }
+      throw new Error(`Failed to fetch IKF event: ${response.status}`);
+    }
+
+    const { event: data } = await response.json();
+    console.log('fetchIkfEvent - Raw data received:', data);
+    
+    // Transform the data to match the Event type
+    const eventData: EventType = {
+      id: data.id || data.eventId,
+      eventId: data.eventId || data.id,
+      docId: data.docId || data.id,
+      event_name: data.event_name,
+      name: data.event_name,
+      competition_type: 'FightCard',
+      venue_name: data.venue_name || '',
+      address: data.address || '',
+      city: data.city || '',
+      state: data.state || '',
+      date: data.date,
+      flyer: data.flyer || '',
+      weighin_date: data.weighin_date || data.date,
+      weighin_start_time: data.weighin_start_time || '',
+      weighin_end_time: data.weighin_end_time || '',
+      rules_meeting_time: data.rules_meeting_time || '',
+      bouts_start_time: data.bouts_start_time || '',
+      doors_open: data.doors_open || '',
+      spectator_info: data.spectator_info || '',
+      registration_enabled: data.registration_enabled || false,
+      registration_fee: data.registration_fee || 0,
+      tickets_enabled: data.tickets_enabled || false,
+      ticket_enabled: data.tickets_enabled || false,
+      ticket_price: data.ticket_price || 0,
+      ticket_price_description: data.ticket_price_description || '',
+      ticket_price2: data.ticket_price2 || 0,
+      ticket_price2_description: data.ticket_price2_description || '',
+      event_details: data.event_details || '',
+      coach_price: data.coach_price || 0,
+      coach_enabled: data.coach_enabled || false,
+      photos_enabled: data.photos_enabled || false,
+      photos_price: data.photos_price || 0,
+      sanctioning: data.sanctioning || 'IKF',
+      promotion: data.promotion || '',
+      email: data.email || '',
+      promoterId: data.promoterId || '',
+      promoterEmail: data.promoterEmail || '',
+      status: data.status || 'pending',
+      ticket_system_option: data.ticket_system_option || 'none',
+      coordinates: data.coordinates || undefined,
+      street: data.street,
+      postal_code: data.postal_code,
+      country: data.country,
+      colonia: data.colonia,
+      municipality: data.municipality,
+      ticket_link: data.ticket_link,
+      zip: data.zip,
+      numMats: data.numMats,
+      registration_link: data.registration_link,
+      matches_link: data.matches_link
+    };
+
+    console.log('fetchIkfEvent - Transformed event data:', eventData);
+    return eventData;
+  } catch (error) {
+    console.error('fetchIkfEvent - Error:', error);
+    return null;
+  }
+}

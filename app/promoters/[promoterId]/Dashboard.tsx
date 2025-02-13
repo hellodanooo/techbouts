@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Event, Promoter } from '../../../utils/types';
+import { EventType, Promoter } from '../../../utils/types';
 import { parseISO, format } from 'date-fns';
 import Calendar from '../Calendar';
 import MonthTable from '../../../components/MonthTable';
@@ -13,10 +13,10 @@ import AuthDisplay from '@/components/ui/AuthDisplay';
 interface PromoterDashboardProps {
   promoter: Promoter;  // Changed from Promoter[] to Promoter
   promoterId: string;
-  initialConfirmedEvents: Event[];
-  initialPendingEvents: Event[];
+  initialConfirmedEvents: EventType[];
+  initialPendingEvents: EventType[];
   logoUrl: string;
-  ikfEvents: Event[];
+  ikfEvents: EventType[];
 }
 
 export default function PromoterDashboard({ 
@@ -31,10 +31,10 @@ export default function PromoterDashboard({
   const [showEventModal, setShowEventModal] = useState(false);
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
-  // Check if the user's email matches the promoter's email
-  const isAuthorizedPromoter = useMemo(() => {
-    return user?.email && promoter?.email && user.email === promoter.email;
-  }, [user?.email, promoter?.email]);
+  const canManageEvents = useMemo(() => {
+    return (user?.email && promoter?.email && user.email === promoter.email) || isAdmin;
+  }, [user?.email, promoter?.email, isAdmin]);
+
 
   // Process events with status
   const allEvents = useMemo(() => {
@@ -62,6 +62,12 @@ export default function PromoterDashboard({
     return [...confirmed, ...pending, ...ikf];
   }, [initialConfirmedEvents, initialPendingEvents, ikfEvents]);
 
+
+
+
+
+
+  
   return (
     <div className="p-5">
       <AuthDisplay 
@@ -86,15 +92,17 @@ export default function PromoterDashboard({
         </div>
       </div>
 
-      {/* Only show Create Event button if user email matches promoter email */}
-      {isAuthorizedPromoter && (
-        <button
-          onClick={() => setShowEventModal(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Create Event
-        </button>
-      )}
+   {canManageEvents && (
+ <div>
+ <button
+    onClick={() => setShowEventModal(true)}
+    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+  >
+    Create Event
+  </button>
+
+  </div>
+)}
 
       {showEventModal && (
         <AddEventForm

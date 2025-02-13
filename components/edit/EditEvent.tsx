@@ -1,12 +1,12 @@
 "use client";
 
 import React from 'react';
-import { Event } from '@/utils/types';
+import { EventType } from '@/utils/types';
 import { format, parseISO } from 'date-fns';
 
 
 interface EventOptionsProps {
-  event: Event;
+  event: EventType;
 }
 
 
@@ -44,9 +44,9 @@ const EventOptions: React.FC<EventOptionsProps> = ({ event }) => {
       <section className="grid grid-cols-2 gap-4">
         <div>
           <h4 className="font-medium text-gray-700">Date & Time</h4>
-          <p>{formatDate(event.date)}</p>
-          <p>Doors: {formatTime(event.doors_open)}</p>
-          <p>Bouts Start: {formatTime(event.bouts_start_time)}</p>
+          <p>{formatDate(event.date ?? '')}</p>
+          <p>Doors: {formatTime(event.doors_open ?? '')}</p>
+          <p>Bouts Start: {formatTime(event.bouts_start_time ?? '')}</p>
         </div>
 
         <div>
@@ -62,14 +62,14 @@ const EventOptions: React.FC<EventOptionsProps> = ({ event }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600">Date</p>
-            <p>{formatDate(event.weighin_date)}</p>
+            <p>{formatDate(event.weighin_date ?? '')}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Time</p>
-            <p>{formatTime(event.weighin_start_time)} - {formatTime(event.weighin_end_time)}</p>
+            <p>{formatTime(event.weighin_start_time ?? '')} - {formatTime(event.weighin_end_time ?? '')}</p>
           </div>
         </div>
-        <p className="text-sm">Rules Meeting: {formatTime(event.rules_meeting_time)}</p>
+        <p className="text-sm">Rules Meeting: {formatTime(event.rules_meeting_time ?? '')}</p>
       </section>
 
       {(event.registration_enabled || event.tickets_enabled || event.coach_enabled || event.photos_enabled) && (
@@ -86,21 +86,21 @@ const EventOptions: React.FC<EventOptionsProps> = ({ event }) => {
               <div>
                 <p className="text-sm text-gray-600">Tickets</p>
                 <p>{formatCurrency(event.ticket_price)} - {event.ticket_price_description}</p>
-                {event.ticket_price2 > 0 && (
-                  <p>{formatCurrency(event.ticket_price2)} - {event.ticket_price2_description}</p>
+                {event.ticket_price2 && event.ticket_price2 > 0 && (
+                  <p>{formatCurrency(event.ticket_price2 ?? 0)} - {event.ticket_price2_description}</p>
                 )}
               </div>
             )}
             {event.coach_enabled && (
               <div>
                 <p className="text-sm text-gray-600">Coach Pass</p>
-                <p>{formatCurrency(event.coach_price)}</p>
+                <p>{formatCurrency(event.coach_price ?? 0)}</p>
               </div>
             )}
             {event.photos_enabled && (
               <div>
                 <p className="text-sm text-gray-600">Photos</p>
-                <p>{formatCurrency(event.photos_price)}</p>
+                <p>{formatCurrency(event.photos_price ?? 0)}</p>
               </div>
             )}
           </div>

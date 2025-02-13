@@ -1,6 +1,6 @@
 // utils/apiFunctions/fetchPmtEvent.ts
 import { headers } from 'next/headers';
-import { Event } from '../types';
+import { EventType } from '../types';
 
 export async function fetchPmtEvent(eventId: string) {
   try {
@@ -26,7 +26,7 @@ export async function fetchPmtEvent(eventId: string) {
       throw new Error('No event data returned');
     }
 
-    return data.event as Event;
+    return data.event as EventType;
   } catch (error) {
     console.error('Error fetching event:', error);
     return null;

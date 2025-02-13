@@ -141,7 +141,7 @@ export interface FullContactFighter {
 
 
 
-export interface Event {
+export interface EventType {
   competition_type: 'FightCard' | 'Tournament';
   event_name: string;
   venue_name?: string;
@@ -155,26 +155,26 @@ export interface Event {
   coordinates?: { latitude: number; longitude: number };
   registration_link?: string;
   matches_link?: string;
-  weighin_date: string;
-  weighin_start_time: string;
-  weighin_end_time: string;
-  rules_meeting_time: string;
-  bouts_start_time: string;
-  docId: string;
-  doors_open: string;
-  spectator_info: string;
+  weighin_date?: string;
+  weighin_start_time?: string;
+  weighin_end_time?: string;
+  rules_meeting_time?: string;
+  bouts_start_time?: string;
+  docId?: string;
+  doors_open?: string;
+  spectator_info?: string;
   registration_enabled: boolean;
   registration_fee: number;
   tickets_enabled: boolean;
   ticket_price: number;
-  ticket_price_description: string;
-  ticket_price2: number;
-  ticket_price2_description: string;
-  event_details: string;
-  coach_price: number;
-  coach_enabled: boolean;
-  photos_enabled: boolean;
-  photos_price: number;
+  ticket_price_description?: string;
+  ticket_price2?: number;
+  ticket_price2_description?: string;
+  event_details?: string;
+  coach_price?: number;
+  coach_enabled?: boolean;
+  photos_enabled?: boolean;
+  photos_price?: number;
   sanctioning: string;
   promotion: string;
   email: string;
@@ -186,8 +186,8 @@ export interface Event {
   country?: string;
   colonia?: string;
   municipality?: string;
-  ticket_enabled: boolean;
-  ticket_system_option: 'inHouse' | 'thirdParty' | 'none';
+  ticket_enabled?: boolean;
+  ticket_system_option?: 'inHouse' | 'thirdParty' | 'none';
   ticket_link?: string;
   zip?: string;
   name?: string;

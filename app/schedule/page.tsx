@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import MonthTable from "@/components/MonthTable";
-import { Event } from "@/utils/types";
+import { EventType } from "@/utils/types";
 import { fetchEvents } from "@/utils/pmt/events";
 
 export default function SchedulePage() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventType[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<EventType[]>([]);
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [eventCount, setEventCount] = useState<number | null>(null);

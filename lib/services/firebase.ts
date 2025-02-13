@@ -10,7 +10,7 @@ import {
   getDoc,
   
 } from 'firebase/firestore';
-import { Event, ResultsFighter } from '@/utils/types';
+import { EventType, ResultsFighter } from '@/utils/types';
 import { calculateAge } from '@/utils/calculatAge';
 
 interface ResultsJsonData {
@@ -91,7 +91,7 @@ export class FirebaseService {
       }
 
       for (const eventDoc of querySnapshot.docs) {
-        const event = eventDoc.data() as Event;
+        const event = eventDoc.data() as EventType;
         const eventYear = event.date.substring(0, 4);
         
         if (!selectedYearKeys.includes(eventYear)) {
@@ -113,7 +113,7 @@ export class FirebaseService {
 
   private static async getFightersFromEvent(
     eventId: string, 
-    event: Event,
+    event: EventType,
     onProgress?: (message: string) => void
   ): Promise<ResultsFighter[]> {
     // Try resultsJson first
@@ -132,7 +132,7 @@ export class FirebaseService {
 
   private static async processFightersFromJson(
     resultsData: ResultsJsonData,
-    event: Event,
+    event: EventType,
     eventId: string
   ): Promise<ResultsFighter[]> {
     return resultsData.fighters.map(fighter => ({
@@ -156,7 +156,7 @@ export class FirebaseService {
 
   private static async processFightersFromResults2(
     eventId: string,
-    event: Event
+    event: EventType
   ): Promise<ResultsFighter[]> {
     const fightersRef = collection(pmtDb, 'events', eventId, 'results2');
     const fightersSnapshot = await getDocs(fightersRef);

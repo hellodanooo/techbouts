@@ -3,13 +3,13 @@ import React, { FC, useState, useEffect } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirestore, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { app } from '@/lib/firebase_pmt/config';
-import { Event } from '../../utils/types';
+import { EventType } from '../../utils/types';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { generateDocId } from '../../utils/eventManagement';
 import Image from 'next/image';
 
 interface PendingEventData {
-  events: Event[];
+  events: EventType[];
   lastUpdated?: string;
 }
 interface StripeError {
@@ -17,14 +17,14 @@ interface StripeError {
 }
 
 interface PromoterEditEventProps {
-  event: Event | null;
+  event: EventType | null;
   eventId: string;
   onCancelUpdate: () => void;
   onUpdateSuccess: () => void;
 }
 
 interface PaymentFormProps {
-  event: Event;
+  event: EventType;
   onSuccess: () => void;
   onCancel: () => void;
   validateFields: () => boolean;
@@ -329,7 +329,7 @@ const PromoterEditEvent: FC<PromoterEditEventProps> = ({
       
       if (pendingDoc.exists()) {
         const pendingData = pendingDoc.data() as PendingEventData;
-        const filteredEvents = pendingData.events.filter((e: Event) => e.id !== eventId);
+        const filteredEvents = pendingData.events.filter((e: EventType) => e.id !== eventId);
         await updateDoc(pendingEventsRef, { events: filteredEvents });
       }
 

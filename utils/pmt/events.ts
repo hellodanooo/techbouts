@@ -1,9 +1,9 @@
-import { Event } from '@/utils/types';
+import { EventType } from '@/utils/types';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { generateDocId } from '@/utils/eventManagement';
 import { db } from '@/lib/firebase_pmt/config';
 
-export async function fetchEvents(): Promise<Event[]> {
+export async function fetchEvents(): Promise<EventType[]> {
   try {
     console.log('Utility: Starting fetch...');
     const eventCalendarRef = doc(db, 'event_calendar', 'upcoming_events');

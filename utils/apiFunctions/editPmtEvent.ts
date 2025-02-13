@@ -1,7 +1,7 @@
 // utils/apiFunctions/editPmtEvent.ts
-import { Event } from '../types';
+import { EventType } from '../types';
 
-export async function editPmtEvent(eventId: string, updatedEventData: Partial<Event>): Promise<Event | null> {
+export async function editPmtEvent(eventId: string, updatedEventData: Partial<EventType>): Promise<EventType | null> {
   try {
     const url = `/api/pmt/events/${eventId}`;
     console.log('Updating Event Data at:', url);
@@ -29,7 +29,7 @@ export async function editPmtEvent(eventId: string, updatedEventData: Partial<Ev
       throw new Error('No event data returned after update');
     }
 
-    return data.event as Event;
+    return data.event as EventType;
   } catch (error) {
     console.error('Error updating event:', error);
     return null;

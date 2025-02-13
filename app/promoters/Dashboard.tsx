@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Event, Promoter } from '../../utils/types';
+import { EventType, Promoter } from '../../utils/types';
 import Calendar from './Calendar';
 import MonthTable from '../../components/MonthTable';
 import { useRouter } from 'next/navigation';
@@ -11,9 +11,9 @@ import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 
 interface Props {
-  initialConfirmedEvents?: Event[];
-  initialPendingEvents?: Event[];
-  ikfEvents?: Event[];
+  initialConfirmedEvents?: EventType[];
+  initialPendingEvents?: EventType[];
+  ikfEvents?: EventType[];
   ikfPromoters?: Promoter[];
   pmtPromoters?: Promoter[];
 }
@@ -161,7 +161,7 @@ const PromoterDashboard = ({
       router.push(`/promoters/${promoter.promoterId.toLowerCase()}`);
     } else {
       // For IKF, use the promoterId
-      router.push(`/promoter/${promoter.promoterId}`);
+      router.push(`/promoters/${promoter.promoterId}`);
     }
   };
 

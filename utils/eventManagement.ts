@@ -2,9 +2,9 @@
 
 import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase_techbouts/config';
-import { Event } from './types';
+import { EventType } from './types';
 
-const getEventsJson = async (): Promise<Event[]> => {
+const getEventsJson = async (): Promise<EventType[]> => {
   const docRef = doc(db, 'events', 'events_json');
   const snapshot = await getDoc(docRef);
 
@@ -22,12 +22,12 @@ const getEventsJson = async (): Promise<Event[]> => {
   return data?.events || [];
 };
 
-const saveFirestoreEvents = async (events: Event[]) => {
+const saveFirestoreEvents = async (events: EventType[]) => {
   const docRef = doc(db, 'events', 'events_json');
   await updateDoc(docRef, { events });
 };
 
-export const saveToFirestore = async (event: Event | { eventId: string }, action: 'add' | 'update' | 'delete') => {
+export const saveToFirestore = async (event: EventType | { eventId: string }, action: 'add' | 'update' | 'delete') => {
   if (!event || typeof event !== 'object' || !('eventId' in event)) {
     throw new Error('Invalid event data provided.');
   }
@@ -40,7 +40,7 @@ export const saveToFirestore = async (event: Event | { eventId: string }, action
       if (events.some((e) => e.eventId === event.eventId)) {
         throw new Error('Event with the same ID already exists.');
       }
-      updatedEvents = [...events, event as Event];
+      updatedEvents = [...events, event as EventType];
       break;
 
     case 'update':
@@ -74,7 +74,7 @@ export const generateDocId = (eventName: string, city: string, state: string, da
   if (!date || !/^\d{4}-\d{2}-\d{2}/.test(date)) {
     throw new Error('Invalid date format. Expected YYYY-MM-DD');
   }
-
+  
   // Sanitize inputs
   const sanitizedEventName = sanitizeString(eventName);
   const sanitizedCity = sanitizeString(city);
@@ -90,7 +90,7 @@ export const generateDocId = (eventName: string, city: string, state: string, da
   return `${sanitizedEventName}_${sanitizedCity}_${sanitizedState}_${month}_${day}_${year}`;
 };
 
-export const addEvent = async (eventData: Event): Promise<{ success: boolean; message: string }> => {
+export const addEvent = async (eventData: EventType): Promise<{ success: boolean; message: string }> => {
   try {
     // Validate required fields
     if (!eventData.event_name || !eventData.city || !eventData.state || !eventData.date) {
@@ -105,7 +105,7 @@ export const addEvent = async (eventData: Event): Promise<{ success: boolean; me
       eventData.date
     );
     
-    const newEvent: Event = {
+    const newEvent: EventType = {
       ...eventData,
       id: docId,
       eventId: docId,
@@ -132,15 +132,7 @@ export const addEvent = async (eventData: Event): Promise<{ success: boolean; me
 
 
 
-
-
-
-
-
-
-
-
-export const updateEvent = async (eventId: string, updatedData: Partial<Event>): Promise<{ success: boolean; message: string }> => {
+export const updateEvent = async (eventId: string, updatedData: Partial<EventType>): Promise<{ success: boolean; message: string }> => {
   try {
     const eventRef = doc(db, 'techbouts_events', eventId);
     const snapshot = await getDoc(eventRef);
@@ -149,7 +141,7 @@ export const updateEvent = async (eventId: string, updatedData: Partial<Event>):
       throw new Error(`Event with ID ${eventId} does not exist.`);
     }
 
-    const existingEvent = snapshot.data() as Event;
+    const existingEvent = snapshot.data() as EventType;
     const updatedEvent = { ...existingEvent, ...updatedData };
 
     await updateDoc(eventRef, updatedData);
@@ -176,7 +168,7 @@ export const deleteEvent = async (eventId: string): Promise<{ success: boolean; 
 };
 
 
-export const approvePendingEvent = async (pendingEvent: Event): Promise<{ success: boolean; message: string }> => {
+export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ success: boolean; message: string }> => {
   try {
     // Generate document ID for the new confirmed event
     const cityFormatted = pendingEvent.city.replace(/\s+/g, '_');
@@ -188,7 +180,7 @@ export const approvePendingEvent = async (pendingEvent: Event): Promise<{ succes
     );
 
     // Provide default values for missing fields
-    const eventData: Event = {
+    const eventData: EventType = {
       event_name: pendingEvent.event_name,
       city: pendingEvent.city,
       state: pendingEvent.state,
