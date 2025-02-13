@@ -48,7 +48,9 @@ const extractField = <T extends string | number | boolean | undefined>(
 export async function GET() {
   try {
     const response = await fetch(firestoreURL, { cache: 'no-store' });
-
+    console.log("Firestore GET response status:", response.status);
+    const responseText = await response.text();
+    console.log("Firestore GET response body:", responseText);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
