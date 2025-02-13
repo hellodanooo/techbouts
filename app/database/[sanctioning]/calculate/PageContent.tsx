@@ -1,13 +1,18 @@
 // app/database/[sanctioning]/calculate/CalculateRecordsClient.tsx
 'use client';
 
+// CURRENTLY YOU HAVE TO DISABLE AUTH IN ORDER TO CALCULATE RECORDS
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { calculateAndStoreRecords as calculatePMTRecords } from '@/utils/pmt/calculateRecords';
 import { calculateAndStoreRecords as calculateIKFRecords } from '@/utils/pmt/calculateRecords';
+import AuthDisplay from '@/components/ui/AuthDisplay';
 import { useAuth } from '@/context/AuthContext';
+
+
 
 interface CalculateRecordsClientProps {
   sanctioning: string;
@@ -19,7 +24,21 @@ export default function CalculateRecordsClient({ sanctioning }: CalculateRecords
   const [error, setError] = useState<string | null>(null);
   // Default to a recent year (adjust as needed)
   const [selectedYear, setSelectedYear] = useState<string>('2024');
-  const { user } = useAuth();
+  const { user, isAdmin, isNewUser } = useAuth();
+
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardContent>
+            <p className="text-center py-4">Please login to access this feature.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+
 
   const handleCalculate = async () => {
     setLoading(true);
@@ -32,11 +51,14 @@ export default function CalculateRecordsClient({ sanctioning }: CalculateRecords
         result = await calculateIKFRecords(selectedYear, (message) =>
           setProgress((prev) => [...prev, message])
         );
-      } else {
+      } else  if (sanctioning.toLowerCase() === 'pmt') {
         result = await calculatePMTRecords(selectedYear, (message) =>
           setProgress((prev) => [...prev, message])
         );
+      } else {
+        throw new Error('Invalid sanctioning body specified');
       }
+
       setProgress((prev) => [...prev, result.message]);
     } catch (error) {
       setError('Error calculating records. Check console for details.');
@@ -46,20 +68,15 @@ export default function CalculateRecordsClient({ sanctioning }: CalculateRecords
     }
   };
 
-  if (!user) {
-    return (
-      <div className="container mx-auto py-6">
-        <Card>
-          <CardContent>
-            <p className="text-center py-4">Please login to access this feature.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+        <AuthDisplay 
+        user={user}
+        isAdmin={isAdmin}
+        isNewUser={isNewUser}
+      />
       <Card>
         <CardHeader>
           <CardTitle>

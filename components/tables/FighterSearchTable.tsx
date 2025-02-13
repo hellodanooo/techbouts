@@ -1,4 +1,4 @@
-// components/MultiTermSearch.tsx
+// components/tables/FighterSearchTable.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -37,6 +37,10 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
 
   // When the search terms change, call the API to search for matching fighters.
   useEffect(() => {
+
+console.log('terms:', terms);
+console.log('sanctioning:', sanctioning);
+
     if (terms.length > 0) {
       const fetchSearchResults = async () => {
         setLoading(true);
@@ -44,7 +48,7 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
           // Build a comma-separated string of terms
           const queryParam = terms.join(',');
           const res = await fetch(
-            `/api/pmt/fighters/searchFighters?sanctioning=${sanctioning}&year=${year}&terms=${encodeURIComponent(queryParam)}`
+            `/api/${sanctioning}/fighters/searchFighters?year=${year}&terms=${encodeURIComponent(queryParam)}`
           );
           
           const data = await res.json();

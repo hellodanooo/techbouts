@@ -1,4 +1,4 @@
-// app/database/[sanctioning]/calculate/page.tsx
+// app/database/calculate/page.tsx
 import PageContent from './PageContent';
 
 type Props = {

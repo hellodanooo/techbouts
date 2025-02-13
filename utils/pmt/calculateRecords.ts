@@ -85,8 +85,29 @@ export interface FighterRecord {
     ringawareness: number;
   }>;
   lastUpdated: string;
+  searchKeywords: string[];
 }
 
+function computeKeywords(fighter: FighterResult): string[] {
+  const keywords = new Set<string>();
+
+  const addKeywords = (field: string) => {
+    const lower = field.toLowerCase();
+    keywords.add(lower);
+    // Split on spaces in case the field has multiple words
+    lower.split(' ').forEach(word => {
+      if (word) keywords.add(word);
+    });
+  };
+
+  addKeywords(fighter.first);
+  addKeywords(fighter.last);
+  addKeywords(fighter.gym);
+  // If you had a gender field, you could also include it:
+  // if (fighter.gender) addKeywords(fighter.gender);
+
+  return Array.from(keywords);
+}
 /**
  * Processes events for the given year and writes fighter records
  * to the collection "records_pmt_{year}".
@@ -164,6 +185,7 @@ export async function calculateAndStoreRecords(
               ringawareness: 0,
               fights: [],
               lastUpdated: new Date().toISOString(),
+              searchKeywords: computeKeywords(fighter),
             });
           }
 
