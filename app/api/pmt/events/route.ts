@@ -49,12 +49,16 @@ export async function GET() {
   try {
     const response = await fetch(firestoreURL, { cache: 'no-store' });
     console.log("Firestore GET response status:", response.status);
-    const responseText = await response.text();
+    
+    // Clone the response for logging so the original can still be used for parsing
+    const clonedResponse = response.clone();
+    const responseText = await clonedResponse.text();
     console.log("Firestore GET response body:", responseText);
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
+    
     const data: FirestoreDocument = await response.json();
 
     if (!data.fields?.events?.arrayValue?.values) {
