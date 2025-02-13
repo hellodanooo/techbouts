@@ -3,6 +3,8 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { useRouter } from 'next/navigation';
+
 
 type Fighter = {
   address: string;
@@ -21,13 +23,13 @@ type Fighter = {
   gym_id: string;
   height: number;
   last: string;
-  loss: number;
+  losses: number;
   mtp_id: string;
   photo: string;
   state: string;
   website: string;
   weightclass: number;
-  win: string | number;
+  wins: string | number;
 };
 
 type FighterTableProps = {
@@ -54,6 +56,7 @@ const isValidUrl = (url: string): boolean => {
 };
 
 const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditFighter, onDeleteFighter }) => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGym, setSelectedGym] = useState('');
   const [selectedWeightClass, setSelectedWeightClass] = useState('');
@@ -193,23 +196,22 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
                 Age <SortIcon column="age" />
               </th>
               <th className="p-2">Gender</th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('win')}>
-                Wins <SortIcon column="win" />
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('wins')}>
+                Wins <SortIcon column="wins" />
               </th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('loss')}>
-                Losses <SortIcon column="loss" />
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('losses')}>
+                Losses <SortIcon column="losses" />
               </th>
-              <th className="p-2">City</th>
-              <th className="p-2">State</th>
-              <th className="p-2">Fighter ID</th>
-              <th className="p-2">Coach</th>
-              <th className="p-2">Coach Phone</th>
+           
               {editable && <th className="p-2">Actions</th>}
             </tr>
           </thead>
           <tbody>
   {filteredAndSortedFighters.map((fighter) => (
-    <tr key={fighter.fighter_id} className="hover:bg-gray-50 cursor-pointer border-b">
+    <tr key={fighter.fighter_id} className="hover:bg-gray-50 cursor-pointer border-b"
+    onClick={() => router.push(`/fighter/${fighter.fighter_id}`)} // Route on row click
+
+    >
       <td className="p-2">
         <Image
           key={`photo-${fighter.fighter_id}`} // Ensure a unique key
@@ -226,13 +228,9 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
       <td key={`gym-${fighter.fighter_id}`} className="p-2">{fighter.gym}</td>
       <td key={`age-${fighter.fighter_id}`} className="p-2">{fighter.age}</td>
       <td key={`gender-${fighter.fighter_id}`} className="p-2">{fighter.gender}</td>
-      <td key={`win-${fighter.fighter_id}`} className="p-2">{fighter.win}</td>
-      <td key={`loss-${fighter.fighter_id}`} className="p-2">{fighter.loss}</td>
-      <td key={`city-${fighter.fighter_id}`} className="p-2">{fighter.city}</td>
-      <td key={`state-${fighter.fighter_id}`} className="p-2">{fighter.state}</td>
-      <td key={`id-${fighter.fighter_id}`} className="p-2">{fighter.fighter_id}</td>
-      <td key={`coach-${fighter.fighter_id}`} className="p-2">{fighter.coach}</td>
-      <td key={`coach-phone-${fighter.fighter_id}`} className="p-2">{fighter.coach_phone}</td>
+      <td key={`win-${fighter.fighter_id}`} className="p-2">{fighter.wins}</td>
+      <td key={`loss-${fighter.fighter_id}`} className="p-2">{fighter.losses}</td>
+
       {editable && (
         <td key={`actions-${fighter.fighter_id}`} className="p-2">
           <button

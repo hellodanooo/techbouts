@@ -1,3 +1,4 @@
+// app/fighter/[fighterId]/page.tsx
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { FighterPageContent } from './PageContent';

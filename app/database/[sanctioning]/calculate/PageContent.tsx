@@ -9,8 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { calculateAndStoreRecords as calculatePMTRecords } from '@/utils/pmt/calculateRecords';
 import { calculateAndStoreRecords as calculateIKFRecords } from '@/utils/pmt/calculateRecords';
-import AuthDisplay from '@/components/ui/AuthDisplay';
-import { useAuth } from '@/context/AuthContext';
+// import AuthDisplay from '@/components/ui/AuthDisplay';
+// import { useAuth } from '@/context/AuthContext';
 
 
 
@@ -24,19 +24,19 @@ export default function CalculateRecordsClient({ sanctioning }: CalculateRecords
   const [error, setError] = useState<string | null>(null);
   // Default to a recent year (adjust as needed)
   const [selectedYear, setSelectedYear] = useState<string>('2024');
-  const { user, isAdmin, isNewUser } = useAuth();
+//  const { user, isAdmin, isNewUser } = useAuth();
 
-  if (!isAdmin) {
-    return (
-      <div className="container mx-auto py-6">
-        <Card>
-          <CardContent>
-            <p className="text-center py-4">Please login to access this feature.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // if (!isAdmin) {
+  //   return (
+  //     <div className="container mx-auto py-6">
+  //       <Card>
+  //         <CardContent>
+  //           <p className="text-center py-4">Please login to access this feature.</p>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
 
 
 
@@ -72,11 +72,11 @@ export default function CalculateRecordsClient({ sanctioning }: CalculateRecords
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-        <AuthDisplay 
+        {/* <AuthDisplay 
         user={user}
         isAdmin={isAdmin}
         isNewUser={isNewUser}
-      />
+      /> */}
       <Card>
         <CardHeader>
           <CardTitle>

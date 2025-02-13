@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase_pmt/config';
 
+
 interface FighterResult {
   id: string;
   first: string;
@@ -40,12 +41,15 @@ interface FighterResult {
   knees: number;
   legkick: number;
   ringawareness: number;
+  age: number;
+  gender: string;
 }
 
 export interface FighterRecord {
   pmt_id: string;
   first: string;
   last: string;
+  gender: string;
   gym: string;
   email: string;
   weightclasses: number[];
@@ -86,6 +90,7 @@ export interface FighterRecord {
   }>;
   lastUpdated: string;
   searchKeywords: string[];
+  age: number;
 }
 
 function computeKeywords(fighter: FighterResult): string[] {
@@ -186,6 +191,8 @@ export async function calculateAndStoreRecords(
               fights: [],
               lastUpdated: new Date().toISOString(),
               searchKeywords: computeKeywords(fighter),
+              age: fighter.age,
+              gender: fighter.gender || '',
             });
           }
 
@@ -256,11 +263,17 @@ export async function calculateAndStoreRecords(
       progressCallback?.(`Processed batch of ${eventsSnapshot.size} events`);
     }
 
+
+    const sortedFighterRecords = Array.from(fighterRecords.entries()).sort(
+      ([, recordA], [, recordB]) => recordB.wins - recordA.wins
+    );
+    
     // Write the aggregated fighter records in batches to the collection "records_pmt_{selectedYear}"
     let batch = writeBatch(db);
     let operationCount = 0;
     let totalRecords = 0;
-    for (const [fighterId, record] of fighterRecords.entries()) {
+    
+    for (const [fighterId, record] of sortedFighterRecords) {
       const recordToStore = {
         ...record,
         email: record.email || '',

@@ -1,3 +1,4 @@
+// app/fighter/[fighterId]/PageContent.tsx
 "use client";
 
 import React, { useState } from "react";
