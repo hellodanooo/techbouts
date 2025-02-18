@@ -4,13 +4,11 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase_techbouts/config';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import SanctionPopup from '../components/popups/One'
 import { Promoter } from '../utils/types';
 
 interface AddPromoterProps {
   onClose: () => void;
-  promoters: Promoter[];
   isAdmin?: boolean; // Add optional isAdmin prop
 }
 
@@ -24,17 +22,17 @@ const initialFormData: Promoter = {
   phone: '',
   email: '',
   promoterId: '',
-  promotion: '',
+  promotionName: '',
   sanctioning: [],
   createdAt: new Date().toISOString() 
 
 };
 
-const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters, isAdmin = false }) => {
+const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) => {
   const [formData, setFormData] = useState<Promoter>(initialFormData);
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
+  const [userEmail] = useState('');
   const [sanctioning, setSanctioning] = useState('');
   const [sanctionPopupOpen, setSanctionPopupOpen] = useState(false);
   const [promotionError, setPromotionError] = useState<string | null>(null);
@@ -52,67 +50,53 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters, isAdmin =
   }, [isAdmin]);
 
 
-  const handleInputChange = (field: string, value: string) => {
-   
-   
-    if (field === 'promotion') {
+  const handleInputChange = async (field: string, value: string) => {
+    if (field === 'promotionName') {
       // Clear any existing error
       setPromotionError(null);
       
-      // Generate promoterId from the new promotion name
-      const newPromoterId = value.toLowerCase().replace(/\s+/g, '_');
-      
-      // Check if this promoterId already exists
-      const existingPromoter = promoters.find(
-        promoter => promoter.promoterId === newPromoterId
-      );
-
-      if (existingPromoter) {
-        setPromotionError('This promotion name already exists. Please modify the name and try again.');
-        // Still update the form to show what was typed
-        setFormData((prev) => ({
-          ...prev,
-          [field]: value,
-        }));
-        return;
-      }
-    }
-   
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleGoogleSignIn = async () => {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-  
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-  
-      if (user && user.email) {
-        // Check if a promoter with this email already exists
-        const existingPromoter = promoters.find(promoter => promoter.email === user.email);
+      try {
+        // Generate promoterId from the promotion name
+        const newPromoterId = value.toLowerCase().replace(/\s+/g, '_');
         
+        // Fetch existing promoters from the API
+        const response = await fetch('/api/promoters');
+        if (!response.ok) {
+          throw new Error('Failed to fetch promoters');
+        }
+        
+        const data = await response.json();
+        
+        // Check if either the promoterId or promotionName already exists
+        const existingPromoter = data.promoters.find((promoter: Promoter) => 
+          promoter.promoterId === newPromoterId || 
+          promoter.promotionName?.toLowerCase() === value.toLowerCase()
+        );
+  
         if (existingPromoter) {
-          alert(`A promoter already exists for this email (${user.email})`);
-          return;
+          setPromotionError('This Promotion Name Already Exists');
         }
   
-        setUserEmail(user.email);
-        setAuthenticated(true);
-        setFormData((prev) => ({
+        // Update form data with both the promotion name and its generated ID
+        setFormData(prev => ({
           ...prev,
-          email: user.email ?? ''
+          [field]: value,
+          promoterId: newPromoterId
         }));
+      } catch (error) {
+        console.error('Error checking promotion name:', error);
+        setPromotionError('Error checking promotion name availability');
       }
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      alert('Failed to authenticate with Google.');
+    } else {
+      // For other fields, just update normally
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
     }
   };
+
+
 
   const handleSubmit = async () => {
     if (!authenticated) {
@@ -123,18 +107,18 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters, isAdmin =
     try {
       setLoading(true);
 
-      const promoterId = `${formData.promotion.toLowerCase().replace(/\s+/g, '_')}`;
+      const promoterId = `${formData.promoterId.toLowerCase().replace(/\s+/g, '_')}`;
 
       const promoterData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        name: formData.promotion,
+        name: formData.promotionName,
         city: formData.city,
         state: formData.state,
         phone: formData.phone,
         email: formData.email,
         promoterId: promoterId,
-        promotion: formData.promotion,
+        promotion: formData.promotionName,
         sanctioning: sanctioning,
         createdAt: new Date().toISOString()
       };
@@ -170,19 +154,13 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters, isAdmin =
 };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-lg">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-6 rounded shadow-md w-full max-w-lg max-h-screen overflow-y-auto relative">
+        
         <h2 className="text-xl font-bold mb-4">Create Promotion</h2>
         <div className="space-y-4">
 
-        {!authenticated && (
-            <button
-              onClick={handleGoogleSignIn}
-              className="w-full p-2 border rounded bg-blue-500 text-white hover:bg-blue-600"
-            >
-              Sign in with Google
-            </button>
-          )}
+     
 
           {authenticated && <p className="text-green-500">Signed in as: {userEmail}</p>}
           
@@ -192,8 +170,8 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, promoters, isAdmin =
             type="text"
             placeholder="Promotion Name"
             className="w-full p-2 border rounded"
-            value={formData.promotion}
-            onChange={(e) => handleInputChange('promotion', e.target.value)}
+            value={formData.promotionName}
+            onChange={(e) => handleInputChange('promotionName', e.target.value)}
             disabled={!authenticated}
           />
   {promotionError && (

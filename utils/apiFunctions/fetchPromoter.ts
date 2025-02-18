@@ -3,29 +3,39 @@ import { Promoter } from '../types';
 
 export async function fetchPromoter(promoterId: string) {
   try {
+
+
+
+
     const headersList = await headers();
     const host = headersList.get('host');
-    console.log('Fetching promoter from:', `http://${host}/api/promoters/${promoterId}`);
     
-    const response = await fetch(`http://${host}/api/promoters/${promoterId}`, {
+    const url = `http://${host}/api/promoters/${promoterId}`;
+    console.log('Fetching promoter from:', url);
+    
+    const response = await fetch(url, {
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Error response:', errorData);
+      console.log('Response status:', response.status);
+      console.log('Error response:', errorData);
       throw new Error(`Failed to fetch promoter: ${errorData.error}`);
     }
 
     const data = await response.json();
-    console.log('Full promoter data:', data.promoter);
+    console.log('Successful response data:', data);
+    
     if (!data.promoter) {
+      console.log('No promoter data in response:', data);
       throw new Error('No promoter data returned');
     }
+
     return data.promoter;
   } catch (error) {
-    console.error('Error fetching promoter:', error);
+    console.error('Error in fetchPromoter:', error);
     return null;
   }
 }

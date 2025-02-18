@@ -1,70 +1,73 @@
+// app/api/promoters/[promoterId]/route.ts
+
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/firebase_techbouts/config'; // Change to use the same db instance
-import { doc, getDoc } from 'firebase/firestore'; // Add these imports
-import { Promoter } from '@/utils/types'; // Import the Promoter type
+import { db } from '@/lib/firebase_techbouts/config';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ promoterId: string }> }
+  ) {
+    console.log('API Route - Starting GET request');
+    
+    try {
+      const { promoterId } = await params;
+      console.log('API Route - Fetching Promoter with ID:', promoterId);
+      
+      const promoterRef = doc(db, 'promotions', promoterId);
+      const promoterSnapshot = await getDoc(promoterRef);
+  
+      if (!promoterSnapshot.exists()) {
+        console.log('API Route - Promoter not found in Firebase');
+        return NextResponse.json({ error: 'Promoter not found' }, { status: 404 });
+      }
+  
+      const promoterData = promoterSnapshot.data();
+      console.log('API Route - Raw Firestore data:', promoterData);
+  
+      // Return with 'promoter' key instead of 'event'
+      return NextResponse.json({ promoter: promoterData });
+  
+    } catch (error) {
+      console.error('API Route - Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return NextResponse.json(
+        { error: 'Failed to fetch promoter', details: errorMessage },
+        { status: 500 }
+      );
+    }
+  }
+
+export async function PATCH(
   request: Request,
-  context: { params: Promise<{ promoterId: string }> }
+  { params }: { params: Promise<{ promoterId: string }> }
 ) {
-  const { promoterId } = await context.params;
-
-  console.log(`Fetching promoter with ID: ${promoterId}`);
-
   try {
-    const jsonDocRef = doc(db, 'promotions', 'promotions_json'); // Changed to match working API
-    const snapshot = await getDoc(jsonDocRef); // Changed to use getDoc
+    const { promoterId } = await params;
+    const updatedData = await request.json();
+    
+    const promoterRef = doc(db, 'promotions', promoterId);
+    const promoterSnapshot = await getDoc(promoterRef);
 
-    if (!snapshot.exists()) { // Changed to use exists()
-      console.log("Document does not exist");
-      return NextResponse.json(
-        { error: "Promoter document not found" },
-        { status: 404 }
-      );
+    if (!promoterSnapshot.exists()) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    const data = snapshot.data() as { promoters: Promoter[] }; // Explicitly type the data as containing an array of Promoters
+    // ✅ Use `updateDoc` instead of `eventRef.update`
+    await updateDoc(promoterRef, updatedData);
+    
+    const updatedSnapshot = await getDoc(promoterRef);
+    const updatedEventData = updatedSnapshot.data();
 
-    if (!data?.promoters) {
-      return NextResponse.json(
-        { error: "No promoters data found" },
-        { status: 404 }
-      );
-    }
-
-    const promoter = data.promoters.find((p) => p.promoterId === promoterId);
-
-    if (!promoter) {
-      return NextResponse.json(
-        { error: "Promoter not found" },
-        { status: 404 }
-      );
-    }
-
-    // Format the response to match the structure used in the list API
-    const formattedPromoter = {
-      id: promoter.promoterId,
-      city: promoter.city,
-      email: promoter.email,
-      firstName: promoter.firstName,
-      lastName: promoter.lastName,
-      name: promoter.promotion,
-      phone: promoter.phone,
-      promoterId: promoter.promoterId,
-      promotion: promoter.promotion,
-      sanctioning: promoter.sanctioning,
-      state: promoter.state,
-    };
-
-    return NextResponse.json({ promoter: formattedPromoter });
-
+    return NextResponse.json({ 
+      message: 'promoterId updated successfully',
+      event: updatedEventData 
+    });
   } catch (error) {
-    const err = error as Error;
-    console.error("Error fetching promoter:", err.message);
-    console.error(err.stack);
-
+    console.error('API Route - Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
-      { error: "Failed to fetch promoter", details: err.message },
+      { error: 'Failed to update promoterId', details: errorMessage },
       { status: 500 }
     );
   }

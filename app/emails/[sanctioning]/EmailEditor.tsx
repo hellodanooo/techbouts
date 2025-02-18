@@ -1,163 +1,89 @@
-// app/database/[sanctioning]/emails/EmailEditor.tsx
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
-import { 
-  Bold, 
-  Italic, 
-  Link as LinkIcon,
-  Image as ImageIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  List,
-  ListOrdered
-} from 'lucide-react';
+import { Resend } from 'resend';
+import CustomEmail from './CustomEmail';
+import { render } from '@react-email/render';
+import { useState, useEffect } from 'react';
 
-interface EmailEditorProps {
-  onChange: (html: string) => void;
-  value: string;
-}
+const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
 
-const EmailEditor = ({ onChange, value }: EmailEditorProps) => {
+export default function EmailEditor() {
+  // Editable email fields
+  const [subject, setSubject] = useState("Welcome to Our Platform!");
+  const [message, setMessage] = useState("Thank you for signing up. We're excited to have you!");
+  const [buttonText, setButtonText] = useState("Get Started");
+  const [buttonUrl, setButtonUrl] = useState("https://your-website.com");
+  const [imageUrl, setImageUrl] = useState("https://your-image-url.com/banner.png");
+  const [preview, setPreview] = useState("");
+
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Image,
-      Link,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-    ],
-    content: value,
+    extensions: [StarterKit],
+    content: message,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      setMessage(editor.getHTML());
     },
   });
 
-  if (!editor) {
-    return null;
-  }
+  // Update email preview when fields change
+  useEffect(() => {
+    const updatePreview = async () => {
+      const emailHtml = await render(
+        <CustomEmail
+          subject={subject}
+          message={message}
+          buttonText={buttonText}
+          buttonUrl={buttonUrl}
+          imageUrl={imageUrl}
+        />
+      );
 
-  const addImage = () => {
-    const url = window.prompt('Enter the URL of the image:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+      setPreview(emailHtml);
+    };
+
+    updatePreview();
+  }, [subject, message, buttonText, buttonUrl, imageUrl]);
+
+  // Send email using the updated template
+  const sendEmail = async () => {
+    try {
+      const htmlContent = await render(
+        <CustomEmail subject={subject} message={message} buttonText={buttonText} buttonUrl={buttonUrl} imageUrl={imageUrl} />
+      );
+
+      await resend.emails.send({
+        from: 'your-email@example.com',
+        to: ['your-email@example.com'], // Replace with actual recipient list
+        subject: subject,
+        html: htmlContent,
+      });
+
+      alert('Email sent successfully!');
+    } catch (error) {
+      console.error('Error sending email:', error);
     }
   };
 
-  const addLink = () => {
-    const url = window.prompt('Enter the URL:');
-    if (url) {
-      editor.chain().focus().toggleLink({ href: url }).run();
-    }
-  };
-
-  const addButton = () => {
-    const url = window.prompt('Enter the button URL:');
-    if (url) {
-      editor.chain().focus().insertContent(`
-        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
-          <tr>
-            <td align="center" bgcolor="#e11d48" role="presentation" style="border:none;border-radius:5px;cursor:pointer;padding:10px 25px;" valign="middle">
-              <a href="${url}" style="background:#e11d48;color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;line-height:120%;text-decoration:none;text-transform:none;" target="_blank">
-                Click Here
-              </a>
-            </td>
-          </tr>
-        </table>
-      `).run();
-    }
-  };
-
-  const toolbar = [
-    {
-      icon: <Bold size={16} />,
-      title: 'Bold',
-      action: () => editor.chain().focus().toggleBold().run(),
-      isActive: () => editor.isActive('bold'),
-    },
-    {
-      icon: <Italic size={16} />,
-      title: 'Italic',
-      action: () => editor.chain().focus().toggleItalic().run(),
-      isActive: () => editor.isActive('italic'),
-    },
-    {
-      icon: <AlignLeft size={16} />,
-      title: 'Align Left',
-      action: () => editor.chain().focus().setTextAlign('left').run(),
-      isActive: () => editor.isActive({ textAlign: 'left' }),
-    },
-    {
-      icon: <AlignCenter size={16} />,
-      title: 'Center',
-      action: () => editor.chain().focus().setTextAlign('center').run(),
-      isActive: () => editor.isActive({ textAlign: 'center' }),
-    },
-    {
-      icon: <AlignRight size={16} />,
-      title: 'Align Right',
-      action: () => editor.chain().focus().setTextAlign('right').run(),
-      isActive: () => editor.isActive({ textAlign: 'right' }),
-    },
-    {
-      icon: <List size={16} />,
-      title: 'Bullet List',
-      action: () => editor.chain().focus().toggleBulletList().run(),
-      isActive: () => editor.isActive('bulletList'),
-    },
-    {
-      icon: <ListOrdered size={16} />,
-      title: 'Numbered List',
-      action: () => editor.chain().focus().toggleOrderedList().run(),
-      isActive: () => editor.isActive('orderedList'),
-    },
-    {
-      icon: <LinkIcon size={16} />,
-      title: 'Add Link',
-      action: addLink,
-      isActive: () => editor.isActive('link'),
-    },
-    {
-      icon: <ImageIcon size={16} />,
-      title: 'Add Image',
-      action: addImage,
-      isActive: () => false,
-    },
-  ];
+  if (!editor) return null;
 
   return (
-    <div className="border rounded-md">
-      <div className="border-b p-2 flex flex-wrap gap-2 bg-gray-50">
-        {toolbar.map((item, index) => (
-          <Button
-            key={index}
-            onClick={item.action}
-            variant={item.isActive() ? "default" : "outline"}
-            size="icon"
-            type="button"
-          >
-            {item.icon}
-          </Button>
-        ))}
-        <Button
-          onClick={addButton}
-          variant="outline"
-          size="sm"
-          type="button"
-        >
-          Add Button
-        </Button>
+    <div className="space-y-4">
+      {/* Editable Input Fields */}
+      <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Email Subject" className="w-full p-2 border rounded" />
+      <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Image URL" className="w-full p-2 border rounded" />
+      <EditorContent editor={editor} className="p-4 min-h-[200px] border rounded" />
+      <input type="text" value={buttonText} onChange={(e) => setButtonText(e.target.value)} placeholder="Button Text" className="w-full p-2 border rounded" />
+      <input type="text" value={buttonUrl} onChange={(e) => setButtonUrl(e.target.value)} placeholder="Button URL" className="w-full p-2 border rounded" />
+
+      {/* Live Email Preview */}
+      <div className="border rounded-md p-4 mt-4 bg-gray-100">
+        <h3 className="text-lg font-semibold">Live Email Preview</h3>
+        <div dangerouslySetInnerHTML={{ __html: preview }} className="p-4 bg-white rounded-md shadow-md" />
       </div>
-      <EditorContent editor={editor} className="p-4 min-h-[200px]" />
+
+      <Button onClick={sendEmail} className="mt-4">Send Email</Button>
     </div>
   );
-};
-
-export default EmailEditor;
+}

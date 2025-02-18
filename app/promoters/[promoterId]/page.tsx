@@ -9,8 +9,8 @@ type EventsResponse = {
   pendingEvents: EventType[];
 }
 
-type IKFEventsResponse = {
-  ikfEvents: EventType[];
+type TechBoutsEventsResponse = {
+  TechBoutsEvents: EventType[];
 }
 
 async function fetchPMTEvents(promoterId: string): Promise<EventsResponse> {
@@ -56,12 +56,15 @@ async function fetchPMTEvents(promoterId: string): Promise<EventsResponse> {
   }
 }
 
-async function fetchIKFEvents(promoterId: string): Promise<IKFEventsResponse> {
+async function fetchTechBoutsEvents(promoterId: string): Promise<TechBoutsEventsResponse> {
   try {
     const headersList = await headers();
     const host = headersList.get('host');
     
-    const response = await fetch(`http://${host}/api/ikf/events`, { 
+
+      const response = await fetch(`http://${host}/api/promoters/events/${promoterId}`, {
+
+     
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
@@ -71,16 +74,14 @@ async function fetchIKFEvents(promoterId: string): Promise<IKFEventsResponse> {
     if (response.ok) {
       const data = await response.json();
       return {
-        ikfEvents: data.events?.filter(
-          (event: EventType) => event.promoterId === promoterId
-        ) || []
+        TechBoutsEvents: data.events || []
       };
     }
     
-    return { ikfEvents: [] };
+    return { TechBoutsEvents: [] };
   } catch (error) {
-    console.error('Error fetching IKF events:', error);
-    return { ikfEvents: [] };
+    console.error('Error fetching TechBouts events:', error);
+    return { TechBoutsEvents: [] };
   }
 }
 
@@ -96,16 +97,15 @@ export default async function PromoterPage(props: { params: Promise<{ promoterId
 
   // Initialize event data with proper types
   let pmtEvents: EventsResponse = { confirmedEvents: [], pendingEvents: [] };
-  let ikfEvents: IKFEventsResponse = { ikfEvents: [] };
+  let TechBoutsEvents: TechBoutsEventsResponse = { TechBoutsEvents: [] };
 
   // Conditionally fetch events based on sanctioning
   if (promoter.sanctioning?.includes('PMT')) {
     pmtEvents = await fetchPMTEvents(promoterId);
   }
   
-  if (promoter.sanctioning?.includes('IKF')) {
-    ikfEvents = await fetchIKFEvents(promoterId);
-  }
+  TechBoutsEvents = await fetchTechBoutsEvents(promoterId);
+
 
   const pageTitle = promoter.promotion || `${promoter.firstName} ${promoter.lastName}'s Events`;
 
@@ -120,7 +120,7 @@ export default async function PromoterPage(props: { params: Promise<{ promoterId
         initialConfirmedEvents={pmtEvents.confirmedEvents}
         initialPendingEvents={pmtEvents.pendingEvents}
         logoUrl={"/logos/techboutslogoFlat.png"}
-        ikfEvents={ikfEvents.ikfEvents}
+        allTechBoutsEvents={TechBoutsEvents.TechBoutsEvents}
       />
     </>
   );

@@ -11,12 +11,12 @@ import Image from 'next/image';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 
 interface PromoterDashboardProps {
-  promoter: Promoter;  // Changed from Promoter[] to Promoter
+  promoter: Promoter; 
   promoterId: string;
   initialConfirmedEvents: EventType[];
   initialPendingEvents: EventType[];
   logoUrl: string;
-  ikfEvents: EventType[];
+  allTechBoutsEvents: EventType[];
 }
 
 export default function PromoterDashboard({ 
@@ -25,7 +25,7 @@ export default function PromoterDashboard({
   initialPendingEvents, 
   logoUrl,
   promoter,
-  ikfEvents
+  allTechBoutsEvents
 }: PromoterDashboardProps) {
   console.log('Promoter data in dashboard:', promoter);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -52,15 +52,17 @@ export default function PromoterDashboard({
       eventType: 'pmt' as const
     }));
 
-    const ikf = ikfEvents.map(event => ({
+    const ikf = allTechBoutsEvents.map(event => ({
       ...event,
       parsedDate: parseISO(event.date),
       status: 'confirmed' as const,
-      eventType: 'ikf' as const
+   
     }));
 
+   
+
     return [...confirmed, ...pending, ...ikf];
-  }, [initialConfirmedEvents, initialPendingEvents, ikfEvents]);
+  }, [initialConfirmedEvents, initialPendingEvents, allTechBoutsEvents]);
 
 
 
@@ -127,7 +129,7 @@ export default function PromoterDashboard({
               .map(event => (
                 <div key={event.id}>
                   {event.event_name} - {format(event.parsedDate, 'MMMM d, yyyy')}
-                  {event.eventType === 'ikf' && ' (IKF)'}
+               
                 </div>
               ))}
           </div>

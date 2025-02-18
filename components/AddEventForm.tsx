@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EventType, Promoter } from '@/utils/types';
 import GoogleAutocomplete from './ui/GoogleAutocomplete';
 import { addEvent } from '@/utils/eventManagement';
@@ -12,12 +12,14 @@ import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
 import { FaRegFileImage } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa"; // Icons for dropdown
 
+
 interface AddEventFormProps {
   onClose: () => void;
-  promoter: Promoter;
+  promoter?: Promoter;
 }
 
-const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
+
+const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialPromoter }) => {
   const [formData, setFormData] = useState<Partial<EventType>>({
     registration_enabled: true,
     tickets_enabled: false,
@@ -29,14 +31,64 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
     coach_price: 0,
     photos_price: 0,
     ticket_system_option: 'none',
+    numMats: 2, // Default to 2 mats
+   
   });
 
+  const [promoter, setPromoter] = useState<Partial<Promoter>>(initialPromoter || {});
+  const [promoterIdInput] = useState('');
+  const [promoterError, setPromoterError] = useState<string | null>(null);
   const [sanctioning, setSanctioning] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false); // State to toggle advanced section
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [promoterSuggestions, setPromoterSuggestions] = useState<Promoter[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [promoterInput, setPromoterInput] = useState('');
+  const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null);
 
+
+  const fetchPromoterSuggestions = async (query: string) => {
+    if (query.length < 2) {
+      setPromoterSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/promoters`);
+      if (!response.ok) throw new Error('Failed to fetch promoters');
+      
+      const data = await response.json();
+      const filteredPromoters = data.promoters.filter((p: Promoter) => 
+        p.promoterId.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      setPromoterSuggestions(filteredPromoters);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Error fetching promoter suggestions:', error);
+    }
+  };
+
+  const handlePromoterInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPromoterInput(value);
+    fetchPromoterSuggestions(value);
+  };
+
+
+  const handlePromoterSelect = (promoter: Promoter) => {
+    setSelectedPromoter(promoter);
+    setPromoterInput(promoter.promotionName);
+    setShowSuggestions(false);
+    setFormData(prev => ({
+      ...prev,
+      promoterId: promoter.promoterId,
+      promoterEmail: promoter.email,
+      promotionName: promoter.promotionName
+    }));
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -153,9 +205,9 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
         photos_enabled: formData.photos_enabled ?? false,
         photos_price: formData.photos_price ?? 0,
         sanctioning: sanctioning ?? "",
-        promotion: promoter.promotion,
-        promoterId: promoter.promoterId,
-        promoterEmail: promoter.email,
+        promotionName: promoter.promotionName ?? "",
+        promoterId: promoter.promoterId ?? "",
+        promoterEmail: promoter.email ?? "",
         email: formData.email ?? "",
         status: formData.status ?? "confirmed",
         street: formData.street ?? "",
@@ -174,7 +226,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
       
   
       // ✅ Call the appropriate API based on sanctioning type
-      const result = (sanctioning === 'PMT' || sanctioning === 'PBSC') ? await addPmtEvent(eventData) : await addEvent(eventData);
+      const result = (sanctioning === 'PMT') ? await addPmtEvent(eventData) : await addEvent(eventData);
   
       // ✅ Explicitly check if the event exists
       if (!result.success || !('event' in result) || !result.event?.eventId) {
@@ -182,7 +234,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
       }
   
       // ✅ Now that we have an eventId, create the event collection with full event data
-      if (sanctioning === 'PMT' || sanctioning === 'PBSC' && result.event) {
+      if (sanctioning === 'PMT' && result.event) {
         console.log('Creating PMT event collection, Data Sent', result.event);
         const createCollectionResult = await createPmtEventCollection(result.event);
   
@@ -202,20 +254,92 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
   
   
   
-  
-  
+  useEffect(() => {
+    const fetchPromoterData = async () => {
+      if (!promoterIdInput) return;
+      
+      try {
+        const response = await fetch(`/api/promoters/${promoterIdInput}`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          setPromoterError(`Failed to fetch promoter: ${errorData.error}`);
+          return;
+        }
+
+        const data = await response.json();
+        if (!data.promoter) {
+          setPromoterError('No promoter found with this ID');
+          return;
+        }
+
+        setPromoter(data.promoter);
+        setPromoterError(null);
+      } catch (error) {
+        setPromoterError('Error fetching promoter data');
+        console.error('Error in fetchPromoter:', error);
+      }
+    };
+
+    if (promoterIdInput) {
+      fetchPromoterData();
+    }
+  }, [promoterIdInput]);
   
   
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-     
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-lg max-h-screen overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-6 rounded shadow-md w-full max-w-lg max-h-screen overflow-y-auto relative">
         
         <h2 className="text-xl font-bold mb-4">Create New Event</h2>
 
         <div className="space-y-4">
-          <div className="w-full p-2 border rounded bg-gray-50">{promoter.promotion}</div>
+        {promoterError && (
+          <div className="text-red-500 text-sm mt-2">
+            {promoterError}
+          </div>
+        )}
+        {!initialPromoter && (
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search for promoter..."
+                value={promoterInput}
+                onChange={handlePromoterInputChange}
+                className="w-full p-2 border rounded"
+                onFocus={() => setShowSuggestions(true)}
+              />
+              
+              {showSuggestions && promoterSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                  {promoterSuggestions.map((promoter) => (
+                    <div
+                      key={promoter.promoterId}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handlePromoterSelect(promoter)}
+                    >
+                      <div className="font-medium">{promoter.promoterId}</div>
+                   
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedPromoter && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                  <p>Selected Promoter: {selectedPromoter.promotionName}</p>
+                  <p>Email: {selectedPromoter.email}</p>
+                </div>
+              )}
+            </div>
+          )}
+
 
           <select
             value={sanctioning}
@@ -282,6 +406,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+              <div>Weighin Start Time</div>
               <input
                 type="time"
                 name="weighin_start_time"
@@ -289,6 +414,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+                            <div>Weighin End Time</div>
+
               <input
                 type="time"
                 name="weighin_end_time"
@@ -296,6 +423,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+                            <div>Rules Meeting Time</div>
+
               <input
                 type="time"
                 name="rules_meeting_time"
@@ -303,6 +432,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+                            <div>Bouts Start Time</div>
               <input
                 type="time"
                 name="bouts_start_time"
@@ -310,6 +440,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+                            <div>Doors Open Time</div>
               <input
                 type="time"
                 name="doors_open"
@@ -317,6 +448,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+                                          <div>Spectator Info</div>
+
               <input
                 type="text"
                 name="spectator_info"

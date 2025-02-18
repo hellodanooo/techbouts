@@ -18,6 +18,7 @@ const HeaderHome = ({ isAdmin }: HeaderHomeProps) => {
   const [open, setOpen] = useState(false);
 
   const navigationLinks = [
+    { href: '/events', label: 'Events' },
     { href: '/promoters', label: 'Promoters' },
     { href: '/sanctioning', label: 'Sanctioning' },
     { href: '/database', label: 'Database' },
@@ -27,7 +28,8 @@ const HeaderHome = ({ isAdmin }: HeaderHomeProps) => {
   return (
     <header className="w-full relative">
       {/* Main header content */}
-      <div className="relative w-full flex justify-between items-center bg-gradient-to-b from-[#4793AF] to-[#4793AF]/90 p-4 sm:p-6 border-b-2 border-[#FFC470] shadow-lg">
+     
+      <div className="relative w-full flex justify-between items-center bg-gradient-to-b from-[#eeeee4] to-[#eab676]/90 p-4 sm:p-6 border-b-2 border-[#FFC470] shadow-lg rounded-sm">
         {/* Logo section */}
         <div className="relative">
           <Image 
@@ -45,10 +47,10 @@ const HeaderHome = ({ isAdmin }: HeaderHomeProps) => {
             {navigationLinks.map((link, index) => (
               <div key={link.href} className="flex items-center">
                 {index > 0 && (
-                  <Separator orientation="vertical" className="h-6 bg-[#FFC470]/30" />
+                  <Separator orientation="vertical" className="h-6 bg-[#21130d]/30" />
                 )}
                 <NavigationMenuItem>
-                  <Button variant="ghost" className="text-white hover:text-[#FFC470] hover:bg-[#8B322C]/20">
+                  <Button variant="ghost" className="text-black hover:text-[black] hover:bg-[#8B322C]/20">
                     <Link href={link.href}>{link.label}</Link>
                   </Button>
                 </NavigationMenuItem>
@@ -85,6 +87,7 @@ const HeaderHome = ({ isAdmin }: HeaderHomeProps) => {
           </SheetContent>
         </Sheet>
       </div>
+
     </header>
   );
 };

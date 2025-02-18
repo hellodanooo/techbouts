@@ -7,28 +7,45 @@ export async function fetchPmtEvent(eventId: string) {
     const headersList = await headers(); 
     const host = headersList.get('host');
     const url = `http://${host}/api/pmt/events/${eventId}`;
-    console.log('Fetching Event Data from:', url);
+    console.log('Fetching PMT Event Data from:', url);
     
     const response = await fetch(url, {
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    // Log the raw response for debugging
-    console.log('Response status:', response.status);
-    const responseText = await response.text();
-    console.log('Raw response:', responseText);
+    // Log the response status for debugging
+    console.log('PMT Event Response status:', response.status);
 
-    // Try to parse the response
-    const data = JSON.parse(responseText);
-    
-    if (!data.event) {
-      throw new Error('No event data returned');
+    if (!response.ok) {
+      console.log('PMT Event fetch failed with status:', response.status);
+      return null;
     }
 
-    return data.event as EventType;
+    const responseText = await response.text();
+    console.log('Raw PMT Event response:', responseText);
+
+    // Only try to parse if we have content
+    if (!responseText) {
+      console.log('No PMT Event content returned');
+      return null;
+    }
+
+    try {
+      const data = JSON.parse(responseText);
+      
+      if (!data.event) {
+        console.log('No PMT Event data found in response');
+        return null;
+      }
+
+      return data.event as EventType;
+    } catch (parseError) {
+      console.error('Error parsing PMT Event JSON response:', parseError);
+      return null;
+    }
   } catch (error) {
-    console.error('Error fetching event:', error);
+    console.error('Error fetching PMT Event:', error);
     return null;
   }
 }

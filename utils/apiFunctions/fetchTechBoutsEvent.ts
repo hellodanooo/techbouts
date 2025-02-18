@@ -2,7 +2,7 @@
 import { EventType } from '../types';
 import { headers } from 'next/headers';
 
-export async function fetchIkfEvent(eventId: string): Promise<EventType | null> {
+export async function fetchTechBoutsEvent(eventId: string): Promise<EventType | null> {
   console.log('fetchIkfEvent - Starting fetch for eventId:', eventId);
   
   try {
@@ -11,7 +11,7 @@ export async function fetchIkfEvent(eventId: string): Promise<EventType | null> 
     const host = headersList.get('host') || 'localhost:3000';
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     
-    const apiUrl = `${protocol}://${host}/api/ikf/events/${eventId}`;
+    const apiUrl = `${protocol}://${host}/api/events/${eventId}`;
     console.log('fetchIkfEvent - Calling API:', apiUrl);
     
     const response = await fetch(apiUrl, { cache: 'no-store' }); // Added no-store to prevent caching
@@ -63,7 +63,7 @@ export async function fetchIkfEvent(eventId: string): Promise<EventType | null> 
       photos_enabled: data.photos_enabled || false,
       photos_price: data.photos_price || 0,
       sanctioning: data.sanctioning || 'IKF',
-      promotion: data.promotion || '',
+      promotionName: data.promotionName || '',
       email: data.email || '',
       promoterId: data.promoterId || '',
       promoterEmail: data.promoterEmail || '',

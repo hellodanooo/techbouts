@@ -43,6 +43,7 @@ interface FighterResult {
   ringawareness: number;
   age: number;
   gender: string;
+  dob: string;
 }
 
 export interface FighterRecord {
@@ -91,6 +92,7 @@ export interface FighterRecord {
   lastUpdated: string;
   searchKeywords: string[];
   age: number;
+  dob: string;
 }
 
 function computeKeywords(fighter: FighterResult): string[] {
@@ -193,6 +195,7 @@ export async function calculateAndStoreRecords(
               searchKeywords: computeKeywords(fighter),
               age: fighter.age,
               gender: fighter.gender || '',
+              dob: fighter.dob || '',
             });
           }
 

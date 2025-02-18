@@ -82,7 +82,7 @@ export async function GET() {
         date: extractField(event, 'date', 'string') || '',
         flyer: extractField(event, 'flyer', 'string') || '',
         promoterId: extractField(event, 'promoterId', 'string') || '',
-        promotion: extractField(event, 'promotion', 'string') || '',
+        promotionName: extractField(event, 'promotionName', 'string') || '',
         sanctioning: extractField(event, 'sanctioning', 'string') || '',
         email: extractField(event, 'email', 'string') || '',
         promoterEmail: extractField(event, 'promoterEmail', 'string') || '',

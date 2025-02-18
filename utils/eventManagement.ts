@@ -212,7 +212,7 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       photos_enabled: pendingEvent.photos_enabled || false,
       photos_price: pendingEvent.photos_price || 0,
       sanctioning: pendingEvent.sanctioning || 'None',
-      promotion: pendingEvent.promotion || 'TBA',
+      promotionName: pendingEvent.promotionName || 'TBA',
       email: pendingEvent.email || 'TBA',
       promoterEmail: pendingEvent.promoterEmail || 'TBA',
       ticket_enabled: pendingEvent.ticket_enabled || false,

@@ -25,12 +25,10 @@ export default function EmailBlast({ sanctioning }: EmailBlastProps) {
   const [loading, setLoading] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2024');
   const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
+  const [message] = useState('');
   const [status, setStatus] = useState<string>('');
 
-  const handleMessageChange = (html: string) => {
-    setMessage(html);
-  };
+
 
   const sendEmails = async (emailsList: string[], isTest: boolean = false) => {
     const campaignId = `${sanctioning}_${selectedYear}_${Date.now()}${isTest ? '_test' : ''}`;
@@ -155,8 +153,8 @@ export default function EmailBlast({ sanctioning }: EmailBlastProps) {
               Email Message
             </label>
              <EmailEditor
-              value={message}
-              onChange={handleMessageChange}
+            
+   
             /> 
           </div>
 

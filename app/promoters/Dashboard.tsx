@@ -232,7 +232,6 @@ const PromoterDashboard = ({
 
         <AddPromoter
           onClose={() => setShowPromoterModal(false)}
-          promoters={activePromoters}
           isAdmin={isAdmin} // Pass the isAdmin status
         />
       )}

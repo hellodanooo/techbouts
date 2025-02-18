@@ -176,10 +176,10 @@ export interface EventType {
   photos_enabled?: boolean;
   photos_price?: number;
   sanctioning: string;
-  promotion: string;
   email: string;
   promoterId: string;
   promoterEmail: string;
+  promotionName: string;
   status?: string;
   street?: string;
   postal_code?: string;
@@ -202,10 +202,12 @@ export interface Promoter  {
   name: string;
   phone: string;
   promoterId: string;
-  promotion: string;
+  promotionName: string;
   sanctioning: string[];
     state: string;
   createdAt?: string;
+  promotion?: string;
+
 };
 
 export interface BasicSanctioningBody {

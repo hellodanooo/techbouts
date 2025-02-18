@@ -1,4 +1,4 @@
-// app/promoters/[promoterId]/[eventId]/edit/EditEventForm.tsx
+// app/[eventId]/edit/EditEventForm.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -7,11 +7,11 @@ import { editPmtEvent } from '@/utils/apiFunctions/editPmtEvent';
 import { useRouter } from 'next/navigation';
 
 interface EditEventFormProps {
+  eventId: string;
     eventData: EventType; 
-    promoterId: string;
   }
 
-export default function EditEventForm({ eventData, promoterId }: EditEventFormProps) {
+export default function EditEventForm({ eventData }: EditEventFormProps) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState(eventData);
@@ -36,7 +36,7 @@ export default function EditEventForm({ eventData, promoterId }: EditEventFormPr
       }
   
       // Redirect back to event page
-      router.push(`/promoters/${promoterId}/${eventData.eventId}`);
+      router.push(`/events/${eventData.eventId}`);
       router.refresh();
     } catch (error) {
       console.error('Error updating event:', error);

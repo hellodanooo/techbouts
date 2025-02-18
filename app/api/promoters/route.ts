@@ -39,12 +39,13 @@ export async function GET(request: Request) {
           email: promoter.email,
           firstName: promoter.firstName,
           lastName: promoter.lastName,
-          name: promoter.promotion,
+          name: promoter.promotionName,
           phone: promoter.phone,
           promoterId: promoter.promoterId,
-          promotion: promoter.promotion,
+          promotionName: promoter.promotionName,
           sanctioning: promoter.sanctioning,
           state: promoter.state,
+
         }));
     }
 
@@ -63,3 +64,5 @@ export async function GET(request: Request) {
     );
   }
 }
+
+

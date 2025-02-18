@@ -1,20 +1,25 @@
-// app/promoters/[promoterId]/[eventId]/edit/page.tsx
+// app/events/[eventId]/edit/page.tsx
 import EditEventForm from './EditEventForm';
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
+import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 
 export default async function EditEventRoute({ 
   params 
 }: { 
-  params: Promise<{ promoterId: string, eventId: string }> 
+  params: Promise<{ eventId: string }> 
 }) {
-  const { promoterId, eventId } = await params;
+  const { eventId } = await params;
 
-  console.log('edit page promoterId:', promoterId);
   console.log('edit page eventId:', eventId);
 
-  // Fetch data
-  const eventData = await fetchPmtEvent(eventId);
+  // Try to fetch PMT event first
+  let eventData = await fetchPmtEvent(eventId);
+
+  // If not found, try TechBouts
+  if (!eventData) {
+    eventData = await fetchTechBoutsEvent(eventId);
+  }
 
   if (!eventData) {
     notFound();
@@ -25,7 +30,7 @@ export default async function EditEventRoute({
       <h1 className="text-2xl font-bold mb-6">Edit Event</h1>
       <EditEventForm 
         eventData={eventData}
-        promoterId={promoterId}
+        eventId={eventId}
       />
     </div>
   );

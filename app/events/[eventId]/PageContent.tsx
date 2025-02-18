@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { EventType, Promoter } from '../../../../utils/types';
+import { EventType } from '@/utils/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -18,23 +18,27 @@ interface TournamentDashboardProps {
   promoterId: string;
   promoterEmail: string;
   eventData: EventType;
-  promoter: Promoter;
 }
 
 export default function PageContentEvent({
-  promoterId,
   eventData,
-  promoter,
   eventId,
 }: TournamentDashboardProps) {
   const [imageError, setImageError] = useState(false);
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
-  // Check if the user's email matches the promoter's email
+const promoterEmail = eventData.promoterEmail;
+
+
   const isAuthorizedPromoter = useMemo(() => {
     if (isAdmin) return true; // Admin can always edit
-    return user?.email && promoter?.email && user.email === promoter.email;
-  }, [user?.email, promoter?.email, isAdmin]);
+    if (!user?.email || !promoterEmail) {
+      console.log('Missing email information');
+      return false;
+    }
+    return user.email === promoterEmail;
+  }, [user?.email, promoterEmail, isAdmin]);
+
 
   const handleImageError = () => {
     setImageError(true);
@@ -65,7 +69,7 @@ export default function PageContentEvent({
           
           {isAuthorizedPromoter && (
             <Link
-              href={`/promoters/${promoterId}/${eventId}/edit`}
+              href={`/events/${eventId}/edit`}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Edit Event

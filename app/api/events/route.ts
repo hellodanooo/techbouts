@@ -1,8 +1,8 @@
 // app/api/ikf/events/route.ts
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/firebase_techbouts/config'; // Import Firestore instance
+import { db } from '@/lib/firebase_techbouts/config'; // Import Firestore instance
 import { doc, getDoc } from 'firebase/firestore';
-import { EventType } from '../../../../utils/types';
+import { EventType } from '@/utils/types';
 
 export async function GET() {
   console.log("API Route: Starting fetch...");

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { EventType } from "../utils/types";
 import { format, parseISO, eachMonthOfInterval, startOfYear, endOfYear, isPast } from "date-fns";
+import Image from "next/image";
 import {
   Card,
   CardHeader,
@@ -49,7 +50,7 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
 
   const handleEventClick = (event: EventType) => {
    
-      window.location.href = `/promoters/${event.promoterId}/${event.id}`;
+      window.location.href = `/events/${event.id}`;
    
   };
 
@@ -96,6 +97,23 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
 
     setEventsByStateAndMonth(organizedEvents);
   }, [events, months, states, eventTypeFilter, timeFilter]);
+
+
+
+
+  const getSanctioningLogo = (sanctioning: string): string => {
+    switch (sanctioning?.toUpperCase()) {
+      case 'IKF':
+        return '/logos/ikf_logo.png';
+      case 'PBSC':
+        return '/logos/pbsc_logo.png';
+      case 'PMT':
+        return '/logos/pmt_logo_2024_sm.png';
+      default:
+        return '/logos/pmt_logo_2024_sm.png';
+    }
+  };
+
 
   return (
     <>
@@ -177,22 +195,35 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
                               const isPastEvent = isPast(parseISO(event.date));
                               return (
                                 <Card
-                                  key={event.id}
-                                  className={`transition-colors cursor-pointer ${
-                                    event.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' :
-                                    event.status === 'approved' ? 'bg-blue-50 hover:bg-blue-100' :
-                                    event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
-                                  } ${isPastEvent ? 'opacity-50' : ''}`}
-                                  onClick={() => handleEventClick(event)}
-                                >
-                                  <CardHeader className="p-2">
-                                    <CardTitle className="text-sm">{event.event_name}</CardTitle>
-                                    <CardDescription>
-                                      {format(parseISO(event.date), "MMM d, yyyy")}<br />
-                                      {event.city}
-                                    </CardDescription>
-                                  </CardHeader>
-                                </Card>
+                                key={event.id}
+                                className={`relative transition-colors cursor-pointer ${
+                                  event.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' :
+                                  event.status === 'approved' ? 'bg-blue-50 hover:bg-blue-100' :
+                                  event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
+                                } ${isPastEvent ? 'opacity-50' : ''}`}
+                                onClick={() => handleEventClick(event)}
+                              >
+                                <CardHeader className="p-2">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <CardTitle className="text-sm">{event.event_name}</CardTitle>
+                                      <CardDescription>
+                                        {format(parseISO(event.date), "MMM d, yyyy")}<br />
+                                        {event.city}
+                                      </CardDescription>
+                                    </div>
+                                    <div className="w-8 h-8 relative flex-shrink-0 overflow-hidden">
+                                      <Image
+                                        src={getSanctioningLogo(event.sanctioning)}
+                                        alt={`${event.sanctioning || 'PMT'} logo`}
+                                        fill
+                                        sizes="32px"
+                                        className="object-contain pointer-events-none"
+                                      />
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                              </Card>
                               );
                             })}
                           </div>
