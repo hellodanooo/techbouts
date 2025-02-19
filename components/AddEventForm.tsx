@@ -8,7 +8,11 @@ import { addPmtEvent } from '@/utils/apiFunctions/addPmtEvent';
 import { getGeocode } from "use-places-autocomplete";
 import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCollection';
 import { generateDocId } from '@/utils/eventManagement';
-import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
+
+
+import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer'; // export const uploadEventFlyer = async (file: File, eventId: string): Promise<string> => { this returns the download url
+
+
 import { FaRegFileImage } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa"; // Icons for dropdown
 
@@ -369,6 +373,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
 
           <GoogleAutocomplete onSelect={handleAddressSelect} />
         </div>
+
 <div className="flex items-center space-x-2 py-5">
   <FaRegFileImage />
   <input

@@ -1,20 +1,46 @@
 // app/[eventId]/edit/EditEventForm.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+
 import { EventType } from '@/utils/types';
+
 import { editPmtEvent } from '@/utils/apiFunctions/editPmtEvent';
+
 import { useRouter } from 'next/navigation';
+
+
+import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer'; // export const uploadEventFlyer = async (file: File, eventId: string): Promise<string> => { this returns the download url
+
+
+interface TimeFields {
+  doors_open: string;
+  weighin_start_time: string;
+  weighin_end_time: string;
+  rules_meeting_time: string;
+  bouts_start_time: string;
+}
 
 interface EditEventFormProps {
   eventId: string;
     eventData: EventType; 
   }
 
-export default function EditEventForm({ eventData }: EditEventFormProps) {
+export default function EditEventForm({ eventData, eventId }: EditEventFormProps) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [formData, setFormData] = useState(eventData);
+   const [isUploadingFlyer, setIsUploadingFlyer] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState<EventType & TimeFields>({
+    ...eventData,
+    doors_open: eventData.doors_open || '',
+    weighin_start_time: eventData.weighin_start_time || '',
+    weighin_end_time: eventData.weighin_end_time || '',
+    rules_meeting_time: eventData.rules_meeting_time || '',
+    bouts_start_time: eventData.bouts_start_time || ''
+  }); 
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -24,31 +50,60 @@ export default function EditEventForm({ eventData }: EditEventFormProps) {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+
+
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
   
     try {
-      const updatedEvent = await editPmtEvent(eventData.eventId, formData);
+      let updatedFormData = { ...formData };
+  
+      // Upload new flyer if one was selected
+      if (selectedFile) {
+        setIsUploadingFlyer(true);
+        const flyerUrl = await uploadEventFlyer(selectedFile, eventId); // Use eventId prop here
+        updatedFormData = {
+          ...updatedFormData,
+          flyer: flyerUrl
+        };
+        setIsUploadingFlyer(false);
+      }
+  
+      const updatedEvent = await editPmtEvent(eventId, updatedFormData); // Use eventId prop here
       
       if (!updatedEvent) {
         throw new Error('Failed to update event');
       }
   
       // Redirect back to event page
-      router.push(`/events/${eventData.eventId}`);
+      router.push(`/events/${eventId}`); // Use eventId prop here
       router.refresh();
     } catch (error) {
       console.error('Error updating event:', error);
-      // You might want to add error handling UI here
+      // Add error handling UI here
     } finally {
       setIsUpdating(false);
     }
   };
 
+
+
   const handleCancel = () => {
     router.back();
   };
+
+
+
+  useEffect(() => {
+    return () => {
+      // Cleanup object URL when component unmounts
+      if (selectedFile) {
+        URL.revokeObjectURL(URL.createObjectURL(selectedFile));
+      }
+    };
+  }, [selectedFile]);
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -67,6 +122,34 @@ export default function EditEventForm({ eventData }: EditEventFormProps) {
               required
             />
           </div>
+
+          <div>
+  <Image 
+    src={selectedFile ? URL.createObjectURL(selectedFile) : eventData.flyer} 
+    alt="Event Flyer" 
+    width={200} 
+    height={200} 
+      style={{ width: 'auto', height: 'auto' }}
+  className="max-w-[200px] max-h-[200px] object-contain"
+  />
+  <label className="block text-sm font-medium text-gray-700">Event Flyer</label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFile(file);
+      }
+    }}
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  />
+  {isUploadingFlyer && (
+    <p className="text-sm text-gray-500 mt-1">
+      Uploading flyer...
+    </p>
+  )}
+</div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Date</label>
@@ -128,7 +211,7 @@ export default function EditEventForm({ eventData }: EditEventFormProps) {
               value={formData.doors_open}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
+              
             />
           </div>
 
@@ -140,7 +223,7 @@ export default function EditEventForm({ eventData }: EditEventFormProps) {
               value={formData.weighin_start_time}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
+              
             />
           </div>
 
@@ -152,7 +235,7 @@ export default function EditEventForm({ eventData }: EditEventFormProps) {
               value={formData.weighin_end_time}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
+              
             />
           </div>
 

@@ -1,8 +1,66 @@
 // app/events/[eventId]/page.tsx
 import PageContentEvent from './PageContent';
 import Head from 'next/head';
+import { Metadata } from 'next';
+
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
+
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
+
+// Add generateMetadata function
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ eventId: string }> 
+}): Promise<Metadata> {
+  const { eventId } = await params;
+  
+  try {
+    // Try PMT first
+    const pmtEventData = await fetchPmtEvent(eventId);
+    if (pmtEventData) {
+      const pageTitle = `${pmtEventData.event_name} - ${pmtEventData.date}`;
+      return {
+        title: pageTitle,
+        
+        openGraph: {
+          title: pageTitle,
+        },
+        twitter: {
+          title: pageTitle,
+        }
+      };
+    }
+
+    // Try TechBouts if PMT not found
+    const techBoutsEventData = await fetchTechBoutsEvent(eventId);
+    if (techBoutsEventData) {
+      const pageTitle = `${techBoutsEventData.name} - ${techBoutsEventData.date}`;
+      return {
+        title: pageTitle,
+        openGraph: {
+          title: pageTitle,
+        },
+        twitter: {
+          title: pageTitle,
+        }
+      };
+    }
+
+    return {
+      title: 'Event Not Found | TechBouts'
+    };
+  } catch {
+    return {
+      title: 'Error Loading Event | TechBouts'
+    };
+  }
+}
+
+
+
+
+
 
 export default async function EventPage(params: { 
   params: Promise<{eventId: string }> 
@@ -18,8 +76,9 @@ export default async function EventPage(params: {
     const pmtEventData = await fetchPmtEvent(eventId);
     if (pmtEventData) {
       console.log('Page Component - Successfully fetched PMT event data');
-      const pageTitle = `${pmtEventData.name} - ${pmtEventData.date}`;
-      
+      const pageTitle = `${pmtEventData.event_name} - ${pmtEventData.date}`;
+      console.log("SEO TITLE", pageTitle)
+      // console.log("pmtEventData", pmtEventData)
       return (
         <>
           <Head>
@@ -35,6 +94,7 @@ export default async function EventPage(params: {
       );
     }
 
+    
     // If PMT event not found, try TechBouts (IKF/PBSC)
     const techBoutsEventData = await fetchTechBoutsEvent(eventId);
     if (techBoutsEventData) {

@@ -15,6 +15,8 @@ type TechBoutsEventsResponse = {
 
 async function fetchPMTEvents(promoterId: string): Promise<EventsResponse> {
   try {
+    console.log('fetchPMTEvents', promoterId);
+
     const headersList = await headers();
     const host = headersList.get('host');
     
