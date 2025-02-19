@@ -224,8 +224,12 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
         ticket_link: formData.ticket_link ?? "",
         zip: formData.zip ?? "",
         name: formData.name ?? "",
-        numMats: formData.numMats ?? 0, // ✅ Default to 0 if undefined
-        competition_type: formData.competition_type ?? "FightCard", // ✅ Default to FightCard if missing
+        numMats: formData.numMats ?? 2, // ✅ Default to 0 if undefined
+        competition_type: formData.competition_type ?? "FightCard",
+        locale: formData.locale ?? "en",
+        disableRegistration: formData.disableRegistration ?? false,
+       
+
       };
       
   

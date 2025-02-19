@@ -79,7 +79,10 @@ export async function fetchTechBoutsEvent(eventId: string): Promise<EventType | 
       zip: data.zip,
       numMats: data.numMats,
       registration_link: data.registration_link,
-      matches_link: data.matches_link
+      matches_link: data.matches_link,
+      locale: data.locale || 'en',
+      disableRegistration: data.disableRegistration || false,
+      
     };
 
     console.log('fetchIkfEvent - Transformed event data:', eventData);

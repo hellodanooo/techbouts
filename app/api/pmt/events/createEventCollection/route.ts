@@ -1,3 +1,5 @@
+// app/api/pmt/events/createEventCollection/route.ts
+
 import { NextResponse } from 'next/server';
 import { EventType } from '@/utils/types';
 

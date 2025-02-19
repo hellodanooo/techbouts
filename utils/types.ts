@@ -153,6 +153,7 @@ export interface EventType {
   date: string;
   flyer: string;
   coordinates?: { latitude: number; longitude: number };
+  disableRegistration: boolean;
   registration_link?: string;
   matches_link?: string;
   weighin_date?: string;
@@ -183,7 +184,7 @@ export interface EventType {
   status?: string;
   street?: string;
   postal_code?: string;
-  country?: string;
+  country: string;
   colonia?: string;
   municipality?: string;
   ticket_enabled?: boolean;
@@ -191,7 +192,8 @@ export interface EventType {
   ticket_link?: string;
   zip?: string;
   name?: string;
-  numMats?: number;
+  numMats: number;
+  locale: string;
 }
 
 export interface Promoter  {

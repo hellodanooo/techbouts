@@ -1,8 +1,8 @@
-// app/promoters/[promoterId]/[eventId]/PageContent.tsx
+// app/events/[eventId]/PageContent.tsx
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { EventType } from '@/utils/types';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,6 +11,9 @@ import AuthDisplay from '@/components/ui/AuthDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import Register from './Register'
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 
 
 interface TournamentDashboardProps {
@@ -28,6 +31,37 @@ export default function PageContentEvent({
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
 const promoterEmail = eventData.promoterEmail;
+
+const [registerOpen, setRegisterOpen] = useState(false);
+
+const [locale, setLocale] = useState('en');
+
+  const stripeUSD = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '');
+  const stripeMEX = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_MEX || '');
+
+  // Use useEffect to update locale based on country
+  useEffect(() => {
+    if (
+      eventData.country === 'MEX' || 
+      eventData.country.toLowerCase() === 'mexico' || 
+      eventData.country.toLowerCase() === 'mx'
+    ) {
+      setLocale('es');
+    } else {
+      setLocale('en');
+    }
+  }, [eventData.country]);
+
+  // Update stripeInstance to use locale from state
+  const stripeInstance = useMemo(() => {
+    if (locale === 'es') {
+      console.log('MEXICO Stripe');
+      return stripeMEX;
+    } else {
+      console.log('US Stripe');
+      return stripeUSD;
+    }
+  }, [locale, stripeMEX, stripeUSD]);
 
 
   const isAuthorizedPromoter = useMemo(() => {
@@ -54,7 +88,12 @@ const promoterEmail = eventData.promoterEmail;
   };
 
 
+
+
+
+
   return (
+    <Elements stripe={stripeInstance}>
     <div className="p-5">
       <AuthDisplay 
         user={user}
@@ -160,12 +199,29 @@ const promoterEmail = eventData.promoterEmail;
                 <CardTitle>Registration & Tickets</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {eventData.registration_enabled && (
+
+
+               
                   <div className="flex justify-between items-center">
-                    <span>Registration Fee</span>
-                    <Badge variant="secondary">${eventData.registration_fee}</Badge>
+
+<button onClick={() => setRegisterOpen(true)} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+  Register
+</button>
+
+{registerOpen && (
+    <Register 
+    eventId={eventId}
+    locale="en"
+    eventName={eventData.event_name}
+    closeModal={() => {}}
+    registrationFee={eventData.registration_fee}
+    />
+  )}
+
                   </div>
-                )}
+
+
+           
                 
                 {eventData.tickets_enabled && (
                   <>
@@ -206,5 +262,7 @@ const promoterEmail = eventData.promoterEmail;
         </div>
       </div>
     </div>
+    </Elements>
+
   );
 }

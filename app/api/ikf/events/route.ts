@@ -60,6 +60,10 @@ export async function GET() {
             email: event.email ?? "",
             promoterEmail: event.promoterEmail ?? "",
             competition_type: event.competition_type ?? "FightCard",
+            disableRegistration: event.disableRegistration ?? false,
+            country: event.country ?? "",
+            locale: event.locale ?? "en",
+            numMats: event.numMats ?? 1,
           };
         });
       }

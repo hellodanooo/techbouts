@@ -1,3 +1,5 @@
+// utils/apiFunctions/createPmtEventCollection.ts
+
 import { EventType } from '@/utils/types';
 
 export async function createPmtEventCollection(eventData: EventType): Promise<{ success: boolean; message?: string }> {

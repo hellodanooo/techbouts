@@ -93,9 +93,13 @@ export default function RootLayout({
         <div className="min-h-full flex flex-col">
           <main className="flex-1 w-full">
             <AuthProvider>
+
+       
+
             <GoogleMapsProvider> 
               {children}
               </GoogleMapsProvider>
+    
             </AuthProvider>
           </main>
         </div>

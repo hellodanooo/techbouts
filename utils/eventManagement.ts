@@ -230,6 +230,9 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       registration_link: pendingEvent.registration_link || '',
       matches_link: pendingEvent.matches_link || '',
       status: pendingEvent.status || 'pending',
+      locale: pendingEvent.locale || 'en',
+      disableRegistration: pendingEvent.disableRegistration || false,
+      
     };
 
     // Add to events collection

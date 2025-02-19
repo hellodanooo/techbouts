@@ -114,7 +114,6 @@ export async function GET() {
         status: extractField(event, 'status', 'string') || '',
         street: extractField(event, 'street', 'string'),
         postal_code: extractField(event, 'postal_code', 'string'),
-        country: extractField(event, 'country', 'string'),
         colonia: extractField(event, 'colonia', 'string'),
         municipality: extractField(event, 'municipality', 'string'),
         ticket_enabled: extractField(event, 'ticket_enabled', 'boolean') || false,
@@ -122,6 +121,9 @@ export async function GET() {
         ticket_link: extractField(event, 'ticket_link', 'string'),
         zip: extractField(event, 'zip', 'string'),
         numMats: extractField(event, 'numMats', 'number') || 0,
+        locale: extractField(event, 'locale', 'string') || 'en',
+        disableRegistration: extractField(event, 'disableRegistration', 'boolean') || false,
+        country: extractField(event, 'country', 'string') || 'USA',
       };
     });
 

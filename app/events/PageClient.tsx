@@ -11,6 +11,8 @@ import AddEventForm from '@/components/AddEventForm';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 
+
+
 interface Props {
   initialConfirmedEvents?: EventType[];
   initialPendingEvents?: EventType[];
