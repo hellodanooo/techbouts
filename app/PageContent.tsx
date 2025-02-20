@@ -3,8 +3,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth } from '@/context/AuthContext';
+
 import HeaderHome from "@/components/ui/HeaderHome";
+import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import LoadingScreen from '@/components/loading_screens/LandingLoading';
 

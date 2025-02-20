@@ -1,4 +1,4 @@
-//app/database/[sanctioning]/emails/ExportEmails.tsx
+// app/emails/[promotion]/ExportEmails.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,28 +6,32 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { exportEmails as exportPMTEmails } from '@/utils/pmt/emailExport';
+import { useAuth } from '@/context/AuthContext';
 
 interface ExportEmailsClientProps {
-  sanctioning: string;
+  promotion: string;
 }
 
-export default function ExportEmailsClient({ sanctioning }: ExportEmailsClientProps) {
+export default function ExportEmailsClient({ promotion }: ExportEmailsClientProps) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('2024');
-
+  const { user, isAdmin } = useAuth();
+  
   const handleExport = async () => {
     setLoading(true);
     setError(null);
     setProgress([]);
 
     try {
-      let result: { message: string } | null = null; // Explicitly declare the type
+      let result: { message: string } | null = null;
     
-      if (sanctioning === 'pmt') {
-        result = await exportPMTEmails(selectedYear, (message) =>
-          setProgress((prev) => [...prev, message])
+      if (promotion.toLowerCase() === 'pmt') {
+        result = await exportPMTEmails(
+          selectedYear,
+          { user, isAdmin },  // Pass auth info
+          (message) => setProgress((prev) => [...prev, message])
         );
       }
     
@@ -40,7 +44,7 @@ export default function ExportEmailsClient({ sanctioning }: ExportEmailsClientPr
     } finally {
       setLoading(false);
     }
-  };
+};
 
 
 
@@ -49,7 +53,7 @@ export default function ExportEmailsClient({ sanctioning }: ExportEmailsClientPr
       <Card>
         <CardHeader>
           <CardTitle>
-            Export {sanctioning.toUpperCase()} Fighter Emails
+            Export {promotion.toUpperCase()} Fighter Emails
           </CardTitle>
         </CardHeader>
         <CardContent>

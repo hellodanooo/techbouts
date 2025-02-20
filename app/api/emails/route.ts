@@ -1,4 +1,4 @@
-// app/api/sendEmails/route.ts
+// app/api/emails/route.ts
 import { NextResponse } from 'next/server';
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
@@ -20,21 +20,11 @@ export async function POST(request: Request) {
 
     const trackingPixelUrl = `https://pmt-west.app/api/openedEmailCounter?campaignId=${campaignId}`;
 
-    const emailHTML = `
-      <html>
-        <head>
-          <style>
-            .email-body { text-align: center; font-family: Arial, sans-serif; }
-          </style>
-        </head>
-        <body>
-          <div class="email-body">
-            ${message}
-            <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;"/>
-          </div>
-        </body>
-      </html>
-    `;
+    // Insert tracking pixel at the end of the message body, before closing body tag
+    const emailHTML = message.replace('</body>', `
+      <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;"/>
+      </body>
+    `);
 
     // Send emails using AWS SDK v3
     await Promise.all(emails.map(async (email: string) => {

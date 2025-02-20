@@ -1,6 +1,7 @@
+// components/tables/EmailTable.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -15,13 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
@@ -39,46 +33,17 @@ interface EmailData {
   lastUpdated: string;
 }
 
-export default function EmailsTable() {
-  const [selectedYear, setSelectedYear] = useState("2024");
-  const [emailData, setEmailData] = useState<EmailData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface EmailsTableProps {
+  emailData: EmailData | null;
+  loading: boolean;
+  error: string | null;
+  selectedYear: string;
+}
+
+export default function EmailsTable({ emailData, loading, error, selectedYear }: EmailsTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  const years = ["2025", "2024", "2023", "2022"];
-
-  useEffect(() => {
-    const fetchEmails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/emails/fetchPMT?year=${selectedYear}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        setEmailData(result as EmailData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error fetching email data');
-        console.error('Error fetching emails:', err);
-        setEmailData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchEmails();
-  }, [selectedYear]);
 
   const filteredEmails = emailData?.emails.filter(email =>
     email.first.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,26 +59,8 @@ export default function EmailsTable() {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>Fighter Emails Database</span>
+          <span>Fighter Emails Database - {selectedYear}</span>
           <div className="flex items-center space-x-4">
-            <Select
-              value={selectedYear}
-              onValueChange={(value) => {
-                setSelectedYear(value);
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Select year" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Input
               placeholder="Search..."
               value={searchTerm}
