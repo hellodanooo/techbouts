@@ -38,6 +38,7 @@ export async function GET() {
             promotionName: promoter.promotionName,
             sanctioning: promoter.sanctioning,
             state: promoter.state,
+            logo: promoter.logo,
           }));
       }
     } else {

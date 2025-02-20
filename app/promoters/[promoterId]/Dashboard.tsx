@@ -89,7 +89,7 @@ export default function PromoterDashboard({
             />
           </div>
           <h1 className="text-2xl font-bold">
-            {promoter.promotion || `${promoter.firstName} ${promoter.lastName}`}s Events
+            {promoter.promotionName || `No Promotion Name`} Events
           </h1>
         </div>
       </div>

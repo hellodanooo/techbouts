@@ -1,5 +1,3 @@
-// app/emails/[promotion]/CustomEmail_1.tsx
-// CustomEmail.tsx
 import React from 'react';
 import { Html, Head, Body, Container, Text, Heading, Button, Img, Section } from "@react-email/components";
 
@@ -18,31 +16,50 @@ const CustomEmail = ({
   buttonUrl, 
   promotion 
 }: CustomEmailProps) => {
-  // Define logo mapping with proper public folder paths
   const LOGO_MAPPING = {
     muaythaipurist: {
       src: '/logos/MTP_LOGO.png',
-      width: 200,
-      height: 80
+      size: 100
     },
     ikf: {
       src: '/logos/ikf_logo.png',
-      width: 180,
-      height: 70
+      size: 100
     },
     pmt: {
       src: '/logos/pmt_logo_2024_sm.png',
-      width: 220,
-      height: 90
+      size: 100
     }
   };
 
-  // Get the selected logo based on promotion
   const selectedLogo = LOGO_MAPPING[promotion as keyof typeof LOGO_MAPPING];
+
+  const imageStyles = {
+    display: 'block',
+    width: `${selectedLogo.size}px`,
+    height: `${selectedLogo.size}px`,
+    maxWidth: `${selectedLogo.size}px`,
+    maxHeight: `${selectedLogo.size}px`,
+    margin: '0 auto',
+    objectFit: 'contain' as const,
+    lineHeight: '1'
+  };
 
   return (
     <Html>
-      <Head />
+      <Head>
+        <style>{`
+          img {
+            max-width: 100%;
+            object-fit: contain;
+          }
+          .logo-container {
+            width: ${selectedLogo.size}px !important;
+            height: ${selectedLogo.size}px !important;
+            display: block !important;
+            margin: 0 auto !important;
+          }
+        `}</style>
+      </Head>
       <Body style={{ 
         backgroundColor: '#f3f4f6',
         margin: '0',
@@ -55,20 +72,35 @@ const CustomEmail = ({
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}>
-          {/* Header with Dynamic Logo */}
           <Section style={{
             textAlign: 'center',
             padding: '24px',
             borderBottom: '1px solid #e5e7eb'
           }}>
             {selectedLogo && (
-              <Img
-                src={`${process.env.NEXT_PUBLIC_APP_URL}${selectedLogo.src}`}
-                width={selectedLogo.width}
-                height={selectedLogo.height}
-                alt={`${promotion.toUpperCase()} Logo`}
-                style={{ margin: '0 auto' }}
-              />
+              <table 
+                role="presentation" 
+                cellPadding="0" 
+                cellSpacing="0" 
+                style={{ 
+                  width: `${selectedLogo.size}px`,
+                  height: `${selectedLogo.size}px`,
+                  margin: '0 auto',
+                  border: 'none'
+                }}
+              >
+                <tr>
+                  <td align="center" valign="middle" className="logo-container">
+                    <Img
+                      src={`${process.env.NEXT_PUBLIC_APP_URL}${selectedLogo.src}`}
+                      width={selectedLogo.size}
+                      height={selectedLogo.size}
+                      alt={`${promotion.toUpperCase()} Logo`}
+                      style={imageStyles}
+                    />
+                  </td>
+                </tr>
+              </table>
             )}
           </Section>
 
@@ -78,6 +110,7 @@ const CustomEmail = ({
               fontSize: '24px',
               fontWeight: 'bold',
               color: '#1f2937',
+              textAlign: 'center',
               marginBottom: '24px'
             }}>
               {subject}
@@ -87,52 +120,77 @@ const CustomEmail = ({
               color: '#4b5563',
               fontSize: '16px',
               lineHeight: '1.5',
-              marginBottom: '32px'
+              textAlign: 'center',
+              marginBottom: '24px'
             }}>
               {message}
             </Text>
 
             {buttonText && buttonUrl && (
-              <Button 
-                href={buttonUrl}
-                style={{
-                  backgroundColor: '#e11d48',
-                  color: '#ffffff',
-                  padding: '12px 32px',
-                  borderRadius: '6px',
-                  fontWeight: '500',
-                  textDecoration: 'none',
-                  display: 'inline-block'
-                }}
-              >
-                {buttonText}
-              </Button>
+              <table role="presentation" cellPadding="0" cellSpacing="0" style={{ margin: '0 auto' }}>
+                <tr>
+                  <td align="center">
+                    <Button 
+                      href={buttonUrl}
+                      style={{
+                        backgroundColor: '#e11d48',
+                        color: '#ffffff',
+                        padding: '12px 32px',
+                        borderRadius: '6px',
+                        fontWeight: '500',
+                        textDecoration: 'none',
+                        display: 'inline-block'
+                      }}
+                    >
+                      {buttonText}
+                    </Button>
+                  </td>
+                </tr>
+              </table>
             )}
           </Section>
 
-          {/* Footer with TechBouts Logo */}
+          {/* Footer Section */}
           <Section style={{
             textAlign: 'center',
-            padding: '24px',
+            padding: '5px',
             backgroundColor: '#f9fafb',
             borderTop: '1px solid #e5e7eb',
             borderBottomLeftRadius: '8px',
-            borderBottomRightRadius: '8px'
+            borderBottomRightRadius: '8px',
+            marginTop: '24px'
           }}>
             <Text style={{
               color: '#6b7280',
-              fontSize: '14px',
-              marginBottom: '12px'
+              fontSize: '10px',
+              marginBottom: '4px'
             }}>
               Powered by
             </Text>
-            <Img
-              src={`${process.env.NEXT_PUBLIC_APP_URL}/logos/techboutslogoFlat.png`}
-              width={150}
-              height={40}
-              alt="TechBouts Logo"
+            <table 
+              role="presentation" 
+              cellPadding="0" 
+              cellSpacing="0" 
               style={{ margin: '0 auto' }}
-            />
+            >
+              <tr>
+                <td>
+                  <Img
+                    src={`${process.env.NEXT_PUBLIC_APP_URL}/logos/techboutslogoFlat.png`}
+                    width={100}
+                    height={20}
+                    alt="TechBouts Logo"
+                    style={{
+                      display: 'block',
+                      maxWidth: '100px',
+                      width: '100%',
+                      height: 'auto',
+                      margin: '0 auto'
+                    }}
+                  />
+                </td>
+              </tr>
+            </table>
           </Section>
         </Container>
       </Body>

@@ -8,7 +8,7 @@ import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import FighterForm from './FighterForm';
 import { format } from 'date-fns';
 
-interface CheckoutFormProps {
+interface RegisterProps {
   eventId: string;
   locale: string;
   eventName: string;
@@ -69,7 +69,7 @@ interface ConvertedFees {
   currency: string;
 }
 
-const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale }) => {
 
 
   const [fighterData, setFighterData] = useState<FighterFormData | null>(null);

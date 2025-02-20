@@ -45,6 +45,7 @@ export async function GET(request: Request) {
           promotionName: promoter.promotionName,
           sanctioning: promoter.sanctioning,
           state: promoter.state,
+          logo: promoter.logo,
 
         }));
     }

@@ -136,11 +136,6 @@ export interface FullContactFighter {
   website?: string;
 }
 
-
-
-
-
-
 export interface EventType {
   competition_type: 'FightCard' | 'Tournament';
   event_name: string;
@@ -206,9 +201,10 @@ export interface Promoter  {
   promoterId: string;
   promotionName: string;
   sanctioning: string[];
-    state: string;
+  state: string;
   createdAt?: string;
   promotion?: string;
+  logo?: string;
 
 };
 

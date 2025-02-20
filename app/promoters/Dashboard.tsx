@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import AddPromoter from '@/components/AddPromoter';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
+import Image from 'next/image';
 
 interface Props {
   initialConfirmedEvents?: EventType[];
@@ -70,7 +71,7 @@ const PromoterDashboard = ({
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [activeSanctioning, setActiveSanctioning] = useState<'PMT' | 'IKF'>('PMT');
-  const [showPromoterModal, setShowPromoterModal] = useState(false); 
+  const [showPromoterModal, setShowPromoterModal] = useState(false);
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
 
   const activePromoters = useMemo(() => {
@@ -171,12 +172,12 @@ const PromoterDashboard = ({
       const confirmedWithPrefix = initialConfirmedEvents.map(event => ({
         ...event,
         uniqueId: `confirmed_${event.eventId}`,
-         sanctioning: 'PMT'
+        sanctioning: 'PMT'
       }));
       const pendingWithPrefix = initialPendingEvents.map(event => ({
         ...event,
         uniqueId: `pending_${event.eventId}`,
-         sanctioning: 'PMT'
+        sanctioning: 'PMT'
       }));
       return [...confirmedWithPrefix, ...pendingWithPrefix];
     }
@@ -194,7 +195,7 @@ const PromoterDashboard = ({
 
   return (
     <div style={styles.container}>
-  <AuthDisplay 
+      <AuthDisplay
         user={user}
         isAdmin={isAdmin}
         isPromoter={isPromoter}
@@ -278,6 +279,23 @@ const PromoterDashboard = ({
                 hoveredCard === promoter.name
               )}
             >
+              {promoter.logo ? (
+                <Image
+                  src={promoter.logo}
+                  alt={promoter.name}
+                  width={150}
+                  height={150}
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-[150px] h-[150px] bg-gray-200 rounded-full flex items-center justify-center"
+                >
+                  <span className="text-gray-400 text-lg">
+                    {promoter.name?.charAt(0)?.toUpperCase() || 'P'}
+                  </span>
+                </div>
+              )}
               <h2 style={styles.cardTitle}>{promoter.name}</h2>
               <p style={styles.cardSubText}>
                 {promoter.city}, {promoter.state}

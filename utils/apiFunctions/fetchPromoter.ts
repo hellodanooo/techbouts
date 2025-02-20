@@ -5,12 +5,11 @@ export async function fetchPromoter(promoterId: string) {
   try {
 console.log('fetchPromoter', promoterId);
 
-const transformedPromoterId = promoterId === "borntowin" ? "born_to_win" : promoterId;
 
     const headersList = await headers();
     const host = headersList.get('host');
     
-    const url = `http://${host}/api/promoters/${transformedPromoterId}`;
+    const url = `http://${host}/api/promoters/${promoterId}`;
     console.log('Fetching promoter from:', url);
     
     const response = await fetch(url, {

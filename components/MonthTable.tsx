@@ -37,7 +37,7 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
   }>({});
 
   // Modified states array to include NorCal and SoCal
-  const states = useMemo(() => ["NorCal", "SoCal", "TX", "CO", "ID", "WA"], []);
+  const states = useMemo(() => ["NorCal", "SoCal", "TX", "CO", "ID", "WA", "NV"], []);
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const months = useMemo(
     () =>

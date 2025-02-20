@@ -12,10 +12,14 @@ const sesClient = new SESClient({
 
 export async function POST(request: Request) {
   try {
-    const { message, subject, emails, campaignId } = await request.json();
+    const { message, subject, emails, campaignId, source } = await request.json();
 
     if (!emails || emails.length === 0 || !message) {
       return NextResponse.json({ message: 'Missing emails or message' }, { status: 400 });
+    }
+
+    if (!source || !source.name || !source.email) {
+      return NextResponse.json({ message: 'Invalid email source configuration' }, { status: 400 });
     }
 
     const trackingPixelUrl = `https://pmt-west.app/api/openedEmailCounter?campaignId=${campaignId}`;
@@ -29,7 +33,7 @@ export async function POST(request: Request) {
     // Send emails using AWS SDK v3
     await Promise.all(emails.map(async (email: string) => {
       const command = new SendEmailCommand({
-        Source: '"Point Muay Thai West" <info@pointmuaythaica.com>',
+        Source: `"${source.name}" <${source.email}>`,
         Destination: {
           ToAddresses: [email],
         },

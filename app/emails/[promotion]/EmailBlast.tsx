@@ -35,6 +35,27 @@ const TEST_EMAILS = [
   'logytime1@gmail.com'
 ];
 
+interface EmailSourceConfig {
+  name: string;
+  email: string;
+}
+
+const EMAIL_SOURCE_MAPPING: Record<string, EmailSourceConfig> = {
+  muaythaipurist: {
+    name: "Muay Thai Purist",
+    email: "info@muaythaipurist.com"
+  },
+  pmt: {
+    name: "Point Muay Thai West",
+    email: "info@pointmuaythaica.com"
+  },
+  ikf: {
+    name: "Point Muay Thai West",
+    email: "info@pointmuaythaica.com"
+  }
+};
+
+
 export default function EmailBlast({ promotion }: EmailBlastProps) {
   const [loading, setLoading] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2024');
@@ -47,6 +68,9 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
   const [buttonText, setButtonText] = useState("Enter Button Text Here");
   const [buttonUrl, setButtonUrl] = useState("https://your-website.com");
   const [renderedHtml, setRenderedHtml] = useState<string>("");
+
+  const emailSource = EMAIL_SOURCE_MAPPING[promotion] || EMAIL_SOURCE_MAPPING.pmt;
+
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -103,7 +127,11 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
           buttonText,
           buttonUrl,
           campaignId,
-          promotion
+          promotion,
+          source: {
+            name: emailSource.name,
+            email: emailSource.email
+          }
         }),
       });
 

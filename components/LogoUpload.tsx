@@ -1,9 +1,8 @@
 // components/LogoUpload.tsx
 import React, { useState, useCallback } from 'react';
-import { getStorage, ref } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '@/lib/firebase_techbouts/config';
 import Cropper from 'react-easy-crop';
-import { uploadBytes } from 'firebase/storage';
 
 // Add these interfaces for proper typing
 interface Point {
@@ -22,7 +21,7 @@ interface LogoUploadProps {
   docId: string;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (downloadUrl: string) => void;
   source: string;
 }
 
@@ -89,20 +88,16 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ docId, isOpen, onClose, onSucce
 
   const uploadLogo = async () => {
     if (!image || !croppedAreaPixels) return;
-    console.log('Cropped Area Pixels:', croppedAreaPixels);
 
     try {
       setUploading(true);
       setError(null);
 
       const croppedImage = await getCroppedImg(image, croppedAreaPixels);
-      console.log('Cropped Image Base64:', croppedImage);
-
       const storage = getStorage(app);
       const logoRef = ref(storage, `techbouts_${source}/${docId}.png`);
       
       const base64Data = croppedImage.split(',')[1];
-
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -111,12 +106,11 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ docId, isOpen, onClose, onSucce
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'image/png' });
       
-      // Upload the blob with metadata
+      // Upload the blob and get the download URL
       await uploadBytes(logoRef, blob, metadata);
-            
-      console.log('Upload Successful:', base64Data);
-
-      onSuccess();
+      const downloadUrl = await getDownloadURL(logoRef);
+      
+      onSuccess(downloadUrl);
       onClose();
     } catch (err) {
       setError('Failed to upload logo. Please try again.');
@@ -125,6 +119,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ docId, isOpen, onClose, onSucce
       setUploading(false);
     }
   };
+
 
   if (!isOpen) return null;
 
