@@ -39,7 +39,13 @@ export async function fetchPmtEvent(eventId: string) {
         return null;
       }
 
-      return data.event as EventType;
+      const eventData = {
+        ...data.event,
+        country: data.event.country || 'USA'
+      };
+
+
+      return eventData as EventType;
     } catch (parseError) {
       console.error('Error parsing PMT Event JSON response:', parseError);
       return null;
