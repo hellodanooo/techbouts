@@ -7,6 +7,7 @@ interface CustomEmailProps {
   buttonText?: string;
   buttonUrl?: string;
   promotion: string;
+  image?: string;
 }
 
 const CustomEmail = ({ 
@@ -14,7 +15,8 @@ const CustomEmail = ({
   message, 
   buttonText, 
   buttonUrl, 
-  promotion 
+  promotion,
+  image 
 }: CustomEmailProps) => {
   const LOGO_MAPPING = {
     muaythaipurist: {
@@ -116,6 +118,35 @@ const CustomEmail = ({
               {subject}
             </Heading>
             
+
+ {/* Content Image */}
+ {image && (
+              <table 
+                role="presentation" 
+                cellPadding="0" 
+                cellSpacing="0" 
+                style={{ width: '100%', margin: '24px 0' }}
+              >
+                <tr>
+                  <td align="center">
+                    <Img
+                      src={image}
+                      alt="Content image"
+                      width={600}
+                      className="content-image"
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        margin: '0 auto'
+                      }}
+                    />
+                  </td>
+                </tr>
+              </table>
+            )}
+
+
             <Text style={{
               color: '#4b5563',
               fontSize: '16px',
