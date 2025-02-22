@@ -1,4 +1,4 @@
-// app/promoters/Dashboard.tsx
+// app/events/PageClient.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -19,7 +19,7 @@ interface Props {
   allTechBoutsEvents?: EventType[];
 }
 
-const PromoterDashboard = ({
+const EventsDashboard = ({
   initialConfirmedEvents = [],
   initialPendingEvents = [],
     allTechBoutsEvents = [],
@@ -282,4 +282,4 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
   );
 };
 
-export default PromoterDashboard;
+export default EventsDashboard;

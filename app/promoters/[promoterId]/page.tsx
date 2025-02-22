@@ -1,3 +1,4 @@
+// app/promoters/[promoterId]/page.tsx
 import { headers } from 'next/headers';
 import { EventType } from '../../../utils/types';
 import PromoterDashboard from './Dashboard';

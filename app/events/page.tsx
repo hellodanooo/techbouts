@@ -1,4 +1,4 @@
-//app/promoters/page.tsx
+//app/events/page.tsx
 
 import { headers } from 'next/headers';
 import PageClient from './PageClient';

@@ -3,6 +3,8 @@ import EditEventForm from './EditEventForm';
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
+import OfficialsEvent from './OfficialsEvent';
+
 
 export default async function EditEventRoute({ 
   params 
@@ -32,6 +34,18 @@ export default async function EditEventRoute({
         eventData={eventData}
         eventId={eventId}
       />
+<div style={{
+  marginTop: '20px',
+  borderTop: '1px solid #ccc',
+  paddingTop: '20px'
+}}>
+<OfficialsEvent
+        eventId={eventId} numMats={eventData.numMats} 
+      />
+
+</div>
+    
+
     </div>
   );
 }

@@ -1,7 +1,6 @@
-// components/ui/AuthDisplay.tsx
-'use client';
-
+import { LogOut } from 'lucide-react';
 import GoogleAuthButton from './GoogleAuthButton';
+import { useAuth } from '@/context/AuthContext';
 
 interface AuthDisplayProps {
   user: { email: string | null } | null;
@@ -11,12 +10,13 @@ interface AuthDisplayProps {
 }
 
 export default function AuthDisplay({ user, isAdmin }: AuthDisplayProps) {
+  const { signOut } = useAuth();
+
   if (!user?.email) {
     return (
       <aside aria-hidden="true" className="fixed bottom-4 right-4 z-50">
         <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg shadow-md">   
-    <GoogleAuthButton />
-
+          <GoogleAuthButton />
         </div>
       </aside>
     );
@@ -34,8 +34,17 @@ export default function AuthDisplay({ user, isAdmin }: AuthDisplayProps) {
 
   return (
     <aside aria-hidden="true" className="fixed bottom-4 right-4 z-50">
-      <div className={`${bgColor} px-4 py-2 rounded-lg shadow-md transition-all duration-200`}>
-        <p className={`text-sm ${textColor}`}>{displayText}</p>
+      <div className={`${bgColor} px-4 py-3 rounded-lg shadow-md transition-all duration-200`}>
+        <div className="flex items-center justify-between gap-4">
+          <p className={`text-sm ${textColor}`}>{displayText}</p>
+          <button
+            onClick={signOut}
+            className={`${textColor} hover:opacity-75 transition-opacity`}
+            title="Sign out"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
     </aside>
   );

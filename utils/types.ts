@@ -1,3 +1,30 @@
+
+export type Official = {
+  email: string;
+  city: string;
+  first: string;
+  last: string;
+  payment: string;
+  paymentId: string;
+  phone: string;
+  photo: string;
+  position?: string;
+  state: string;
+  official_id: string;
+  id: string;
+  bouts_judged: number;
+  bouts_reffed: number;
+  facebookUrl: string;
+  mat?: number;
+  location?: string;
+  judgedBefore: boolean;
+  muayThaiExperience: string;
+  paymentType: string;
+  officialId: string;
+  quizScore?: number;
+
+}
+
 interface EmailCampaign {
   id: string;
   promotion: string;

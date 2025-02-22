@@ -6,19 +6,28 @@ export async function fetchPmtEvents() {
   try {
     const headersList = await headers();
     const host = headersList.get('host');
+    const timestamp = Date.now(); // Add timestamp to bust cache
     
-    // Fetch both confirmed and pending events in parallel
+    // Add cache-busting headers and timestamp to URL
     const [upcomingResponse, pendingResponse] = await Promise.all([
-      fetch(`http://${host}/api/pmt/events`, {
+      fetch(`http://${host}/api/pmt/events?t=${timestamp}`, {
         cache: 'no-store',
+        next: { revalidate: 0 }, // Force revalidation
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
       }),
-      fetch(`http://${host}/api/pmt/pending_events`, {
+      fetch(`http://${host}/api/pmt/pending_events?t=${timestamp}`, {
         cache: 'no-store',
+        next: { revalidate: 0 }, // Force revalidation
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
       }),
     ]);

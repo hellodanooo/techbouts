@@ -46,14 +46,25 @@ const extractField = <T extends string | number | boolean | undefined>(
 };
 
 export async function GET() {
+  const timestamp = new Date().toISOString(); 
+  const urlWithMask = `${firestoreURL}&mask.fieldPaths=events&readTime=${timestamp}`;
+  
   try {
-    const response = await fetch(firestoreURL, { cache: 'no-store' });
-    console.log("Firestore GET response status:", response.status);
+    const response = await fetch(urlWithMask, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Firebase-Query-Options': 'readTime',
+      },
+      cache: 'no-store'
+    });
+
+    console.log("Request time:", new Date(timestamp).toISOString());
+    console.log("Response status:", response.status);
     
-    // Clone the response for logging so the original can still be used for parsing
     const clonedResponse = response.clone();
     const responseText = await clonedResponse.text();
-    console.log("Firestore GET response body:", responseText);
+    console.log("Response received at:", new Date().toISOString());
+    console.log("Response body:", responseText);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

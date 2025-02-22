@@ -6,8 +6,9 @@ import { EventType, Promoter } from '../../utils/types';
 import { fetchPmtEvents } from '../../utils/apiFunctions/fetchPmtEvents';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-async function fetchAllIKFEvents() {
+async function fetchAllTechBoutsEvents() {
   try {
     console.log('Starting IKF Event Fetch')
     const headersList = await headers();
@@ -24,25 +25,25 @@ async function fetchAllIKFEvents() {
 
     console.log('Fetch IKF Events Status:', confirmedResponse.status);
 
-    let ikfEvents: EventType[] = [];
+    let allTechBoutsEvents: EventType[] = [];
 
     if (confirmedResponse.ok) {
       try {
         const confirmedData = await confirmedResponse.json();
-        ikfEvents = confirmedData.events || [];
+        allTechBoutsEvents = confirmedData.events || [];
       } catch (error) {
         console.error('Error parsing confirmed events:', error);
       }
     }
 
-    return { ikfEvents };
+    return { allTechBoutsEvents };
   } catch (error) {
     console.error('Error fetching events:', error);
-    return { ikfEvents: [] };
+    return { allTechBoutsEvents: [] };
   }
 }
 
-async function fetchAllIKFPromoters() {
+async function fetchAllTechBoutsPromoters() {
   try {
     const headersList = await headers();
     const host = headersList.get('host');
@@ -58,21 +59,21 @@ async function fetchAllIKFPromoters() {
 
     console.log('IKF Promoters Status:', confirmedResponse.status);
 
-    let ikfPromoters: Promoter[] = [];
+    let techBoutsPromoters: Promoter[] = [];
 
     if (confirmedResponse.ok) {
       try {
         const confirmedData = await confirmedResponse.json();
-        ikfPromoters = confirmedData.promoters || [];
+        techBoutsPromoters = confirmedData.promoters || [];
       } catch (error) {
         console.error('Error parsing IKF Promoters:', error);
       }
     }
 
-    return { ikfPromoters };
+    return { techBoutsPromoters };
   } catch (error) {
     console.error('Error fetching IKF Promoters:', error);
-    return { ikfPromoters: [] };
+    return { techBoutsPromoters: [] };
   }
 }
 
@@ -112,15 +113,15 @@ async function fetchAllPMTPromoters() {
 
 export default async function PromoterEventsPage() {
   const { confirmedPMTEvents, pendingPMTEvents } = await fetchPmtEvents();
-  const { ikfEvents } = await fetchAllIKFEvents();
-  const { ikfPromoters } = await fetchAllIKFPromoters();
+  const { allTechBoutsEvents } = await fetchAllTechBoutsEvents();
+  const { techBoutsPromoters } = await fetchAllTechBoutsPromoters();
   const { pmtPromoters } = await fetchAllPMTPromoters();
 
   // Log the results for debugging
   console.log('Fetched confirmed events:', confirmedPMTEvents.length);
   console.log('Fetched pending events:', pendingPMTEvents.length);
-  console.log('Fetched IKF events:', ikfEvents.length);
-  console.log('Fetched IKF promoters:', ikfPromoters.length);
+  console.log('Fetched Techbouts events:', allTechBoutsEvents.length);
+  console.log('Fetched TechBouts promoters:', techBoutsPromoters.length);
   console.log('Fetched PMT promoters:', pmtPromoters.length);
 
   return (
@@ -128,8 +129,8 @@ export default async function PromoterEventsPage() {
       <PromoterDashboard 
         initialConfirmedEvents={confirmedPMTEvents}
         initialPendingEvents={pendingPMTEvents}
-        ikfEvents={ikfEvents}
-        ikfPromoters={ikfPromoters}
+        allTechBoutsEvents={allTechBoutsEvents}
+        techBoutsPromoters={techBoutsPromoters}
         pmtPromoters={pmtPromoters}
       />
     </>

@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await firebaseSignOut(auth);
       setIsAdmin(false);
       setIsPromoter(false);
-      router.push('/');
+
     } catch (error) {
       console.error('Sign out error:', error);
     }
