@@ -381,6 +381,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
           />
 
           <GoogleAutocomplete onSelect={handleAddressSelect} />
+       
+       
         </div>
 
 <div className="flex items-center space-x-2 py-5">

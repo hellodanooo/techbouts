@@ -10,6 +10,8 @@ import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
+import { getGeocode } from "use-places-autocomplete";
 
 interface TimeFields {
   doors_open: string;
@@ -121,6 +123,56 @@ export default function EditEventForm({ eventData, eventId }: EditEventFormProps
     };
   }, [selectedFile]);
 
+
+  const handleAddressSelect = async (address: string, coordinates: { lat: number; lng: number }) => {
+    try {
+      const results = await getGeocode({ address });
+      const place = results[0];
+      
+      if (!place) {
+        console.error("No geocode results found");
+        return;
+      }
+  
+      const addressComponents = place.address_components;
+  
+      // Extract city, state, and country
+      let city = "";
+      let state = "";
+      let country = "";
+  
+      addressComponents.forEach((component) => {
+        const types = component.types;
+  
+        if (types.includes("locality")) {
+          city = component.long_name;
+          console.log("Add Event Form City:", city);
+        } else if (types.includes("administrative_area_level_1")) {
+          state = component.short_name; 
+          console.log("Add Event Form State:", state);
+        } else if (types.includes("country")) {
+          console.log("Add Event Form Country:", component.short_name);
+          country = component.short_name; // e.g., "US" or "MX"
+        }
+      });
+  
+      // Set the extracted data into form state
+      setFormData((prev) => ({
+        ...prev,
+        address,
+        city,
+        state,
+        country,
+        coordinates: { latitude: coordinates.lat, longitude: coordinates.lng },
+      }));
+  
+      console.log("Extracted Data:", { city, state, country });
+    } catch (error) {
+      console.error("Error extracting location details:", error);
+    }
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid md:grid-cols-2 gap-8">
@@ -174,13 +226,7 @@ export default function EditEventForm({ eventData, eventId }: EditEventFormProps
 
           <div>
             <Label>Address</Label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            />
+            <GoogleAutocomplete onSelect={handleAddressSelect} />
           </div>
 
           <div>
