@@ -228,6 +228,11 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
         competition_type: formData.competition_type ?? "FightCard",
         locale: formData.locale ?? "en",
         disableRegistration: formData.disableRegistration ?? false,
+        photoPackagePrice: formData.photoPackagePrice ?? 0,
+        coachRegPrice: formData.coachRegPrice ?? 0,
+        photoPackageEnabled: formData.photoPackageEnabled ?? false,
+        coachRegEnabled: formData.coachRegEnabled ?? false,
+        
        
 
       };

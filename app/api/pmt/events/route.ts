@@ -108,7 +108,16 @@ export async function GET() {
       coach_enabled: extractField(event, 'coach_enabled', 'boolean') || false,
       coach_price: extractField(event, 'coach_price', 'number') || 0,
       ticket_price2: extractField(event, 'ticket_price2', 'number') || 0,
-      ticket_price2_description: extractField(event, 'ticket_price2_description', 'string') || ''
+      ticket_price2_description: extractField(event, 'ticket_price2_description', 'string') || '',
+      photoPackagePrice: extractField(event, 'photoPackagePrice', 'number') || 0,
+      coachRegPrice: extractField(event, 'coachRegPrice', 'number') || 0,
+      photoPackageEnabled: extractField(event, 'photoPackageEnabled', 'boolean') || false,
+      coachRegEnabled: extractField(event, 'coachRegEnabled', 'boolean') || false,
+      ticket_system_option: extractField(event, 'ticket_system_option', 'string') as 'inHouse' | 'thirdParty' | 'none' || 'none',
+      ticket_link: extractField(event, 'ticket_link', 'string') || '',
+      street: extractField(event, 'street', 'string') || '',
+   
+      name: extractField(event, 'name', 'string') || extractField(event, 'event_name', 'string') || '',
     }));
 
     console.log('Fetched Upcoming Events:', events);

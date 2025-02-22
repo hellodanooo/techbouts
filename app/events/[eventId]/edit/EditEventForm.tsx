@@ -3,16 +3,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-
 import { EventType } from '@/utils/types';
-
 import { editPmtEvent } from '@/utils/apiFunctions/editPmtEvent';
-
 import { useRouter } from 'next/navigation';
-
-
-import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer'; // export const uploadEventFlyer = async (file: File, eventId: string): Promise<string> => { this returns the download url
-
+import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface TimeFields {
   doors_open: string;
@@ -24,23 +21,46 @@ interface TimeFields {
 
 interface EditEventFormProps {
   eventId: string;
-    eventData: EventType; 
-  }
+  eventData: EventType;
+}
 
 export default function EditEventForm({ eventData, eventId }: EditEventFormProps) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-   const [isUploadingFlyer, setIsUploadingFlyer] = useState(false);
+  const [isUploadingFlyer, setIsUploadingFlyer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
   const [formData, setFormData] = useState<EventType & TimeFields>({
     ...eventData,
+    name: eventData.event_name || eventData.name || '',
     doors_open: eventData.doors_open || '',
     weighin_start_time: eventData.weighin_start_time || '',
     weighin_end_time: eventData.weighin_end_time || '',
     rules_meeting_time: eventData.rules_meeting_time || '',
-    bouts_start_time: eventData.bouts_start_time || ''
-  }); 
+    bouts_start_time: eventData.bouts_start_time || '',
+    registration_fee: eventData.registration_fee || 0,
+    ticket_price: eventData.ticket_price || 0,
+    photoPackagePrice: eventData.photoPackagePrice || 0,
+    coachRegPrice: eventData.coachRegPrice || 0,
+    numMats: eventData.numMats || 1,
+    ticket_enabled: eventData.ticket_enabled || false,
+    ticket_system_option: eventData.ticket_system_option || 'thirdParty',
+    ticket_link: eventData.ticket_link || '',
+    address: eventData.address || '',
+    street: eventData.street || '',
+    city: eventData.city || '',
+    state: eventData.state || '',
+    zip: eventData.zip || '',
+    country: eventData.country || '',
+    email: eventData.email || '',
+    event_details: eventData.event_details || '',
+    promoterId: eventData.promoterId || '',
+    status: eventData.status || 'confirmed',
 
+    photoPackageEnabled: eventData.photoPackageEnabled || false,
+    coachRegEnabled: eventData.coachRegEnabled || false,
+    disableRegistration: eventData.disableRegistration || false,
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -50,60 +70,56 @@ export default function EditEventForm({ eventData, eventId }: EditEventFormProps
     }));
   };
 
+  const handleSwitchChange = (name: string) => (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
 
-
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
-  
+
     try {
       let updatedFormData = { ...formData };
-  
-      // Upload new flyer if one was selected
+
       if (selectedFile) {
         setIsUploadingFlyer(true);
-        const flyerUrl = await uploadEventFlyer(selectedFile, eventId); // Use eventId prop here
+        const flyerUrl = await uploadEventFlyer(selectedFile, eventId);
         updatedFormData = {
           ...updatedFormData,
           flyer: flyerUrl
         };
         setIsUploadingFlyer(false);
       }
-  
-      const updatedEvent = await editPmtEvent(eventId, updatedFormData); // Use eventId prop here
+
+      const updatedEvent = await editPmtEvent(eventId, updatedFormData);
       
       if (!updatedEvent) {
         throw new Error('Failed to update event');
       }
-  
-      // Redirect back to event page
-      router.push(`/events/${eventId}`); // Use eventId prop here
+
+      router.push(`/events/${eventId}`);
       router.refresh();
     } catch (error) {
       console.error('Error updating event:', error);
-      // Add error handling UI here
     } finally {
       setIsUpdating(false);
     }
   };
 
-
-
   const handleCancel = () => {
     router.back();
   };
 
-
-
   useEffect(() => {
     return () => {
-      // Cleanup object URL when component unmounts
       if (selectedFile) {
         URL.revokeObjectURL(URL.createObjectURL(selectedFile));
       }
     };
   }, [selectedFile]);
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -112,90 +128,126 @@ const handleSubmit = async (e: React.FormEvent) => {
           <h2 className="text-xl font-semibold mb-4">Event Details</h2>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">Event Name</label>
+            <Label>Event Name</Label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />
           </div>
 
           <div>
-  <Image 
-    src={selectedFile ? URL.createObjectURL(selectedFile) : eventData.flyer} 
-    alt="Event Flyer" 
-    width={200} 
-    height={200} 
-      style={{ width: 'auto', height: 'auto' }}
-  className="max-w-[200px] max-h-[200px] object-contain"
-  />
-  <label className="block text-sm font-medium text-gray-700">Event Flyer</label>
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedFile(file);
-      }
-    }}
-    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-  />
-  {isUploadingFlyer && (
-    <p className="text-sm text-gray-500 mt-1">
-      Uploading flyer...
-    </p>
-  )}
-</div>
+            <Image 
+              src={selectedFile ? URL.createObjectURL(selectedFile) : formData.flyer || '/default-flyer.jpg'}
+              alt="Event Flyer"
+              width={200}
+              height={200}
+              className="max-w-[200px] max-h-[200px] object-contain"
+            />
+            <Label>Event Flyer</Label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setSelectedFile(file);
+              }}
+              className="mt-1 block w-full"
+            />
+            {isUploadingFlyer && <p className="text-sm text-gray-500">Uploading flyer...</p>}
+          </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date</label>
+            <Label>Date</Label>
             <input
               type="date"
               name="date"
               value={formData.date}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">City</label>
+            <Label>Address</Label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div>
+            <Label>City</Label>
             <input
               type="text"
               name="city"
               value={formData.city}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">State</label>
+            <Label>State</Label>
             <input
               type="text"
               name="state"
               value={formData.state}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Registration Fee</label>
+            <Label>Zip</Label>
+            <input
+              type="text"
+              name="zip"
+              value={formData.zip}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div>
+            <Label>Country</Label>
+            <input
+              type="text"
+              name="country"
+              value={formData.country}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div>
+            <Label>Email</Label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div>
+            <Label>Registration Fee</Label>
             <input
               type="number"
               name="registration_fee"
               value={formData.registration_fee}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             />
           </div>
         </div>
@@ -204,62 +256,177 @@ const handleSubmit = async (e: React.FormEvent) => {
           <h2 className="text-xl font-semibold mb-4">Schedule</h2>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">Doors Open</label>
+            <Label>Doors Open</Label>
             <input
               type="time"
               name="doors_open"
               value={formData.doors_open}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Weigh-in Start</label>
+            <Label>Weigh-in Start</Label>
             <input
               type="time"
               name="weighin_start_time"
               value={formData.weighin_start_time}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Weigh-in End</label>
+            <Label>Weigh-in End</Label>
             <input
               type="time"
               name="weighin_end_time"
               value={formData.weighin_end_time}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Rules Meeting</label>
+            <Label>Rules Meeting</Label>
             <input
               type="time"
               name="rules_meeting_time"
-              value={formData.rules_meeting_time || ''}
+              value={formData.rules_meeting_time}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Start Time</label>
+            <Label>Bouts Start Time</Label>
             <input
               type="time"
               name="bouts_start_time"
-              value={formData.bouts_start_time || ''}
+              value={formData.bouts_start_time}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             />
           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Settings</h2>
+          
+          <div>
+            <Label>Number of Mats</Label>
+            <input
+              type="number"
+              name="numMats"
+              value={formData.numMats}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div>
+            <Label>Ticket Price</Label>
+            <input
+              type="number"
+              name="ticket_price"
+              value={formData.ticket_price}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <Switch
+              id="ticket-enabled"
+              checked={formData.ticket_enabled}
+              onCheckedChange={handleSwitchChange('ticket_enabled')}
+            />
+            <Label htmlFor="ticket-enabled">Enable Tickets</Label>
+          </div>
+
+          {formData.ticket_enabled && (
+            <>
+              <div>
+  <Label>Ticket System</Label>
+  <Select
+    value={formData.ticket_system_option || 'none'}  // Provide default value
+    onValueChange={(value: 'inHouse' | 'thirdParty' | 'none') => {
+      setFormData(prev => ({
+        ...prev,
+        ticket_system_option: value
+      }));
+    }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select ticket system" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="inHouse">In-House</SelectItem>
+      <SelectItem value="thirdParty">Third Party</SelectItem>
+      <SelectItem value="none">None</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
+              {formData.ticket_system_option === 'thirdParty' && (
+                <div>
+                  <Label>Ticket Link</Label>
+                  <input
+                    type="url"
+                    name="ticket_link"
+                    value={formData.ticket_link}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex items-center space-x-4">
+            <Switch
+              id="photo-package"
+              checked={formData.photoPackageEnabled}
+              onCheckedChange={handleSwitchChange('photoPackageEnabled')}
+            />
+            <Label htmlFor="photo-package">Photo Package</Label>
+          </div>
+
+          {formData.photoPackageEnabled && (
+            <div>
+              <Label>Photo Package Price</Label>
+              <input
+                type="number"
+                name="photoPackagePrice"
+                value={formData.photoPackagePrice}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center space-x-4">
+            <Switch
+              id="coach-reg"
+              checked={formData.coachRegEnabled}
+              onCheckedChange={handleSwitchChange('coachRegEnabled')}
+            />
+            <Label htmlFor="coach-reg">Coach Registration</Label>
+          </div>
+
+          {formData.coachRegEnabled && (
+            <div>
+              <Label>Coach Registration Price</Label>
+              <input
+                type="number"
+                name="coachRegPrice"
+                value={formData.coachRegPrice}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
+            </div>
+          )}
         </div>
       </div>
 

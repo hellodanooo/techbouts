@@ -232,6 +232,10 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       status: pendingEvent.status || 'pending',
       locale: pendingEvent.locale || 'en',
       disableRegistration: pendingEvent.disableRegistration || false,
+      photoPackagePrice: pendingEvent.photoPackagePrice || 0,
+      coachRegPrice: pendingEvent.coachRegPrice || 0,
+      photoPackageEnabled: pendingEvent.photoPackageEnabled || false,
+      coachRegEnabled: pendingEvent.coachRegEnabled || false
       
     };
 

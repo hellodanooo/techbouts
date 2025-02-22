@@ -124,6 +124,14 @@ export async function GET() {
         locale: extractField(event, 'locale', 'string') || 'en',
         disableRegistration: extractField(event, 'disableRegistration', 'boolean') || false,
         country: extractField(event, 'country', 'string') || 'USA',
+        photoPackagePrice: extractField(event, 'photoPackagePrice', 'number') || 0,
+      coachRegPrice: extractField(event, 'coachRegPrice', 'number') || 0,
+      photoPackageEnabled: extractField(event, 'photoPackageEnabled', 'boolean') || false,
+      coachRegEnabled: extractField(event, 'coachRegEnabled', 'boolean') || false,
+  
+      livepage1Enabled: extractField(event, 'livepage1Enabled', 'boolean') || false,
+      livepage2Enabled: extractField(event, 'livepage2Enabled', 'boolean') || false,
+      name: extractField(event, 'name', 'string') || extractField(event, 'event_name', 'string') || '',
       };
     });
 

@@ -72,6 +72,12 @@ export async function GET(
               country: event.country ?? "",
               locale: event.locale ?? "en",
               numMats: event.numMats ?? 1,
+              // Add missing fields
+              photoPackagePrice: event.photoPackagePrice ?? 0,
+              coachRegPrice: event.coachRegPrice ?? 0,
+              photoPackageEnabled: event.photoPackageEnabled ?? false,
+              coachRegEnabled: event.coachRegEnabled ?? false,
+              
             } as EventType;
           });
       }

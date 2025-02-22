@@ -82,6 +82,10 @@ export async function fetchTechBoutsEvent(eventId: string): Promise<EventType | 
       matches_link: data.matches_link,
       locale: data.locale || 'en',
       disableRegistration: data.disableRegistration || false,
+      photoPackagePrice: data.photoPackagePrice || 0,
+      coachRegPrice: data.coachRegPrice || 0,
+      photoPackageEnabled: data.photoPackageEnabled || false,
+      coachRegEnabled: data.coachRegEnabled || false,
       
     };
 

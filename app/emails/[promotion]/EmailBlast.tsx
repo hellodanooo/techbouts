@@ -131,7 +131,8 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
           source: {
             name: emailSource.name,
             email: emailSource.email
-          }
+          },
+      
         }),
       });
 

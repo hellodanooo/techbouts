@@ -62,8 +62,17 @@ export async function GET() {
             competition_type: event.competition_type ?? "FightCard",
             disableRegistration: event.disableRegistration ?? false,
             country: event.country ?? "",
-            locale: event.locale ?? "en",
             numMats: event.numMats ?? 1,
+            locale: event.locale ?? "en",
+            // Add missing fields
+            photoPackagePrice: event.photoPackagePrice ?? 0,
+            coachRegPrice: event.coachRegPrice ?? 0,
+            photoPackageEnabled: event.photoPackageEnabled ?? false,
+            coachRegEnabled: event.coachRegEnabled ?? false,
+            ticket_link: event.ticket_link ?? "",
+            street: event.street ?? "",
+            zip: event.zip ?? "",
+       
           };
         });
       }

@@ -1,3 +1,14 @@
+interface EmailCampaign {
+  id: string;
+  promotion: string;
+  subject: string;
+  sentAt: string;
+  totalSent: number;
+  totalOpened: number;
+  sentEmails: string[];
+  openedEmails: string[];
+  isTest: boolean;
+}
 
 export interface PmtFighterRecord {
   pmt_id: string;
@@ -189,6 +200,10 @@ export interface EventType {
   name?: string;
   numMats: number;
   locale: string;
+  photoPackagePrice: number;
+  coachRegPrice: number;
+  photoPackageEnabled: boolean;
+  coachRegEnabled: boolean;
 }
 
 export interface Promoter  {
