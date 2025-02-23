@@ -58,11 +58,12 @@ interface FighterFormData {
 interface FighterFormProps {
   onFormDataChange: (data: FighterFormData) => void;
   locale?: string;
+  user?: string;
 }
 
 
 
-const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) => {
+const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, user }) => {
 
   const [emailError, setEmailError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
@@ -92,9 +93,9 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
     ammateurFights: 'Number of Amateur Full contact Fights',
     yearsTraining: 'Years Training',
     underYear: 'Under a Year',
-    otherExperience: locale === 'es' ? 
-    'Other Experience' :  
-    'Other experience (Amateur, Smokers, etc.)',
+    otherExperience: locale === 'es' ?
+      'Other Experience' :
+      'Other experience (Amateur, Smokers, etc.)',
     other: 'OTHER',
     athleteEmail: 'Please enter athletes own email',
     email: 'EMAIL',
@@ -160,7 +161,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
     inches: Array.from({ length: 12 }, (_, i) => ({
       value: i,
       label: i.toString()
-    
+
     })),
 
     centimeters: Array.from({ length: 121 }, (_, i) => i + 120).map(cm => ({  // 120cm to 240cm
@@ -170,7 +171,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
 
   };
 
-  
+
 
 
 
@@ -197,7 +198,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
   const [formData, setFormData] = useState<FighterFormData>({
     first: '',
     last: '',
-    email: '',
+    email: user || '',
     dob: '',
     gym: '',
     age: 0,
@@ -211,7 +212,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
     ammy: 0,
     height: 0,
     heightFoot: 0,
-    heightInch:0,
+    heightInch: 0,
     phone: '',
     coach_phone: '',
     coach_name: '',
@@ -221,16 +222,16 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
 
   //////////////////////////////////////////////////////////////////
   /////////////////// GYM SEARCH ///////////////////////////////////////////////
-  const [gymSearchTerm, setGymSearchTerm] = useState<string>('');
+  //const [gymSearchTerm, setGymSearchTerm] = useState<string>('');
 
 
 
-// Update the gym search effect in FighterForm.tsx
+  // Update the gym search effect in FighterForm.tsx
 
 
 
 
-  
+
 
 
 
@@ -247,55 +248,55 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
   useEffect(() => {
     const fetchFighters = async () => {
       if (fighterSearchTerm.length >= 2) {
-        const db = getFirestore(); 
+        const db = getFirestore();
         const profileCollections = ['records_pmt_2024', 'records_pmt_2025'];
-    
+
         // Map over each collection and create a query
         const queries = profileCollections.map(colName => {
           const colRef = collection(db, colName);
           const fightersQuery = query(colRef, where('last', '>=', fighterSearchTerm), where('last', '<=', fighterSearchTerm + '\uf8ff'));
           return getDocs(fightersQuery);
         });
-    
+
         try {
           // Use Promise.all to fetch all queries in parallel
           const querySnapshots = await Promise.all(queries);
           const fighters = querySnapshots.flatMap(snapshot => snapshot.docs.map(doc => {
             const data = doc.data();
             const fighterData: FighterFormData = {
-            first: data.first || '',
-            last: data.last || '',
-            email: data.email || '',
-            dob: data.dob || '',
-            gym: data.gym || '',
-            age: data.age || 0,
-            weightclass: data.weightclass || 0,
-            fighterId: data.fighterId || '',
-            win: data.win || 0,
-            loss: data.loss || 0,
-            gender: data.gender || '',
-            other: data.other || '',
-            years_exp: data.yearsExp || 0,
-            ammy: data.ammy || 0,
-            height: data.height || 0,
-            heightFoot: data.heightFoot || 0,
-            heightInch: data.heightInch || 0,
-            phone: data.phone || '',
-            coach_phone: data.coach_phone || '',
-            coach_name: data.coach_name || '',
-          };
-          return fighterData;
-        }));
-  
-        setFighterSearchResults(fighters);
-      } catch (error) {
-        console.error("Error fetching fighters: ", error);
+              first: data.first || '',
+              last: data.last || '',
+              email: data.email || '',
+              dob: data.dob || '',
+              gym: data.gym || '',
+              age: data.age || 0,
+              weightclass: data.weightclass || 0,
+              fighterId: data.fighterId || '',
+              win: data.win || 0,
+              loss: data.loss || 0,
+              gender: data.gender || '',
+              other: data.other || '',
+              years_exp: data.yearsExp || 0,
+              ammy: data.ammy || 0,
+              height: data.height || 0,
+              heightFoot: data.heightFoot || 0,
+              heightInch: data.heightInch || 0,
+              phone: data.phone || '',
+              coach_phone: data.coach_phone || '',
+              coach_name: data.coach_name || '',
+            };
+            return fighterData;
+          }));
+
+          setFighterSearchResults(fighters);
+        } catch (error) {
+          console.error("Error fetching fighters: ", error);
+          setFighterSearchResults([]);
+        }
+      } else {
         setFighterSearchResults([]);
       }
-    } else {
-      setFighterSearchResults([]);
-    }
-  };
+    };
 
     fetchFighters();
   }, [fighterSearchTerm]);
@@ -315,7 +316,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
     };
     setFormData(updatedFighter);
     setSelectedDate(dayjs(selectedFighter.dob)); // Change this line
-    setGymSearchTerm(updatedFighter.gym.toUpperCase());
+   // setGymSearchTerm(updatedFighter.gym.toUpperCase());
     setFighterSearchResults([]);
   };
 
@@ -338,66 +339,64 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const upperCaseValue = value.toUpperCase();
-  
-    setFormData(currentFormData => {
-      const updatedFormData: FighterFormData = { ...currentFormData };
-  
-      switch (name) {
-        case "weightclass":
-          updatedFormData.weightclass = parseInt(value, 10) || 0;
-          break;
-        case "age":
-          updatedFormData.age = parseInt(value, 10) || 0;
-          break;
-        case "dob":
-          updatedFormData.dob = value;
-          if (dateRegex.test(value)) {
-            updatedFormData.age = calculateAge(value);
-            if (updatedFormData.first && updatedFormData.last) {
-              updatedFormData.fighterId = generateFighterId(updatedFormData.first, updatedFormData.last, value);
-            }
-          } else {
-            setDobError("Date must be in MM/DD/YYYY format");
+
+    // Instead of using setFormData with a callback, create the new data first
+    const newFormData = { ...formData };
+
+    switch (name) {
+      case "weightclass":
+        newFormData.weightclass = parseInt(value, 10) || 0;
+        break;
+      case "age":
+        newFormData.age = parseInt(value, 10) || 0;
+        break;
+      case "dob":
+        newFormData.dob = value;
+        if (dateRegex.test(value)) {
+          newFormData.age = calculateAge(value);
+          if (newFormData.first && newFormData.last) {
+            newFormData.fighterId = generateFighterId(newFormData.first, newFormData.last, value);
           }
-          break;
-  
-        case "email":
-          updatedFormData.email = value;
-          if (value.toLowerCase().includes('@example.com')) {
-            setEmailError("Please enter a valid email address");
-          } else {
-            setEmailError(null);
+        } else {
+          setDobError("Date must be in MM/DD/YYYY format");
+        }
+        break;
+
+      case "email":
+        newFormData.email = value;
+        if (value.toLowerCase().includes('@example.com')) {
+          setEmailError("Please enter a valid email address");
+        } else {
+          setEmailError(null);
+        }
+        break;
+
+      default:
+        if (name in newFormData) {
+          (newFormData[name as keyof FighterFormData] as string) = upperCaseValue;
+        }
+
+        if (name === 'first' || name === 'last') {
+          if (newFormData.first && newFormData.last && newFormData.dob) {
+            newFormData.fighterId = generateFighterId(newFormData.first, newFormData.last, newFormData.dob);
           }
-          break;
-  
-        default:
-          // Type-safe way to update the field
-          if (name in updatedFormData) {
-            (updatedFormData[name as keyof FighterFormData] as string) = upperCaseValue;
-          }
-  
-          if (name === 'first' || name === 'last') {
-            if (updatedFormData.first && updatedFormData.last && updatedFormData.dob) {
-              updatedFormData.fighterId = generateFighterId(updatedFormData.first, updatedFormData.last, updatedFormData.dob);
-            }
-          }
-          break;
-      }
-  
-      onFormDataChange(updatedFormData);
-      return updatedFormData;
-    });
+        }
+        break;
+    }
+
+    // Set the state once with the new data
+    setFormData(newFormData);
+    // Call onFormDataChange directly with the new data
+    onFormDataChange(newFormData);
   };
 
 
-  React.useEffect(() => {
-    onFormDataChange(formData);
-  }, [formData, onFormDataChange]);
+
 
 
   const maxYear = dayjs().subtract(5, 'year');
   const minYear = dayjs().subtract(100, 'year');
-  
+
 
 
   return (
@@ -412,62 +411,62 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
             <ScrollArea className="h-[200px] rounded-md border p-4">
               {/* Waiver content */}
               <div className="space-y-4 text-sm">
-              <p>
-      I, the competitor named below, and/or the legal guardian of the competitor, by submitting this application, acknowledge, understand, and agree to the following:
-    </p>
+                <p>
+                  I, the competitor named below, and/or the legal guardian of the competitor, by submitting this application, acknowledge, understand, and agree to the following:
+                </p>
 
-    <p>
-      <strong>1. Assumption of Risk & Liability Release</strong><br/>
-      I voluntarily participate in events organized by <strong>IKF Point Muay Thai</strong> and <strong>Point Boxing Sparring Circuit</strong>, hosted on <strong>pmt-west.app</strong> and <strong>pmtwest.org</strong>, operated by <strong>Ryan Hodges, and Rafael Mendoza, and Daniel Hodges</strong> and originally founded by <strong>Johnny Davis Enterprises DBA (AK Promotions)</strong> and recognize the continued involvement of various promoters, officials, and organizations.
-    </p>
+                <p>
+                  <strong>1. Assumption of Risk & Liability Release</strong><br />
+                  I voluntarily participate in events organized by <strong>IKF Point Muay Thai</strong> and <strong>Point Boxing Sparring Circuit</strong>, hosted on <strong>pmt-west.app</strong> and <strong>pmtwest.org</strong>, operated by <strong>Ryan Hodges, and Rafael Mendoza, and Daniel Hodges</strong> and originally founded by <strong>Johnny Davis Enterprises DBA (AK Promotions)</strong> and recognize the continued involvement of various promoters, officials, and organizations.
+                </p>
 
-    <p>
-      I fully understand and accept that participation in Muay Thai/Kickboxing and combat sports involves inherent risks, including but not limited to, 
-      <strong>serious injury, permanent disability, paralysis, or death</strong>. I hereby release and discharge all individuals and entities listed above from any liability, claims, or demands arising from my participation in any event.
-    </p>
+                <p>
+                  I fully understand and accept that participation in Muay Thai/Kickboxing and combat sports involves inherent risks, including but not limited to,
+                  <strong>serious injury, permanent disability, paralysis, or death</strong>. I hereby release and discharge all individuals and entities listed above from any liability, claims, or demands arising from my participation in any event.
+                </p>
 
-    <p>
-      <strong>2. Data Usage & Digital Consent</strong><br/>
-      I acknowledge that my personal information, fight records, and participation details may be stored on <strong>PMT-West.app</strong>, <strong>TechBouts.com</strong> and <strong>ikffightplatform.com</strong> for event management, matchmaking, and competition records.
-    </p>
+                <p>
+                  <strong>2. Data Usage & Digital Consent</strong><br />
+                  I acknowledge that my personal information, fight records, and participation details may be stored on <strong>PMT-West.app</strong>, <strong>TechBouts.com</strong> and <strong>ikffightplatform.com</strong> for event management, matchmaking, and competition records.
+                </p>
 
-    <p>
-      <strong>3. Media Release & Publicity Consent</strong><br/>
-      I grant <strong>IKF Point Muay Thai League, PMT-West.app, TechBouts.com</strong> full rights to use any photographs, videos, live streams, and digital media recorded at any event.
-    </p>
+                <p>
+                  <strong>3. Media Release & Publicity Consent</strong><br />
+                  I grant <strong>IKF Point Muay Thai League, PMT-West.app, TechBouts.com</strong> full rights to use any photographs, videos, live streams, and digital media recorded at any event.
+                </p>
 
-    <p>
-      <strong>4. Agreement to Rules & Conduct Policy</strong><br/>
-      I agree to abide by all <strong>official Muay Thai League rules and regulations</strong>. I acknowledge that any misconduct may result in penalties, disqualification, or suspension from future events.
-    </p>
+                <p>
+                  <strong>4. Agreement to Rules & Conduct Policy</strong><br />
+                  I agree to abide by all <strong>official Muay Thai League rules and regulations</strong>. I acknowledge that any misconduct may result in penalties, disqualification, or suspension from future events.
+                </p>
 
-    <p>
-      <strong>5. Medical & Insurance Responsibility</strong><br/>
-      I affirm that I am <strong>physically and mentally fit</strong> to participate and have adequate medical insurance coverage.
-    </p>
+                <p>
+                  <strong>5. Medical & Insurance Responsibility</strong><br />
+                  I affirm that I am <strong>physically and mentally fit</strong> to participate and have adequate medical insurance coverage.
+                </p>
 
-    <p>
-      <strong>6. Identification & Eligibility</strong><br/>
-      I understand that a valid birth certificate or government-issued ID may be required to compete.
-    </p>
+                <p>
+                  <strong>6. Identification & Eligibility</strong><br />
+                  I understand that a valid birth certificate or government-issued ID may be required to compete.
+                </p>
 
-    <p>
-      <strong>7. Refund Policy</strong><br/>
-      I agree that any registration fees or ticket sales are <strong>non-refundable</strong>, unless the event is canceled.
-    </p>
+                <p>
+                  <strong>7. Refund Policy</strong><br />
+                  I agree that any registration fees or ticket sales are <strong>non-refundable</strong>, unless the event is canceled.
+                </p>
 
-    <p>
-  <strong>8. Parent/Guardian Consent for Minors</strong><br/>
-  If the competitor is under the age of 18, a **parent or legal guardian must sign this waiver** on their behalf. 
-  By checking the box below and submitting this form, the parent or legal guardian acknowledges that they have read, understood, and agreed to all terms stated in this waiver 
-  and accept full responsibility for the minors participation in the event.
-</p>
+                <p>
+                  <strong>8. Parent/Guardian Consent for Minors</strong><br />
+                  If the competitor is under the age of 18, a **parent or legal guardian must sign this waiver** on their behalf.
+                  By checking the box below and submitting this form, the parent or legal guardian acknowledges that they have read, understood, and agreed to all terms stated in this waiver
+                  and accept full responsibility for the minors participation in the event.
+                </p>
               </div>
             </ScrollArea>
-            
+
             <div className="mt-4 flex items-center space-x-2">
-              <Checkbox 
-                id="waiver" 
+              <Checkbox
+                id="waiver"
                 checked={isWaiverChecked}
                 onCheckedChange={(checked) => setIsWaiverChecked(checked as boolean)}
               />
@@ -481,7 +480,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
             </div>
           </CardContent>
         </Card>
-  
+
         <fieldset disabled={!isWaiverChecked} className="space-y-6">
           {/* Returning Fighter Search */}
           <Card>
@@ -504,7 +503,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     placeholder="Search by last name..."
                   />
                 </div>
-  
+
                 {fighterSearchResults.length > 0 && (
                   <ScrollArea className="h-[200px] rounded-md border">
                     <div className="p-4">
@@ -524,7 +523,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
               </div>
             </CardContent>
           </Card>
-  
+
           {/* New Fighter Form */}
           <Card>
             <CardHeader>
@@ -554,19 +553,19 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     />
                   </div>
                 </div>
-  
+
                 {/* Gym Information */}
                 <div className="space-y-2">
                   <Label htmlFor="gym">{formLabels.gym}</Label>
                   <Input
                     id="gym"
                     name="gym"
-                    value={gymSearchTerm}
+                    value={formData.gym} // Use formData.gym instead of gymSearchTerm
                     onChange={handleInputChange}
                     required
                   />
                 </div>
-  
+
                 {/* Weight and Height */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -574,7 +573,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     <Select
                       name="weightclass"
                       value={formData.weightclass.toString()}
-                      onValueChange={(value) => 
+                      onValueChange={(value) =>
                         handleInputChange({
                           target: { name: 'weightclass', value }
                         } as React.ChangeEvent<HTMLSelectElement>)
@@ -592,7 +591,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                       </SelectContent>
                     </Select>
                   </div>
-  
+
                   {/* Height Selection */}
                   <div className="space-y-2">
                     <Label>{formLabels.height}</Label>
@@ -628,7 +627,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                           <Select
                             name="heightFoot"
                             value={formData.heightFoot.toString()}
-                            onValueChange={(value) => 
+                            onValueChange={(value) =>
                               handleInputChange({
                                 target: { name: 'heightFoot', value }
                               } as React.ChangeEvent<HTMLSelectElement>)
@@ -645,11 +644,11 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                               ))}
                             </SelectContent>
                           </Select>
-  
+
                           <Select
                             name="heightInch"
                             value={formData.heightInch.toString()}
-                            onValueChange={(value) => 
+                            onValueChange={(value) =>
                               handleInputChange({
                                 target: { name: 'heightInch', value }
                               } as React.ChangeEvent<HTMLSelectElement>)
@@ -671,7 +670,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     </div>
                   </div>
                 </div>
-  
+
                 {/* Date of Birth and Gender */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -696,13 +695,13 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                       <p className="text-sm text-destructive">{dobError}</p>
                     )}
                   </div>
-  
+
                   <div className="space-y-2">
                     <Label>{formLabels.selectGender}</Label>
                     <Select
                       name="gender"
                       value={formData.gender}
-                      onValueChange={(value) => 
+                      onValueChange={(value) =>
                         handleInputChange({
                           target: { name: 'gender', value }
                         } as React.ChangeEvent<HTMLSelectElement>)
@@ -718,7 +717,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     </Select>
                   </div>
                 </div>
-  
+
                 {/* Contact Information */}
                 <Separator />
                 <div className="space-y-4">
@@ -751,7 +750,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     </div>
                   </div>
                 </div>
-  
+
                 {/* Coach Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Coach Information</h3>
@@ -779,7 +778,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale }) =
                     </div>
                   </div>
                 </div>
-  
+
                 {/* Generated Fields */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Generated Information</h3>

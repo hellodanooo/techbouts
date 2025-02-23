@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { db } from '@/lib/firebase_techbouts/config';
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { Firestore, WriteBatch, doc, getDoc, setDoc, collection, getDocs, writeBatch } from 'firebase/firestore';
 import FighterForm from './FighterForm';
 import { format } from 'date-fns';
+
+
 
 interface RegisterProps {
   eventId: string;
@@ -14,6 +16,7 @@ interface RegisterProps {
   eventName: string;
   closeModal: () => void;
   registrationFee: number;
+  user?: string;
 }
 
 interface FighterFormData {
@@ -37,6 +40,25 @@ interface FighterFormData {
   phone: string;
   coach_phone: string;
   coach_name: string;
+}
+
+interface FighterFirestoreData extends FighterFormData {
+  paymentIntentId?: string;
+  paymentAmount?: number;
+  paymentCurrency?: string;
+  date_registered: string;
+  status: 'registered';
+  registrationComplete: boolean;
+}
+
+interface FighterRosterData {
+  first: string;
+  last: string;
+  gym: string;
+  weightclass: number;
+  gender: string;
+  date_registered: string;
+  status: 'registered';
 }
 
 const CARD_ELEMENT_OPTIONS = {
@@ -69,7 +91,14 @@ interface ConvertedFees {
   currency: string;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale }) => {
+
+interface RegistrationError {
+  message: string;
+  code?: string;
+  details?: unknown;
+}
+
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user }) => {
 
 
   const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
@@ -83,6 +112,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   const [currentRegistrationFee, setCurrentRegistrationFee] = useState(baseRegistrationFee);
   const stripe = useStripe();
   const elements = useElements();
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
   useEffect(() => {
     // For Mexican events (locale === 'es'), always use base fee
@@ -312,9 +342,82 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     }
   };
 
+
+
+
+  async function saveFighterToFirestore(
+    db: Firestore,
+    eventId: string,
+    fighterData: FighterFormData & { 
+      paymentIntentId?: string;
+      paymentAmount?: number;
+      paymentCurrency?: string;
+    },
+    currentDate: string
+  ): Promise<boolean> {
+    try {
+      // Create a reference to the event's roster collection
+      const rosterRef = doc(db, 'events', eventId, 'roster', fighterData.fighterId);
+      const rosterJsonRef = doc(db, 'events', eventId, 'roster_json', fighterData.fighterId);
+  
+      // Basic fighter data for roster collection
+      const rosterData: FighterRosterData = {
+        first: fighterData.first,
+        last: fighterData.last,
+        gym: fighterData.gym,
+        weightclass: fighterData.weightclass,
+        gender: fighterData.gender,
+        date_registered: currentDate,
+        status: 'registered'
+      };
+  
+      // Complete fighter data for roster_json collection
+      const rosterJsonData: FighterFirestoreData = {
+        ...fighterData,
+        date_registered: currentDate,
+        status: 'registered',
+        registrationComplete: true
+      };
+  
+      // Save data to both collections using a batch write
+      const batch: WriteBatch = writeBatch(db);
+      batch.set(rosterRef, rosterData);
+      batch.set(rosterJsonRef, rosterJsonData);
+      
+      // Commit the batch
+      await batch.commit();
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving fighter data to Firestore:', error);
+      throw new Error('Failed to save fighter data');
+    }
+  }
+
+  function handleRegistrationError(error: unknown): RegistrationError {
+    if (error instanceof Error) {
+      return {
+        message: error.message,
+        details: error
+      };
+    }
+    
+    if (typeof error === 'string') {
+      return {
+        message: error
+      };
+    }
+    
+    return {
+      message: 'An unexpected error occurred during registration',
+      details: error
+    };
+  }
+
   const handleRegistrationSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setStatusMessage('');
 
     const formError = validateForm();
     if (formError) {
@@ -322,135 +425,109 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       setIsSubmitting(false);
       return;
     }
-
+  
     if (!fighterData) {
       console.log('Fighter data is missing.');
       setIsSubmitting(false);
       return;
     }
-
+  
     const currentDate = format(new Date(), 'yyyy-MM-dd');
-
-
-    // Prepare fighter data for API
-    const apiData = {
-      eventId,
-      first: fighterData.first,
-      last: fighterData.last,
-      email: fighterData.email.toLowerCase(),
-      dob: fighterData.dob,
-      gym: fighterData.gym,
-      age: fighterData.age,
-      weightclass: fighterData.weightclass,
-      fighterId: fighterData.fighterId,
-      win: fighterData.win,
-      loss: fighterData.loss,
-      gender: fighterData.gender,
-      years_exp: fighterData.years_exp,
-      other: fighterData.other,
-      ammy: fighterData.ammy,
-      height: fighterData.height,
-      heightFoot: fighterData.heightFoot,
-      heightInch: fighterData.heightInch,
-      phone: fighterData.phone,
-      coach_phone: fighterData.coach_phone,
-      coach_name: fighterData.coach_name,
-      date_registered: currentDate,
-      registrationFee: locale === 'es' ? baseRegistrationFee : currentRegistrationFee,
-    };
-
-    if (isCreditCodeValid) {
-      // Register without payment
-      try {
-        const response = await fetch('/api/pmt/events/registerFighter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(apiData),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Registration failed');
-        }
-
-        // Handle credit code redemption
-        if (creditCode) {
-          try {
-            await setDoc(doc(db, 'couponCodes', creditCode), { redeemed: true }, { merge: true });
-          } catch (error) {
-            console.error('Error updating coupon code:', error);
-          }
-        }
-
-        // Send confirmation email
-        await sendConfirmationEmail(fighterData, eventName, eventId);
-
-        closeModal();
-      } catch (error) {
-        console.error('Error during registration:', error);
-        alert(formContent.generalErrorMessage);
-      } finally {
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
-    // Handle paid registration
-    if (!stripe || !elements) {
-      console.log('Stripe.js not loaded');
-      setIsSubmitting(false);
-      return;
-    }
-
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
-      console.log('CardElement not found');
-      setIsSubmitting(false);
-      return;
-    }
-
+  
     try {
-      // Process payment
-      const { token, error } = await stripe.createToken(cardElement);
-      if (error) {
-        throw error;
-      }
 
-      const paymentResponse = await axios.post('/api/stripe', {
-        token: token.id,
-        eventId,
-        amount: convertedFee.amount,
-        currency: convertedFee.currency,
-        idempotencyKey: `reg-charge-${apiData.fighterId}-${Date.now()}`,
-        pmt_id: apiData.fighterId,
-        locale
-      });
+      if (isCreditCodeValid) {
 
-      if (paymentResponse.data.success && paymentResponse.data.paymentIntentId) {
-        // Add payment info to fighter data
+        setStatusMessage('Credit Code Valid Submitting registration data...');
 
-        // Register fighter
-        const response = await fetch('/api/pmt/events/registerFighter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(apiData),
-        });
+        await saveFighterToFirestore(db, eventId, fighterData, currentDate);
+        setStatusMessage('Submitted Successfuly.');
 
-        if (!response.ok) {
-          throw new Error('Failed to register fighter after payment');
+        // Update credit code as redeemed
+        if (creditCode) {
+          setStatusMessage('Marking Credit Code as redeemed...');
+
+          await setDoc(doc(db, 'couponCodes', creditCode), { 
+            redeemed: true,
+            redeemedBy: fighterData.email,
+            redeemedAt: currentDate,
+            eventId: eventId
+          }, { merge: true });
+
+          setStatusMessage('Code Marked Redeemed');
         }
+  
+        setStatusMessage('Sending confirmation email...');
 
-        // Send confirmation email
         await sendConfirmationEmail(fighterData, eventName, eventId);
 
+        setStatusMessage('Email Sent');
+
         closeModal();
+        
       } else {
-        throw new Error('Payment failed');
+
+        // Handle paid registration
+        setStatusMessage('Posting Payment...');
+
+        if (!stripe || !elements) {
+          throw new Error('Stripe.js not loaded');
+        }
+  
+        const cardElement = elements.getElement(CardElement);
+        if (!cardElement) {
+          throw new Error('CardElement not found');
+        }
+  
+        // Process payment
+        const { token, error: stripeError } = await stripe.createToken(cardElement);
+        if (stripeError) throw new Error(stripeError.message);
+  
+        const paymentResponse = await axios.post('/api/stripe', {
+          token: token.id,
+          eventId,
+          amount: convertedFee.amount,
+          currency: convertedFee.currency,
+          idempotencyKey: `reg-charge-${fighterData.fighterId}-${Date.now()}`,
+          pmt_id: fighterData.fighterId,
+          locale
+        });
+  
+        if (paymentResponse.data.success && paymentResponse.data.paymentIntentId) {
+         
+          setStatusMessage('Payment Successful. Submitting registration data...');
+
+         
+          // Save fighter data with payment information
+          const fighterDataWithPayment = {
+            ...fighterData,
+            paymentIntentId: paymentResponse.data.paymentIntentId,
+            paymentAmount: convertedFee.amount,
+            paymentCurrency: convertedFee.currency
+          };
+  
+          await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate);
+          
+          setStatusMessage('Submitted Successfuly.');
+          setStatusMessage('Sending confirmation email...');
+
+      
+          await sendConfirmationEmail(fighterData, eventName, eventId);
+          setStatusMessage('Email Sent');
+          setStatusMessage('Registration Successful');
+
+          closeModal();
+
+        } else {
+          setStatusMessage(formContent.paymentFailedMessage);
+          throw new Error('Payment failed: Unable to process payment');
+        }
       }
-    } catch (error) {
-      console.error('Error during payment/registration:', error);
-      alert(formContent.paymentFailedMessage);
+    } catch (error: unknown) {
+      setStatusMessage('An error occurred. Please try again.');
+      const handledError = handleRegistrationError(error);
+      console.error('Error during registration:', handledError);
+      alert(handledError.message || formContent.generalErrorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -471,6 +548,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       <FighterForm
         onFormDataChange={setFighterData}
         locale={locale}
+        user={user}
       />
 
       <div style={{ marginBottom: '30px' }} className='credit-code-container'>
@@ -517,6 +595,13 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         {isSubmitting ? formContent.submittingButton : formContent.submitButton}
       </button>
     </div>
+
+    {statusMessage && (
+  <div className="mt-4 mb-4 p-4 rounded bg-gray-100">
+    <p className="text-sm font-medium text-gray-900">{statusMessage}</p>
+  </div>
+)}
+
     </div>
   );
 };

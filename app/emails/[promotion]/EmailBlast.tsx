@@ -22,10 +22,22 @@ interface FighterEmail {
   email: string;
 }
 
+
 interface EmailData {
   emails: FighterEmail[];
   totalEmails: number;
   lastUpdated: string;
+}
+
+interface EmailError {
+  email: string;
+  error: string;
+}
+
+
+interface EmailSourceConfig {
+  name: string;
+  email: string;
 }
 
 const TEST_EMAILS = [
@@ -35,10 +47,7 @@ const TEST_EMAILS = [
   'logytime1@gmail.com'
 ];
 
-interface EmailSourceConfig {
-  name: string;
-  email: string;
-}
+
 
 const EMAIL_SOURCE_MAPPING: Record<string, EmailSourceConfig> = {
   muaythaipurist: {
@@ -103,45 +112,89 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
   }, [selectedYear]);
 
  
-  const sendEmails = async (emailsList: string[], isTest: boolean = false) => {
-    if (!subject.trim() || !renderedHtml) { // Only check subject and renderedHtml
+  const sendEmails = async (emailsList: string[]): Promise<{ successCount: number; failedEmails: EmailError[] }> => {
+    if (!subject.trim() || !renderedHtml) {
       setStatus('Please fill in all required fields.');
-      return;
+      return {
+        successCount: 0,
+        failedEmails: []
+      };
     }
 
-    const campaignId = `${promotion}_${selectedYear}_${Date.now()}${isTest ? '_test' : ''}`;
-    
+    const campaignId = `${promotion}_${selectedYear}_${Date.now()}`;
     const batchSize = 50;
+    let successCount = 0;
+    const failedEmails: EmailError[] = [];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     for (let i = 0; i < emailsList.length; i += batchSize) {
       const batch = emailsList.slice(i, i + batchSize);
+      setStatus(`Processing batch ${Math.floor(i/batchSize) + 1} of ${Math.ceil(emailsList.length/batchSize)}...`);
       
-      const response = await fetch('/api/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          emails: batch,
-          subject: isTest ? `[TEST] ${subject}` : subject,
-          message: renderedHtml, // Use the rendered HTML from EmailEditor
-          buttonText,
-          buttonUrl,
-          campaignId,
-          promotion,
-          source: {
-            name: emailSource.name,
-            email: emailSource.email
-          },
-      
-        }),
+      const validEmails = batch.filter(email => {
+        if (!emailRegex.test(email)) {
+          failedEmails.push({
+            email,
+            error: 'Invalid email format'
+          });
+          return false;
+        }
+        return true;
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send emails');
-      }
+      if (validEmails.length === 0) continue;
 
-      setStatus(`Sent ${Math.min(i + batchSize, emailsList.length)} of ${emailsList.length} emails...`);
+      try {
+        const response = await fetch('/api/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            emails: validEmails,
+            subject,
+            message: renderedHtml,
+            buttonText,
+            buttonUrl,
+            campaignId,
+            promotion,
+            source: {
+              name: emailSource.name,
+              email: emailSource.email
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          batch.forEach(email => {
+            failedEmails.push({
+              email,
+              error: `Failed to send: ${errorData.message || response.statusText}`
+            });
+          });
+          continue;
+        }
+
+        successCount += validEmails.length;
+        setStatus(`Successfully sent ${successCount} of ${emailsList.length} emails...`);
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`Error processing batch starting at index ${i}:`, error);
+        batch.forEach(email => {
+          failedEmails.push({
+            email,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        });
+      }
     }
+
+    return {
+      successCount,
+      failedEmails
+    };
   };
 
   const handleSendTestEmails = async () => {
@@ -149,8 +202,23 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
     setStatus('Sending test emails...');
 
     try {
-      await sendEmails(TEST_EMAILS, true);
-      setStatus('Test emails sent successfully!');
+      const result = await sendEmails(TEST_EMAILS);
+      
+      // If validation failed
+      if (result.successCount === 0 && result.failedEmails.length === 0) {
+        return; // Status is already set by sendEmails
+      }
+      
+      let statusMessage = `Test email blast completed!\nSuccessfully sent: ${result.successCount} emails\n\n`;
+      
+      if (result.failedEmails.length > 0) {
+        statusMessage += 'Failed emails:\n';
+        result.failedEmails.forEach(({email, error}) => {
+          statusMessage += `${email}: ${error}\n`;
+        });
+      }
+      
+      setStatus(statusMessage);
     } catch (error) {
       console.error('Error sending test emails:', error);
       setStatus('Error sending test emails. Please try again.');
@@ -170,8 +238,23 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
 
     try {
       const emailsList = emailData.emails.map(fighter => fighter.email);
-      await sendEmails(emailsList);
-      setStatus('Email blast completed successfully!');
+      const result = await sendEmails(emailsList);
+      
+      // If validation failed
+      if (result.successCount === 0 && result.failedEmails.length === 0) {
+        return; // Status is already set by sendEmails
+      }
+      
+      let statusMessage = `Email blast completed!\nSuccessfully sent: ${result.successCount} emails\n\n`;
+      
+      if (result.failedEmails.length > 0) {
+        statusMessage += 'Failed emails:\n';
+        result.failedEmails.forEach(({email, error}) => {
+          statusMessage += `${email}: ${error}\n`;
+        });
+      }
+      
+      setStatus(statusMessage);
     } catch (error) {
       console.error('Error sending emails:', error);
       setStatus('Error sending emails. Please try again.');
@@ -179,6 +262,9 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
       setLoading(false);
     }
   };
+
+
+
 
   return (
     <div className="space-y-6">
@@ -212,14 +298,12 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
               <EmailEditor
                 promotion={promotion}
                 subject={subject}
-           
                 buttonText={buttonText}
                 buttonUrl={buttonUrl}
                 onSubjectChange={setSubject}
-             
                 onButtonTextChange={setButtonText}
                 onButtonUrlChange={setButtonUrl}
-                onRenderedHtmlChange={setRenderedHtml} // New prop to receive rendered HTML
+                onRenderedHtmlChange={setRenderedHtml}
               />
             </div>
 
@@ -245,7 +329,7 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
             {status && (
               <div className={`mt-4 p-4 rounded-md ${
                 status.includes('Error') ? 'bg-red-50 text-red-500' : 'bg-muted'
-              }`}>
+              } whitespace-pre-line`}>
                 {status}
               </div>
             )}

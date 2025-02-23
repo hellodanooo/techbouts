@@ -223,7 +223,8 @@ export default function PageContentEvent({
                       eventName={eventData.event_name}
                       closeModal={() => setRegisterOpen(false)}
                       registrationFee={eventData.registration_fee}
-                    />
+                      user={user?.email || undefined}
+                                          />
                   )}
                 </CardContent>
               </Card>
