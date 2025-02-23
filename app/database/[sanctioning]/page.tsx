@@ -2,7 +2,12 @@ import React from 'react';
 import { Metadata } from 'next';
 import YearSelector from '@/components/selectors/YearSelector';
 import FighterSearchTable from '@/components/tables/FighterSearchTable';
-import { fetchPMTFighters, fetchIKFFighters, Fighter } from '@/utils/records/fetchFighters';
+import { fetchPMTFighters, Fighter } from '@/utils/records/fetchFighters';
+import {fetchTechBoutsFighters} from '@/utils/records/fetchFighters';
+//import {gatherPuristRosters} from '@/utils/records/gatherPuristRosters';
+
+
+
 import Image from 'next/image';
 
 export async function generateMetadata(props: { 
@@ -15,9 +20,14 @@ export async function generateMetadata(props: {
   let fighters: Fighter[] = [];
   if (sanctioning === 'pmt') {
     const year = searchParams.year || '2024';
+
     fighters = await fetchPMTFighters(year);
+
   } else if (sanctioning === 'ikf') {
-    fighters = await fetchIKFFighters();
+
+   console.log("Metadata sanctioning IKF: Fetching fighters");
+     fighters = await fetchTechBoutsFighters();
+console.log("Metadata sanctioning IKF Fighters", fighters);
   } else {
     return {
       title: 'Invalid Sanctioning Body',
@@ -49,7 +59,11 @@ export default async function FighterDatabase(props: {
     selectedYear = searchParams.year || '2024';
     fighters = await fetchPMTFighters(selectedYear);
   } else if (sanctioning === 'ikf') {
-    fighters = await fetchIKFFighters();
+  
+      fighters = await fetchTechBoutsFighters();
+
+    //fighters = await gatherPuristRosters();
+
   } else {
     return <div>Invalid sanctioning body specified</div>
   }

@@ -55,7 +55,6 @@ export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
           weightclass: data.weightclasses[0], // use the first weightclass as primary
           wins: data.wins,
           losses: data.losses,
-          // Provide defaults for the remaining Fighter fields
           address: '',
           age: data.age,
           city: '',
@@ -74,7 +73,7 @@ export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
         };
       });
 
-      if (fighters.length >= 30) {
+      if (fighters.length >= 100) {
         break;
       }
       threshold--;
@@ -87,49 +86,68 @@ export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
   }
 };
 
-export const fetchIKFFighters = async (): Promise<Fighter[]> => {
+export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
   try {
-    const fightersRef = collection(techboutsDb, 'fighters_database');
-    // Initially fetch a batch (limit to 100 docs)
-    const fightersQuery = query(fightersRef, limit(100));
-    const fightersSnapshot = await getDocs(fightersQuery);
+    console.log('Starting to fetch TechBouts fighters');
+    const fightersRef = collection(techboutsDb, 'techbouts_fighters');
+    const fightersQuery = query(fightersRef);
 
-    let allFighters: Fighter[] = [];
+    console.log('Executing query...');
+    const fightersSnapshot = await getDocs(fightersQuery);
+    console.log('Query completed. Number of docs:', fightersSnapshot.size);
+
+    const fighters: Fighter[] = [];
+    
     fightersSnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.fighters) {
-        allFighters.push(...data.fighters);
-      }
+      console.log('Processing document:', doc.id);
+      console.log('Document data:', data);
+      
+      // Convert the document data to Fighter type
+      const fighter: Fighter = {
+        fighter_id: data.fighter_id || doc.id,
+        first: data.first || '',
+        last: data.last || '',
+        gym: data.gym || '',
+        email: data.email || '',
+        weightclass: Number(data.weightclass) || 0,
+        wins: data.wins || 0,
+        losses: data.losses || 0,
+        address: data.address || '',
+        age: Number(data.age) || 0,
+        city: data.city || '',
+        coach: data.coach_name || '',  // Updated to match the field name in screenshot
+        coach_phone: data.coach_phone || '',
+        coach_email: data.coach_email || '',
+        dob: data.dob || '',
+        docId: data.docId || doc.id,
+        gender: data.gender || '',
+        gym_id: data.gym_id || '',
+        height: Number(data.height) || 0,
+        mtp_id: data.mtp_id || '',
+        photo: data.photo || '',
+        state: data.state || '',
+        website: data.website || ''
+      };
+      
+      fighters.push(fighter);
     });
 
-    // Now filter client-side using the wins threshold logic.
-    let threshold = 5;
-    let filteredFighters = allFighters.filter(
-      (fighter) => Number(fighter.wins) > threshold
-    );
-    while (filteredFighters.length < 30 && threshold > 0) {
-      threshold--;
-      filteredFighters = allFighters.filter(
-        (fighter) => Number(fighter.wins) > threshold
-      );
+    console.log(`Found ${fighters.length} TechBouts fighters`);
+    if (fighters.length > 0) {
+      console.log('Sample fighter:', fighters[0]);
     }
-
-    return filteredFighters;
+    
+    return fighters;
+    
   } catch (error) {
-    console.error('Error fetching IKF fighters:', error);
+    console.error('Error fetching TechBouts fighters:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return [];
   }
 };
 
-export const fetchFighters = async (
-  sanctioning: string,
-  year?: string
-): Promise<Fighter[]> => {
-  if (sanctioning === 'pmt') {
-    return fetchPMTFighters(year || '2024');
-  } else if (sanctioning === 'ikf') {
-    return fetchIKFFighters();
-  } else {
-    return [];
-  }
-};
+

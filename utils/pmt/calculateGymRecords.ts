@@ -185,16 +185,16 @@ import {
                 tournament_wins: 0,
                 tournament_losses: 0,
                 total_fighters: 0,
-                total_bodykick: 0,    // Changed from avg_bodykick
-                total_boxing: 0,      // Changed from avg_boxing
-                total_clinch: 0,      // Changed from avg_clinch
-                total_defense: 0,     // Changed from avg_defense
-                total_footwork: 0,    // Changed from avg_footwork
-                total_headkick: 0,    // Changed from avg_headkick
-                total_kicks: 0,       // Changed from avg_kicks
-                total_knees: 0,       // Changed from avg_knees
-                total_legkick: 0,     // Changed from avg_legkick
-                total_ringawareness: 0,  // Changed from avg_ringawareness
+                total_bodykick: 0,   
+                total_boxing: 0,     
+                total_clinch: 0,     
+                total_defense: 0,    
+                total_footwork: 0,   
+                total_headkick: 0,    
+                total_kicks: 0,      
+                total_knees: 0,       
+                total_legkick: 0,     
+                total_ringawareness: 0,  
                 fighters: [],
                 fights: [],
                 lastUpdated: new Date().toISOString(),

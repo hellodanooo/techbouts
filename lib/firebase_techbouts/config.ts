@@ -1,6 +1,10 @@
 // lib/firebase_techbouts/config.ts
 
-import { initializeApp, getApps } from "firebase/app";
+import { 
+  initializeApp, 
+  getApps, 
+  FirebaseApp 
+} from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
@@ -15,12 +19,19 @@ const firebaseConfig = {
   measurementId: "G-F27HR9JQ1L"
 };
 
-// Initialize Firebase only if it hasn't been initialized already
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+const TECHBOUTS_APP_NAME = 'techbouts-app';
+
+// Create or retrieve the named app
+function createTechBoutsApp(): FirebaseApp {
+  const existingApp = getApps().find((app) => app.name === TECHBOUTS_APP_NAME);
+  return existingApp ?? initializeApp(firebaseConfig, TECHBOUTS_APP_NAME);
+}
+
+const app = createTechBoutsApp();
 
 // Initialize services
 const auth = getAuth(app);
 const db = getFirestore(app);
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+const analytics = (typeof window !== 'undefined') ? getAnalytics(app) : null;
 
 export { app, auth, analytics, db };

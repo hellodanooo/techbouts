@@ -1,3 +1,6 @@
+// app/api/pmt/events/[eventId]/route.ts
+// this api works
+
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';

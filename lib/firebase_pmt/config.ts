@@ -1,9 +1,15 @@
 // lib/firebase_pmt/config.ts
-import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore";
-import { getAnalytics, Analytics } from "firebase/analytics";
-import { getStorage, FirebaseStorage } from "firebase/storage";
+import { 
+  initializeApp, 
+  getApps, 
+
+  FirebaseApp 
+} from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyAwHf04nr0bu-2osmdLIDkAD0vMHGc6Nvk",
@@ -16,26 +22,21 @@ const firebaseConfig = {
   measurementId: "G-S6PN9L69FC",
 };
 
-let app: FirebaseApp;
-let analytics: Analytics | undefined;
-let storage: FirebaseStorage;
-let db: Firestore;
 
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
+const PMT_APP_NAME = 'pmt-app';
 
-  // Initialize analytics only on the client side
-  if (typeof window !== 'undefined') {
-    analytics = getAnalytics(app);
-  }
-
-  storage = getStorage(app);
-  db = getFirestore(app); // Add Firestore initialization
-} else {
-  app = getApps()[0];
-  storage = getStorage(app);
-  db = getFirestore(app); // Reuse the Firestore instance
+// Create or retrieve the named app
+function createPMTApp(): FirebaseApp {
+  const existingApp = getApps().find((app) => app.name === PMT_APP_NAME);
+  return existingApp ?? initializeApp(firebaseConfig, PMT_APP_NAME);
 }
+
+const app = createPMTApp();
+
+// Now initialize other services
+const analytics = (typeof window !== 'undefined') ? getAnalytics(app) : undefined;
+const storage = getStorage(app);
+const db = getFirestore(app);
 const auth = getAuth(app);
 
-export { app, analytics, storage, db, auth }; // Export db
+export { app, analytics, storage, db, auth };

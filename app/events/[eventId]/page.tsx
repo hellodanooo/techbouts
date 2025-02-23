@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 
+
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 
 // Add generateMetadata function
@@ -79,6 +80,10 @@ export default async function EventPage(params: {
       const pageTitle = `${pmtEventData.event_name} - ${pmtEventData.date}`;
       console.log("SEO TITLE", pageTitle)
       // console.log("pmtEventData", pmtEventData)
+
+
+
+      
       return (
         <>
           <Head>
