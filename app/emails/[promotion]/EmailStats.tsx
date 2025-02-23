@@ -24,6 +24,11 @@ interface EmailCampaign {
   engagement: Record<string, EmailEngagement>;
   linkClicks: Record<string, number>;
   promotion: string;
+  status: string;
+  totalAttempted: number;
+  totalFailed: number;
+  failedEmails: Array<{ email: string; error: string }>;
+  completedAt: string;
 }
 
 interface EmailStatsProps {
@@ -126,6 +131,22 @@ export default function EmailStats({ promotion }: EmailStatsProps) {
                         </p>
                       </div>
                       <div>
+    <p className="text-sm text-gray-500">Attempted</p>
+    <p className="text-lg font-semibold">{campaign.totalAttempted}</p>
+  </div>
+  <div>
+    <p className="text-sm text-gray-500">Sent Successfully</p>
+    <p className="text-lg font-semibold text-green-600">
+      {campaign.totalSent}
+    </p>
+  </div>
+  <div>
+    <p className="text-sm text-gray-500">Failed</p>
+    <p className="text-lg font-semibold text-red-600">
+      {campaign.totalFailed}
+    </p>
+  </div>
+                      <div>
                         <p className="text-sm text-gray-500">Open Rate</p>
                         <p className="text-lg font-semibold">
                           {campaign.totalSent > 0
@@ -193,6 +214,18 @@ export default function EmailStats({ promotion }: EmailStatsProps) {
                             </p>
                           ))}
                         </div>
+                        {campaign.failedEmails?.length > 0 && (
+  <div className="bg-red-50 p-4 rounded-lg mt-4">
+    <h4 className="font-medium mb-2 text-red-700">Failed Sends ({campaign.failedEmails.length})</h4>
+    <div className="space-y-2">
+      {campaign.failedEmails.map(({email, error}) => (
+        <div key={email} className="text-sm">
+          <span className="font-medium">{email}</span>: {error}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
                       </div>
 
                       <div className="bg-gray-50 p-4 rounded-lg">

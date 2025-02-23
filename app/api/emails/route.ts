@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { db } from '@/lib/firebase_techbouts/config';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
 const sesClient = new SESClient({
   region: "us-east-1",
@@ -38,6 +38,7 @@ function wrapLinksWithTracking(html: string, campaignId: string, promotion: stri
   );
 }
 
+// app/api/emails/route.ts
 export async function POST(request: Request) {
   try {
     const { message, subject, emails, campaignId, source, promotion } = await request.json();
@@ -50,32 +51,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Invalid email source configuration' }, { status: 400 });
     }
 
-    // Initialize campaign in Firestore
+    // Keep track of successful and failed sends
+    const sendResults = {
+      successful: [] as string[],
+      failed: [] as { email: string; error: string }[]
+    };
+
+    // Initialize campaign in Firestore with pending status
     const campaignRef = doc(db, 'email_campaigns', promotion, 'campaigns', campaignId);
     await setDoc(campaignRef, {
       id: campaignId,
       promotion,
       subject,
       sentAt: new Date().toISOString(),
-      totalSent: emails.length,
+      status: 'sending',
+      totalAttempted: emails.length,
+      totalSent: 0,
+      totalFailed: 0,
       totalOpened: 0,
-      sentEmails: emails,
+      sentEmails: [],
+      failedEmails: [],
       openedEmails: [],
       engagement: {},
       linkClicks: {},
     });
 
-    // Send emails with enhanced tracking
-    await Promise.all(
-      emails.map(async (email: string) => {
+    // Send emails and track results
+    const sendPromises = emails.map(async (email: string) => {
+      try {
         // Generate tracking elements
         const { pixelTracker, cssTracker } = generateTrackingPixels(campaignId, promotion, email);
         
-        // Process HTML content
         let emailHTML = message;
         emailHTML = wrapLinksWithTracking(emailHTML, campaignId, promotion, email);
-        
-        // Add tracking elements at both top and bottom
         emailHTML = `
           ${pixelTracker}
           ${cssTracker}
@@ -93,16 +101,54 @@ export async function POST(request: Request) {
           },
         });
 
-        return sesClient.send(command);
-      })
-    );
+        const result = await sesClient.send(command);
+        
+        if (result.$metadata.httpStatusCode === 200) {
+          sendResults.successful.push(email);
+        } else {
+          sendResults.failed.push({ 
+            email, 
+            error: `SES returned status: ${result.$metadata.httpStatusCode}` 
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to send email to ${email}:`, error);
+        sendResults.failed.push({ 
+          email, 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        });
+      }
+    });
 
+    // Wait for all sends to complete
+    await Promise.all(sendPromises);
+
+    // Update campaign with final results
+    await updateDoc(campaignRef, {
+      status: 'completed',
+      totalSent: sendResults.successful.length,
+      totalFailed: sendResults.failed.length,
+      sentEmails: sendResults.successful,
+      failedEmails: sendResults.failed,
+      completedAt: new Date().toISOString()
+    });
+
+    // Return detailed results
     return NextResponse.json({ 
-      message: 'Emails sent successfully', 
-      campaignId 
+      message: 'Email campaign completed', 
+      campaignId,
+      results: {
+        totalAttempted: emails.length,
+        totalSent: sendResults.successful.length,
+        totalFailed: sendResults.failed.length,
+        failedEmails: sendResults.failed
+      }
     });
   } catch (error) {
-    console.error('Error sending emails:', error);
-    return NextResponse.json({ message: 'Failed to send emails' }, { status: 500 });
+    console.error('Error in email campaign:', error);
+    return NextResponse.json({ 
+      message: 'Failed to complete email campaign',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
