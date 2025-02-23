@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-
+import { useState, useEffect } from "react";
 import HeaderHome from "@/components/ui/HeaderHome";
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
@@ -11,10 +11,36 @@ import LoadingScreen from '@/components/loading_screens/LandingLoading';
 
 export default function PageContent() {
   const { user, isAdmin, isNewUser } = useAuth();
-  const { loading } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    // Start fading out after a brief delay
+    setTimeout(() => {
+      setOpacity(0);
+    }, 100);
+
+    // Remove loading screen after animation completes
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <div 
+        style={{ 
+          opacity: opacity,
+          transition: 'opacity 2s ease-in-out'
+        }}
+      >
+        <LoadingScreen />
+      </div>
+    );
   }
 
   return (
