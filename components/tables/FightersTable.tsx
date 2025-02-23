@@ -231,6 +231,9 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
       <td key={`gender-${fighter.fighter_id}`} className="p-2">{fighter.gender}</td>
       <td key={`win-${fighter.fighter_id}`} className="p-2">{fighter.wins}</td>
       <td key={`loss-${fighter.fighter_id}`} className="p-2">{fighter.losses}</td>
+      <td key={`coach-${fighter.fighter_id}`} className="p-2">{fighter.coach}</td>
+      <td key={`coach_phone-${fighter.fighter_id}`} className="p-2">{fighter.coach_phone}</td>
+
 
 
       {editable && (

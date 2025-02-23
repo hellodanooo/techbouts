@@ -27,6 +27,9 @@ export type Fighter = {
   website: string;
   weightclass: number;
   wins: string | number;
+  mma_win?: number;
+  mma_loss?: number;
+  
 };
 
 export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
@@ -111,8 +114,8 @@ export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
         gym: data.gym || '',
         email: data.email || '',
         weightclass: Number(data.weightclass) || 0,
-        wins: data.wins || 0,
-        losses: data.losses || 0,
+        wins: data.win || 0,
+        losses: data.loss || 0,
         address: data.address || '',
         age: Number(data.age) || 0,
         city: data.city || '',
@@ -127,7 +130,9 @@ export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
         mtp_id: data.mtp_id || '',
         photo: data.photo || '',
         state: data.state || '',
-        website: data.website || ''
+        website: data.website || '',
+        mma_win: data.mma_win || 0,
+        mma_loss: data.mma_loss || 0,
       };
       
       fighters.push(fighter);
