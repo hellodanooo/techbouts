@@ -44,6 +44,7 @@ export type Fighter = {
   website: string;
   weightclass: number;
   wins: string | number;
+  eventIds: string[];
 };
 
 // Helper function to convert Firestore format to regular JSON
@@ -116,7 +117,20 @@ const generateFighterId = (first: string, last: string, dob: string): string => 
     return `${cleanFirstName}${cleanLastName}${cleanDob}`;
   };
 
-// utils/records/gatherPuristRosters.ts
+
+  const extractEventId = (documentName: string | undefined): string | null => {
+    if (!documentName) return null;
+    
+    // The document name format would be something like:
+    // "projects/{projectId}/databases/(default)/documents/{eventId}/roster/fighters/{fighterId}"
+    const parts = documentName.split('/');
+    // Get the eventId part - it should be after "documents"
+    const documentsIndex = parts.indexOf('documents');
+    if (documentsIndex !== -1 && parts.length > documentsIndex + 1) {
+      return parts[documentsIndex + 2];
+    }
+    return null;
+  };
 
 export async function gatherPuristRosters(): Promise<Fighter[]> {
     try {
@@ -178,19 +192,37 @@ export async function gatherPuristRosters(): Promise<Fighter[]> {
             fighterData.dob as string
           );
   
-          // If fighter already exists, merge any new information
+          const eventId = extractEventId(doc.name);
+
+console.log("Event ID", eventId);
+
           if (fighterMap.has(fighterId)) {
             const existingFighter = fighterMap.get(fighterId)!;
+      
+            // Make sure eventIds is initialized
+            if (!existingFighter.eventIds) {
+              existingFighter.eventIds = [];
+            }
+            
+            // Add the new eventId if it exists and isn't already in the array
+            if (eventId && !existingFighter.eventIds.includes(eventId)) {
+              existingFighter.eventIds.push(eventId);
+            }
+      
             fighterMap.set(fighterId, {
               ...existingFighter,
               ...fighterData as Fighter,
-              fighter_id: fighterId
+              fighter_id: fighterId,
+              eventIds: existingFighter.eventIds  // Keep the accumulated eventIds
             });
           } else {
-            fighterMap.set(fighterId, {
+            // For new fighter, initialize with the current eventId
+            const newFighter = {
               ...(fighterData as Fighter),
-              fighter_id: fighterId
-            });
+              fighter_id: fighterId,
+              eventIds: eventId ? [eventId] : []
+            };
+            fighterMap.set(fighterId, newFighter);
           }
         } catch (error) {
           console.error('Error processing fighter:', error, fighterData);
@@ -198,7 +230,7 @@ export async function gatherPuristRosters(): Promise<Fighter[]> {
       });
   
       const fighters = Array.from(fighterMap.values());
-      console.log('Processed fighters:', fighters.length);
+     console.log('Processed fighters:', fighters.length);
       return fighters;
       
     } catch (error) {

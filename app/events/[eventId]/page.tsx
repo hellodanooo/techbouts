@@ -4,8 +4,6 @@ import Head from 'next/head';
 import { Metadata } from 'next';
 
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
-
-
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 
 // Add generateMetadata function

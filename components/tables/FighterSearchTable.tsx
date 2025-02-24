@@ -32,7 +32,13 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
   const [terms, setTerms] = useState<string[]>([]);
   const [fighters, setFighters] = useState<Fighter[]>(initialFighters);
   const [loading, setLoading] = useState(false);
- 
+
+  // const [uploadStatus, setUploadStatus] = useState({
+  //   isUploading: false,
+  //   message: ''
+  // });
+
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchInput(value);
@@ -158,9 +164,6 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
   // };
   
 
-
-
-  
   // const handleSendToTechBouts = async () => {
   //   setUploadStatus({ isUploading: true, message: 'Starting upload...' });
   //   try {

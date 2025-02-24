@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
 import { getGeocode } from "use-places-autocomplete";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface TimeFields {
   doors_open: string;
@@ -31,7 +33,18 @@ export default function EditEventForm({ eventData, eventId }: EditEventFormProps
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploadingFlyer, setIsUploadingFlyer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+  const [openSections, setOpenSections] = useState({
+    details: false,
+   
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   const [formData, setFormData] = useState<EventType & TimeFields>({
     ...eventData,
     name: eventData.event_name || eventData.name || '',
@@ -174,6 +187,18 @@ export default function EditEventForm({ eventData, eventId }: EditEventFormProps
 
 
   return (
+
+    <Collapsible
+    open={openSections.details}
+    onOpenChange={() => toggleSection('details')}
+    className="w-full border rounded-lg overflow-hidden"
+  >
+    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
+      <h2 className="text-xl font-semibold">Event Details</h2>
+      {openSections.details ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+    </CollapsibleTrigger>
+    <CollapsibleContent className="p-4 bg-white">
+
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid md:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow space-y-4">
@@ -494,5 +519,8 @@ export default function EditEventForm({ eventData, eventId }: EditEventFormProps
         </button>
       </div>
     </form>
+    </CollapsibleContent>
+  </Collapsible>
+
   );
 }

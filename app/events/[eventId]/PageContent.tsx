@@ -30,6 +30,8 @@ export default function PageContentEvent({
   const [registerOpen, setRegisterOpen] = useState(false);
   const [locale, setLocale] = useState('en');
 
+  const [showEmbedModal, setShowEmbedModal] = useState(false);
+
   const stripeUSD = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '');
   const stripeMEX = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_MEX || '');
 
@@ -69,6 +71,8 @@ export default function PageContentEvent({
   return (
     <Elements stripe={stripeInstance}>
       <div className="p-5">
+        {user?.email}
+        {eventData.promoterEmail}
         <AuthDisplay
           user={user}
           isAdmin={isAdmin}
@@ -213,7 +217,21 @@ export default function PageContentEvent({
                         Photo Package (${eventData.photoPackagePrice})
                       </button>
                     )}
+
+
+
+
                   </div>
+
+
+                  {isAuthorizedPromoter && (
+                  <button
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    onClick={() => setShowEmbedModal(true)}
+                  >
+                    Embed Registration
+                  </button>
+                )}
 
                   {/* Register Modal */}
                   {registerOpen && (
@@ -240,9 +258,48 @@ export default function PageContentEvent({
                   </CardContent>
                 </Card>
               )}
+
+
+              
             </div>
           </div>
         </div>
+
+        {showEmbedModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white p-4 rounded shadow-lg w-full max-w-xl relative">
+                    <h2 className="text-xl font-bold mb-2">Embed Registration Code</h2>
+                    <p className="mb-2">
+                      Copy this code and paste it into your Wix or Squarespace site.
+                    </p>
+                    <div className="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+                      {/*
+                        NOTE: Replace "yourdomain.com" with your actual domain.
+                        The src should match the route you created at 
+                        app/events/[eventId]/embed/page.tsx
+                      */}
+                      <code>
+                        {`<iframe 
+  src="https://techbouts.com/events/${eventId}/embed" 
+  width="600" 
+  height="800" 
+  frameborder="0" 
+  scrolling="auto"
+></iframe>`}
+                      </code>
+                    </div>
+
+                    <div className="text-right mt-4">
+                      <button
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        onClick={() => setShowEmbedModal(false)}
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
       </div>
     </Elements>
   );

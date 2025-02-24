@@ -30,6 +30,7 @@ type Fighter = {
   website: string;
   weightclass: number;
   wins: string | number;
+  eventIds?: string[];
 };
 
 type FighterTableProps = {
@@ -233,6 +234,9 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
       <td key={`loss-${fighter.fighter_id}`} className="p-2">{fighter.losses}</td>
       <td key={`coach-${fighter.fighter_id}`} className="p-2">{fighter.coach}</td>
       <td key={`coach_phone-${fighter.fighter_id}`} className="p-2">{fighter.coach_phone}</td>
+      <td key={`fighter_id-${fighter.fighter_id}`} className="p-2">{fighter.fighter_id}</td>
+      <td key={`eventIds-${fighter.fighter_id}`} className="p-2">{fighter.eventIds}</td>
+
 
 
 

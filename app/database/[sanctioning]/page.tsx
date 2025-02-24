@@ -27,6 +27,7 @@ export async function generateMetadata(props: {
 
    console.log("Metadata sanctioning IKF: Fetching fighters");
      fighters = await fetchTechBoutsFighters();
+    //fighters = await gatherPuristRosters();
 console.log("Metadata sanctioning IKF Fighters", fighters);
   } else {
     return {
