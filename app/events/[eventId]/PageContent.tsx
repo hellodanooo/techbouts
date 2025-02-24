@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import Register from './Register';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import EmbedCodeGenerator from '@/components/EmbedCodeGenerator';
 
 interface TournamentDashboardProps {
   eventId: string;
@@ -225,13 +226,13 @@ export default function PageContentEvent({
 
 
                   {isAuthorizedPromoter && (
-                  <button
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                    onClick={() => setShowEmbedModal(true)}
-                  >
-                    Embed Registration
-                  </button>
-                )}
+                    <button
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                      onClick={() => setShowEmbedModal(true)}
+                    >
+                      Embed Registration
+                    </button>
+                  )}
 
                   {/* Register Modal */}
                   {registerOpen && (
@@ -242,7 +243,7 @@ export default function PageContentEvent({
                       closeModal={() => setRegisterOpen(false)}
                       registrationFee={eventData.registration_fee}
                       user={user?.email || undefined}
-                                          />
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -260,46 +261,43 @@ export default function PageContentEvent({
               )}
 
 
-              
+
             </div>
           </div>
         </div>
 
         {showEmbedModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="bg-white p-4 rounded shadow-lg w-full max-w-xl relative">
-                    <h2 className="text-xl font-bold mb-2">Embed Registration Code</h2>
-                    <p className="mb-2">
-                      Copy this code and paste it into your Wix or Squarespace site.
-                    </p>
-                    <div className="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
-                      {/*
-                        NOTE: Replace "yourdomain.com" with your actual domain.
-                        The src should match the route you created at 
-                        app/events/[eventId]/embed/page.tsx
-                      */}
-                      <code>
-                        {`<iframe 
-  src="https://techbouts.com/events/${eventId}/embed" 
-  width="600" 
-  height="800" 
-  frameborder="0" 
-  scrolling="auto"
-></iframe>`}
-                      </code>
-                    </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] overflow-auto">
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Embed Registration Form</h2>
+          <button
+            onClick={() => setShowEmbedModal(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <p className="mb-6">
+          Add your event registration form to any website by copying and pasting the embed code below.
+          The form will work on any website and will automatically collect registrations in your TechBouts dashboard.
+        </p>
+        
+        <EmbedCodeGenerator 
+          eventId={eventId} 
+          eventName={eventData.name || eventData.event_name || 'Event'} 
+        />
+      </div>
+    </div>
+  </div>
+)}
 
-                    <div className="text-right mt-4">
-                      <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        onClick={() => setShowEmbedModal(false)}
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+
+
       </div>
     </Elements>
   );
