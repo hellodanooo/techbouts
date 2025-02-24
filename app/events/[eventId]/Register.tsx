@@ -314,7 +314,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
   const sendConfirmationEmail = async (fighterData: FighterFormData, eventName: string, eventId: string) => {
     try {
-      const emailResponse = await axios.post('/api/sendConfirmationEmail', {
+      const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
         email: fighterData.email.toLowerCase(),
         firstName: fighterData.first,
         lastName: fighterData.last,
