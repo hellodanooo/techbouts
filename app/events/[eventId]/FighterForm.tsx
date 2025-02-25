@@ -3,7 +3,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, getFirestore } from 'firebase/firestore';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  QueryDocumentSnapshot,
+  DocumentData
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase_techbouts/config';
+
 
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -33,26 +42,58 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 interface FighterFormData {
+  // Basic Information
   first: string;
   last: string;
   email: string;
   dob: string;
-  gym: string;
   age: number;
-  weightclass: number;
-  fighterId: string;
-  win: number;
-  loss: number;
   gender: string;
-  years_exp: number;
-  other: string;
-  ammy: number;
+  fighter_id: string;
+
+  // Gym Information
+  gym: string;
+  gym_id: string;
+  coach_name: string;
+  coach_email: string;
+  coach_phone: string;
+
+  // Location Information
+  state: string;
+  city: string;
+
+
+  // Physical Information
+
+  weightclass: number;
   height: number;
   heightFoot: number;
   heightInch: number;
+
+  // Record
+  mt_win: number;
+  mt_loss: number;
+  boxing_win: number;
+  boxing_loss: number;
+  mma_win: number;
+  mma_loss: number;
+  pmt_win: number;
+  pmt_loss: number;
+
+
+  // Legacy fields (maintained for compatibility)
+  win: number;
+  loss: number;
+  ammy: number;
+
+  // Experience & Classification
+  years_exp: number;
+
+  // Contact Information
   phone: string;
-  coach_phone: string;
-  coach_name: string;
+
+  // Additional Information
+  other: string;
 }
 
 interface FighterFormProps {
@@ -67,15 +108,11 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   const [emailError, setEmailError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
-
   const [isWaiverChecked, setIsWaiverChecked] = useState(false);
-
-
-
   const [formLabels] = useState({
     returningAthletes: 'RETURNING ATHLETES',
     doubleCheckInfo: '(double check your information)',
-    searchLastName: 'SEARCH BY LAST NAME',
+    searchLastName: 'SEARCH BY EMAIL',
     newAthletes: 'New Athletes can fill the Form Manually',
     firstName: 'FIRST NAME',
     lastName: 'LAST NAME',
@@ -185,7 +222,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         ...formData,
         dob: formattedDate,
         age: calculateAge(formattedDate),
-        fighterId: formData.first && formData.last ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighterId,
+        fighter_id: formData.first && formData.last ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighter_id,
       });
       setSelectedDate(date);
       setDobError(null);
@@ -196,27 +233,61 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
 
   const [formData, setFormData] = useState<FighterFormData>({
+    // Basic Information
     first: '',
     last: '',
     email: user || '',
     dob: '',
-    gym: '',
     age: 0,
-    weightclass: 0,
-    fighterId: '',
-    win: 0,
-    loss: 0,
     gender: '',
-    other: '',
-    years_exp: 0,
-    ammy: 0,
+    fighter_id: '',
+
+    // Gym Information
+    gym: '',
+    gym_id: '',
+    coach_name: '',
+    coach_email: '',
+    coach_phone: '',
+
+    // Location Information
+    state: '',
+    city: '',
+
+
+    // Physical Information
+
+    weightclass: 0,
     height: 0,
     heightFoot: 0,
     heightInch: 0,
+
+    // Record
+    mt_win: 0,
+    mt_loss: 0,
+    boxing_win: 0,
+    boxing_loss: 0,
+    mma_win: 0,
+    mma_loss: 0,
+    pmt_win: 0,
+    pmt_loss: 0,
+   
+
+    // Legacy fields
+    win: 0,
+    loss: 0,
+    ammy: 0,
+
+    // Experience & Classification
+    years_exp: 0,
+
+    // Contact Information
     phone: '',
-    coach_phone: '',
-    coach_name: '',
+
+    // Additional Information
+    other: '',
   });
+
+
   const [dobError, setDobError] = useState<string | null>(null);
   const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
 
@@ -247,23 +318,45 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   useEffect(() => {
     const fetchFighters = async () => {
-      if (fighterSearchTerm.length >= 2) {
-        const db = getFirestore();
-        const profileCollections = ['records_pmt_2024', 'records_pmt_2025'];
-
-        // Map over each collection and create a query
-        const queries = profileCollections.map(colName => {
-          const colRef = collection(db, colName);
-          const fightersQuery = query(colRef, where('last', '>=', fighterSearchTerm), where('last', '<=', fighterSearchTerm + '\uf8ff'));
-          return getDocs(fightersQuery);
-        });
-
+      if (fighterSearchTerm.length >= 3) {
+        console.log('Searching for email containing:', fighterSearchTerm);
+        
         try {
-          // Use Promise.all to fetch all queries in parallel
-          const querySnapshots = await Promise.all(queries);
-          const fighters = querySnapshots.flatMap(snapshot => snapshot.docs.map(doc => {
+          // Create a query that searches for emails containing the search term (case-insensitive)
+          const colRef = collection(db, 'techbouts_fighters');
+          
+          // For email, we want to use lowercase to match most common storage patterns
+          const lowerSearchTerm = fighterSearchTerm.toLowerCase();
+          
+          // Use a range query to find strings that contain our search term
+          const fightersQuery = query(
+            colRef,
+            where('email', '>=', lowerSearchTerm),
+            where('email', '<=', lowerSearchTerm + '\uf8ff')
+          );
+          
+          console.log('Executing query...');
+          const querySnapshot = await getDocs(fightersQuery);
+          console.log('Query returned', querySnapshot.size, 'results');
+          
+          // Even if we get results with the lowercase search, we should also try with original case
+          // to ensure we catch all possible matches (for any emails stored with mixed case)
+          const originalCaseQuery = query(
+            colRef,
+            where('email', '>=', fighterSearchTerm),
+            where('email', '<=', fighterSearchTerm + '\uf8ff')
+          );
+          
+          const originalCaseSnapshot = await getDocs(originalCaseQuery);
+          console.log('Original case query returned', originalCaseSnapshot.size, 'results');
+          
+          // Combine both sets of results (will automatically remove duplicates by document ID)
+          const combinedResults = new Map();
+          
+          // Helper function to map document data to our FighterFormData type
+          const mapDocToFighterData = (doc: QueryDocumentSnapshot<DocumentData>): FighterFormData => {
             const data = doc.data();
-            const fighterData: FighterFormData = {
+            return {
               first: data.first || '',
               last: data.last || '',
               email: data.email || '',
@@ -271,12 +364,20 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               gym: data.gym || '',
               age: data.age || 0,
               weightclass: data.weightclass || 0,
-              fighterId: data.fighterId || '',
+              fighter_id: data.fighter_id || '',
               win: data.win || 0,
               loss: data.loss || 0,
+              mt_win: data.mt_win || 0,
+              mt_loss: data.mt_loss || 0,
+              boxing_win: data.boxing_win || 0,
+              boxing_loss: data.boxing_loss || 0,
+              mma_win: data.mma_win || 0,
+              mma_loss: data.mma_loss || 0,
+              pmt_win: data.pmt_win || 0,
+              pmt_loss: data.pmt_loss || 0,
               gender: data.gender || '',
               other: data.other || '',
-              years_exp: data.yearsExp || 0,
+              years_exp: data.years_exp || 0,
               ammy: data.ammy || 0,
               height: data.height || 0,
               heightFoot: data.heightFoot || 0,
@@ -284,20 +385,42 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               phone: data.phone || '',
               coach_phone: data.coach_phone || '',
               coach_name: data.coach_name || '',
+              coach_email: data.coach_email || '',
+              state: data.state || '',
+              city: data.city || '',
+              gym_id: data.gym_id || '',
             };
-            return fighterData;
-          }));
-
+          };
+          
+          // Add results from lowercase query
+          querySnapshot.docs.forEach(doc => {
+            combinedResults.set(doc.id, mapDocToFighterData(doc));
+          });
+          
+          // Add results from original case query
+          originalCaseSnapshot.docs.forEach(doc => {
+            if (!combinedResults.has(doc.id)) {
+              combinedResults.set(doc.id, mapDocToFighterData(doc));
+            }
+          });
+          
+          // Convert Map to Array
+          const fighters = Array.from(combinedResults.values());
+          
+          // Log for debugging
+          console.log('Total combined fighters:', fighters.length);
+          
+          // Set the results
           setFighterSearchResults(fighters);
         } catch (error) {
-          console.error("Error fetching fighters: ", error);
+          console.error("Error fetching fighters:", error);
           setFighterSearchResults([]);
         }
       } else {
         setFighterSearchResults([]);
       }
     };
-
+  
     fetchFighters();
   }, [fighterSearchTerm]);
 
@@ -315,8 +438,15 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       dob: dayjs(selectedFighter.dob).format('MM/DD/YYYY'),
     };
     setFormData(updatedFighter);
-    setSelectedDate(dayjs(selectedFighter.dob)); // Change this line
-   // setGymSearchTerm(updatedFighter.gym.toUpperCase());
+    setSelectedDate(dayjs(selectedFighter.dob));
+    
+    // Update form fields based on retrieved data
+    if (updatedFighter.heightFoot === 0 && updatedFighter.heightInch === 0 && updatedFighter.height > 0) {
+      // Convert height in inches to feet and inches
+      updatedFighter.heightFoot = Math.floor(updatedFighter.height / 12);
+      updatedFighter.heightInch = updatedFighter.height % 12;
+    }
+    
     setFighterSearchResults([]);
   };
 
@@ -355,7 +485,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         if (dateRegex.test(value)) {
           newFormData.age = calculateAge(value);
           if (newFormData.first && newFormData.last) {
-            newFormData.fighterId = generateFighterId(newFormData.first, newFormData.last, value);
+            newFormData.fighter_id = generateFighterId(newFormData.first, newFormData.last, value);
           }
         } else {
           setDobError("Date must be in MM/DD/YYYY format");
@@ -378,7 +508,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
         if (name === 'first' || name === 'last') {
           if (newFormData.first && newFormData.last && newFormData.dob) {
-            newFormData.fighterId = generateFighterId(newFormData.first, newFormData.last, newFormData.dob);
+            newFormData.fighter_id = generateFighterId(newFormData.first, newFormData.last, newFormData.dob);
           }
         }
         break;
@@ -500,26 +630,32 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                       setFighterSearchTerm(value);
                       if (value.length < 3) setFighterSearchResults([]);
                     }}
-                    placeholder="Search by last name..."
+                    placeholder="Search by Email..."
                   />
                 </div>
 
                 {fighterSearchResults.length > 0 && (
-                  <ScrollArea className="h-[200px] rounded-md border">
-                    <div className="p-4">
-                      {fighterSearchResults.map((fighter, index) => (
-                        <Button
-                          key={index}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => handleFighterSelect(fighter)}
-                        >
-                          {fighter.first} {fighter.last} Age: {fighter.age}
-                        </Button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
+  <ScrollArea className="h-[200px] rounded-md border">
+    <div className="p-4">
+      {fighterSearchResults.map((fighter, index) => (
+        <Button
+          key={index}
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => handleFighterSelect(fighter)}
+        >
+          <div className="text-left">
+            <div className="font-medium">{fighter.first} {fighter.last}</div>
+            <div className="text-sm text-muted-foreground">
+              Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
+            </div>
+          </div>
+        </Button>
+      ))}
+    </div>
+  </ScrollArea>
+)}
+
               </div>
             </CardContent>
           </Card>
@@ -696,6 +832,13 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                     )}
                   </div>
 
+
+                  <div className="space-y-2">
+                    <Label>Age</Label>
+                    <div className="text-2xl font-bold">{formData.age}</div>
+                  </div>
+
+
                   <div className="space-y-2">
                     <Label>{formLabels.selectGender}</Label>
                     <Select
@@ -751,6 +894,104 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                   </div>
                 </div>
 
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Location Information</h3>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Select
+                        name="state"
+                        value={formData.state}
+                        onValueChange={(value) =>
+                          handleInputChange({
+                            target: { name: 'state', value }
+                          } as React.ChangeEvent<HTMLSelectElement>)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AL">Alabama</SelectItem>
+                          <SelectItem value="AK">Alaska</SelectItem>
+                          <SelectItem value="AZ">Arizona</SelectItem>
+                          <SelectItem value="AR">Arkansas</SelectItem>
+                          <SelectItem value="CA">California</SelectItem>
+                          <SelectItem value="CO">Colorado</SelectItem>
+                          <SelectItem value="CT">Connecticut</SelectItem>
+                          <SelectItem value="DE">Delaware</SelectItem>
+                          <SelectItem value="FL">Florida</SelectItem>
+                          <SelectItem value="GA">Georgia</SelectItem>
+                          <SelectItem value="HI">Hawaii</SelectItem>
+                          <SelectItem value="ID">Idaho</SelectItem>
+                          <SelectItem value="IL">Illinois</SelectItem>
+                          <SelectItem value="IN">Indiana</SelectItem>
+                          <SelectItem value="IA">Iowa</SelectItem>
+                          <SelectItem value="KS">Kansas</SelectItem>
+                          <SelectItem value="KY">Kentucky</SelectItem>
+                          <SelectItem value="LA">Louisiana</SelectItem>
+                          <SelectItem value="ME">Maine</SelectItem>
+                          <SelectItem value="MD">Maryland</SelectItem>
+                          <SelectItem value="MA">Massachusetts</SelectItem>
+                          <SelectItem value="MI">Michigan</SelectItem>
+                          <SelectItem value="MN">Minnesota</SelectItem>
+                          <SelectItem value="MS">Mississippi</SelectItem>
+                          <SelectItem value="MO">Missouri</SelectItem>
+                          <SelectItem value="MT">Montana</SelectItem>
+                          <SelectItem value="NE">Nebraska</SelectItem>
+                          <SelectItem value="NV">Nevada</SelectItem>
+                          <SelectItem value="NH">New Hampshire</SelectItem>
+                          <SelectItem value="NJ">New Jersey</SelectItem>
+                          <SelectItem value="NM">New Mexico</SelectItem>
+                          <SelectItem value="NY">New York</SelectItem>
+                          <SelectItem value="NC">North Carolina</SelectItem>
+                          <SelectItem value="ND">North Dakota</SelectItem>
+                          <SelectItem value="OH">Ohio</SelectItem>
+                          <SelectItem value="OK">Oklahoma</SelectItem>
+                          <SelectItem value="OR">Oregon</SelectItem>
+                          <SelectItem value="PA">Pennsylvania</SelectItem>
+                          <SelectItem value="RI">Rhode Island</SelectItem>
+                          <SelectItem value="SC">South Carolina</SelectItem>
+                          <SelectItem value="SD">South Dakota</SelectItem>
+                          <SelectItem value="TN">Tennessee</SelectItem>
+                          <SelectItem value="TX">Texas</SelectItem>
+                          <SelectItem value="UT">Utah</SelectItem>
+                          <SelectItem value="VT">Vermont</SelectItem>
+                          <SelectItem value="VA">Virginia</SelectItem>
+                          <SelectItem value="WA">Washington</SelectItem>
+                          <SelectItem value="WV">West Virginia</SelectItem>
+                          <SelectItem value="WI">Wisconsin</SelectItem>
+                          <SelectItem value="WY">Wyoming</SelectItem>
+                          <SelectItem value="DC">District of Columbia</SelectItem>
+                          <SelectItem value="PR">Puerto Rico</SelectItem>
+                          {/* Add international options for Mexican events */}
+                          {locale === 'es' && (
+                            <>
+                              <SelectItem value="MX">Mexico</SelectItem>
+                              <SelectItem value="INTL">Other International</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+
+
+
+
+                </div>
+
+
                 {/* Coach Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Coach Information</h3>
@@ -779,18 +1020,192 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                   </div>
                 </div>
 
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Fighter Record</h3>
+
+                  {/* Muay Thai Record */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Muay Thai Record</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="mt_win">Wins</Label>
+                        <Input
+                          id="mt_win"
+                          name="mt_win"
+                          type="number"
+                          min="0"
+                          value={formData.mt_win}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="mt_loss">Losses</Label>
+                        <Input
+                          id="mt_loss"
+                          name="mt_loss"
+                          type="number"
+                          min="0"
+                          value={formData.mt_loss}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Boxing Record */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Boxing Record</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="boxing_win">Wins</Label>
+                        <Input
+                          id="boxing_win"
+                          name="boxing_win"
+                          type="number"
+                          min="0"
+                          value={formData.boxing_win}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="boxing_loss">Losses</Label>
+                        <Input
+                          id="boxing_loss"
+                          name="boxing_loss"
+                          type="number"
+                          min="0"
+                          value={formData.boxing_loss}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* MMA Record */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">MMA Record</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="mma_win">Wins</Label>
+                        <Input
+                          id="mma_win"
+                          name="mma_win"
+                          type="number"
+                          min="0"
+                          value={formData.mma_win}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="mma_loss">Losses</Label>
+                        <Input
+                          id="mma_loss"
+                          name="mma_loss"
+                          type="number"
+                          min="0"
+                          value={formData.mma_loss}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Point Muay Thai Record */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Point Muay Thai Record</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="pmt_win">Wins</Label>
+                        <Input
+                          id="pmt_win"
+                          name="pmt_win"
+                          type="number"
+                          min="0"
+                          value={formData.pmt_win}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="pmt_loss">Losses</Label>
+                        <Input
+                          id="pmt_loss"
+                          name="pmt_loss"
+                          type="number"
+                          min="0"
+                          value={formData.pmt_loss}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+              
+
+                  {/* Experience Level */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Experience Level</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="years_exp">Years of Experience</Label>
+                        <Select
+                          name="years_exp"
+                          value={formData.years_exp.toString()}
+                          onValueChange={(value) =>
+                            handleInputChange({
+                              target: { name: 'years_exp', value }
+                            } as React.ChangeEvent<HTMLSelectElement>)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select years" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">{formLabels.underYear}</SelectItem>
+                            <SelectItem value="1">1 Year</SelectItem>
+                            <SelectItem value="2">2 Years</SelectItem>
+                            <SelectItem value="3">3 Years</SelectItem>
+                            <SelectItem value="4">4 Years</SelectItem>
+                            <SelectItem value="5">5+ Years</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="ammy">Amateur Status</Label>
+                        <Select
+                          name="ammy"
+                          value={formData.ammy.toString()}
+                          onValueChange={(value) =>
+                            handleInputChange({
+                              target: { name: 'ammy', value }
+                            } as React.ChangeEvent<HTMLSelectElement>)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Amateur</SelectItem>
+                            <SelectItem value="0">Professional</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+
                 {/* Generated Fields */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Generated Information</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Age</Label>
-                      <div className="text-2xl font-bold">{formData.age}</div>
-                    </div>
+
+
                     <div className="space-y-2">
                       <Label>Fighter ID</Label>
                       <Input
-                        value={formData.fighterId}
+                        value={formData.fighter_id}
                         readOnly
                         className="bg-muted"
                       />

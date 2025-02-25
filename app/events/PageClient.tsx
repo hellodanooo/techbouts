@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { EventType } from '../../utils/types';
 
 import MonthTable from '../../components/MonthTable';
-import AddPromoter from '@/components/AddPromoter';
+import AddPromoter from '@/components/AddEditPromoter';
 import AddEventForm from '@/components/AddEventForm';
 
 import { useAuth } from '@/context/AuthContext';

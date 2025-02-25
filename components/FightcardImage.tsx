@@ -50,7 +50,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
       <div>{fighter.first} {fighter.last}</div>
       <div>{fighter.gym}</div>
       <div>{fighter.weightclass} lbs | {fighter.age} yrs | {fighter.gender}</div>
-      <div>[{fighter.win}-{fighter.loss}] {fighter.result || ''}</div>
+      <div>[{fighter.mt_win}-{fighter.mt_win}] {fighter.result || ''}</div>
     </div>
   );
 
@@ -123,7 +123,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
       <div>${fighter.first} ${fighter.last}</div>
       <div>${fighter.gym}</div>
       <div>${fighter.weightclass} lbs | ${fighter.age} yrs | ${fighter.gender}</div>
-      <div>[${fighter.win}-${fighter.loss}] ${fighter.result || ''}</div>
+      <div>[${fighter.mt_win}-${fighter.mt_loss}] ${fighter.result || ''}</div>
     </div>
   `;
 

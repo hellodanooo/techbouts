@@ -2,12 +2,9 @@ import React from 'react';
 import { Metadata } from 'next';
 import YearSelector from '@/components/selectors/YearSelector';
 import FighterSearchTable from '@/components/tables/FighterSearchTable';
-import { fetchPMTFighters, Fighter } from '@/utils/records/fetchFighters';
-import {fetchTechBoutsFighters} from '@/utils/records/fetchFighters';
-//import {gatherPuristRosters} from '@/utils/records/gatherPuristRosters';
-
-
-
+import { fetchPMTFighters } from '@/utils/records/fetchFighters';
+import { fetchTechBoutsFighters } from '@/utils/records/fetchFighters';
+import { FullContactFighter, PmtFighterRecord } from '@/utils/types';
 import Image from 'next/image';
 
 export async function generateMetadata(props: { 
@@ -16,30 +13,21 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const sanctioning = (await props.params).sanctioning.toLowerCase();
   const searchParams = await props.searchParams;
+  let fighterCount = 0;
 
-  let fighters: Fighter[] = [];
   if (sanctioning === 'pmt') {
     const year = searchParams.year || '2024';
-
-    fighters = await fetchPMTFighters(year);
-
+    const fighters = await fetchPMTFighters(year);
+    fighterCount = fighters.length;
   } else if (sanctioning === 'ikf') {
-
-   console.log("Metadata sanctioning IKF: Fetching fighters");
-     fighters = await fetchTechBoutsFighters();
-    //fighters = await gatherPuristRosters();
-console.log("Metadata sanctioning IKF Fighters", fighters);
-  } else {
-    return {
-      title: 'Invalid Sanctioning Body',
-      description: 'Invalid sanctioning body specified.',
-    };
+    const fighters = await fetchTechBoutsFighters();
+    fighterCount = fighters.length;
   }
 
   const sanctioningUpper = sanctioning.toUpperCase();
   return {
-    title: `${sanctioningUpper} Fighter Database - ${fighters.length} Fighters`,
-    description: `Explore our ${sanctioningUpper} fighter database with ${fighters.length} fighters grouped by weight class, gym, and more.`,
+    title: `${sanctioningUpper} Fighter Database - ${fighterCount} Fighters`,
+    description: `Explore our ${sanctioningUpper} fighter database with ${fighterCount} fighters grouped by weight class, gym, and more.`,
   };
 }
 
@@ -49,7 +37,8 @@ export default async function FighterDatabase(props: {
 }) {
   const sanctioning = (await props.params).sanctioning.toLowerCase();
   const searchParams = await props.searchParams;
-  let fighters: Fighter[] = [];
+  let pmtFighters: PmtFighterRecord[] = [];
+  let techBoutsFighters: FullContactFighter[] = [];
   let selectedYear = '2024';
 
   if (!['pmt', 'ikf'].includes(sanctioning)) {
@@ -58,16 +47,12 @@ export default async function FighterDatabase(props: {
 
   if (sanctioning === 'pmt') {
     selectedYear = searchParams.year || '2024';
-    fighters = await fetchPMTFighters(selectedYear);
+    pmtFighters = await fetchPMTFighters(selectedYear);
   } else if (sanctioning === 'ikf') {
-  
-      fighters = await fetchTechBoutsFighters();
-
-    //fighters = await gatherPuristRosters();
-
-  } else {
-    return <div>Invalid sanctioning body specified</div>
+    techBoutsFighters = await fetchTechBoutsFighters();
   }
+
+  const fighterCount = sanctioning === 'pmt' ? pmtFighters.length : techBoutsFighters.length;
 
   return (
     <div className="w-full flex flex-col items-center space-y-6">
@@ -93,24 +78,32 @@ export default async function FighterDatabase(props: {
         />
       )}
 
-      <YearSelector />
+      {sanctioning === 'pmt' && <YearSelector />}
       
       <div className="text-center">
         {sanctioning === 'pmt' && (
-          <p>Total Fighters for {selectedYear}: {fighters.length}</p>
+          <p>Total Fighters for {selectedYear}: {fighterCount}</p>
         )}
         {sanctioning === 'ikf' && (
-          <p>Total Fighters: {fighters.length}</p>
+          <p>Total Fighters: {fighterCount}</p>
         )}
       </div>
 
       <div className="w-full overflow-x-auto">
-        <FighterSearchTable 
-          initialFighters={fighters} 
-          sanctioning={sanctioning} 
-          year={selectedYear} 
-        />
+        {sanctioning === 'pmt' ? (
+          <FighterSearchTable 
+            initialFighters={pmtFighters} 
+            sanctioning={sanctioning} 
+            year={selectedYear} 
+          />
+        ) : (
+          <FighterSearchTable 
+            initialFighters={techBoutsFighters} 
+            sanctioning={sanctioning} 
+            year={selectedYear} 
+          />
+        )}
       </div>
     </div>
-);
+  );
 }

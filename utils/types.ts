@@ -91,87 +91,73 @@ export interface PmtFighterRecord {
 
 export interface FullContactFighter {
   // Basic Information
-  pmt_id: string;
   id: string;
   first: string;
   last: string;
   dob: string;
   age: number;
   gender: string;
-  email?: string;
-  
+  email: string;
   // Gym Information
   gym: string;
   gym_id: string;
-  coach?: string;
-  coach_email?: string;
-  coach_name?: string;
-  coach_phone?: string;
-  
+  coach: string;
+  coach_email: string;
+  coach_name: string;
+  coach_phone: string;
   // Location Information
   state: string;
   city?: string;
   address?: string;
   comp_city?: string;
   comp_state?: string;
-  
   // Physical Information
-  weighin: number;
+  weighin?: number;
   weightclass: number;
-  height?: number;
-  
+  height: number;
   // Record
-  wins: number;
-  losses: number;
-  win: number;
-  loss: number;
-  tournament_wins?: number;
-  tournament_losses?: number;
-  ikf_wins: number;
-  ikf_losses: number;
-  nc?: number;
-  dq?: number;
-  ammy: number;
-  
+  mt_win: number;
+  mt_loss: number;
+  boxing_win: number;
+  boxing_loss: number;
+  mma_win: number;
+  mma_loss: number;
+  pmt_win: number;
+  pmt_loss: number;
+  nc: number;
+  dq: number;
   // Event Information
   event?: string;
   eventDocId?: string;
-  bout: number;
+  bout?: number;
   bout_type?: string;
   boutid?: string;
   boutmat?: string;
-  mat: number;
-  bracket: number;
-  day: number;
-  fighternum: string;
+  mat?: number;
+  bracket?: number;
+  day?: number;
+  fighternum?: string;
   opponent_id?: string;
   result?: string;
   championship_result?: string;
-  
   // Experience & Classification
   years_exp: number;
   class: 'A' | 'B' | 'C';
   age_gender: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
   confirmed: boolean;
-  
-  // Skills Rating
-  legkick: number;
-  bodykick: number;
-  headkick: number;
-  clinch: number;
-  defense: number;
-  kicks: number;
-  footwork: number;
-  boxing: number;
-  knees: number;
-  ringawareness: number;
-  
   // Media & Documentation
   photo?: string;
-  photo_package: boolean;
+  photo_package?: boolean;
   docId: string;
   fighter_id: string;
   website?: string;
+  date_registered?: string;
+  payment_info?: {
+    paymentIntentId: string | '';
+    paymentAmount: number | 0;
+    paymentCurrency: string | '';
+  };
+  eventIds?: string[];
 }
 
 export interface EventType {
@@ -233,7 +219,7 @@ export interface EventType {
   coachRegEnabled: boolean;
 }
 
-export interface Promoter  {
+export interface Promoter {
   city: string;
   email: string;
   firstName: string;
@@ -247,6 +233,10 @@ export interface Promoter  {
   createdAt?: string;
   promotion?: string;
   logo?: string;
+  website?: string;
+  facebook: string;
+  instagram: string;
+
 
 };
 
@@ -304,7 +294,7 @@ export interface ResultsFighter extends BaseFighter {
   docId: string;
   eventDocId: string;
   gym_id: string;
-  
+
   // Bout specific information
   weighin: number;
   result: string;
@@ -315,20 +305,20 @@ export interface ResultsFighter extends BaseFighter {
   bout: number;
   mat: number;
   bout_type: string;
-  
+
   // Location information
   comp_city: string;
   comp_state: string;
   street1?: string;
   state: string;
   post_code?: string;
-  
+
   // Contact information
   phone?: string;
   coach_name: string;
   trainer?: string;
-  
-  
+
+
   // Competition details
   fighternum: 'fighter1' | 'fighter2' | 'unmatched' | 'bye';
   ammy: number;
@@ -341,7 +331,7 @@ export interface ResultsFighter extends BaseFighter {
   confirmed: boolean;
   day: number;
   age_gender: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
-  
+
   // Skill metrics
   legkick: number;
   bodykick: number;
@@ -353,7 +343,7 @@ export interface ResultsFighter extends BaseFighter {
   boxing: number;
   knees: number;
   ringawareness: number;
-  
+
   // Additional information
   photo?: string;
   other?: string;
@@ -387,7 +377,7 @@ export interface FighterProfile {
 export interface FighterDisplay extends BaseFighter {
   fighter_id: string;
   photo?: string;
- bouts?: {
+  bouts?: {
     result: string;
     opponentName: string;
     date: string;
@@ -402,7 +392,7 @@ export interface FighterDisplay extends BaseFighter {
 //   gym: string;
 //   dob: string;
 //   gender: string;
- 
+
 //   weightclass: number;
 //   mtp_id: string;
 //   email: string;
@@ -413,7 +403,7 @@ export interface FighterDisplay extends BaseFighter {
 //   gymlogo: string;
 //   gymwebsite: string;
 //   gymaddress: string;
-  
+
 //   height: number;
 //   heightFoot?: number;
 //   heightInch?: number;
@@ -430,7 +420,7 @@ export interface FighterDisplay extends BaseFighter {
 //   docId: string;
 //   boutNum?:number;
 //   confirmed?:boolean;
-  
+
 //   gym_id:string;
 //   fighterId?:string;
 //   titleFight?:boolean;
@@ -454,36 +444,36 @@ export interface FighterDisplay extends BaseFighter {
 
 //   } 
 
-  export type GymProfile = {
-    gym: string;
-    win: number;
-    loss: number;
-    logo: string;
-    website: string;
-    address: string;
-    city: string;
-    state: string;
-    docId?: string;
-    boysWin: number;
-    boysLoss: number;
-    girlsWin: number;
-    girlsLoss: number;
-    menWin: number;
-    menLoss: number;
-    womanLoss: number;
-    womanWin: number;
-    latitude: number;
-    longitude: number;
-    id: string;
-    suspended: boolean;
-    suspensionLength: number;
-    suspensionDate: string;
-    suspensionReason: string;
-    athletes: ResultsFighter[];
-    coach_name?: string;
-    coach_phone?: string;
-    coach_email: string;
-  }
+export type GymProfile = {
+  gym: string;
+  win: number;
+  loss: number;
+  logo: string;
+  website: string;
+  address: string;
+  city: string;
+  state: string;
+  docId?: string;
+  boysWin: number;
+  boysLoss: number;
+  girlsWin: number;
+  girlsLoss: number;
+  menWin: number;
+  menLoss: number;
+  womanLoss: number;
+  womanWin: number;
+  latitude: number;
+  longitude: number;
+  id: string;
+  suspended: boolean;
+  suspensionLength: number;
+  suspensionDate: string;
+  suspensionReason: string;
+  athletes: ResultsFighter[];
+  coach_name?: string;
+  coach_phone?: string;
+  coach_email: string;
+}
 
 
 export interface FighterFormData {

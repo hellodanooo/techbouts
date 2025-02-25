@@ -34,28 +34,11 @@ export async function middleware(request: NextRequest) {
     
     return response;
   }
-  
-  // Handle authentication for promoter routes
-  if (path.startsWith('/promoter/')) {
-    try {
-      const session = request.cookies.get('session');
-      
-      if (!session) {
-        const url = new URL('/auth/login', request.url);
-        url.searchParams.set('callbackUrl', path);
-        return NextResponse.redirect(url);
-      }
-    } catch (error) {
-      console.error('Auth middleware error:', error);
-      const url = new URL('/auth/login', request.url);
-      return NextResponse.redirect(url);
-    }
-  } 
-  
+    
   return NextResponse.next();
 }
 
 // Update the matcher to include both API and promoter routes
 export const config = {
-  matcher: ['/api/:path*', '/promoter/:path*'],
+  matcher: ['/api/:path*',],
 };

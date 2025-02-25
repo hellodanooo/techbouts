@@ -5,7 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import FighterTable from '@/components/tables/FightersTable';
+import PmtFighterTable from '@/components/tables/PmtFighterTable';
 import { Input } from "@/components/ui/input";
+import { FullContactFighter, PmtFighterRecord } from '@/utils/types';
 
 
 // import { db } from '@/lib/firebase_techbouts/config';
@@ -19,18 +21,17 @@ import { Input } from "@/components/ui/input";
 //   getDocs
 // } from 'firebase/firestore';
 
-import { Fighter } from '@/utils/records/fetchFighters';
 
-interface MultiTermSearchProps {
-  initialFighters: Fighter[];
+interface FighterSearchProps {
+  initialFighters: PmtFighterRecord[] | FullContactFighter[];
   sanctioning: string;
   year: string;
 }
 
-const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, sanctioning, year }) => {
+const FighterSearchTable: React.FC<FighterSearchProps> = ({ initialFighters, sanctioning, year }) => {
   const [searchInput, setSearchInput] = useState('');
   const [terms, setTerms] = useState<string[]>([]);
-  const [fighters, setFighters] = useState<Fighter[]>(initialFighters);
+  const [fighters, setFighters] = useState<PmtFighterRecord[] | FullContactFighter[]>(initialFighters);
   const [loading, setLoading] = useState(false);
 
   // const [uploadStatus, setUploadStatus] = useState({
@@ -111,6 +112,14 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
   //             // Prepare fighter data
   //             const fighterData = {
   //               ...fighter,
+  //               mt_win: fighter.win ? fighter.win : 0,
+  //               mt_loss: fighter.loss ? fighter.loss : 0,
+  //               first: fighter.first ? fighter.first.toUpperCase() : '',
+  //               last: fighter.last ? fighter.last.toUpperCase() : '',
+  //               gym: fighter.gym ? fighter.gym.toUpperCase() : '',
+  //               gender: fighter.gender ? fighter.gender.toUpperCase() : '',
+  //               email: fighter.email ? fighter.email.toLowerCase() : '', 
+  //               coach_email: fighter.coach_email ? fighter.coach_email.toLowerCase() : '',
   //               docId: fighter.fighter_id, // Ensure docId matches fighter_id
   //               updated_at: new Date().toISOString(),
   //               created_at: new Date().toISOString()
@@ -195,33 +204,7 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
         <p>Loading...</p>
       ) : (
         <div>
-          
-          {/* <div className="mb-4">
-            <button
-              onClick={handleSendToTechBouts}
-              disabled={uploadStatus.isUploading}
-              className={`px-4 py-2 rounded text-white ${
-                uploadStatus.isUploading 
-                  ? 'bg-gray-400' 
-                  : 'bg-blue-500 hover:bg-blue-600'
-              }`}
-            >
-              {uploadStatus.isUploading ? 'Uploading...' : 'Send To TechBouts Firebase'}
-            </button>
-            
-            {uploadStatus.message && (
-              <div className={`mt-2 p-2 rounded ${
-                uploadStatus.message.includes('failed') 
-                  ? 'bg-red-100 text-red-700' 
-                  : 'bg-green-100 text-green-700'
-              }`}>
-                {uploadStatus.message}
-              </div>
-            )}
-          </div> */}
-
-
- <div className="mb-4">
+          <div className="mb-4">
             <Input
               placeholder="Search fighters..."
               value={searchInput}
@@ -229,11 +212,18 @@ const FighterSearchTable: React.FC<MultiTermSearchProps> = ({ initialFighters, s
               className="w-full"
             />
           </div>
-          <FighterTable fighters={fighters} />
+          
+          {/* Render the appropriate table based on the sanctioning body */}
+          {sanctioning === 'pmt' ? (
+            <PmtFighterTable fighters={fighters as PmtFighterRecord[]} />
+          ) : (
+            <FighterTable fighters={fighters as FullContactFighter[]} />
+          )}
         </div>
       )}
     </div>
   );
 };
+
 
 export default FighterSearchTable;

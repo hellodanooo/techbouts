@@ -2,41 +2,13 @@
 import { collection, getDocs, query, limit, where } from 'firebase/firestore';
 import { db as pmtDb } from '@/lib/firebase_pmt/config';
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
+import { FullContactFighter, PmtFighterRecord } from '../types';
 
-export type Fighter = {
-  address: string;
-  age: number;
-  city: string;
-  coach: string;
-  coach_phone: string;
-  coach_email: string;
-  email: string;
-  dob: string;
-  docId: string;
-  fighter_id: string;
-  first: string;
-  gender: string;
-  gym: string;
-  gym_id: string;
-  height: number;
-  last: string;
-  losses: number;
-  mtp_id: string;
-  photo: string;
-  state: string;
-  website: string;
-  weightclass: number;
-  wins: string | number;
-  mma_win?: number;
-  mma_loss?: number;
-  
-};
-
-export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
+export const fetchPMTFighters = async (year: string): Promise<PmtFighterRecord[]> => {
   try {
     const fightersRef = collection(pmtDb, `records_pmt_${year}`);
     let threshold = 5;
-    let fighters: Fighter[] = [];
+    let fighters: PmtFighterRecord[] = [];
 
     // Loop, relaxing the wins requirement until we have at least 30 fighters (or threshold hits 0)
     while (threshold >= 0) {
@@ -56,8 +28,10 @@ export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
           gym: data.gym,
           email: data.email,
           weightclass: data.weightclasses[0], // use the first weightclass as primary
+          win: data.win,
           wins: data.wins,
           losses: data.losses,
+          loss: data.loss,
           address: '',
           age: data.age,
           city: '',
@@ -69,10 +43,10 @@ export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
           gender: data.gender || '',
           gym_id: '',
           height: 0,
-          mtp_id: '',
           photo: '',
           state: '',
           website: '',
+          pmt_id: data.pmt_id,
         };
       });
 
@@ -89,7 +63,7 @@ export const fetchPMTFighters = async (year: string): Promise<Fighter[]> => {
   }
 };
 
-export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
+export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> => {
   try {
     console.log('Starting to fetch TechBouts fighters');
     const fightersRef = collection(techboutsDb, 'techbouts_fighters');
@@ -99,7 +73,7 @@ export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
     const fightersSnapshot = await getDocs(fightersQuery);
     console.log('Query completed. Number of docs:', fightersSnapshot.size);
 
-    const fighters: Fighter[] = [];
+    const fighters: FullContactFighter[] = [];
     
     fightersSnapshot.forEach((doc) => {
       const data = doc.data();
@@ -107,19 +81,33 @@ export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
       console.log('Document data:', data);
       
       // Convert the document data to Fighter type
-      const fighter: Fighter = {
+      const fighter: FullContactFighter = {
         fighter_id: data.fighter_id || doc.id,
         first: data.first || '',
         last: data.last || '',
         gym: data.gym || '',
         email: data.email || '',
         weightclass: Number(data.weightclass) || 0,
-        wins: data.win || 0,
-        losses: data.loss || 0,
+        age_gender: data.age_gender || '',
+        // record
+        mt_win: data.win || 0,
+        mt_loss: data.loss || 0,
+        boxing_win: data.boxing_win || 0,
+        boxing_loss: data.boxing_loss || 0,
+        mma_win: data.mmawin || 0,
+        mma_loss: data.mmaloss || 0,
+        pmt_win: data.pmt_win || 0,
+        pmt_loss: data.pmt_loss || 0,
+        nc: data.nc || 0,
+        dq: data.dq || 0,
+        years_exp: data.years_exp || 0,
+        class: data.class || '',
+        // additional fields
         address: data.address || '',
         age: Number(data.age) || 0,
         city: data.city || '',
-        coach: data.coach_name || '',  // Updated to match the field name in screenshot
+        coach: data.coach_name || '',
+        coach_name: data.coach_name || '',
         coach_phone: data.coach_phone || '',
         coach_email: data.coach_email || '',
         dob: data.dob || '',
@@ -127,12 +115,13 @@ export const fetchTechBoutsFighters = async (): Promise<Fighter[]> => {
         gender: data.gender || '',
         gym_id: data.gym_id || '',
         height: Number(data.height) || 0,
-        mtp_id: data.mtp_id || '',
+  
         photo: data.photo || '',
         state: data.state || '',
         website: data.website || '',
-        mma_win: data.mma_win || 0,
-        mma_loss: data.mma_loss || 0,
+        id: data.id || '',
+        confirmed: data.confirmed || false,
+     
       };
       
       fighters.push(fighter);

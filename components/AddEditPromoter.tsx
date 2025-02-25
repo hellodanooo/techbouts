@@ -4,13 +4,17 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase_techbouts/config';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import SanctionPopup from '../components/popups/One'
+import SanctionPopup from './popups/One'
 import { Promoter } from '../utils/types';
 import LogoUpload from './LogoUpload';
+import { useAuth } from '@/context/AuthContext';
 
-interface AddPromoterProps {
+interface AddEditPromoterProps {
   onClose: () => void;
   isAdmin?: boolean;
+  add?: boolean;
+  edit?: boolean;
+  promoterData?: Promoter;
 }
 
 const initialFormData: Promoter = {
@@ -24,6 +28,10 @@ const initialFormData: Promoter = {
   promoterId: '',
   promotionName: '',
   sanctioning: [],
+  website: '',
+  logo: '',
+  instagram: '',
+  facebook: '',
   createdAt: new Date().toISOString()
 };
 
@@ -36,26 +44,53 @@ const SANCTIONING_OPTIONS = [
 
 ];
 
-const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) => {
-  const [formData, setFormData] = useState<Promoter>(initialFormData);
+const AddEditPromoter: React.FC<AddEditPromoterProps> = ({ 
+  onClose, 
+  isAdmin = false, 
+  edit = false,
+  promoterData
+}) => {
+  const { user } = useAuth();
+
+  const [formData, setFormData] = useState<Promoter>(
+    // Initialize with promoterData if available, otherwise use initialFormData
+    edit && promoterData ? {
+      ...initialFormData,
+      ...promoterData,
+      // Ensure all required fields are present with fallbacks
+      firstName: promoterData.firstName || '',
+      lastName: promoterData.lastName || '',
+      name: promoterData.name || promoterData.promotionName || '',
+      city: promoterData.city || '',
+      state: promoterData.state || '',
+      phone: promoterData.phone || '',
+      email: promoterData.email || '',
+      promoterId: promoterData.promoterId || '',
+      promotionName: promoterData.promotionName || '',
+    } : initialFormData
+  );
+  
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [userEmail] = useState('');
-  const [selectedSanctioning, setSelectedSanctioning] = useState<string[]>([]);
+  const [selectedSanctioning, setSelectedSanctioning] = useState<string[]>(
+    edit && promoterData?.sanctioning ? promoterData.sanctioning : []
+  );
   const [sanctionPopupOpen, setSanctionPopupOpen] = useState(false);
   const [currentSanctioning, setCurrentSanctioning] = useState<string>('');
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string>('');
+  const [logoUrl, setLogoUrl] = useState<string>(
+    edit && promoterData?.logo ? promoterData.logo : ''
+  );
+
+  useEffect(() => {
+    if (isAdmin || (user?.email && promoterData?.email && user.email === promoterData.email)) {
+      setAuthenticated(true);
+    }
+  }, [isAdmin, user, promoterData]);
 
   const handleLogoUploadSuccess = (downloadUrl: string) => {
     setLogoUrl(downloadUrl);
   };
-
-  useEffect(() => {
-    if (isAdmin) {
-      setAuthenticated(true);
-    }
-  }, [isAdmin]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -77,7 +112,6 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
     setSelectedSanctioning(prev => prev.filter(s => s !== sanctioningToRemove));
   };
 
-
   const checkPromotionExists = async (promotionName: string, promoterId: string): Promise<boolean> => {
     try {
       const response = await fetch('/api/promoters');
@@ -87,9 +121,12 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
       
       const data = await response.json();
       
-      return data.promoters.some((promoter: Promoter) => 
-        promoter.promoterId === promoterId || 
-        promoter.promotionName?.toLowerCase() === promotionName.toLowerCase()
+      return data.promoters.some((p: Promoter) => 
+        // In edit mode, we want to exclude the current promoter from the check
+        p.promoterId !== promoterData?.promoterId && (
+          p.promoterId === promoterId || 
+          p.promotionName?.toLowerCase() === promotionName.toLowerCase()
+        )
       );
     } catch (error) {
       console.error('Error checking promotion existence:', error);
@@ -99,26 +136,30 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
 
   const handleSubmit = async () => {
     if (!authenticated) {
-      alert('Please authenticate with Google before submitting the form.');
+      alert('You are not authorized to perform this action.');
       return;
     }
 
     try {
       setLoading(true);
 
-      const promoterId = formData.promotionName.toLowerCase().replace(/\s+/g, '');
+      // If editing, use the existing promoterId, otherwise generate a new one
+      const promoterId = edit ? formData.promoterId : formData.promotionName.toLowerCase().replace(/\s+/g, '');
       
-      const exists = await checkPromotionExists(formData.promotionName, promoterId);
-      if (exists) {
-        alert('This Promotion Name Already Exists');
-        setLoading(false);
-        return;
+      // Check if promotion exists (only for new promoters)
+      if (!edit) {
+        const exists = await checkPromotionExists(formData.promotionName, promoterId);
+        if (exists) {
+          alert('This Promotion Name Already Exists');
+          setLoading(false);
+          return;
+        }
       }
 
       const promoterData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        name: formData.promotionName,
+        name: formData.promotionName,  // Keep the name field for compatibility
         city: formData.city,
         state: formData.state,
         phone: formData.phone,
@@ -126,41 +167,59 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
         promoterId: promoterId,
         promotionName: formData.promotionName,
         sanctioning: selectedSanctioning,
-        logo: logoUrl, // Add the logo URL to the data
-        createdAt: new Date().toISOString()
+        logo: logoUrl,
+        website: formData.website,
+        instagram: formData.instagram,
+        facebook: formData.facebook,
+        // Only update createdAt if creating a new record
+        ...(edit ? {} : { createdAt: new Date().toISOString() }),
+        // Add updatedAt for tracking changes
+        updatedAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, 'promotions', promoterId), promoterData);
+      // Update the document in Firestore
+      await setDoc(doc(db, 'promotions', promoterId), promoterData, { merge: true });
 
+      // Update the JSON document that contains all promoters
       const jsonDocRef = doc(db, 'promotions', 'promotions_json');
       const jsonDocSnap = await getDoc(jsonDocRef);
 
       if (jsonDocSnap.exists()) {
         const jsonData = jsonDocSnap.data();
-        const updatedPromoters = jsonData.promoters ? [...jsonData.promoters, promoterData] : [promoterData];
+        let updatedPromoters = [];
+        
+        if (edit) {
+          // Update existing promoter in the array
+          updatedPromoters = jsonData.promoters.map((p: Promoter) => 
+            p.promoterId === promoterId ? { ...p, ...promoterData } : p
+          );
+        } else {
+          // Add new promoter to the array
+          updatedPromoters = jsonData.promoters ? [...jsonData.promoters, promoterData] : [promoterData];
+        }
+        
         await updateDoc(jsonDocRef, { promoters: updatedPromoters });
-      } else {
+      } else if (!edit) {
+        // Only create a new JSON document if it doesn't exist and we're adding a new promoter
         await setDoc(jsonDocRef, { promoters: [promoterData] });
       }
 
-      alert('Promotion created successfully!');
+      alert(`Promotion ${edit ? 'updated' : 'created'} successfully!`);
       onClose();
     } catch (error) {
-      console.error('Error creating promotion:', error);
-      alert('Failed to create promotion.');
+      console.error(`Error ${edit ? 'updating' : 'creating'} promotion:`, error);
+      alert(`Failed to ${edit ? 'update' : 'create'} promotion.`);
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded shadow-md w-full max-w-lg max-h-screen overflow-y-auto relative">
-        <h2 className="text-xl font-bold mb-4">Create Promotion</h2>
+        <h2 className="text-xl font-bold mb-4">{edit ? 'Edit' : 'Create'} Promotion</h2>
         <div className="space-y-4">
-          {authenticated && <p className="text-green-500">Signed in as: {userEmail}</p>}
-          {isAdmin && <p className="text-green-500">Admin {userEmail}</p>}
+        
           
           <input
             type="text"
@@ -168,7 +227,7 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
             className="w-full p-2 border rounded"
             value={formData.promotionName}
             onChange={(e) => handleInputChange('promotionName', e.target.value)}
-            disabled={!authenticated}
+            disabled={!authenticated || (edit && !isAdmin)} // Only admin can change promotion name in edit mode
           />
 
           <input
@@ -220,8 +279,7 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
             disabled={!authenticated}
           />
 
-
-<div className="space-y-2">
+          <div className="space-y-2">
             <select
               className="w-full p-2 border rounded"
               onChange={handleSanctioningSelect}
@@ -251,12 +309,50 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
                   <button
                     onClick={() => handleRemoveSanctioning(sanction)}
                     className="text-blue-600 hover:text-blue-800"
+                    disabled={!authenticated}
                   >
                     ×
                   </button>
                 </div>
               ))}
             </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold">Website</label>
+              <input
+                type="text"
+                placeholder="Website"
+                className="w-full p-2 border rounded"
+                value={formData.website}
+                onChange={(e) => handleInputChange('website', e.target.value)}
+                disabled={!authenticated}
+              />
+              </div>
+              <div className="space-y-2">
+              <label className="block text-sm font-semibold">Instagram</label>
+              <input
+                type="text"
+                placeholder="Instagram"
+                className="w-full p-2 border rounded"
+                value={formData.instagram}
+                onChange={(e) => handleInputChange('instagram', e.target.value)}
+                disabled={!authenticated}
+              />
+              </div>
+              <div className="space-y-2">
+              <label className="block text-sm font-semibold">Facebook</label>
+              <input
+                type="text"
+                placeholder="Facebook"
+                className="w-full p-2 border rounded"
+                value={formData.facebook}
+                onChange={(e) => handleInputChange('facebook', e.target.value)}
+                disabled={!authenticated}
+              />
+              </div>
+
+
+
           </div>
 
           <div className="space-y-2">
@@ -267,17 +363,16 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
                 disabled={!authenticated}
               >
-                Upload Logo
+                {logoUrl ? 'Change Logo' : 'Upload Logo'}
               </button>
               {logoUrl && (
                 <div className="flex items-center gap-2">
                   <img src={logoUrl} alt="Logo Preview" className="w-10 h-10 rounded-full object-cover" />
-                  <span className="text-sm text-green-600">Logo uploaded successfully</span>
+                  <span className="text-sm text-green-600">Logo uploaded</span>
                 </div>
               )}
             </div>
           </div>
-
 
         </div>
         <div className="mt-6 flex justify-end space-x-4">
@@ -294,30 +389,32 @@ const AddPromoter: React.FC<AddPromoterProps> = ({ onClose, isAdmin = false }) =
             }`}
             disabled={loading || !authenticated}
           >
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Saving...' : edit ? 'Update' : 'Save'}
           </button>
         </div>
       </div>
+      
       {sanctionPopupOpen && (
-       <SanctionPopup
-       popUpSource="sanctioningDetails"
-       selectedSanctioning={currentSanctioning}
-       onClose={() => setSanctionPopupOpen(false)}
-     />
+        <SanctionPopup
+          popUpSource="sanctioningDetails"
+          selectedSanctioning={currentSanctioning}
+          onClose={() => setSanctionPopupOpen(false)}
+        />
       )}
 
-{logoUploadOpen && (
+
+
+      {logoUploadOpen && (
         <LogoUpload
-          docId={formData.promotionName.toLowerCase().replace(/\s+/g, '')}
+          docId={formData.promoterId || formData.promotionName.toLowerCase().replace(/\s+/g, '')}
           isOpen={logoUploadOpen}
           onClose={() => setLogoUploadOpen(false)}
           onSuccess={handleLogoUploadSuccess}
           source="promotions"
         />
       )}
-
     </div>
   );
 };
 
-export default AddPromoter;
+export default AddEditPromoter;

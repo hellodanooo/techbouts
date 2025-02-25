@@ -629,7 +629,7 @@ CONFIRMED:
             {fighter.weightclass} lbs<br />
             Age: {fighter.age}<br />
             {fighter.gender}<br />
-            <div>[{fighter.ikf_wins}-{fighter.ikf_losses}]</div>
+            <div>[{fighter.mt_win}-{fighter.mt_loss}]</div>
             {fighter.result || ''}
           </div>
         ) : (
@@ -836,7 +836,7 @@ CONFIRMED:
 const renderBout = (bout: number, fighters: FullContactFighter[]) => {
   const defaultFighter: FullContactFighter = {
     // Basic Information
-    pmt_id: '',
+    fighter_id: '',
     id: 'placeholder',
     first: 'OPEN',
     last: '',
@@ -866,17 +866,18 @@ const renderBout = (bout: number, fighters: FullContactFighter[]) => {
     height: 0,
     
     // Record
-    wins: 0,
-    losses: 0,
-    win: 0,
-    loss: 0,
-    tournament_wins: 0,
-    tournament_losses: 0,
-    ikf_wins: 0,
-    ikf_losses: 0,
+    mt_win: 0,
+    mt_loss: 0,
+    boxing_win: 0,
+    boxing_loss: 0,
+    mma_win: 0,
+    mma_loss: 0,
+    pmt_win: 0,
+    pmt_loss: 0,
+  
     nc: 0,
     dq: 0,
-    ammy: 0,
+ 
     
     // Event Information
     bout: 0,
@@ -896,24 +897,15 @@ const renderBout = (bout: number, fighters: FullContactFighter[]) => {
     age_gender: 'MEN',
     confirmed: false,
     
-    // Skills Rating
-    legkick: 0,
-    bodykick: 0,
-    headkick: 0,
-    clinch: 0,
-    defense: 0,
-    kicks: 0,
-    footwork: 0,
-    boxing: 0,
-    knees: 0,
-    ringawareness: 0,
+  
     
     // Media & Documentation
     photo: '/Icon_grey.png',
     photo_package: false,
     docId: '',
-    fighter_id: '',
-    website: ''
+    website: '',
+
+ 
   };
 
   const displayFighters = fighters.length === 1
@@ -956,7 +948,7 @@ const renderBout = (bout: number, fighters: FullContactFighter[]) => {
                 <p>{fighter.weightclass} lbs</p>
                 <p>Age: {fighter.age}</p>
                 {fighter.gender}<br />
-                <p>[{fighter.win}-{fighter.loss}]</p>
+                <p>[{fighter.mt_win}-{fighter.mt_loss}]</p>
                 <p>{fighter.result || ''}</p>
               </>
             ) : (

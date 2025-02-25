@@ -5,7 +5,7 @@ import { EventType, Promoter } from '../../utils/types';
 import Calendar from './Calendar';
 import MonthTable from '../../components/MonthTable';
 import { useRouter } from 'next/navigation';
-import AddPromoter from '@/components/AddPromoter';
+import AddEditPromoter from '@/components/AddEditPromoter';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import Image from 'next/image';
@@ -100,6 +100,9 @@ const PromoterDashboard = ({
               firstName: '',
               lastName: '',
               phone: '',
+              website: '',
+              facebook: '',
+              instagram: '',
               promotionName: event.promotionName || ''
             }, 'PBSC');
           }
@@ -127,6 +130,9 @@ const PromoterDashboard = ({
               firstName: '',
               lastName: '',
               phone: '',
+              website: '',
+              facebook: '',
+              instagram: '',
               promotionName: event.promotionName || ''
             }, 'PBSC');
           }
@@ -273,9 +279,10 @@ const PromoterDashboard = ({
       )}
 
       {showPromoterModal && (
-        <AddPromoter
+        <AddEditPromoter
           onClose={() => setShowPromoterModal(false)}
           isAdmin={isAdmin}
+          add={true}
         />
       )}
 

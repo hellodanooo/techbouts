@@ -4,44 +4,19 @@ import Image from 'next/image';
 import { Input } from "@/components/ui/input";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { FullContactFighter } from '@/utils/types';
 
 
-type Fighter = {
-  address: string;
-  age: number;
-  city: string;
-  coach: string;
-  coach_phone: string;
-  coach_email: string;
-  email: string;
-  dob: string;
-  docId: string;
-  fighter_id: string;
-  first: string;
-  gender: string;
-  gym: string;
-  gym_id: string;
-  height: number;
-  last: string;
-  losses: number;
-  mtp_id: string;
-  photo: string;
-  state: string;
-  website: string;
-  weightclass: number;
-  wins: string | number;
-  eventIds?: string[];
-};
 
 type FighterTableProps = {
-  fighters: Fighter[];
+  fighters: FullContactFighter[];
   editable?: boolean;
-  onEditFighter?: (fighter: Fighter) => void;
+  onEditFighter?: (fighter: FullContactFighter) => void;
   onDeleteFighter?: (fighterId: string) => void;
 };
 
 type SortConfig = {
-  key: keyof Fighter;
+  key: keyof FullContactFighter;
   direction: 'asc' | 'desc';
 };
 
@@ -74,7 +49,7 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
   }))].sort();  const states = [...new Set(fighters.map(f => f.state || 'Unknown'))].filter(Boolean).sort();
 
   // Handle sorting
-  const handleSort = (key: keyof Fighter) => {
+  const handleSort = (key: keyof FullContactFighter) => {
     setSortConfig(current => ({
       key,
       direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
@@ -111,7 +86,7 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
       });
   }, [fighters, searchTerm, selectedGym, selectedWeightClass, selectedGender, selectedState, sortConfig]);
 
-  const SortIcon = ({ column }: { column: keyof Fighter }) => {
+  const SortIcon = ({ column }: { column: keyof FullContactFighter }) => {
     if (sortConfig.key !== column) return null;
     return sortConfig.direction === 'asc' ? 
       <ChevronUp className="inline w-4 h-4" /> : 
@@ -197,11 +172,11 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
                 Age <SortIcon column="age" />
               </th>
               <th className="p-2">Gender</th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('wins')}>
-                Wins <SortIcon column="wins" />
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('mt_win')}>
+                Wins <SortIcon column="mt_win" />
               </th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('losses')}>
-                Losses <SortIcon column="losses" />
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('mt_win')}>
+                Losses <SortIcon column="mt_loss" />
               </th>
 
            
@@ -230,8 +205,8 @@ const FighterTable: React.FC<FighterTableProps> = ({ fighters, editable, onEditF
       <td key={`gym-${fighter.fighter_id}`} className="p-2">{fighter.gym}</td>
       <td key={`age-${fighter.fighter_id}`} className="p-2">{fighter.age}</td>
       <td key={`gender-${fighter.fighter_id}`} className="p-2">{fighter.gender}</td>
-      <td key={`win-${fighter.fighter_id}`} className="p-2">{fighter.wins}</td>
-      <td key={`loss-${fighter.fighter_id}`} className="p-2">{fighter.losses}</td>
+      <td key={`win-${fighter.fighter_id}`} className="p-2">{fighter.mt_win}</td>
+      <td key={`loss-${fighter.fighter_id}`} className="p-2">{fighter.mt_loss}</td>
       <td key={`coach-${fighter.fighter_id}`} className="p-2">{fighter.coach}</td>
       <td key={`coach_phone-${fighter.fighter_id}`} className="p-2">{fighter.coach_phone}</td>
       <td key={`fighter_id-${fighter.fighter_id}`} className="p-2">{fighter.fighter_id}</td>

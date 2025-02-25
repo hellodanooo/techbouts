@@ -46,6 +46,9 @@ export async function GET(request: Request) {
           sanctioning: promoter.sanctioning,
           state: promoter.state,
           logo: promoter.logo,
+          facebook: promoter.facebook,
+          instagram: promoter.instagram,
+          website: promoter.website,
 
         }));
     }

@@ -4,11 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { db } from '@/lib/firebase_techbouts/config';
-import { Firestore, WriteBatch, doc, getDoc, setDoc, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import FighterForm from './FighterForm';
 import { format } from 'date-fns';
-
-
+import { FullContactFighter } from '@/utils/types';
 
 interface RegisterProps {
   eventId: string;
@@ -27,7 +26,7 @@ interface FighterFormData {
   gym: string;
   age: number;
   weightclass: number;
-  fighterId: string;
+  fighter_id: string;
   win: number;
   loss: number;
   gender: string;
@@ -40,26 +39,22 @@ interface FighterFormData {
   phone: string;
   coach_phone: string;
   coach_name: string;
+  coach_email: string;
+  state: string;
+  city: string;
+  mt_win: number;
+  mt_loss: number;
+  boxing_win: number;
+  boxing_loss: number;
+  mma_win: number;
+  mma_loss: number;
+  pmt_win: number;
+  pmt_loss: number;
+  gym_id?: string;
+
 }
 
-interface FighterFirestoreData extends FighterFormData {
-  paymentIntentId?: string;
-  paymentAmount?: number;
-  paymentCurrency?: string;
-  date_registered: string;
-  status: 'registered';
-  registrationComplete: boolean;
-}
 
-interface FighterRosterData {
-  first: string;
-  last: string;
-  gym: string;
-  weightclass: number;
-  gender: string;
-  date_registered: string;
-  status: 'registered';
-}
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -84,13 +79,10 @@ const CARD_ELEMENT_OPTIONS = {
   hidePostalCode: true // Optionally hide the postal code field if not needed
 };
 
-
-
 interface ConvertedFees {
   amount: number;
   currency: string;
 }
-
 
 interface RegistrationError {
   message: string;
@@ -99,7 +91,6 @@ interface RegistrationError {
 }
 
 const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user }) => {
-
 
   const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -134,7 +125,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     setCurrentRegistrationFee(newFee);
   }, [rosterCount, baseRegistrationFee, locale]);
 
-
   const [convertedFee, setConvertedFee] = useState<ConvertedFees>({
     amount: currentRegistrationFee,
     currency: 'USD'
@@ -157,17 +147,25 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   });
 
   useEffect(() => {
-
     const fetchRosterCount = async () => {
       try {
-        const rosterRef = collection(db, 'events', eventId, 'roster_json');
-        const querySnapshot = await getDocs(rosterRef);
-        setRosterCount(querySnapshot.size);
+        // Get a reference to the single roster_json document that contains all fighters
+        const rosterJsonRef = doc(db, 'events', eventId, 'roster_json', 'fighters');
+        const rosterDoc = await getDoc(rosterJsonRef);
+        
+        if (rosterDoc.exists()) {
+          const data = rosterDoc.data();
+          const fighters = data.fighters || [];
+          setRosterCount(fighters.length);
+        } else {
+          setRosterCount(0);
+        }
       } catch (error) {
         console.error('Error fetching roster count:', error);
+        setRosterCount(0);
       }
     };
-
+  
     fetchRosterCount();
   }, [eventId]);
 
@@ -206,9 +204,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
     fetchExchangeRate();
   }, [locale, baseRegistrationFee, currentRegistrationFee]);
-
-
-
 
   const validateForm = (): string | null => {
     if (!fighterData) {
@@ -305,8 +300,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     }
   };
 
-
-
   const handleCreditCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCreditCode(e.target.value);
     setShowVerifyButton(true); // Show the "Verify" button when the user starts typing
@@ -342,13 +335,10 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     }
   };
 
-
-
-
   async function saveFighterToFirestore(
     db: Firestore,
     eventId: string,
-    fighterData: FighterFormData & { 
+    fighterData: FighterFormData & {
       paymentIntentId?: string;
       paymentAmount?: number;
       paymentCurrency?: string;
@@ -356,33 +346,98 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     currentDate: string
   ): Promise<boolean> {
     try {
-      // Create a reference to the event's roster collection
-      const rosterRef = doc(db, 'events', eventId, 'roster', fighterData.fighterId);
-      const rosterJsonRef = doc(db, 'events', eventId, 'roster_json', fighterData.fighterId);
-  
-      // Basic fighter data for roster collection
-      const rosterData: FighterRosterData = {
+      // Create payment info object, ensuring no undefined values
+      const paymentInfo = {
+        paymentIntentId: fighterData.paymentIntentId || "",
+        paymentAmount: fighterData.paymentAmount || 0,
+        paymentCurrency: fighterData.paymentCurrency || 'USD'
+      };
+      
+      // Determine class based on experience and amateur status
+      const fighterClass = determineClass(fighterData.years_exp || 0, fighterData.ammy || 0);
+      
+      // Determine age_gender classification
+      const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
+      
+      // Prepare fighter data to match FullContactFighter interface
+      const fullContactFighterData: Partial<FullContactFighter> = {
+        // Basic Information
+        fighter_id: fighterData.fighter_id,
+        id: fighterData.fighter_id,
         first: fighterData.first,
         last: fighterData.last,
-        gym: fighterData.gym,
-        weightclass: fighterData.weightclass,
+        dob: fighterData.dob,
+        age: fighterData.age,
         gender: fighterData.gender,
+        email: fighterData.email.toLowerCase(),
+        
+        // Gym Information
+        gym: fighterData.gym,
+        gym_id: fighterData.gym_id || '',
+        coach: fighterData.coach_name,
+        coach_email: fighterData.coach_email || '',
+        coach_name: fighterData.coach_name,
+        coach_phone: fighterData.coach_phone,
+        
+        // Location Information
+        state: fighterData.state || '',
+        city: fighterData.city || '',
+        
+        // Physical Information
+        weightclass: fighterData.weightclass,
+        height: calculateHeightInInches(fighterData.heightFoot, fighterData.heightInch),
+        
+        // Record
+        mt_win: fighterData.mt_win || 0,
+        mt_loss: fighterData.mt_loss || 0,
+        boxing_win: fighterData.boxing_win || 0,
+        boxing_loss: fighterData.boxing_loss || 0,
+        mma_win: fighterData.mma_win || 0,
+        mma_loss: fighterData.mma_loss || 0,
+        pmt_win: fighterData.pmt_win || 0,
+        pmt_loss: fighterData.pmt_loss || 0,
+        
+        // Experience & Classification
+        years_exp: fighterData.years_exp || 0,
+        class: fighterClass,
+        age_gender: ageGenderClassification,
+        confirmed: true,
+        
+   
+        
+        // Documentation
+        docId: fighterData.fighter_id,
+        
+        // Additional data for tracking
         date_registered: currentDate,
-        status: 'registered'
+        payment_info: paymentInfo
       };
-  
-      // Complete fighter data for roster_json collection
-      const rosterJsonData: FighterFirestoreData = {
-        ...fighterData,
-        date_registered: currentDate,
-        status: 'registered',
-        registrationComplete: true
-      };
-  
-      // Save data to both collections using a batch write
-      const batch: WriteBatch = writeBatch(db);
-      batch.set(rosterRef, rosterData);
-      batch.set(rosterJsonRef, rosterJsonData);
+      
+      // Reference to the roster_json document
+      const rosterJsonRef = doc(db, 'events', eventId, 'roster_json', 'fighters');
+      
+      // Check if the document exists
+      const rosterJsonDoc = await getDoc(rosterJsonRef);
+      const batch = writeBatch(db);
+      
+      if (rosterJsonDoc.exists()) {
+        // Document exists, get the current fighters array
+        const data = rosterJsonDoc.data();
+        const fighters = data.fighters || [];
+        
+        // Add the new fighter to the array
+        fighters.push(fullContactFighterData);
+        
+        // Update the document with the new array
+        batch.update(rosterJsonRef, { fighters: fighters });
+      } else {
+        // Document doesn't exist, create it with the fighter as the first item in the array
+        batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
+      }
+      
+      // Also save an individual document for this fighter in a separate collection for easier querying
+      const individualFighterRef = doc(db, 'events', eventId, 'fighters', fighterData.fighter_id);
+      batch.set(individualFighterRef, fullContactFighterData);
       
       // Commit the batch
       await batch.commit();
@@ -393,6 +448,33 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       throw new Error('Failed to save fighter data');
     }
   }
+  
+  // Helper function to calculate height in inches
+  function calculateHeightInInches(feet: number, inches: number): number {
+    return (feet * 12) + inches;
+  }
+  
+  // Helper function to determine fighter class based on experience
+  function determineClass(yearsExp: number, ammy: number): 'A' | 'B' | 'C' {
+    if (ammy === 0) {
+      return 'A'; // Professional
+    } else if (yearsExp > 3) {
+      return 'B'; // Experienced amateur
+    } else {
+      return 'C'; // Novice amateur
+    }
+  }
+  
+  // Helper function to determine age_gender classification
+  function determineAgeGender(age: number, gender: string): 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS' {
+    if (age >= 18) {
+      return gender.toLowerCase() === 'male' ? 'MEN' : 'WOMEN';
+    } else {
+      return gender.toLowerCase() === 'male' ? 'BOYS' : 'GIRLS';
+    }
+  }
+
+
 
   function handleRegistrationError(error: unknown): RegistrationError {
     if (error instanceof Error) {
@@ -401,137 +483,130 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         details: error
       };
     }
-    
+
     if (typeof error === 'string') {
       return {
         message: error
       };
     }
-    
+
     return {
       message: 'An unexpected error occurred during registration',
       details: error
     };
   }
 
-  const handleRegistrationSubmit = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setStatusMessage('');
 
-    const formError = validateForm();
-    if (formError) {
-      alert(formError);
-      setIsSubmitting(false);
-      return;
-    }
-  
-    if (!fighterData) {
-      console.log('Fighter data is missing.');
-      setIsSubmitting(false);
-      return;
-    }
-  
-    const currentDate = format(new Date(), 'yyyy-MM-dd');
-  
-    try {
+const handleRegistrationSubmit = async () => {
+  if (isSubmitting) return;
+  setIsSubmitting(true);
+  setStatusMessage('');
 
-      if (isCreditCodeValid) {
+  const formError = validateForm();
+  if (formError) {
+    alert(formError);
+    setIsSubmitting(false);
+    return;
+  }
 
-        setStatusMessage('Credit Code Valid Submitting registration data...');
+  if (!fighterData) {
+    console.log('Fighter data is missing.');
+    setIsSubmitting(false);
+    return;
+  }
 
-        await saveFighterToFirestore(db, eventId, fighterData, currentDate);
-        setStatusMessage('Submitted Successfuly.');
+  const currentDate = format(new Date(), 'yyyy-MM-dd');
 
-        // Update credit code as redeemed
-        if (creditCode) {
-          setStatusMessage('Marking Credit Code as redeemed...');
+  try {
+    // Check if registration is free (valid credit code or registration fee is 0)
+    const isFreeRegistration = isCreditCodeValid || currentRegistrationFee === 0;
 
-          await setDoc(doc(db, 'couponCodes', creditCode), { 
-            redeemed: true,
-            redeemedBy: fighterData.email,
-            redeemedAt: currentDate,
-            eventId: eventId
-          }, { merge: true });
+    if (isFreeRegistration) {
+      setStatusMessage('Submitting free registration data...');
 
-          setStatusMessage('Code Marked Redeemed');
-        }
-  
+      await saveFighterToFirestore(db, eventId, fighterData, currentDate);
+      setStatusMessage('Submitted Successfully.');
+
+      // Update credit code as redeemed if using a credit code
+      if (isCreditCodeValid && creditCode) {
+        setStatusMessage('Marking Credit Code as redeemed...');
+
+        await setDoc(doc(db, 'couponCodes', creditCode), {
+          redeemed: true,
+          redeemedBy: fighterData.email,
+          redeemedAt: currentDate,
+          eventId: eventId
+        }, { merge: true });
+
+        setStatusMessage('Code Marked Redeemed');
+      }
+
+      setStatusMessage('Sending confirmation email...');
+      await sendConfirmationEmail(fighterData, eventName, eventId);
+      setStatusMessage('Email Sent');
+      closeModal();
+    } else {
+      // Handle paid registration
+      setStatusMessage('Posting Payment...');
+
+      if (!stripe || !elements) {
+        throw new Error('Stripe.js not loaded');
+      }
+
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        throw new Error('CardElement not found');
+      }
+
+      // Process payment
+      const { token, error: stripeError } = await stripe.createToken(cardElement);
+      if (stripeError) throw new Error(stripeError.message);
+
+      const paymentResponse = await axios.post('/api/stripe', {
+        token: token.id,
+        eventId,
+        amount: convertedFee.amount,
+        currency: convertedFee.currency,
+        idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
+        pmt_id: fighterData.fighter_id,
+        locale
+      });
+
+      if (paymentResponse.data.success && paymentResponse.data.paymentIntentId) {
+        setStatusMessage('Payment Successful. Submitting registration data...');
+
+        // Save fighter data with payment information
+        const fighterDataWithPayment = {
+          ...fighterData,
+          paymentIntentId: paymentResponse.data.paymentIntentId,
+          paymentAmount: convertedFee.amount,
+          paymentCurrency: convertedFee.currency
+        };
+
+        await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate);
+
+        setStatusMessage('Submitted Successfully.');
         setStatusMessage('Sending confirmation email...');
 
         await sendConfirmationEmail(fighterData, eventName, eventId);
-
         setStatusMessage('Email Sent');
+        setStatusMessage('Registration Successful');
 
         closeModal();
-        
       } else {
-
-        // Handle paid registration
-        setStatusMessage('Posting Payment...');
-
-        if (!stripe || !elements) {
-          throw new Error('Stripe.js not loaded');
-        }
-  
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) {
-          throw new Error('CardElement not found');
-        }
-  
-        // Process payment
-        const { token, error: stripeError } = await stripe.createToken(cardElement);
-        if (stripeError) throw new Error(stripeError.message);
-  
-        const paymentResponse = await axios.post('/api/stripe', {
-          token: token.id,
-          eventId,
-          amount: convertedFee.amount,
-          currency: convertedFee.currency,
-          idempotencyKey: `reg-charge-${fighterData.fighterId}-${Date.now()}`,
-          pmt_id: fighterData.fighterId,
-          locale
-        });
-  
-        if (paymentResponse.data.success && paymentResponse.data.paymentIntentId) {
-         
-          setStatusMessage('Payment Successful. Submitting registration data...');
-
-         
-          // Save fighter data with payment information
-          const fighterDataWithPayment = {
-            ...fighterData,
-            paymentIntentId: paymentResponse.data.paymentIntentId,
-            paymentAmount: convertedFee.amount,
-            paymentCurrency: convertedFee.currency
-          };
-  
-          await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate);
-          
-          setStatusMessage('Submitted Successfuly.');
-          setStatusMessage('Sending confirmation email...');
-
-      
-          await sendConfirmationEmail(fighterData, eventName, eventId);
-          setStatusMessage('Email Sent');
-          setStatusMessage('Registration Successful');
-
-          closeModal();
-
-        } else {
-          setStatusMessage(formContent.paymentFailedMessage);
-          throw new Error('Payment failed: Unable to process payment');
-        }
+        setStatusMessage(formContent.paymentFailedMessage);
+        throw new Error('Payment failed: Unable to process payment');
       }
-    } catch (error: unknown) {
-      setStatusMessage('An error occurred. Please try again.');
-      const handledError = handleRegistrationError(error);
-      console.error('Error during registration:', handledError);
-      alert(handledError.message || formContent.generalErrorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (error: unknown) {
+    setStatusMessage('An error occurred. Please try again.');
+    const handledError = handleRegistrationError(error);
+    console.error('Error during registration:', handledError);
+    alert(handledError.message || formContent.generalErrorMessage);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
   return (
@@ -539,68 +614,70 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     <div className="fixed bg-white inset-0 z-50 flex items-center justify-center">
       <div className="p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
 
-      <div>
-        Current Fighters Registered: {rosterCount}<br></br>
-        Early Bird (under 50 Athletes): 65 | 50-80: 75 | 80-110: 85 | 110+: 95
+        <div>
+          Current Fighters Registered: {rosterCount}<br></br>
+          Early Bird (under 50 Athletes): 65 | 50-80: 75 | 80-110: 85 | 110+: 95
 
-      </div>
+        </div>
 
-      <FighterForm
-        onFormDataChange={setFighterData}
-        locale={locale}
-        user={user}
-      />
-
-      <div style={{ marginBottom: '30px' }} className='credit-code-container'>
-        <label htmlFor='creditCode'>
-          {formContent.creditCodeLabel}:
-        </label>
-        <input
-          type='text'
-          id='creditCode'
-          value={creditCode}
-          onChange={handleCreditCodeChange}
+        <FighterForm
+          onFormDataChange={setFighterData}
+          locale={locale}
+          user={user}
         />
-        {showVerifyButton && (
-          <button onClick={validateCreditCode} className='verifyButton'>
 
-            {formContent.verifyButton}
+        <div style={{ marginBottom: '30px' }} className='credit-code-container'>
+          <label htmlFor='creditCode'>
+            {formContent.creditCodeLabel}:
+          </label>
+          <input
+            type='text'
+            id='creditCode'
+            value={creditCode}
+            onChange={handleCreditCodeChange}
+          />
+          {showVerifyButton && (
+            <button onClick={validateCreditCode} className='verifyButton'>
 
-          </button>
+              {formContent.verifyButton}
+
+            </button>
+          )}
+        </div>
+
+        {isCreditCodeValid === null ? null : isCreditCodeValid ? (
+          <p>{formContent.validCodeMessage}</p>
+        ) : creditCodeRedeemed ? (
+          <p>{formContent.redeemedCodeMessage}</p>
+        ) : (
+          <p>{formContent.invalidCodeMessage}</p>
         )}
+
+        {(isCreditCodeValid || currentRegistrationFee === 0) ? (
+          <p>Registration is free</p>
+        ) : (
+          <div style={{ width: '100%' }} className='card-element-container'>
+            <CardElement options={CARD_ELEMENT_OPTIONS} />
+            <p>
+              {formContent.registrationFeeLabel}
+              {convertedFee.currency === 'MXN'
+                ? `${convertedFee.amount} MXN`
+                : `$${currentRegistrationFee} USD`
+              }
+            </p>
+          </div>
+        )}
+
+        <button onClick={handleRegistrationSubmit} disabled={isSubmitting} className='submitButton'>
+          {isSubmitting ? formContent.submittingButton : formContent.submitButton}
+        </button>
       </div>
 
-      {isCreditCodeValid === null ? null : isCreditCodeValid ? (
-        <p>{formContent.validCodeMessage}</p>
-      ) : creditCodeRedeemed ? (
-        <p>{formContent.redeemedCodeMessage}</p>
-      ) : (
-        <p>{formContent.invalidCodeMessage}</p>
-      )}
-
-      {isCreditCodeValid === true ? null : (
-        <div style={{ width: '100%' }} className='card-element-container'>
-          <CardElement options={CARD_ELEMENT_OPTIONS} />
-          <p>
-            {formContent.registrationFeeLabel}
-            {convertedFee.currency === 'MXN'
-              ? `${convertedFee.amount} MXN`
-              : `$${currentRegistrationFee} USD`
-            }
-          </p>
+      {statusMessage && (
+        <div className="mt-4 mb-4 p-4 rounded bg-gray-100">
+          <p className="text-sm font-medium text-gray-900">{statusMessage}</p>
         </div>
       )}
-
-      <button onClick={handleRegistrationSubmit} disabled={isSubmitting} className='submitButton'>
-        {isSubmitting ? formContent.submittingButton : formContent.submitButton}
-      </button>
-    </div>
-
-    {statusMessage && (
-  <div className="mt-4 mb-4 p-4 rounded bg-gray-100">
-    <p className="text-sm font-medium text-gray-900">{statusMessage}</p>
-  </div>
-)}
 
     </div>
   );

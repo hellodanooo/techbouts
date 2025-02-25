@@ -43,7 +43,8 @@ export type Fighter = {
   state: string;
   website: string;
   weightclass: number;
-  wins: string | number;
+  win: string | number;
+  loss: string | number;
   eventIds: string[];
 };
 
