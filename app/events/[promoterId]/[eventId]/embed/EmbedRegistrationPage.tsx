@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import Register from '@/app/events/[eventId]/Register';
+import Register from '@/app/events/[promoterId]/[eventId]/Register';
 import { EventType } from '@/utils/types';
 
 type Props = {

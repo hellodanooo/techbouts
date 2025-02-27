@@ -21,7 +21,7 @@ export default function TournamentDashboard({
   promoterEmail,
   eventData
 }: TournamentDashboardProps) {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [isPromoter, setIsPromoter] = useState<boolean | null>(false);
   const [imageError, setImageError] = useState(false);
@@ -83,9 +83,7 @@ export default function TournamentDashboard({
     }
   }
 
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
-  }
+ 
 
   return (
     <div className="p-5">

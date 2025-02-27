@@ -1,5 +1,4 @@
-//app/events/page.tsx
-
+// app/events/page.tsx
 import { headers } from 'next/headers';
 import PageClient from './PageClient';
 import { EventType } from '../../utils/types';
@@ -10,26 +9,24 @@ export const dynamic = 'force-dynamic';
 async function fetchAllTechBoutsEvents() {
   try {
     console.log('Starting IKF Event Fetch')
-    const headersList = await headers();
+    const headersList = await headers(); // headers() returns a Promise in newer Next.js versions
     const host = headersList.get('host');
     
-    const [confirmedResponse] = await Promise.all([
-      fetch(`http://${host}/api/events`, { 
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    ]);
+    const response = await fetch(`http://${host}/api/events`, { 
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-    console.log('Fetch IKF Events Status:', confirmedResponse.status);
+    console.log('Fetch IKF Events Status:', response.status);
 
     let allTechBoutsEvents: EventType[] = [];
 
-    if (confirmedResponse.ok) {
+    if (response.ok) {
       try {
-        const confirmedData = await confirmedResponse.json();
-        allTechBoutsEvents = confirmedData.events || [];
+        const data = await response.json();
+        allTechBoutsEvents = data.events || [];
       } catch (error) {
         console.error('Error parsing confirmed events:', error);
       }
@@ -43,15 +40,19 @@ async function fetchAllTechBoutsEvents() {
 }
 
 export default async function EventsPage() {
-  const { confirmedPMTEvents, pendingPMTEvents } = await fetchPmtEvents();
-  const { allTechBoutsEvents } = await fetchAllTechBoutsEvents();
-
+  // Use Promise.all to parallelize the fetch operations
+  const [pmtEvents, techBoutsEvents] = await Promise.all([
+    fetchPmtEvents(),
+    fetchAllTechBoutsEvents()
+  ]);
+  
+  const { confirmedPMTEvents, pendingPMTEvents } = pmtEvents;
+  const { allTechBoutsEvents } = techBoutsEvents;
 
   // Log the results for debugging
   console.log('Fetched confirmed events:', confirmedPMTEvents.length);
   console.log('Fetched pending events:', pendingPMTEvents.length);
   console.log('Fetched IKF events:', allTechBoutsEvents.length);
-
 
   return (
     <>
@@ -59,7 +60,6 @@ export default async function EventsPage() {
         initialConfirmedEvents={confirmedPMTEvents}
         initialPendingEvents={pendingPMTEvents}
         allTechBoutsEvents={allTechBoutsEvents}
-     
       />
     </>
   );

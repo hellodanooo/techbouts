@@ -1,6 +1,6 @@
 // utils/eventManagement.ts
 
-import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase_techbouts/config';
 import { EventType } from './types';
 
@@ -91,6 +91,9 @@ export const generateDocId = (eventName: string, city: string, state: string, da
 };
 
 export const addEvent = async (eventData: EventType): Promise<{ success: boolean; message: string }> => {
+  console.log('Adding Techbouts Event for Promoter', eventData.promoterId);
+  
+  
   try {
     // Validate required fields
     if (!eventData.event_name || !eventData.city || !eventData.state || !eventData.date) {
@@ -116,7 +119,7 @@ export const addEvent = async (eventData: EventType): Promise<{ success: boolean
     };
 
     // Save to Firestore
-    const eventRef = doc(db, 'events', docId);
+    const eventRef = doc(db,'events', 'promotions',eventData.promoterId, docId);
     await setDoc(eventRef, newEvent);
     await saveToFirestore(newEvent, 'add');
 
@@ -153,6 +156,8 @@ export const updateEvent = async (eventId: string, updatedData: Partial<EventTyp
     return { success: false, message: 'Error updating event' };
   }
 };
+
+
 export const deleteEvent = async (eventId: string): Promise<{ success: boolean; message: string }> => {
   try {
     const eventRef = doc(db, 'techbouts_events', eventId);

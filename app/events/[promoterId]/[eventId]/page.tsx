@@ -1,4 +1,5 @@
-// app/events/[eventId]/page.tsx
+// app/events/[promoterId]/[eventId]/page.tsx
+
 import PageContentEvent from './PageContent';
 import Head from 'next/head';
 import { Metadata } from 'next';
@@ -10,9 +11,10 @@ import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Promise<{ eventId: string }> 
+  params: Promise<{ promoterId:string, eventId: string }> 
 }): Promise<Metadata> {
-  const { eventId } = await params;
+  
+  const { promoterId, eventId } = await params;
   
   try {
     // Try PMT first
@@ -32,7 +34,7 @@ export async function generateMetadata({
     }
 
     // Try TechBouts if PMT not found
-    const techBoutsEventData = await fetchTechBoutsEvent(eventId);
+    const techBoutsEventData = await fetchTechBoutsEvent(promoterId, eventId);
     if (techBoutsEventData) {
       const pageTitle = `${techBoutsEventData.name} - ${techBoutsEventData.date}`;
       return {
@@ -57,15 +59,11 @@ export async function generateMetadata({
 }
 
 
-
-
-
-
 export default async function EventPage(params: { 
-  params: Promise<{eventId: string }> 
+  params: Promise<{promoterId:string, eventId: string }> 
 }) {
   // Destructure and await the params
-  const { eventId } = await params.params;
+  const { promoterId, eventId } = await params.params;
   
   console.log('Page Component - Received params:', { eventId });
 
@@ -99,7 +97,7 @@ export default async function EventPage(params: {
 
     
     // If PMT event not found, try TechBouts (IKF/PBSC)
-    const techBoutsEventData = await fetchTechBoutsEvent(eventId);
+    const techBoutsEventData = await fetchTechBoutsEvent(promoterId,eventId);
     if (techBoutsEventData) {
       console.log('Page Component - Successfully fetched TechBouts event data');
       const pageTitle = `${techBoutsEventData.name} - ${techBoutsEventData.date}`;

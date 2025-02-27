@@ -2,8 +2,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Official } from '@/utils/types';
-import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { fetchOfficials, updateOfficial } from '@/utils/officials/fetchOfficials';
 
 export default function PageClient() {
   const [officials, setOfficials] = useState<Official[]>([]);
@@ -15,32 +15,20 @@ export default function PageClient() {
 
   // Fetch officials on component mount
   useEffect(() => {
-    fetchOfficials();
-  }, []);
-
-  const fetchOfficials = async () => {
-    try {
-      const [{ collection }, { db }] = await Promise.all([
-        import('firebase/firestore'),
-        import('@/lib/firebase_techbouts/config')
-      ]);
-
-      const officialsRef = collection(db, 'officials');
-      const officialsDoc = doc(officialsRef, 'officials_json');
-      const docSnap = await getDoc(officialsDoc);
-
-      if (docSnap.exists()) {
-        const officialsData = docSnap.data();
-        setOfficials(officialsData.data || []);
+    const getOfficials = async () => {
+      try {
+        const data = await fetchOfficials();
+        setOfficials(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error in component:', error);
+        setErrorMessage('Failed to fetch officials');
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching officials:', error);
-      setErrorMessage('Failed to fetch officials');
-      setIsLoading(false);
-    }
-  };
+    };
+    
+    getOfficials();
+  }, []);
 
   const handleEdit = (official: Official) => {
     setEditingOfficial(official);
@@ -48,28 +36,12 @@ export default function PageClient() {
 
   const handleSave = async (updatedOfficial: Official) => {
     try {
-      const [{ collection, doc, updateDoc }, { db }] = await Promise.all([
-        import('firebase/firestore'),
-        import('@/lib/firebase_techbouts/config')
-      ]);
-
-      const officialsRef = collection(db, 'officials');
-      const officialsDoc = doc(officialsRef, 'officials_json');
-      
-      // Update the specific official in the array
-      const updatedOfficials = officials.map(o => 
-        o.id === updatedOfficial.id ? updatedOfficial : o
-      );
-
-      await updateDoc(officialsDoc, {
-        data: updatedOfficials
-      });
-
+      const updatedOfficials = await updateOfficial(updatedOfficial, officials);
       setOfficials(updatedOfficials);
       setEditingOfficial(null);
       setTransferStatus('success');
     } catch (error) {
-      console.error('Error updating official:', error);
+      console.error('Error in component:', error);
       setTransferStatus('error');
       setErrorMessage('Failed to update official');
     }
@@ -146,30 +118,49 @@ export default function PageClient() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {officials.map((official) => (
-  <tr 
-  key={official.id}
- 
-  className="hover:bg-gray-50 cursor-pointer transition-colors"
->    
-            <td 
-             onClick={() => router.push(`/officials/${official.officialId}`)}
-            className="px-6 py-4 whitespace-nowrap">{official.first}</td>
+              <tr 
+                key={official.id}
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+              >    
+                <td 
+                  onClick={() => router.push(`/officials/${official.officialId}`)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
+                  {official.first}
+                </td>
                 <td
-             onClick={() => router.push(`/officials/${official.officialId}`)}
-             className="px-6 py-4 whitespace-nowrap">{official.last}</td>
+                  onClick={() => router.push(`/officials/${official.officialId}`)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
+                  {official.last}
+                </td>
                 <td 
-             onClick={() => router.push(`/officials/${official.officialId}`)}
-             className="px-6 py-4 whitespace-nowrap">{official.city}</td>
+                  onClick={() => router.push(`/officials/${official.officialId}`)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
+                  {official.city}
+                </td>
                 <td 
-             onClick={() => router.push(`/officials/${official.officialId}`)}
-             className="px-6 py-4 whitespace-nowrap">{official.state}</td>
+                  onClick={() => router.push(`/officials/${official.officialId}`)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
+                  {official.state}
+                </td>
                 <td
-                 onClick={() => router.push(`/officials/${official.id}`)}
-                className="px-6 py-4 whitespace-nowrap">{official.position}</td>
+                  onClick={() => router.push(`/officials/${official.id}`)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
+                  {official.position}
+                </td>
                 <td 
-             onClick={() => router.push(`/officials/${official.officialId}`)}
-             className="px-6 py-4 whitespace-nowrap">{official.phone}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{official.email}</td>
+                  onClick={() => router.push(`/officials/${official.officialId}`)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
+                  {official.phone}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {official.email}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => handleEdit(official)}

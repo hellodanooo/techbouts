@@ -1,6 +1,8 @@
 // components/RosterTable.tsx
 'use client'
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
 import {
   Table,
   TableBody,
@@ -9,6 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -19,6 +24,9 @@ import {
 import FindPotentialMatchesModal from './PotentialMatchesModal';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
+
+
+import AddFighterModal from './AddFighterModal';
 
 
 
@@ -37,14 +45,21 @@ interface Fighter {
 
 interface RosterTableProps {
   roster: Fighter[];
+  eventId: string;
+  promoterId: string;
 }
 
-export default function RosterTable({ roster }: RosterTableProps) {
-  
+export default function RosterTable({ roster, eventId, promoterId }: RosterTableProps) {
+  const router = useRouter();
+
   const[openPotentialMatchesModal, setOpenPotentialMatchesModal] = React.useState(false);
   const [selectedFighter, setSelectedFighter] = React.useState<Fighter | null>(null);
+
+  const [openAddFighterModal, setOpenAddFighterModal] = useState(false);
+
+  
   const [openSections, setOpenSections] = useState({
-    details: false,
+    roster: true,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -54,13 +69,48 @@ export default function RosterTable({ roster }: RosterTableProps) {
     }));
   };
 
-  
+
+  const navigateToFighterDetail = (fighter: Fighter) => {
+    const fighterId = fighter.fighter_id || fighter.id;
+    if (fighterId) {
+      router.push(`/fighter/${fighterId}`);
+    } else {
+      console.error("Fighter ID not available for navigation");
+    }
+  };
+
+
+
   if (!roster?.length) {
     return (
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Event Roster</CardTitle>
+          
+          <div className="flex justify-start mb-4">
+          <Button 
+            onClick={() => setOpenAddFighterModal(true)}
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" /> Add Fighter
+          </Button>
+        </div>
+
+
+        {openAddFighterModal && eventId && (
+          <AddFighterModal 
+            eventId={eventId}
+            promoterId={promoterId}
+            savesTo="roster"
+            isOpen={openAddFighterModal}
+            onClose={() => setOpenAddFighterModal(false)}
+            
+          />
+        )}
+
+
         </CardHeader>
+     
         <CardContent>
           <p className="text-muted-foreground">No roster data available</p>
         </CardContent>
@@ -68,18 +118,32 @@ export default function RosterTable({ roster }: RosterTableProps) {
     );
   }
 
+
+
+
   return (
     <Collapsible
-    open={openSections.details}
-    onOpenChange={() => toggleSection('details')}
+    open={openSections.roster}
+    onOpenChange={() => toggleSection('roster')}
     className="w-full border rounded-lg overflow-hidden"
   >
     <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
       <h2 className="text-xl font-semibold">Roster</h2>
-      {openSections.details ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+      {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
     </CollapsibleTrigger>
     <CollapsibleContent className="p-4 bg-white">
  
+
+    <div className="flex justify-end mb-4">
+          <Button 
+            onClick={() => setOpenAddFighterModal(true)}
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" /> Add Fighter
+          </Button>
+        </div>
+
+
  <Card className="w-full">
       <CardHeader>
         <CardTitle>Event Roster</CardTitle>
@@ -94,7 +158,7 @@ export default function RosterTable({ roster }: RosterTableProps) {
                 <TableHead>Weight</TableHead>
                 <TableHead>Age</TableHead>
                 <TableHead>Gender</TableHead>
-                <TableHead>Experience</TableHead>
+                <TableHead>MT-MMA</TableHead>
                 <TableHead>Edit</TableHead>
                 <TableHead>Search</TableHead>
               </TableRow>
@@ -102,14 +166,17 @@ export default function RosterTable({ roster }: RosterTableProps) {
             <TableBody>
               {roster.map((fighter, index) => (
                 <TableRow key={index}>
-                  <TableCell>
+             <TableCell
+                    onClick={() => navigateToFighterDetail(fighter)}
+                    className="cursor-pointer hover:text-blue-600 hover:underline"
+                  >
                     {`${fighter.first || ''} ${fighter.last || ''}`}
                   </TableCell>
                   <TableCell>{fighter.gym || '-'}</TableCell>
                   <TableCell>{fighter.weightclass || '-'}</TableCell>
                   <TableCell>{fighter.age || '-'}</TableCell>
                   <TableCell>{fighter.gender || '-'}</TableCell>
-                  <TableCell>{fighter.experience || '-'}</TableCell>
+                  <TableCell>{`${fighter.mt_win || 0}-${fighter.mt_loss || 0}`}</TableCell>
                  
                   <TableCell>
                     <span 
@@ -143,16 +210,39 @@ export default function RosterTable({ roster }: RosterTableProps) {
             </TableBody>
           </Table>
 
-          {openPotentialMatchesModal && (
+
+
+
+
+  
+        </div>
+      </CardContent>
+    </Card>
+
+
+    {openAddFighterModal && eventId && (
+          <AddFighterModal 
+            eventId={eventId}
+            savesTo="roster"
+            promoterId={promoterId}
+            isOpen={openAddFighterModal}
+            onClose={() => setOpenAddFighterModal(false)}
+            
+          />
+        )}
+
+
+{openPotentialMatchesModal && (
   <FindPotentialMatchesModal 
     fighter={selectedFighter as Fighter} 
     onClose={() => setOpenPotentialMatchesModal(false)} 
   />
 )}
-        </div>
-      </CardContent>
-    </Card>
+
     </CollapsibleContent>
   </Collapsible>
+
+
+
   );
 }

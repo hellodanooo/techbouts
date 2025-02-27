@@ -15,6 +15,7 @@ import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer'; // export co
 
 import { FaRegFileImage } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa"; // Icons for dropdown
+import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider"; // Import our provider
 
 
 interface AddEventFormProps {
@@ -36,6 +37,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
     photos_price: 0,
     ticket_system_option: 'none',
     numMats: 2, // Default to 2 mats
+    promoterId: '',
    
   });
 
@@ -210,8 +212,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
         photos_price: formData.photos_price ?? 0,
         sanctioning: sanctioning ?? "",
         promotionName: promoter.promotionName ?? "",
-        promoterId: promoter.promoterId ?? "",
-        promoterEmail: promoter.email ?? "",
+        promoterId: formData.promoterId ?? "",
+        promoterEmail: formData.email ?? "",
         email: formData.email ?? "",
         status: formData.status ?? "confirmed",
         street: formData.street ?? "",
@@ -307,6 +309,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
   
 
   return (
+                <GoogleMapsProvider>
+
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded shadow-md w-full max-w-lg max-h-screen overflow-y-auto relative">
         
@@ -493,6 +497,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
 
       </div>
     </div>
+    </GoogleMapsProvider>
   );
 };
 

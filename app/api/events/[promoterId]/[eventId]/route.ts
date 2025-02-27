@@ -5,16 +5,16 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ eventId: string }> }
+  { params }: { params: Promise<{ promoterId:string, eventId: string }> }
 ) {
   console.log('API Route - Starting GET request');
   console.log('API Route - Request URL:', request.url);
   
   try {
-    const { eventId } = await params;
+    const { promoterId, eventId } = await params;
     console.log('API Route - Fetching event with ID:', eventId);
     
-    const eventRef = doc(db, 'events', eventId);
+    const eventRef = doc(db, 'events', 'promotions', promoterId, eventId);
     console.log('API Route - Created Firestore reference');
     
     const eventSnapshot = await getDoc(eventRef);

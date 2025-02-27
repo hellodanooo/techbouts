@@ -1,4 +1,4 @@
-// app/events/[eventId]/PageContent.tsx
+// app/events/[promoterId]/[eventId]/PageContent.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -25,6 +25,7 @@ interface TournamentDashboardProps {
 export default function PageContentEvent({
   eventData,
   eventId,
+  promoterId
 }: TournamentDashboardProps) {
   const [imageError, setImageError] = useState(false);
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
@@ -86,7 +87,7 @@ export default function PageContentEvent({
             <h1 className="text-2xl font-bold">{eventData.name}</h1>
             {isAuthorizedPromoter && (
               <Link
-                href={`/events/${eventId}/edit`}
+                href={`/events/${promoterId}/${eventId}/edit`}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 Edit Event

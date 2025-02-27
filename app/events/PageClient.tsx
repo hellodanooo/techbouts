@@ -11,8 +11,6 @@ import AddEventForm from '@/components/AddEventForm';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 
-
-
 interface Props {
   initialConfirmedEvents?: EventType[];
   initialPendingEvents?: EventType[];
@@ -180,11 +178,7 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
         isPromoter={isPromoter}
         isNewUser={isNewUser}
       />
-      <h1>Promoter Dashboard</h1>
-
-
-
-
+      <h1>Events Dashboard</h1>
 
       {isAdmin && (
 

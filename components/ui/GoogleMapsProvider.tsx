@@ -16,10 +16,6 @@ const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => 
     <LoadScript
       googleMapsApiKey={process.env.NEXT_PUBLIC_PLACES_API_KEY_TECHBOUTS!}
 
-  
-
-     
-
       libraries={libraries}
     >
       {children}

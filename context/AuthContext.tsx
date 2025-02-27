@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
   isAdmin: boolean;
   isPromoter: boolean;
   isNewUser: boolean;
@@ -22,7 +21,6 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPromoter, setIsPromoter] = useState(false);
   const router = useRouter();
@@ -87,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsPromoter(false);
       }
 
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -119,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{ 
       user, 
-      loading, 
       isAdmin,
       isPromoter,
       isNewUser: !(isAdmin || isPromoter),

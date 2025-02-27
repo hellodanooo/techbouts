@@ -50,7 +50,7 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
 
   const handleEventClick = (event: EventType) => {
    
-      window.location.href = `/events/${event.id}`;
+      window.location.href = `/events/${event.promoterId}/${event.id}`;
    
   };
 

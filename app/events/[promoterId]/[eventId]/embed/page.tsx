@@ -7,7 +7,7 @@ import EmbedRegistrationPage from './EmbedRegistrationPage';
 export async function generateMetadata({
   params
 }: {
-  params: Promise<{ eventId: string }>
+  params: Promise<{ promoterId: string, eventId: string }>
 }): Promise<Metadata> {
   const { eventId } = await params;
   return {
@@ -18,16 +18,16 @@ export async function generateMetadata({
 export default async function Page({
   params
 }: {
-  params: Promise<{ eventId: string }>
+  params: Promise<{ promoterId: string, eventId: string }>
 }) {
-  const { eventId } = await params;
+  const { promoterId, eventId } = await params;
   
   // Fetch event data
   let eventData = null;
   try {
     eventData = await fetchPmtEvent(eventId);
     if (!eventData) {
-      eventData = await fetchTechBoutsEvent(eventId);
+      eventData = await fetchTechBoutsEvent(promoterId, eventId);
     }
   } catch (error) {
     console.error('Error fetching event data for embed:', error);

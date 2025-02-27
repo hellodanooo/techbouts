@@ -39,6 +39,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 interface FighterFormData {
@@ -100,19 +101,24 @@ interface FighterFormProps {
   onFormDataChange: (data: FighterFormData) => void;
   locale?: string;
   user?: string;
+  source?: string;
 }
 
 
 
-const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, user }) => {
+const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, user, source }) => {
 
   const [emailError, setEmailError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [isWaiverChecked, setIsWaiverChecked] = useState(false);
+
+
+  
   const [formLabels] = useState({
     returningAthletes: 'RETURNING ATHLETES',
     doubleCheckInfo: '(double check your information)',
-    searchLastName: 'SEARCH BY EMAIL',
+    searchByEmail: 'SEARCH BY EMAIL',
+    searchByLastName: 'SEARCH BY LAST NAME',
     newAthletes: 'New Athletes can fill the Form Manually',
     firstName: 'FIRST NAME',
     lastName: 'LAST NAME',
@@ -154,24 +160,35 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     return kg.toFixed(1);
   };
 
+
+
   const weightClasses = [
     { lbs: 60, kg: lbsToKg(60) },
+    { lbs: 65, kg: lbsToKg(65) },
     { lbs: 70, kg: lbsToKg(70) },
+    { lbs: 75, kg: lbsToKg(75) },
     { lbs: 80, kg: lbsToKg(80) },
     { lbs: 90, kg: lbsToKg(90) },
+    { lbs: 95, kg: lbsToKg(95) },
     { lbs: 100, kg: lbsToKg(100) },
-    { lbs: 110, kg: lbsToKg(110) },
-    { lbs: 120, kg: lbsToKg(120) },
-    { lbs: 130, kg: lbsToKg(130) },
-    { lbs: 140, kg: lbsToKg(140) },
-    { lbs: 150, kg: lbsToKg(150) },
-    { lbs: 160, kg: lbsToKg(160) },
-    { lbs: 170, kg: lbsToKg(170) },
-    { lbs: 180, kg: lbsToKg(180) },
-    { lbs: 190, kg: lbsToKg(190) },
-    { lbs: 200, kg: lbsToKg(200) },
+    { lbs: 108, kg: lbsToKg(108) },
+    { lbs: 112, kg: lbsToKg(112) },
+    { lbs: 117, kg: lbsToKg(117) },
+    { lbs: 122, kg: lbsToKg(122) },
+    { lbs: 127, kg: lbsToKg(127) },
+    { lbs: 132, kg: lbsToKg(132) },
+    { lbs: 137, kg: lbsToKg(137) },
+    { lbs: 142, kg: lbsToKg(142) },
+    { lbs: 147, kg: lbsToKg(147) },
+    { lbs: 153, kg: lbsToKg(153) },
+    { lbs: 159, kg: lbsToKg(159) },
+    { lbs: 165, kg: lbsToKg(165) },
+    { lbs: 172, kg: lbsToKg(172) },
+    { lbs: 179, kg: lbsToKg(179) },
+    { lbs: 186, kg: lbsToKg(186) },
+    { lbs: 195, kg: lbsToKg(195) },
     { lbs: 215, kg: lbsToKg(215) },
-    { lbs: 230, kg: lbsToKg(230) },
+    { lbs: 235, kg: lbsToKg(235) },
     { lbs: 300, kg: lbsToKg(300) }
   ];
 
@@ -315,24 +332,29 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   /////////////////// fighterId SEARCH ///////////////////////////////////////////////
   const [fighterSearchTerm, setFighterSearchTerm] = useState<string>('');
   const [fighterSearchResults, setFighterSearchResults] = useState<FighterFormData[]>([]);
+  const [searchType, setSearchType] = useState<'email' | 'last'>('email');
 
   useEffect(() => {
     const fetchFighters = async () => {
       if (fighterSearchTerm.length >= 3) {
-        console.log('Searching for email containing:', fighterSearchTerm);
+        console.log(`Searching for ${searchType} containing:`, fighterSearchTerm);
         
         try {
           // Create a query that searches for emails containing the search term (case-insensitive)
           const colRef = collection(db, 'techbouts_fighters');
-          
+          let optimizedSearchTerm = fighterSearchTerm;
           // For email, we want to use lowercase to match most common storage patterns
-          const lowerSearchTerm = fighterSearchTerm.toLowerCase();
+         if (searchType === 'email') {
+          optimizedSearchTerm = fighterSearchTerm.toLowerCase();
+         }
+         if (searchType === 'last') {
+          optimizedSearchTerm = fighterSearchTerm.toUpperCase();
+          }
           
-          // Use a range query to find strings that contain our search term
           const fightersQuery = query(
             colRef,
-            where('email', '>=', lowerSearchTerm),
-            where('email', '<=', lowerSearchTerm + '\uf8ff')
+            where(searchType, '>=', optimizedSearchTerm),
+            where(searchType, '<=', optimizedSearchTerm + '\uf8ff')
           );
           
           console.log('Executing query...');
@@ -340,11 +362,11 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           console.log('Query returned', querySnapshot.size, 'results');
           
           // Even if we get results with the lowercase search, we should also try with original case
-          // to ensure we catch all possible matches (for any emails stored with mixed case)
+          // to ensure we catch all possible matches (for any values stored with mixed case)
           const originalCaseQuery = query(
             colRef,
-            where('email', '>=', fighterSearchTerm),
-            where('email', '<=', fighterSearchTerm + '\uf8ff')
+            where(searchType, '>=', fighterSearchTerm),
+            where(searchType, '<=', fighterSearchTerm + '\uf8ff')
           );
           
           const originalCaseSnapshot = await getDocs(originalCaseQuery);
@@ -422,8 +444,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     };
   
     fetchFighters();
-  }, [fighterSearchTerm]);
-
+  }, [fighterSearchTerm, searchType]);
 
 
 
@@ -431,23 +452,112 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
 
   const handleFighterSelect = (selectedFighter: FighterFormData) => {
-    const updatedFighter = {
-      ...selectedFighter,
-      first: selectedFighter.first.toUpperCase(),
-      last: selectedFighter.last.toUpperCase(),
-      dob: dayjs(selectedFighter.dob).format('MM/DD/YYYY'),
-    };
-    setFormData(updatedFighter);
-    setSelectedDate(dayjs(selectedFighter.dob));
+    console.log('Selected fighter raw data:', selectedFighter);
     
-    // Update form fields based on retrieved data
+    // Create a complete fighter object with proper data conversions and defaults
+    const updatedFighter: FighterFormData = {
+      // Basic Information with defaults for every field
+      first: (selectedFighter.first || '').toUpperCase(),
+      last: (selectedFighter.last || '').toUpperCase(),
+      email: selectedFighter.email || '',
+      dob: selectedFighter.dob ? dayjs(selectedFighter.dob).format('MM/DD/YYYY') : '',
+      age: typeof selectedFighter.age === 'number' ? selectedFighter.age : (parseInt(selectedFighter.age as unknown as string) || 0),
+      gender: selectedFighter.gender || '',
+      fighter_id: selectedFighter.fighter_id || '',
+  
+      // Gym Information
+      gym: selectedFighter.gym || '',
+      gym_id: selectedFighter.gym_id || '',
+      coach_name: selectedFighter.coach_name || '',
+      coach_email: selectedFighter.coach_email || '',
+      coach_phone: selectedFighter.coach_phone || '',
+  
+      // Location Information
+      state: selectedFighter.state || '',
+      city: selectedFighter.city || '',
+  
+      // Physical Information
+      weightclass: typeof selectedFighter.weightclass === 'number' ? selectedFighter.weightclass : 
+                  (parseInt(selectedFighter.weightclass as unknown as string) || 0),
+      height: typeof selectedFighter.height === 'number' ? selectedFighter.height : 
+             (parseInt(selectedFighter.height as unknown as string) || 0),
+      heightFoot: typeof selectedFighter.heightFoot === 'number' ? selectedFighter.heightFoot : 
+                 (parseInt(selectedFighter.heightFoot as unknown as string) || 0),
+      heightInch: typeof selectedFighter.heightInch === 'number' ? selectedFighter.heightInch : 
+                 (parseInt(selectedFighter.heightInch as unknown as string) || 0),
+  
+      // Record fields with numeric conversion
+      mt_win: typeof selectedFighter.mt_win === 'number' ? selectedFighter.mt_win : 
+              (parseInt(selectedFighter.mt_win as unknown as string) || 0),
+      mt_loss: typeof selectedFighter.mt_loss === 'number' ? selectedFighter.mt_loss : 
+               (parseInt(selectedFighter.mt_loss as unknown as string) || 0),
+      boxing_win: typeof selectedFighter.boxing_win === 'number' ? selectedFighter.boxing_win : 
+                  (parseInt(selectedFighter.boxing_win as unknown as string) || 0),
+      boxing_loss: typeof selectedFighter.boxing_loss === 'number' ? selectedFighter.boxing_loss : 
+                   (parseInt(selectedFighter.boxing_loss as unknown as string) || 0),
+      mma_win: typeof selectedFighter.mma_win === 'number' ? selectedFighter.mma_win : 
+               (parseInt(selectedFighter.mma_win as unknown as string) || 0),
+      mma_loss: typeof selectedFighter.mma_loss === 'number' ? selectedFighter.mma_loss : 
+                (parseInt(selectedFighter.mma_loss as unknown as string) || 0),
+      pmt_win: typeof selectedFighter.pmt_win === 'number' ? selectedFighter.pmt_win : 
+               (parseInt(selectedFighter.pmt_win as unknown as string) || 0),
+      pmt_loss: typeof selectedFighter.pmt_loss === 'number' ? selectedFighter.pmt_loss : 
+                (parseInt(selectedFighter.pmt_loss as unknown as string) || 0),
+      
+      // Legacy fields
+      win: typeof selectedFighter.win === 'number' ? selectedFighter.win : 
+           (parseInt(selectedFighter.win as unknown as string) || 0),
+      loss: typeof selectedFighter.loss === 'number' ? selectedFighter.loss : 
+            (parseInt(selectedFighter.loss as unknown as string) || 0),
+      ammy: typeof selectedFighter.ammy === 'number' ? selectedFighter.ammy : 
+            (parseInt(selectedFighter.ammy as unknown as string) || 0),
+  
+      // Experience & Classification
+      years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp : 
+                 (parseInt(selectedFighter.years_exp as unknown as string) || 0),
+  
+      // Contact Information
+      phone: selectedFighter.phone || '',
+  
+      // Additional Information
+      other: selectedFighter.other || '',
+    };
+    
+    // Handle height conversion if needed
     if (updatedFighter.heightFoot === 0 && updatedFighter.heightInch === 0 && updatedFighter.height > 0) {
-      // Convert height in inches to feet and inches
       updatedFighter.heightFoot = Math.floor(updatedFighter.height / 12);
       updatedFighter.heightInch = updatedFighter.height % 12;
     }
     
+    console.log('Processed fighter data:', updatedFighter);
+    
+    // Parse the date for DatePicker - only if dob exists and is valid
+    if (updatedFighter.dob) {
+      try {
+        const dateValue = dayjs(updatedFighter.dob, 'MM/DD/YYYY');
+        if (dateValue.isValid()) {
+          console.log('Setting date picker to:', dateValue.format('MM/DD/YYYY'));
+          setSelectedDate(dateValue);
+        } else {
+          console.error('Invalid date format:', updatedFighter.dob);
+          setSelectedDate(null);
+        }
+      } catch (e) {
+        console.error('Error parsing date:', e);
+        setSelectedDate(null);
+      }
+    }
+    
+    // Update form data - IMPORTANT: do this synchronously before the next step
+    setFormData(updatedFighter);
+    
+    // Notify parent component about the updated data
+    console.log('Calling onFormDataChange with:', updatedFighter);
+    onFormDataChange(updatedFighter);
+    
+    // Clear search results
     setFighterSearchResults([]);
+    setFighterSearchTerm('');
   };
 
   //////////////////////////////////////////////////////////////////
@@ -527,17 +637,25 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   const maxYear = dayjs().subtract(5, 'year');
   const minYear = dayjs().subtract(100, 'year');
 
-
+  useEffect(() => {
+    if (source === 'add-fighter-modal') {
+      setIsWaiverChecked(true);
+    }
+  }, [source]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <form className="space-y-6">
         {/* Waiver Section */}
-        <Card>
+        
+        {source !== 'add-fighter-modal' && (
+          
+          <Card>
           <CardHeader>
             <CardTitle>Waiver and Release Agreement</CardTitle>
           </CardHeader>
           <CardContent>
+            
             <ScrollArea className="h-[200px] rounded-md border p-4">
               {/* Waiver content */}
               <div className="space-y-4 text-sm">
@@ -592,6 +710,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                   and accept full responsibility for the minors participation in the event.
                 </p>
               </div>
+
             </ScrollArea>
 
             <div className="mt-4 flex items-center space-x-2">
@@ -610,55 +729,82 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
             </div>
           </CardContent>
         </Card>
+        )}
+
+
 
         <fieldset disabled={!isWaiverChecked} className="space-y-6">
           {/* Returning Fighter Search */}
+         
+         
+         
           <Card>
-            <CardHeader>
-              <CardTitle>{formLabels.returningAthletes}</CardTitle>
-              <CardDescription>{formLabels.doubleCheckInfo}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fighterSearch">{formLabels.searchLastName}</Label>
-                  <Input
-                    id="fighterSearch"
-                    value={fighterSearchTerm.toUpperCase()}
-                    onChange={(e) => {
-                      const value = e.target.value.toUpperCase();
-                      setFighterSearchTerm(value);
-                      if (value.length < 3) setFighterSearchResults([]);
-                    }}
-                    placeholder="Search by Email..."
-                  />
+  <CardHeader>
+    <CardTitle>{formLabels.returningAthletes}</CardTitle>
+    <CardDescription>{formLabels.doubleCheckInfo}</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-4">
+      <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="email">Search by Email</TabsTrigger>
+          <TabsTrigger value="last">Search by Last Name</TabsTrigger>
+        </TabsList>
+        <TabsContent value="email" className="space-y-2">
+          <Label htmlFor="emailSearch">Search by Email</Label>
+          <Input
+            id="emailSearch"
+            value={searchType === 'email' ? fighterSearchTerm : ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFighterSearchTerm(value);
+              if (value.length < 3) setFighterSearchResults([]);
+            }}
+            placeholder="Enter email address..."
+          />
+        </TabsContent>
+        <TabsContent value="last" className="space-y-2">
+          <Label htmlFor="lastNameSearch">Search by Last Name</Label>
+          <Input
+            id="lastNameSearch"
+            value={searchType === 'last' ? fighterSearchTerm : ''}
+            onChange={(e) => {
+              const value = e.target.value.toUpperCase();
+              setFighterSearchTerm(value);
+              if (value.length < 3) setFighterSearchResults([]);
+            }}
+            placeholder="Enter last name..."
+          />
+        </TabsContent>
+      </Tabs>
+
+      {fighterSearchResults.length > 0 && (
+        <ScrollArea className="h-[200px] rounded-md border">
+          <div className="p-4">
+            {fighterSearchResults.map((fighter, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleFighterSelect(fighter)}
+              >
+                <div className="text-left">
+                  <div className="font-medium">{fighter.first} {fighter.last}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
+                  </div>
                 </div>
-
-                {fighterSearchResults.length > 0 && (
-  <ScrollArea className="h-[200px] rounded-md border">
-    <div className="p-4">
-      {fighterSearchResults.map((fighter, index) => (
-        <Button
-          key={index}
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => handleFighterSelect(fighter)}
-        >
-          <div className="text-left">
-            <div className="font-medium">{fighter.first} {fighter.last}</div>
-            <div className="text-sm text-muted-foreground">
-              Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
-            </div>
+              </Button>
+            ))}
           </div>
-        </Button>
-      ))}
+        </ScrollArea>
+      )}
     </div>
-  </ScrollArea>
-)}
+  </CardContent>
+</Card>
 
-              </div>
-            </CardContent>
-          </Card>
+
+
 
           {/* New Fighter Form */}
           <Card>
@@ -1170,26 +1316,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="ammy">Amateur Status</Label>
-                        <Select
-                          name="ammy"
-                          value={formData.ammy.toString()}
-                          onValueChange={(value) =>
-                            handleInputChange({
-                              target: { name: 'ammy', value }
-                            } as React.ChangeEvent<HTMLSelectElement>)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">Amateur</SelectItem>
-                            <SelectItem value="0">Professional</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                     
                     </div>
                   </div>
                 </div>

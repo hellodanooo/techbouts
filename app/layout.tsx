@@ -3,9 +3,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
-import 'mapbox-gl/dist/mapbox-gl.css';
-import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider"; // Import our provider
-
+//import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider"; // Import our provider
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -74,9 +72,6 @@ export const metadata: Metadata = {
     title: 'TechBouts',
     description: 'Professional boxing event management platform for promoters, sanctioning bodies, and gyms.',
   },
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-  },
   alternates: {
     canonical: 'https://techbouts.com',
   },
@@ -92,15 +87,13 @@ export default function RootLayout({
      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full`}>
         <div className="min-h-full flex flex-col">
           <main className="flex-1 w-full">
-            <AuthProvider>
+             <AuthProvider> 
 
-       
-
-            <GoogleMapsProvider> 
+            {/* <GoogleMapsProvider>   */}
               {children}
-              </GoogleMapsProvider>
+               {/* </GoogleMapsProvider>  */}
     
-            </AuthProvider>
+             </AuthProvider> 
           </main>
         </div>
       </body>

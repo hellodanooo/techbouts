@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Official } from '../../../../utils/types';
+import { Official } from '../../../../../utils/types';
 
 
 interface OfficialLayoutModalProps {

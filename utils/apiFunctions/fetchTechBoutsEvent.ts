@@ -1,9 +1,11 @@
-// utils/apiFunctions/fetchIkfEvent.ts
+// utils/apiFunctions/fetchTechBoutsEvent.ts
 import { EventType } from '../types';
 import { headers } from 'next/headers';
 
-export async function fetchTechBoutsEvent(eventId: string): Promise<EventType | null> {
-  console.log('fetchIkfEvent - Starting fetch for eventId:', eventId);
+export async function fetchTechBoutsEvent(promoterId: string, eventId: string): Promise<EventType | null> {
+  console.log('fetchTechBoutsEvent - Starting fetch for Promoter:', promoterId);
+
+  console.log('fetchTechBoutsEvent - Starting fetch for eventId:', eventId);
   
   try {
     // Get the host from headers for server-side requests
@@ -11,22 +13,22 @@ export async function fetchTechBoutsEvent(eventId: string): Promise<EventType | 
     const host = headersList.get('host') || 'localhost:3000';
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     
-    const apiUrl = `${protocol}://${host}/api/events/${eventId}`;
-    console.log('fetchIkfEvent - Calling API:', apiUrl);
+    const apiUrl = `${protocol}://${host}/api/events/${promoterId}/${eventId}`;
+    console.log('fetchTechBoutsEvent - Calling API:', apiUrl);
     
     const response = await fetch(apiUrl, { cache: 'no-store' }); // Added no-store to prevent caching
-    console.log('fetchIkfEvent - API response status:', response.status);
+    console.log('fetchTechBoutsEvent - API response status:', response.status);
     
     if (!response.ok) {
       if (response.status === 404) {
-        console.log('fetchIkfEvent - Event not found in IKF database');
+        console.log('fetchTechBoutsEvent - Event not found in TechBoutsEvent database');
         return null;
       }
-      throw new Error(`Failed to fetch IKF event: ${response.status}`);
+      throw new Error(`Failed to fetch fetchTechBoutsEvent: ${response.status}`);
     }
 
     const { event: data } = await response.json();
-    console.log('fetchIkfEvent - Raw data received:', data);
+    console.log('fetchTechBoutsEvent - Raw data received:', data);
     
     // Transform the data to match the Event type
     const eventData: EventType = {
@@ -89,10 +91,10 @@ export async function fetchTechBoutsEvent(eventId: string): Promise<EventType | 
       
     };
 
-    console.log('fetchIkfEvent - Transformed event data:', eventData);
+    console.log('fetchTechBoutsEvent - Transformed event data:', eventData);
     return eventData;
   } catch (error) {
-    console.error('fetchIkfEvent - Error:', error);
+    console.error('fetchTechBoutsEvent - Error:', error);
     return null;
   }
 }
