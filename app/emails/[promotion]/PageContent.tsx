@@ -1,10 +1,10 @@
 // app/emails/[promotion]/PageContent.tsx
 'use client';
 import ExportEmailsClient from './ExportEmails';
-import EmailBlast from './EmailBlast';
+import EmailBlast from '../../../components/emails/EmailBlast';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
-import EmailStats from './EmailStats';
+import EmailStats from '../../../components/emails/EmailStats';
 
 interface EmailsPageClientProps {
     promotion: string;

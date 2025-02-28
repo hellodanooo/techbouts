@@ -4,7 +4,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import CustomEmail_1 from '../../../components/emails/templates/CustomEmail_1';
+import CustomEmail_1 from './templates/CustomEmail_1';
 import { render } from '@react-email/render';
 import { useState, useEffect } from 'react';
 import { uploadEmailImage } from '@/utils/images/uploadEmailImage';

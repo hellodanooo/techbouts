@@ -217,6 +217,7 @@ export interface EventType {
   coachRegPrice: number;
   photoPackageEnabled: boolean;
   coachRegEnabled: boolean;
+  payLaterEnabled?: boolean;
 }
 
 export interface Promoter {

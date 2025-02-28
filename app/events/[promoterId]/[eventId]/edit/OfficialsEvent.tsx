@@ -45,7 +45,7 @@ const SelectLocationDropdown: FC<SelectLocationDropdownProps> = ({ officialsList
     );
 };
 
-const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats }) => {
+const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId }) => {
     const [officials, setOfficials] = useState<Official[]>([]);
     const [allOfficials, setAllOfficials] = useState<Official[]>([]);
     const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
@@ -76,7 +76,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats }) => {
             setLoadingError(null);
             
             const db = getFirestore(app);
-            const eventDocRef = doc(db, 'events', eventId);
+            const eventDocRef = doc(db, 'events', 'promotions', promoterId, eventId);
             const officialsColRef = collection(eventDocRef, 'officials');
 
             try {
@@ -164,7 +164,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats }) => {
         if (!window.confirm("Are you sure you want to delete this official from this event?")) return;
 
         try {
-            await deleteDoc(doc(getFirestore(app), 'events', eventId, 'officials', officialId));
+            await deleteDoc(doc(getFirestore(app), 'events', 'promotions', promoterId, eventId, 'officials', officialId));
             console.log("Official deleted successfully");
 
             // Remove the official from the officials list
@@ -194,7 +194,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats }) => {
     
         try {
             const db = getFirestore(app);
-            const eventDocRef = doc(db, 'events', eventId);
+            const eventDocRef = doc(db, 'events', 'promotions', promoterId, eventId);
             // Use setDoc with the profile ID instead of addDoc
             const officialDocRef = doc(eventDocRef, 'officials', officialId);
             await setDoc(officialDocRef, newOfficial);
@@ -233,7 +233,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats }) => {
             );
 
             if (prevOfficial) {
-                await updateDoc(doc(db, 'events', eventId, 'officials', prevOfficial.id), {
+                await updateDoc(doc(db, 'events', 'promotions', promoterId, eventId, 'officials', prevOfficial.id), {
                     mat: -1,
                     location: ""
                 });
@@ -244,7 +244,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats }) => {
                 );
             }
 
-            const officialDocRef = doc(db, 'events', eventId, 'officials', officialId);
+            const officialDocRef = doc(db, 'events', 'promotions', promoterId, eventId, 'officials', officialId);
             await updateDoc(officialDocRef, { mat, location });
             console.log(`Assigned ${officialToAssign.first} ${officialToAssign.last} to mat ${mat} at ${location}`);
 

@@ -78,6 +78,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     photoPackageEnabled: eventData.photoPackageEnabled || false,
     coachRegEnabled: eventData.coachRegEnabled || false,
     disableRegistration: eventData.disableRegistration || false,
+    payLaterEnabled: eventData.payLaterEnabled || false,
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -569,6 +570,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                   </div>
                 )}
 
+{/* ///////////// COACH AREA */}
                 <div className="flex items-center space-x-4">
                   <Switch
                     id="coach-reg"
@@ -590,6 +592,20 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                     />
                   </div>
                 )}
+{/* ///////////// COACH AREA ^^^^^^^^^ */}
+<div className="flex items-center space-x-4">
+                  <Switch
+                    id="payLater"
+                    checked={formData.payLaterEnabled}
+                    onCheckedChange={handleSwitchChange('payLaterEnabled')}
+                  />
+                  <Label htmlFor="coach-reg">Allow Pay Later</Label>
+                </div>
+
+
+
+
+
               </div>
             </div>
 
