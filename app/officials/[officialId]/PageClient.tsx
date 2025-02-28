@@ -70,9 +70,11 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
           <div className="flex-shrink-0">
             {official.photo ? (
               <div className="relative w-36 h-36 md:w-48 md:h-48 overflow-hidden rounded-lg border border-gray-200">
-<Image                  src={official.photo} 
+                <Image src={official.photo}
                   alt={`${official.first} ${official.last}`}
                   className="object-cover w-full h-full"
+                  layout="fill"
+                 
                 />
               </div>
             ) : (
@@ -81,35 +83,34 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
               </div>
             )}
           </div>
-          
+
           {/* Name and Position */}
           <div className="flex flex-col justify-between">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">
                 {official.first} {official.last}
               </h2>
-              <span className={`mt-2 inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                official.position?.toLowerCase() === 'pending' 
-                  ? 'bg-yellow-100 text-yellow-800' 
+              <span className={`mt-2 inline-block px-3 py-1 rounded-full text-sm font-semibold ${official.position?.toLowerCase() === 'pending'
+                  ? 'bg-yellow-100 text-yellow-800'
                   : 'bg-green-100 text-green-800'
-              }`}>
+                }`}>
                 {official.position?.toUpperCase()}
               </span>
-              
+
               {official.facebookUrl && (
-                <a 
-                  href={official.facebookUrl} 
-                  target="_blank" 
+                <a
+                  href={official.facebookUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center text-blue-600 hover:text-blue-800"
                 >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5 mr-1" 
-                    viewBox="0 0 24 24" 
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-1"
+                    viewBox="0 0 24 24"
                     fill="currentColor"
                   >
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                   Social Media
                 </a>
@@ -148,7 +149,7 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
                 <p>{official.city}, {official.state}</p>
               </div>
             </div>
-            
+
             {(official.payment || official.paymentType || official.paymentId) && (
               <div className="bg-gray-50 p-4 rounded">
                 <h3 className="text-lg font-semibold text-gray-700">Payment Information</h3>
@@ -203,7 +204,7 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
                     {official.bouts_reffed || 0}
                   </span>
                 </div>
-            
+
               </div>
             </div>
           </div>
@@ -214,11 +215,10 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
             <h3 className="text-lg font-semibold text-gray-700">Application Quiz Score</h3>
             <div className="mt-2">
               <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className={`h-2.5 rounded-full ${
-                    official.quizScore >= 80 ? 'bg-green-600' : 
-                    official.quizScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`} 
+                <div
+                  className={`h-2.5 rounded-full ${official.quizScore >= 80 ? 'bg-green-600' :
+                      official.quizScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
                   style={{ width: `${official.quizScore}%` }}
                 ></div>
               </div>
