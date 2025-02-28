@@ -382,6 +382,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId 
                     <div className="border p-4 rounded-lg">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">Judges</h3>
+                            <div>Number of Judges: {officials.filter(o => o.position === 'Judge').length}</div>
                             <button 
                                 onClick={() => openOfficialBankModal('Judge')}
                                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
@@ -406,13 +407,26 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId 
                     </div>
                 </div>
 
-                <div className="mb-6">
+<div className="flex items-center">
+                <div className="m-5">
                     <Link 
                         href="/officials/apply" 
                         className="inline-block px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
                     >
+                        Share Official Application
+                    </Link>
+
+                   </div>
+                    <div className="m-5">
+
+                    <Link 
+                        href="/officials" 
+                        className="inline-block px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                    >
                         Add New Official
                     </Link>
+                </div>
+
                 </div>
 
                 <div className="mb-6 p-4 bg-gray-100 rounded-lg">

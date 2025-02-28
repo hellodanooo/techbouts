@@ -345,28 +345,11 @@ export default function EditOfficialModal({
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Payment Type
-                </label>
-                <select
-                  name="paymentType"
-                  value={editedOfficial.paymentType || ''}
-                  onChange={handleChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm"
-                >
-                  <option value="">Select Payment Type</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Venmo">Venmo</option>
-                  <option value="PayPal">PayPal</option>
-                  <option value="Zelle">Zelle</option>
-                  <option value="Check">Check</option>
-                </select>
-              </div>
+            
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Payment ID/Email
+                  Paypal ID/Email
                 </label>
                 <input
                   type="text"
