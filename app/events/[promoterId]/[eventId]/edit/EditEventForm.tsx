@@ -60,7 +60,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     ticket_price: eventData.ticket_price || 0,
     photoPackagePrice: eventData.photoPackagePrice || 0,
     coachRegPrice: eventData.coachRegPrice || 0,
-    numMats: eventData.numMats || 1,
+    numMats: eventData.numMats ? Number(eventData.numMats) : 1,
     ticket_enabled: eventData.ticket_enabled || false,
     ticket_system_option: eventData.ticket_system_option || 'thirdParty',
     ticket_link: eventData.ticket_link || '',
@@ -81,13 +81,27 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     payLaterEnabled: eventData.payLaterEnabled || false,
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+
+
+
+ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const { name, value } = e.target;
+  
+  // Explicitly convert numeric fields
+  const numericFields = ['numMats', 'registration_fee', 'ticket_price', 'photoPackagePrice', 'coachRegPrice'];
+  
+  if (numericFields.includes(name)) {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value === '' ? '' : Number(value)
+    }));
+  } else {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-  };
+  }
+};
 
   const handleSwitchChange = (name: string) => (checked: boolean) => {
     setFormData(prev => ({

@@ -7,6 +7,14 @@ export async function editPmtEvent(eventId: string, updatedEventData: Partial<Ev
     console.log('Updating Event Data at:', url);
     console.log('Update payload:', updatedEventData);
     
+    // Debugging: Check types of numeric fields
+    if (updatedEventData.numMats !== undefined) {
+      console.log('numMats type:', typeof updatedEventData.numMats, updatedEventData.numMats);
+    }
+    if (updatedEventData.registration_fee !== undefined) {
+      console.log('registration_fee type:', typeof updatedEventData.registration_fee, updatedEventData.registration_fee);
+    }
+    
     const response = await fetch(url, {
       method: 'PATCH',
       headers: { 

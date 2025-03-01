@@ -82,26 +82,59 @@ const convertToFirestoreFormat = (data: Record<string, unknown>): FirestoreDocum
     if (typeof value === 'string') {
       fields[key] = { stringValue: value };
     } else if (typeof value === 'number') {
-      fields[key] = Number.isInteger(value) 
-        ? { integerValue: value.toString() }
-        : { doubleValue: value };
+      // The key fix is here - ensuring numbers stay as numbers in Firestore
+      if (Number.isInteger(value)) {
+        // For integers, Firestore REST API requires a string representation
+        // but it will store it as a number internally
+        fields[key] = { integerValue: value.toString() };
+      } else {
+        // For floating points, we use doubleValue
+        fields[key] = { doubleValue: value };
+      }
     } else if (typeof value === 'boolean') {
       fields[key] = { booleanValue: value };
     } else if (Array.isArray(value)) {
-      fields[key] = {
-        arrayValue: {
-          values: value.map(item => {
-            if (typeof item === 'string') return { stringValue: item };
-            if (typeof item === 'number') return { integerValue: item.toString() };
-            return { stringValue: String(item) };
-          })
+      // Same pattern for arrays - ensure numbers in arrays are properly typed
+      const values: FirestoreValue[] = [];
+      
+      value.forEach(item => {
+        if (typeof item === 'string') {
+          values.push({ stringValue: item });
+        } else if (typeof item === 'number') {
+          if (Number.isInteger(item)) {
+            values.push({ integerValue: item.toString() });
+          } else {
+            values.push({ doubleValue: item });
+          }
+        } else if (typeof item === 'boolean') {
+          values.push({ booleanValue: item });
+        } else if (typeof item === 'object' && item !== null) {
+          const nestedObj = convertToFirestoreFormat(item as Record<string, unknown>);
+          if (nestedObj.fields) {
+            values.push({ mapValue: { fields: nestedObj.fields } });
+          }
+        } else {
+          values.push({ stringValue: String(item) });
         }
-      };
+      });
+      
+      fields[key] = { arrayValue: { values } };
+    } else if (typeof value === 'object' && value !== null) {
+      const nestedObj = convertToFirestoreFormat(value as Record<string, unknown>);
+      if (nestedObj.fields) {
+        fields[key] = { mapValue: { fields: nestedObj.fields } };
+      }
+    } else if (value === null) {
+      // Handle null values (you could add a nullValue type to your interface)
+      fields[key] = { stringValue: "" };
     }
   });
   
   return { fields };
 };
+
+
+
 
 export async function GET(
   request: Request,
@@ -149,6 +182,16 @@ export async function PATCH(
   try {
     const updatedData = await request.json() as Record<string, unknown>;
     console.log("Received update data:", updatedData);
+
+
+    const numericFields = ['numMats', 'registration_fee', 'ticket_price', 'photoPackagePrice', 'coachRegPrice'];
+    numericFields.forEach(field => {
+      if (field in updatedData && typeof updatedData[field] === 'string') {
+        updatedData[field] = Number(updatedData[field]);
+        console.log(`Converted ${field} from string to number: ${updatedData[field]}`);
+      }
+    });
+
     const firestoreFormat = convertToFirestoreFormat(updatedData);
     console.log("Converted to Firestore format:", firestoreFormat);
 
