@@ -4,64 +4,7 @@ import { db as pmtDb } from '@/lib/firebase_pmt/config';
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
 import { FullContactFighter, PmtFighterRecord } from '../types';
 
-export const fetchPMTFighters = async (year: string): Promise<PmtFighterRecord[]> => {
-  try {
-    const fightersRef = collection(pmtDb, `records_pmt_${year}`);
-    let threshold = 5;
-    let fighters: PmtFighterRecord[] = [];
 
-    // Loop, relaxing the wins requirement until we have at least 30 fighters (or threshold hits 0)
-    while (threshold >= 0) {
-      const fightersQuery = query(
-        fightersRef,
-        where('wins', '>', threshold),
-        limit(100)
-      );
-      const fightersSnapshot = await getDocs(fightersQuery);
-
-      fighters = fightersSnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          fighter_id: data.pmt_id,
-          first: data.first,
-          last: data.last,
-          gym: data.gym,
-          email: data.email,
-          weightclass: data.weightclasses[0], // use the first weightclass as primary
-          win: data.win,
-          wins: data.wins,
-          losses: data.losses,
-          loss: data.loss,
-          address: '',
-          age: data.age,
-          city: '',
-          coach: '',
-          coach_phone: '',
-          coach_email: '',
-          dob: '',
-          docId: doc.id,
-          gender: data.gender || '',
-          gym_id: '',
-          height: 0,
-          photo: '',
-          state: '',
-          website: '',
-          pmt_id: data.pmt_id,
-        };
-      });
-
-      if (fighters.length >= 100) {
-        break;
-      }
-      threshold--;
-    }
-
-    return fighters;
-  } catch (error) {
-    console.error('Error fetching PMT fighters:', error);
-    return [];
-  }
-};
 
 export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> => {
   try {
@@ -145,3 +88,66 @@ export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> =>
 };
 
 
+
+
+
+
+
+export const fetchPMTFighters = async (year: string): Promise<PmtFighterRecord[]> => {
+  try {
+    const fightersRef = collection(pmtDb, `records_pmt_${year}`);
+    let threshold = 5;
+    let fighters: PmtFighterRecord[] = [];
+
+    // Loop, relaxing the wins requirement until we have at least 30 fighters (or threshold hits 0)
+    while (threshold >= 0) {
+      const fightersQuery = query(
+        fightersRef,
+        where('wins', '>', threshold),
+        limit(100)
+      );
+      const fightersSnapshot = await getDocs(fightersQuery);
+
+      fighters = fightersSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          fighter_id: data.pmt_id,
+          first: data.first,
+          last: data.last,
+          gym: data.gym,
+          email: data.email,
+          weightclass: data.weightclasses[0], // use the first weightclass as primary
+          win: data.win,
+          wins: data.wins,
+          losses: data.losses,
+          loss: data.loss,
+          address: '',
+          age: data.age,
+          city: '',
+          coach: '',
+          coach_phone: '',
+          coach_email: '',
+          dob: '',
+          docId: doc.id,
+          gender: data.gender || '',
+          gym_id: '',
+          height: 0,
+          photo: '',
+          state: '',
+          website: '',
+          pmt_id: data.pmt_id,
+        };
+      });
+
+      if (fighters.length >= 100) {
+        break;
+      }
+      threshold--;
+    }
+
+    return fighters;
+  } catch (error) {
+    console.error('Error fetching PMT fighters:', error);
+    return [];
+  }
+};

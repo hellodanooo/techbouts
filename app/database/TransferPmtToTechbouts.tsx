@@ -12,7 +12,7 @@ import { Loader2, Check, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
+import { useAuth } from '@/context/AuthContext';
 
 export default function TransferPmtToTechbouts() {
   const [pmtRecords, setPmtRecords] = useState<Map<string, FighterRecord>>(new Map());
@@ -22,6 +22,8 @@ export default function TransferPmtToTechbouts() {
   const [progressMessage, setProgressMessage] = useState('');
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const { isAdmin } = useAuth();
+
   const [mergeResults, setMergeResults] = useState<{
     success?: boolean;
     updated?: number;
@@ -128,6 +130,21 @@ export default function TransferPmtToTechbouts() {
       setIsMerging(false);
     }
   };
+
+  // If user is not an admin, show access denied message
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto py-16 flex flex-col items-center justify-center min-h-[60vh]">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Access Denied</AlertTitle>
+          <AlertDescription>
+            You dont have permission to access this page. Admin privileges are required.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">

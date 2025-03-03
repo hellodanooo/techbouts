@@ -1,108 +1,108 @@
+// app/database/[sanctioning]/page.tsx
 import React from 'react';
 import { Metadata } from 'next';
-import YearSelector from '@/components/selectors/YearSelector';
-import FighterSearchTable from '@/components/tables/FighterSearchTable';
-import { fetchPMTFighters } from '@/utils/records/fetchFighters';
-import { fetchTechBoutsFighters } from '@/utils/records/fetchFighters';
-import { FullContactFighter, PmtFighterRecord } from '@/utils/types';
+import FighterSearchTable from '@/components/tables/EnhancedFighterTable';
 import Image from 'next/image';
+import { Suspense } from 'react';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
+import { FullContactFighter } from '@/utils/types';
 
-export async function generateMetadata(props: { 
-  params: Promise<{ sanctioning: string }>;
-  searchParams: Promise<{ year?: string }>;
-}): Promise<Metadata> {
-  const sanctioning = (await props.params).sanctioning.toLowerCase();
-  const searchParams = await props.searchParams;
-  let fighterCount = 0;
+// Placeholder loading component
+const LoadingFighters = () => (
+  <div className="flex flex-col items-center justify-center h-64">
+    <div className="animate-spin h-12 w-12 border-4 border-blue-500 rounded-full border-t-transparent mb-4"></div>
+    <p>Loading fighters...</p>
+  </div>
+);
 
-  if (sanctioning === 'pmt') {
-    const year = searchParams.year || '2024';
-    const fighters = await fetchPMTFighters(year);
-    fighterCount = fighters.length;
-  } else if (sanctioning === 'ikf') {
-    const fighters = await fetchTechBoutsFighters();
-    fighterCount = fighters.length;
+// Function to get initial data with just a small subset of fighters
+async function getInitialFighters() {
+  try {
+    // Only fetch a small initial batch of fighters
+    const fightersRef = collection(techboutsDb, 'techbouts_fighters');
+    const fightersQuery = query(fightersRef, limit(50)); // Only get first 50
+    
+    const fightersSnapshot = await getDocs(fightersQuery);
+    
+    // Get the count without loading all fighters
+    const countQuery = query(fightersRef);
+    const countSnapshot = await getDocs(countQuery);
+    const totalCount = countSnapshot.size;
+    
+    // Map the initial fighters
+    const fighters = fightersSnapshot.docs.map(doc => {
+      const data = doc.data();
+      
+      return {
+        fighter_id: data.fighter_id || doc.id,
+        first: data.first || '',
+        last: data.last || '',
+        gym: data.gym || '',
+        email: data.email || '',
+        weightclass: Number(data.weightclass) || 0,
+        age_gender: data.age_gender || '',
+        mt_win: data.win || 0,
+        mt_loss: data.loss || 0,
+        boxing_win: data.boxing_win || 0,
+        boxing_loss: data.boxing_loss || 0,
+        mma_win: data.mmawin || 0,
+        mma_loss: data.mmaloss || 0,
+        nc: data.nc || 0,
+        dq: data.dq || 0,
+        years_exp: data.years_exp || 0,
+        class: data.class || '',
+        docId: data.docId || doc.id,
+      } as FullContactFighter;
+    });
+    
+    return { fighters, totalCount };
+  } catch (error) {
+    console.error('Error fetching initial fighters:', error);
+    return { fighters: [], totalCount: 0 };
   }
+}
 
-  const sanctioningUpper = sanctioning.toUpperCase();
+export async function generateMetadata(): Promise<Metadata> {
+  
+  // Get count without loading all fighters
+  const { totalCount } = await getInitialFighters();
+  
   return {
-    title: `${sanctioningUpper} Fighter Database - ${fighterCount} Fighters`,
-    description: `Explore our ${sanctioningUpper} fighter database with ${fighterCount} fighters grouped by weight class, gym, and more.`,
+    title: `TechBouts Fighter Database - ${totalCount} Fighters`,
+    description: `Explore our TechBouts fighter database with ${totalCount} fighters grouped by weight class, gym, and more.`,
   };
 }
 
-export default async function FighterDatabase(props: {
-  params: Promise<{ sanctioning: string }>;
-  searchParams: Promise<{ year?: string }>;
-}) {
-  const sanctioning = (await props.params).sanctioning.toLowerCase();
-  const searchParams = await props.searchParams;
-  let pmtFighters: PmtFighterRecord[] = [];
-  let techBoutsFighters: FullContactFighter[] = [];
-  let selectedYear = '2024';
-
-  if (!['pmt', 'ikf'].includes(sanctioning)) {
-    return <div>Invalid sanctioning body specified</div>;
-  }
-
-  if (sanctioning === 'pmt') {
-    selectedYear = searchParams.year || '2024';
-    pmtFighters = await fetchPMTFighters(selectedYear);
-  } else if (sanctioning === 'ikf') {
-    techBoutsFighters = await fetchTechBoutsFighters();
-  }
-
-  const fighterCount = sanctioning === 'pmt' ? pmtFighters.length : techBoutsFighters.length;
+export default async function FighterDatabase() {
+  
+  // Get initial fighters (just a small subset)
+  const { fighters: initialFighters, totalCount } = await getInitialFighters();
 
   return (
     <div className="w-full flex flex-col items-center space-y-6">
-      <h1 className="text-2xl font-bold">{sanctioning.toUpperCase()} Fighter Database</h1>
+      <h1 className="text-2xl font-bold">TechBouts Fighter Database</h1>
       
-      {sanctioning === 'pmt' && (
-        <Image
-          src="/logos/pmt_logo_2024_sm.png"
-          alt="PMT Database"
-          width={250}
-          height={125}
-          className="rounded-lg shadow-lg"
-        />
-      )}
-      
-      {sanctioning === 'ikf' && (
-        <Image
-          src="/logos/ikf_logo.png"
-          alt="IKF Database"
-          width={250}
-          height={125}
-          className="rounded-lg shadow-lg"
-        />
-      )}
-
-      {sanctioning === 'pmt' && <YearSelector />}
+      <Image
+        src="/logos/techbouts_logo.png" // Update to your actual logo path
+        alt="TechBouts Database"
+        width={250}
+        height={125}
+        className="rounded-lg shadow-lg"
+      />
       
       <div className="text-center">
-        {sanctioning === 'pmt' && (
-          <p>Total Fighters for {selectedYear}: {fighterCount}</p>
-        )}
-        {sanctioning === 'ikf' && (
-          <p>Total Fighters: {fighterCount}</p>
-        )}
+        <p>Total Fighters: {totalCount}</p>
+        <p className="text-sm text-gray-500">Showing results in batches for better performance</p>
       </div>
 
       <div className="w-full overflow-x-auto">
-        {sanctioning === 'pmt' ? (
+        <Suspense fallback={<LoadingFighters />}>
           <FighterSearchTable 
-            initialFighters={pmtFighters} 
-            sanctioning={sanctioning} 
-            year={selectedYear} 
+            initialFighters={initialFighters} 
+            totalCount={totalCount}
           />
-        ) : (
-          <FighterSearchTable 
-            initialFighters={techBoutsFighters} 
-            sanctioning={sanctioning} 
-            year={selectedYear} 
-          />
-        )}
+        </Suspense>
       </div>
     </div>
   );
