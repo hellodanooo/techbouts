@@ -1,19 +1,20 @@
-// app/api/events/[eventId]/route.ts
+// app/api/events/[promoterId]/[eventId]/route.ts
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase_techbouts/config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ promoterId:string, eventId: string }> }
+  { params }: { params: Promise<{ promoterId: string, eventId: string }> }
 ) {
   console.log('API Route - Starting GET request');
   console.log('API Route - Request URL:', request.url);
   
   try {
     const { promoterId, eventId } = await params;
-    console.log('API Route - Fetching event with ID:', eventId);
+    console.log('API Route - Fetching event with ID:', eventId, 'for promoter:', promoterId);
     
+    // Fix the document path to include the promoterId in the collection path
     const eventRef = doc(db, 'events', 'promotions', promoterId, eventId);
     console.log('API Route - Created Firestore reference');
     
@@ -42,22 +43,27 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ eventId: string }> }
+  { params }: { params: Promise<{ promoterId: string, eventId: string }> }
 ) {
   try {
-    const { eventId } = await params;
+    const { promoterId, eventId } = await params;
+    console.log('API Route - Updating event with ID:', eventId, 'for promoter:', promoterId);
+    
     const updatedData = await request.json();
     
-    const eventRef = doc(db, 'events', eventId);
+    // Fix the document path to include the promoterId in the collection path
+    const eventRef = doc(db, 'events', 'promotions', promoterId, eventId);
     const eventSnapshot = await getDoc(eventRef);
 
     if (!eventSnapshot.exists()) {
+      console.log('API Route - Event document not found in Firebase');
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // ✅ Use `updateDoc` instead of `eventRef.update`
+    // Update the document
     await updateDoc(eventRef, updatedData);
     
+    // Fetch the updated document
     const updatedSnapshot = await getDoc(eventRef);
     const updatedEventData = updatedSnapshot.data();
 
@@ -66,7 +72,7 @@ export async function PATCH(
       event: updatedEventData 
     });
   } catch (error) {
-    console.error('API Route - Error:', error);
+    console.error('API Route - Error updating event:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
       { error: 'Failed to update event', details: errorMessage },

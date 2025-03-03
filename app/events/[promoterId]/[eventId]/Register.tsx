@@ -16,6 +16,8 @@ interface RegisterProps {
   closeModal: () => void;
   registrationFee: number;
   user?: string;
+  sanctioningLogoUrl?: string;
+  promotionLogoUrl?: string;
 }
 
 interface FighterFormData {
@@ -90,7 +92,7 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl }) => {
 
   const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -147,6 +149,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   });
 
   useEffect(() => {
+   console.log('Sanctioning Logo URL:', sanctioningLogoUrl);
     const fetchRosterCount = async () => {
       try {
         // Get a reference to the single roster_json document that contains all fighters
@@ -612,7 +615,26 @@ const handleRegistrationSubmit = async () => {
   return (
 
     <div className="fixed bg-white inset-0 z-50 flex items-center justify-center">
+    
+
+
       <div className="p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+   
+   
+<div>logo</div>
+    {sanctioningLogoUrl && (
+  
+    <div>
+      LOGO
+      <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-12 w-auto mx-auto" />
+    </div>  
+    
+    )}
+   
+   
+      <div style={{ backgroundColor: 'black', color: 'white', padding: '10px', textAlign: 'center' }}>
+        <h1>Registration Form for {eventName}</h1>
+      </div>
 
         <div>
           Current Fighters Registered: {rosterCount}<br></br>

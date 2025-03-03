@@ -213,7 +213,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
         sanctioning: sanctioning ?? "",
         promotionName: promoter.promotionName ?? "",
         promoterId: formData.promoterId ?? "",
-        promoterEmail: formData.email ?? "",
+        promoterEmail: formData.promoterEmail ?? "",
         email: formData.email ?? "",
         status: formData.status ?? "confirmed",
         street: formData.street ?? "",

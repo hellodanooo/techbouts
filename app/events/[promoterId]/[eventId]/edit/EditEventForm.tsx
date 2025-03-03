@@ -162,13 +162,13 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
           setIsUploadingFlyer(false);
         }
 
-        const updatedEvent = await editTechBoutsEvent(eventId, updatedFormData);
+        const updatedEvent = await editTechBoutsEvent(promoterId, eventId, updatedFormData);
 
         if (!updatedEvent) {
           throw new Error('Failed to update event');
         }
 
-        router.push(`/events/${eventId}`);
+        router.push(`/events/${promoterId}/{${eventId}`);
         router.refresh();
 
 

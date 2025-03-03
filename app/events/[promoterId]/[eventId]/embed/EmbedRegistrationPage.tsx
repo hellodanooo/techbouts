@@ -96,6 +96,8 @@ export default function EmbedRegistrationPage({
             eventName={eventData.event_name ?? eventData.name ?? 'Event'}
             closeModal={() => null}
             registrationFee={eventData.registration_fee ?? 0}
+            sanctioningLogoUrl={eventData.sanctioningLogoUrl}
+
      
           />
         )}

@@ -12,9 +12,10 @@ import { CheckIcon, CopyIcon } from 'lucide-react';
 interface EmbedCodeGeneratorProps {
   eventId: string;
   eventName: string;
+  promoterId: string;
 }
 
-export default function EmbedCodeGenerator({ eventId, eventName }: EmbedCodeGeneratorProps) {
+export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: EmbedCodeGeneratorProps) {
   const [copied, setCopied] = useState(false);
   const [width, setWidth] = useState(600);
   const [height, setHeight] = useState(700);
@@ -43,7 +44,7 @@ export default function EmbedCodeGenerator({ eventId, eventName }: EmbedCodeGene
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
     
     return `<iframe 
-  src="${baseUrl}/events/${eventId}/embed${queryString}" 
+  src="${baseUrl}/events/${promoterId}/${eventId}/embed${queryString}" 
   width="${width}" 
   height="${height}" 
   frameborder="0" 
@@ -57,7 +58,7 @@ export default function EmbedCodeGenerator({ eventId, eventName }: EmbedCodeGene
   
   // Generate the JavaScript embed code (more advanced)
   const generateJsCode = () => {
-    return `<div id="techbouts-registration-${eventId}"></div>
+    return `<div id="techbouts-registration-${promoterId}-${eventId}"></div>
 <script>
   (function() {
     // Create script element

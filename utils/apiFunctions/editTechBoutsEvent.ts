@@ -1,9 +1,9 @@
 // utils/apiFunctions/editTechBoutsEvent.ts
 import { EventType } from '../types';
 
-export async function editTechBoutsEvent(eventId: string, updatedEventData: Partial<EventType>): Promise<EventType | null> {
+export async function editTechBoutsEvent(promoterId: string, eventId: string, updatedEventData: Partial<EventType>): Promise<EventType | null> {
   try {
-    const url = `/api/events/${eventId}`;
+    const url = `/api/events/${promoterId}/${eventId}`;
     console.log('editTechBoutsEvent - Updating Event Data at:', url);
     console.log('editTechBoutsEvent - Update payload:', updatedEventData);
     

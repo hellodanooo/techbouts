@@ -20,6 +20,7 @@ interface TournamentDashboardProps {
   promoterId: string;
   promoterEmail: string;
   eventData: EventType;
+
 }
 
 export default function PageContentEvent({
@@ -244,6 +245,7 @@ export default function PageContentEvent({
                       closeModal={() => setRegisterOpen(false)}
                       registrationFee={eventData.registration_fee}
                       user={user?.email || undefined}
+                      sanctioningLogoUrl={eventData.sanctioningLogoUrl}
                     />
                   )}
                 </CardContent>
@@ -291,6 +293,7 @@ export default function PageContentEvent({
         <EmbedCodeGenerator 
           eventId={eventId} 
           eventName={eventData.name || eventData.event_name || 'Event'} 
+          promoterId={promoterId}
         />
       </div>
     </div>

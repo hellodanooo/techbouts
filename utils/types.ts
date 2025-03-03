@@ -218,6 +218,8 @@ export interface EventType {
   photoPackageEnabled: boolean;
   coachRegEnabled: boolean;
   payLaterEnabled?: boolean;
+  sanctioningLogoUrl?: string;
+  promotionLogoUrl?: string;
 }
 
 export interface Promoter {

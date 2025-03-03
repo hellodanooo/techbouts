@@ -48,6 +48,8 @@ export async function generateMetadata({
       };
     }
 
+
+
     return {
       title: 'Event Not Found | TechBouts'
     };
@@ -98,13 +100,18 @@ export default async function EventPage(params: {
     
     // If PMT event not found, try TechBouts (IKF/PBSC)
     const techBoutsEventData = await fetchTechBoutsEvent(promoterId,eventId);
+    
+    
     if (techBoutsEventData) {
       console.log('Page Component - Successfully fetched TechBouts event data');
       const pageTitle = `${techBoutsEventData.name} - ${techBoutsEventData.date}`;
       
       // Determine if it's IKF or PBSC based on the event data
       const sanctioning = techBoutsEventData.sanctioning || 'IKF'; // Default to IKF if not specified
-      
+
+      const sanctioningLogoUrl = techBoutsEventData.sanctioning === 'PMT' ? '/logos/pmt_logo_2024_sm.png' : techBoutsEventData.sanctioning === 'PBSC' ? '/logos/pbsc_logo.png' : '/logos/ikf_logo.png';      
+techBoutsEventData.sanctioningLogoUrl = sanctioningLogoUrl;
+
       return (
         <>
           <Head>
