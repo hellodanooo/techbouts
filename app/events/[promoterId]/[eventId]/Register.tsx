@@ -621,25 +621,52 @@ const handleRegistrationSubmit = async () => {
       <div className="p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
    
    
-<div>logo</div>
+
     {sanctioningLogoUrl && (
-  
+      <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px',
+        marginBottom: '10px',
+        fontSize: '2.5rem',
+        border: '1px solid black',
+        borderRadius: '10px',
+      }}
+      >
+
+
     <div>
-      LOGO
-      <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-12 w-auto mx-auto" />
+    P
+    </div>
+    <div>
+    B
+    </div>
+    <div>
+      <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20 w-auto mx-auto" />
     </div>  
-    
+    <div>
+    S
+    </div>
+    <div>
+    C
+    </div>
+    </div>
+
+  
     )}
    
    
-      <div style={{ backgroundColor: 'black', color: 'white', padding: '10px', textAlign: 'center' }}>
+      <div style={{ backgroundColor: 'black', color: 'white', padding: '10px', textAlign: 'center'
+        
+       }}>
         <h1>Registration Form for {eventName}</h1>
       </div>
 
         <div>
           Current Fighters Registered: {rosterCount}<br></br>
           Early Bird (under 50 Athletes): 65 | 50-80: 75 | 80-110: 85 | 110+: 95
-
         </div>
 
         <FighterForm
