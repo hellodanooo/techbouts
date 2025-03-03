@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import TransferPmtToTechbouts from './TransferPmtToTechbouts';
 
 export const metadata = {
   title: 'Fighter Database Organizations',
@@ -37,6 +38,7 @@ export default function FighterDatabase() {
           />
         </Link>
       </div>
+      <TransferPmtToTechbouts />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// app/events/[promoterId]/[eventId]/edit/OfficialsEvent.tsx
 'use client';
 
 import React, { FC, useEffect, useState } from 'react';
@@ -9,6 +10,9 @@ import { fetchOfficials } from '@/utils/officials/fetchOfficials';
 
 import OfficialLayoutModal from './OfficialLayoutModal';
 import OfficialBankModal from './OfficialBankModal';
+import OfficialsAccounting from '@/components/officials/OfficialsAccounting';
+import { Calculator } from "lucide-react";
+
 
 import {
   Collapsible,
@@ -48,6 +52,11 @@ interface OfficialsEventProps {
   numMats: number;
   promoterId: string;
   sanctioning: string;
+  eventName: string;
+  eventDate: string;
+  eventAddress: string;
+
+
 }
 
 interface SelectLocationDropdownProps {
@@ -80,13 +89,14 @@ const SelectLocationDropdown: FC<SelectLocationDropdownProps> = ({ officialsList
   );
 };
 
-const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId }) => {
+const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId, eventName, eventDate, eventAddress }) => {
   const [officials, setOfficials] = useState<Official[]>([]);
   const [allOfficials, setAllOfficials] = useState<Official[]>([]);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
-  
+  const [isAccountingModalOpen, setIsAccountingModalOpen] = useState(false);
+
   // State for the OfficialBankModal
   const [isOfficialBankModalOpen, setIsOfficialBankModalOpen] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<string>('');
@@ -552,6 +562,30 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId 
           officials={officials}
           matCount={numMats}
         />
+
+
+<div className="flex justify-center">
+  <Button 
+    variant="default" 
+    onClick={() => setIsAccountingModalOpen(true)}
+    className="bg-green-600 hover:bg-green-700 text-white mt-4 mb-4 px-4 py-2 rounded-md"
+  >
+    <Calculator className="h-4 w-4 mr-2" />
+    Officials Accounting
+  </Button>
+</div>
+
+<OfficialsAccounting
+  isOpen={isAccountingModalOpen}
+  onClose={() => setIsAccountingModalOpen(false)}
+  officials={officials}
+  eventId={eventId}
+  promoterId={promoterId}
+  eventName={eventName}
+  eventDate={eventDate}
+  eventAddress={eventAddress}
+  numMats={numMats}
+/>
       </CollapsibleContent>
     </Collapsible>
   );

@@ -82,6 +82,9 @@ if (eventData) {
         numMats={eventData.numMats} 
         promoterId={eventData.promoterId}
         sanctioning={eventData.sanctioning}
+        eventName={eventData.event_name}
+        eventDate={eventData.date}
+        eventAddress={eventData.address}
       /> 
 
 </div>

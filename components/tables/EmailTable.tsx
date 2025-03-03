@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Download } from "lucide-react";
 
 interface FighterEmail {
   pmt_id: string;
@@ -55,6 +55,35 @@ export default function EmailsTable({ emailData, loading, error, selectedYear }:
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedEmails = filteredEmails.slice(startIndex, startIndex + itemsPerPage);
 
+  const exportToCSV = () => {
+    if (!emailData?.emails.length) return;
+    
+    // Create CSV content
+    const headers = ['First Name', 'Last Name', 'Email', 'PMT ID'];
+    const csvContent = [
+      headers.join(','),
+      ...emailData.emails.map(email => 
+        [
+          `"${email.first.replace(/"/g, '""')}"`, 
+          `"${email.last.replace(/"/g, '""')}"`, 
+          `"${email.email.replace(/"/g, '""')}"`, 
+          `"${email.pmt_id.replace(/"/g, '""')}"`
+        ].join(',')
+      )
+    ].join('\n');
+    
+    // Create a blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `fighter-emails-${selectedYear}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -70,6 +99,16 @@ export default function EmailsTable({ emailData, loading, error, selectedYear }:
               }}
               className="max-w-xs"
             />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportToCSV} 
+              disabled={loading || !emailData?.emails.length}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export to CSV
+            </Button>
           </div>
         </CardTitle>
       </CardHeader>

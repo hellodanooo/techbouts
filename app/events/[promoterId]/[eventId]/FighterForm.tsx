@@ -1,40 +1,17 @@
 // pages/components/FighterForm.tsx
 // this component should create the fighter and pass to the root screen to submit to roster
 'use client';
-
 import React, { useState, useEffect } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  QueryDocumentSnapshot,
-  DocumentData
-} from 'firebase/firestore';
+import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
-
-
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -113,7 +90,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   const [isWaiverChecked, setIsWaiverChecked] = useState(false);
 
 
-  
+
   const [formLabels] = useState({
     returningAthletes: 'RETURNING ATHLETES',
     doubleCheckInfo: '(double check your information)',
@@ -228,10 +205,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
 
 
-
-
-
-
   const handleDateChange = (date: dayjs.Dayjs | null) => {
     if (date) {
       const formattedDate = date.format('MM/DD/YYYY');
@@ -287,7 +260,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     mma_loss: 0,
     pmt_win: 0,
     pmt_loss: 0,
-   
+
 
     // Legacy fields
     win: 0,
@@ -335,32 +308,33 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   const [searchType, setSearchType] = useState<'email' | 'last'>('email');
 
   useEffect(() => {
+    
     const fetchFighters = async () => {
       if (fighterSearchTerm.length >= 3) {
         console.log(`Searching for ${searchType} containing:`, fighterSearchTerm);
-        
+
         try {
           // Create a query that searches for emails containing the search term (case-insensitive)
           const colRef = collection(db, 'techbouts_fighters');
           let optimizedSearchTerm = fighterSearchTerm;
           // For email, we want to use lowercase to match most common storage patterns
-         if (searchType === 'email') {
-          optimizedSearchTerm = fighterSearchTerm.toLowerCase();
-         }
-         if (searchType === 'last') {
-          optimizedSearchTerm = fighterSearchTerm.toUpperCase();
+          if (searchType === 'email') {
+            optimizedSearchTerm = fighterSearchTerm.toLowerCase();
           }
-          
+          if (searchType === 'last') {
+            optimizedSearchTerm = fighterSearchTerm.toUpperCase();
+          }
+
           const fightersQuery = query(
             colRef,
             where(searchType, '>=', optimizedSearchTerm),
             where(searchType, '<=', optimizedSearchTerm + '\uf8ff')
           );
-          
+
           console.log('Executing query...');
           const querySnapshot = await getDocs(fightersQuery);
           console.log('Query returned', querySnapshot.size, 'results');
-          
+
           // Even if we get results with the lowercase search, we should also try with original case
           // to ensure we catch all possible matches (for any values stored with mixed case)
           const originalCaseQuery = query(
@@ -368,13 +342,13 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
             where(searchType, '>=', fighterSearchTerm),
             where(searchType, '<=', fighterSearchTerm + '\uf8ff')
           );
-          
+
           const originalCaseSnapshot = await getDocs(originalCaseQuery);
           console.log('Original case query returned', originalCaseSnapshot.size, 'results');
-          
+
           // Combine both sets of results (will automatically remove duplicates by document ID)
           const combinedResults = new Map();
-          
+
           // Helper function to map document data to our FighterFormData type
           const mapDocToFighterData = (doc: QueryDocumentSnapshot<DocumentData>): FighterFormData => {
             const data = doc.data();
@@ -413,25 +387,25 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               gym_id: data.gym_id || '',
             };
           };
-          
+
           // Add results from lowercase query
           querySnapshot.docs.forEach(doc => {
             combinedResults.set(doc.id, mapDocToFighterData(doc));
           });
-          
+
           // Add results from original case query
           originalCaseSnapshot.docs.forEach(doc => {
             if (!combinedResults.has(doc.id)) {
               combinedResults.set(doc.id, mapDocToFighterData(doc));
             }
           });
-          
+
           // Convert Map to Array
           const fighters = Array.from(combinedResults.values());
-          
+
           // Log for debugging
           console.log('Total combined fighters:', fighters.length);
-          
+
           // Set the results
           setFighterSearchResults(fighters);
         } catch (error) {
@@ -442,7 +416,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         setFighterSearchResults([]);
       }
     };
-  
+
     fetchFighters();
   }, [fighterSearchTerm, searchType]);
 
@@ -453,7 +427,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   const handleFighterSelect = (selectedFighter: FighterFormData) => {
     console.log('Selected fighter raw data:', selectedFighter);
-    
+
     // Create a complete fighter object with proper data conversions and defaults
     const updatedFighter: FighterFormData = {
       // Basic Information with defaults for every field
@@ -464,73 +438,73 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       age: typeof selectedFighter.age === 'number' ? selectedFighter.age : (parseInt(selectedFighter.age as unknown as string) || 0),
       gender: selectedFighter.gender || '',
       fighter_id: selectedFighter.fighter_id || '',
-  
+
       // Gym Information
       gym: selectedFighter.gym || '',
       gym_id: selectedFighter.gym_id || '',
       coach_name: selectedFighter.coach_name || '',
       coach_email: selectedFighter.coach_email || '',
       coach_phone: selectedFighter.coach_phone || '',
-  
+
       // Location Information
       state: selectedFighter.state || '',
       city: selectedFighter.city || '',
-  
+
       // Physical Information
-      weightclass: typeof selectedFighter.weightclass === 'number' ? selectedFighter.weightclass : 
-                  (parseInt(selectedFighter.weightclass as unknown as string) || 0),
-      height: typeof selectedFighter.height === 'number' ? selectedFighter.height : 
-             (parseInt(selectedFighter.height as unknown as string) || 0),
-      heightFoot: typeof selectedFighter.heightFoot === 'number' ? selectedFighter.heightFoot : 
-                 (parseInt(selectedFighter.heightFoot as unknown as string) || 0),
-      heightInch: typeof selectedFighter.heightInch === 'number' ? selectedFighter.heightInch : 
-                 (parseInt(selectedFighter.heightInch as unknown as string) || 0),
-  
+      weightclass: typeof selectedFighter.weightclass === 'number' ? selectedFighter.weightclass :
+        (parseInt(selectedFighter.weightclass as unknown as string) || 0),
+      height: typeof selectedFighter.height === 'number' ? selectedFighter.height :
+        (parseInt(selectedFighter.height as unknown as string) || 0),
+      heightFoot: typeof selectedFighter.heightFoot === 'number' ? selectedFighter.heightFoot :
+        (parseInt(selectedFighter.heightFoot as unknown as string) || 0),
+      heightInch: typeof selectedFighter.heightInch === 'number' ? selectedFighter.heightInch :
+        (parseInt(selectedFighter.heightInch as unknown as string) || 0),
+
       // Record fields with numeric conversion
-      mt_win: typeof selectedFighter.mt_win === 'number' ? selectedFighter.mt_win : 
-              (parseInt(selectedFighter.mt_win as unknown as string) || 0),
-      mt_loss: typeof selectedFighter.mt_loss === 'number' ? selectedFighter.mt_loss : 
-               (parseInt(selectedFighter.mt_loss as unknown as string) || 0),
-      boxing_win: typeof selectedFighter.boxing_win === 'number' ? selectedFighter.boxing_win : 
-                  (parseInt(selectedFighter.boxing_win as unknown as string) || 0),
-      boxing_loss: typeof selectedFighter.boxing_loss === 'number' ? selectedFighter.boxing_loss : 
-                   (parseInt(selectedFighter.boxing_loss as unknown as string) || 0),
-      mma_win: typeof selectedFighter.mma_win === 'number' ? selectedFighter.mma_win : 
-               (parseInt(selectedFighter.mma_win as unknown as string) || 0),
-      mma_loss: typeof selectedFighter.mma_loss === 'number' ? selectedFighter.mma_loss : 
-                (parseInt(selectedFighter.mma_loss as unknown as string) || 0),
-      pmt_win: typeof selectedFighter.pmt_win === 'number' ? selectedFighter.pmt_win : 
-               (parseInt(selectedFighter.pmt_win as unknown as string) || 0),
-      pmt_loss: typeof selectedFighter.pmt_loss === 'number' ? selectedFighter.pmt_loss : 
-                (parseInt(selectedFighter.pmt_loss as unknown as string) || 0),
-      
+      mt_win: typeof selectedFighter.mt_win === 'number' ? selectedFighter.mt_win :
+        (parseInt(selectedFighter.mt_win as unknown as string) || 0),
+      mt_loss: typeof selectedFighter.mt_loss === 'number' ? selectedFighter.mt_loss :
+        (parseInt(selectedFighter.mt_loss as unknown as string) || 0),
+      boxing_win: typeof selectedFighter.boxing_win === 'number' ? selectedFighter.boxing_win :
+        (parseInt(selectedFighter.boxing_win as unknown as string) || 0),
+      boxing_loss: typeof selectedFighter.boxing_loss === 'number' ? selectedFighter.boxing_loss :
+        (parseInt(selectedFighter.boxing_loss as unknown as string) || 0),
+      mma_win: typeof selectedFighter.mma_win === 'number' ? selectedFighter.mma_win :
+        (parseInt(selectedFighter.mma_win as unknown as string) || 0),
+      mma_loss: typeof selectedFighter.mma_loss === 'number' ? selectedFighter.mma_loss :
+        (parseInt(selectedFighter.mma_loss as unknown as string) || 0),
+      pmt_win: typeof selectedFighter.pmt_win === 'number' ? selectedFighter.pmt_win :
+        (parseInt(selectedFighter.pmt_win as unknown as string) || 0),
+      pmt_loss: typeof selectedFighter.pmt_loss === 'number' ? selectedFighter.pmt_loss :
+        (parseInt(selectedFighter.pmt_loss as unknown as string) || 0),
+
       // Legacy fields
-      win: typeof selectedFighter.win === 'number' ? selectedFighter.win : 
-           (parseInt(selectedFighter.win as unknown as string) || 0),
-      loss: typeof selectedFighter.loss === 'number' ? selectedFighter.loss : 
-            (parseInt(selectedFighter.loss as unknown as string) || 0),
-      ammy: typeof selectedFighter.ammy === 'number' ? selectedFighter.ammy : 
-            (parseInt(selectedFighter.ammy as unknown as string) || 0),
-  
+      win: typeof selectedFighter.win === 'number' ? selectedFighter.win :
+        (parseInt(selectedFighter.win as unknown as string) || 0),
+      loss: typeof selectedFighter.loss === 'number' ? selectedFighter.loss :
+        (parseInt(selectedFighter.loss as unknown as string) || 0),
+      ammy: typeof selectedFighter.ammy === 'number' ? selectedFighter.ammy :
+        (parseInt(selectedFighter.ammy as unknown as string) || 0),
+
       // Experience & Classification
-      years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp : 
-                 (parseInt(selectedFighter.years_exp as unknown as string) || 0),
-  
+      years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp :
+        (parseInt(selectedFighter.years_exp as unknown as string) || 0),
+
       // Contact Information
       phone: selectedFighter.phone || '',
-  
+
       // Additional Information
       other: selectedFighter.other || '',
     };
-    
+
     // Handle height conversion if needed
     if (updatedFighter.heightFoot === 0 && updatedFighter.heightInch === 0 && updatedFighter.height > 0) {
       updatedFighter.heightFoot = Math.floor(updatedFighter.height / 12);
       updatedFighter.heightInch = updatedFighter.height % 12;
     }
-    
+
     console.log('Processed fighter data:', updatedFighter);
-    
+
     // Parse the date for DatePicker - only if dob exists and is valid
     if (updatedFighter.dob) {
       try {
@@ -547,14 +521,14 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         setSelectedDate(null);
       }
     }
-    
+
     // Update form data - IMPORTANT: do this synchronously before the next step
     setFormData(updatedFighter);
-    
+
     // Notify parent component about the updated data
     console.log('Calling onFormDataChange with:', updatedFighter);
     onFormDataChange(updatedFighter);
-    
+
     // Clear search results
     setFighterSearchResults([]);
     setFighterSearchTerm('');
@@ -631,9 +605,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   };
 
 
-
-
-
   const maxYear = dayjs().subtract(5, 'year');
   const minYear = dayjs().subtract(100, 'year');
 
@@ -647,161 +618,161 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <form className="space-y-6">
         {/* Waiver Section */}
-        
+
         {source !== 'add-fighter-modal' && (
-          
+
           <Card>
-          <CardHeader>
-            <CardTitle>Waiver and Release Agreement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            
-            <ScrollArea className="h-[200px] rounded-md border p-4">
-              {/* Waiver content */}
-              <div className="space-y-4 text-sm">
-                <p>
-                  I, the competitor named below, and/or the legal guardian of the competitor, by submitting this application, acknowledge, understand, and agree to the following:
-                </p>
+            <CardHeader>
+              <CardTitle>Waiver and Release Agreement</CardTitle>
+            </CardHeader>
+            <CardContent>
 
-                <p>
-                  <strong>1. Assumption of Risk & Liability Release</strong><br />
-                  I voluntarily participate in events organized by <strong>IKF Point Muay Thai</strong> and <strong>Point Boxing Sparring Circuit</strong>, hosted on <strong>pmt-west.app</strong> and <strong>pmtwest.org</strong>, operated by <strong>Ryan Hodges, and Rafael Mendoza, and Daniel Hodges</strong> and originally founded by <strong>Johnny Davis Enterprises DBA (AK Promotions)</strong> and recognize the continued involvement of various promoters, officials, and organizations.
-                </p>
+              <ScrollArea className="h-[200px] rounded-md border p-4">
+                {/* Waiver content */}
+                <div className="space-y-4 text-sm">
+                  <p>
+                    I, the competitor named below, and/or the legal guardian of the competitor, by submitting this application, acknowledge, understand, and agree to the following:
+                  </p>
 
-                <p>
-                  I fully understand and accept that participation in Muay Thai/Kickboxing and combat sports involves inherent risks, including but not limited to,
-                  <strong>serious injury, permanent disability, paralysis, or death</strong>. I hereby release and discharge all individuals and entities listed above from any liability, claims, or demands arising from my participation in any event.
-                </p>
+                  <p>
+                    <strong>1. Assumption of Risk & Liability Release</strong><br />
+                    I voluntarily participate in events organized by <strong>IKF Point Muay Thai</strong> and <strong>Point Boxing Sparring Circuit</strong>, hosted on <strong>pmt-west.app</strong> and <strong>pmtwest.org</strong>, operated by <strong>Ryan Hodges, and Rafael Mendoza, and Daniel Hodges</strong> and originally founded by <strong>Johnny Davis Enterprises DBA (AK Promotions)</strong> and recognize the continued involvement of various promoters, officials, and organizations.
+                  </p>
 
-                <p>
-                  <strong>2. Data Usage & Digital Consent</strong><br />
-                  I acknowledge that my personal information, fight records, and participation details may be stored on <strong>PMT-West.app</strong>, <strong>TechBouts.com</strong> and <strong>ikffightplatform.com</strong> for event management, matchmaking, and competition records.
-                </p>
+                  <p>
+                    I fully understand and accept that participation in Muay Thai/Kickboxing and combat sports involves inherent risks, including but not limited to,
+                    <strong>serious injury, permanent disability, paralysis, or death</strong>. I hereby release and discharge all individuals and entities listed above from any liability, claims, or demands arising from my participation in any event.
+                  </p>
 
-                <p>
-                  <strong>3. Media Release & Publicity Consent</strong><br />
-                  I grant <strong>IKF Point Muay Thai League, PMT-West.app, TechBouts.com</strong> full rights to use any photographs, videos, live streams, and digital media recorded at any event.
-                </p>
+                  <p>
+                    <strong>2. Data Usage & Digital Consent</strong><br />
+                    I acknowledge that my personal information, fight records, and participation details may be stored on <strong>PMT-West.app</strong>, <strong>TechBouts.com</strong> and <strong>ikffightplatform.com</strong> for event management, matchmaking, and competition records.
+                  </p>
 
-                <p>
-                  <strong>4. Agreement to Rules & Conduct Policy</strong><br />
-                  I agree to abide by all <strong>official Muay Thai League rules and regulations</strong>. I acknowledge that any misconduct may result in penalties, disqualification, or suspension from future events.
-                </p>
+                  <p>
+                    <strong>3. Media Release & Publicity Consent</strong><br />
+                    I grant <strong>IKF Point Muay Thai League, PMT-West.app, TechBouts.com</strong> full rights to use any photographs, videos, live streams, and digital media recorded at any event.
+                  </p>
 
-                <p>
-                  <strong>5. Medical & Insurance Responsibility</strong><br />
-                  I affirm that I am <strong>physically and mentally fit</strong> to participate and have adequate medical insurance coverage.
-                </p>
+                  <p>
+                    <strong>4. Agreement to Rules & Conduct Policy</strong><br />
+                    I agree to abide by all <strong>official Muay Thai League rules and regulations</strong>. I acknowledge that any misconduct may result in penalties, disqualification, or suspension from future events.
+                  </p>
 
-                <p>
-                  <strong>6. Identification & Eligibility</strong><br />
-                  I understand that a valid birth certificate or government-issued ID may be required to compete.
-                </p>
+                  <p>
+                    <strong>5. Medical & Insurance Responsibility</strong><br />
+                    I affirm that I am <strong>physically and mentally fit</strong> to participate and have adequate medical insurance coverage.
+                  </p>
 
-                <p>
-                  <strong>7. Refund Policy</strong><br />
-                  I agree that any registration fees or ticket sales are <strong>non-refundable</strong>, unless the event is canceled.
-                </p>
+                  <p>
+                    <strong>6. Identification & Eligibility</strong><br />
+                    I understand that a valid birth certificate or government-issued ID may be required to compete.
+                  </p>
 
-                <p>
-                  <strong>8. Parent/Guardian Consent for Minors</strong><br />
-                  If the competitor is under the age of 18, a **parent or legal guardian must sign this waiver** on their behalf.
-                  By checking the box below and submitting this form, the parent or legal guardian acknowledges that they have read, understood, and agreed to all terms stated in this waiver
-                  and accept full responsibility for the minors participation in the event.
-                </p>
+                  <p>
+                    <strong>7. Refund Policy</strong><br />
+                    I agree that any registration fees or ticket sales are <strong>non-refundable</strong>, unless the event is canceled.
+                  </p>
+
+                  <p>
+                    <strong>8. Parent/Guardian Consent for Minors</strong><br />
+                    If the competitor is under the age of 18, a **parent or legal guardian must sign this waiver** on their behalf.
+                    By checking the box below and submitting this form, the parent or legal guardian acknowledges that they have read, understood, and agreed to all terms stated in this waiver
+                    and accept full responsibility for the minors participation in the event.
+                  </p>
+                </div>
+
+              </ScrollArea>
+
+              <div className="mt-4 flex items-center space-x-2">
+                <Checkbox
+                  id="waiver"
+                  checked={isWaiverChecked}
+                  onCheckedChange={(checked) => setIsWaiverChecked(checked as boolean)}
+                />
+                <Label htmlFor="waiver" className="text-sm">
+                  I have read and agree to the waiver
+                  <br />
+                  <span className="text-xs text-muted-foreground">
+                    (If the competitor is under 18, a parent or legal guardian must agree on their behalf.)
+                  </span>
+                </Label>
               </div>
-
-            </ScrollArea>
-
-            <div className="mt-4 flex items-center space-x-2">
-              <Checkbox
-                id="waiver"
-                checked={isWaiverChecked}
-                onCheckedChange={(checked) => setIsWaiverChecked(checked as boolean)}
-              />
-              <Label htmlFor="waiver" className="text-sm">
-                I have read and agree to the waiver
-                <br />
-                <span className="text-xs text-muted-foreground">
-                  (If the competitor is under 18, a parent or legal guardian must agree on their behalf.)
-                </span>
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         )}
 
 
 
         <fieldset disabled={!isWaiverChecked} className="space-y-6">
           {/* Returning Fighter Search */}
-         
-         
-         
-          <Card>
-  <CardHeader>
-    <CardTitle>{formLabels.returningAthletes}</CardTitle>
-    <CardDescription>{formLabels.doubleCheckInfo}</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <div className="space-y-4">
-      <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="email">Search by Email</TabsTrigger>
-          <TabsTrigger value="last">Search by Last Name</TabsTrigger>
-        </TabsList>
-        <TabsContent value="email" className="space-y-2">
-          <Label htmlFor="emailSearch">Search by Email</Label>
-          <Input
-            id="emailSearch"
-            value={searchType === 'email' ? fighterSearchTerm : ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFighterSearchTerm(value);
-              if (value.length < 3) setFighterSearchResults([]);
-            }}
-            placeholder="Enter email address..."
-          />
-        </TabsContent>
-        <TabsContent value="last" className="space-y-2">
-          <Label htmlFor="lastNameSearch">Search by Last Name</Label>
-          <Input
-            id="lastNameSearch"
-            value={searchType === 'last' ? fighterSearchTerm : ''}
-            onChange={(e) => {
-              const value = e.target.value.toUpperCase();
-              setFighterSearchTerm(value);
-              if (value.length < 3) setFighterSearchResults([]);
-            }}
-            placeholder="Enter last name..."
-          />
-        </TabsContent>
-      </Tabs>
 
-      {fighterSearchResults.length > 0 && (
-        <ScrollArea className="h-[200px] rounded-md border">
-          <div className="p-4">
-            {fighterSearchResults.map((fighter, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleFighterSelect(fighter)}
-              >
-                <div className="text-left">
-                  <div className="font-medium">{fighter.first} {fighter.last}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
-                  </div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
-      )}
-    </div>
-  </CardContent>
-</Card>
+
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{formLabels.returningAthletes}</CardTitle>
+              <CardDescription>{formLabels.doubleCheckInfo}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="email">Search by Email</TabsTrigger>
+                    <TabsTrigger value="last">Search by Last Name</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="email" className="space-y-2">
+                    <Label htmlFor="emailSearch">Search by Email</Label>
+                    <Input
+                      id="emailSearch"
+                      value={searchType === 'email' ? fighterSearchTerm : ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFighterSearchTerm(value);
+                        if (value.length < 3) setFighterSearchResults([]);
+                      }}
+                      placeholder="Enter email address..."
+                    />
+                  </TabsContent>
+                  <TabsContent value="last" className="space-y-2">
+                    <Label htmlFor="lastNameSearch">Search by Last Name</Label>
+                    <Input
+                      id="lastNameSearch"
+                      value={searchType === 'last' ? fighterSearchTerm : ''}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase();
+                        setFighterSearchTerm(value);
+                        if (value.length < 3) setFighterSearchResults([]);
+                      }}
+                      placeholder="Enter last name..."
+                    />
+                  </TabsContent>
+                </Tabs>
+
+                {fighterSearchResults.length > 0 && (
+                  <ScrollArea className="h-[200px] rounded-md border">
+                    <div className="p-4">
+                      {fighterSearchResults.map((fighter, index) => (
+                        <Button
+                          key={index}
+                          variant="ghost"
+                          className="w-full justify-start"
+                          onClick={() => handleFighterSelect(fighter)}
+                        >
+                          <div className="text-left">
+                            <div className="font-medium">{fighter.first} {fighter.last}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
 
 
@@ -1286,7 +1257,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                     </div>
                   </div>
 
-              
+
 
                   {/* Experience Level */}
                   <div className="space-y-2">
@@ -1316,7 +1287,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                           </SelectContent>
                         </Select>
                       </div>
-                     
+
                     </div>
                   </div>
                 </div>
