@@ -622,6 +622,8 @@ const handleRegistrationSubmit = async () => {
    
    
 
+
+
     {sanctioningLogoUrl && (
       <div
       style={{
@@ -637,21 +639,12 @@ const handleRegistrationSubmit = async () => {
       >
 
 
-    <div>
-    P
-    </div>
-    <div>
-    B
-    </div>
+
     <div>
       <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20 w-auto mx-auto" />
     </div>  
-    <div>
-    S
-    </div>
-    <div>
-    C
-    </div>
+ 
+  
     </div>
 
   

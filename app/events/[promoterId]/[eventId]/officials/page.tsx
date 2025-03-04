@@ -10,7 +10,7 @@ import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 
 //import { fetchPuristRoster } from '@/utils/apiFunctions/fetchPuristRoster';
 
-import OfficialsEvent from '../edit/OfficialsEvent';
+import OfficialsEvent from '../admin/OfficialsEvent';
 
 export default async function EditEventRoute({ 
   params 

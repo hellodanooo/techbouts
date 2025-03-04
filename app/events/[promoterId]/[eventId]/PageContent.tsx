@@ -88,7 +88,7 @@ export default function PageContentEvent({
             <h1 className="text-2xl font-bold">{eventData.name}</h1>
             {isAuthorizedPromoter && (
               <Link
-                href={`/events/${promoterId}/${eventId}/edit`}
+                href={`/events/${promoterId}/${eventId}/admin`}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 Admin Dashboard

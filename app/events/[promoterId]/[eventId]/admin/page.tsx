@@ -1,5 +1,4 @@
 // app/events/[promoterId]/[eventId]/edit/page.tsx
-import EditEventForm from './EditEventForm';
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 
@@ -9,10 +8,12 @@ import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 
 import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
 
+import PageDashboard from './PageDashboard';
+
+
 //import { fetchPuristRoster } from '@/utils/apiFunctions/fetchPuristRoster';
 
-import RosterTable from './RosterTable';
-import OfficialsEvent from './OfficialsEvent';
+
 
 export default async function EditEventRoute({ 
   params 
@@ -50,45 +51,30 @@ if (eventData) {
 
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Event Dashboard</h1>
-      <div>Sanctioning: {eventData.sanctioning}</div>
+    <div className="container mx-auto px-2 py-2">
       
-      <div className='mb-6'> 
-     
-      <EditEventForm 
-        eventData={eventData}
-        eventId={eventId}
-        promoterId={promoterId}
-      />
-</div>
-    
-    <div>
-      <RosterTable 
-      roster={roster}
+      <div className='flex flex-col items-center justify-center ' >
+
+      <div className="font-bold mb-2">Event Dashboard</div>
+
+
+    <div className='flex flex-wrap items-center justify-center '>
+
+<div className='mr-5'>Event: {eventData.event_name}</div>
+
+      <div className='mr-5'>Sanctioning: {eventData.sanctioning}</div>
+
+       <div> Promoter: {eventData.promoterEmail}</div>
+
+       </div>
+
+      </div>
+      <PageDashboard
+      eventData={eventData}
       eventId={eventId}
       promoterId={promoterId}
-      />
-    </div>
-
-
-    <div style={{
-  marginTop: '20px',
-  borderTop: '1px solid #ccc',
-  paddingTop: '20px'
-}}>
- <OfficialsEvent
-        eventId={eventId} 
-        numMats={eventData.numMats} 
-        promoterId={eventData.promoterId}
-        sanctioning={eventData.sanctioning}
-        eventName={eventData.event_name}
-        eventDate={eventData.date}
-        eventAddress={eventData.address}
-      /> 
-
-</div>
-
+      roster={roster}
+    />
     </div>
   );
 }
