@@ -5,9 +5,18 @@ import {
   getApps, 
   FirebaseApp 
 } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
+import { 
+  getFirestore 
+} from "firebase/firestore";
+import { 
+  getAuth, 
+  setPersistence, 
+  browserLocalPersistence, 
+  inMemoryPersistence 
+} from "firebase/auth";
+import { 
+  getAnalytics 
+} from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-PWlAUJn1v0dvBDAuhr_D1uxWNMB72cg",
@@ -20,6 +29,22 @@ const firebaseConfig = {
 };
 
 const TECHBOUTS_APP_NAME = 'techbouts-app';
+
+// Function to detect if we're in an embedded browser environment
+const isEmbeddedBrowser = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  const userAgent = navigator.userAgent.toLowerCase();
+  return (
+    userAgent.includes('fban') || // Facebook app
+    userAgent.includes('fbav') || // Facebook browser
+    userAgent.includes('instagram') ||
+    userAgent.includes('linkedin') ||
+    userAgent.includes('wv') || // WebView
+    // Messenger typically includes FBAN or FBAV but adding specific check
+    (userAgent.includes('facebook') && userAgent.includes('messenger'))
+  );
+};
 
 // Create or retrieve the named app
 function createTechBoutsApp(): FirebaseApp {
@@ -34,4 +59,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const analytics = (typeof window !== 'undefined') ? getAnalytics(app) : null;
 
-export { app, auth, analytics, db };
+// Set appropriate persistence based on browser environment
+if (typeof window !== 'undefined') {
+  const persistenceType = isEmbeddedBrowser() 
+    ? inMemoryPersistence  // Use in-memory for embedded browsers
+    : browserLocalPersistence;  // Use local storage for regular browsers
+  
+  setPersistence(auth, persistenceType)
+    .catch((error) => {
+      console.error('Firebase auth persistence error:', error);
+    });
+}
+
+export { app, auth, analytics, db, isEmbeddedBrowser };

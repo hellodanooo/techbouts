@@ -642,10 +642,7 @@ const handleRegistrationSubmit = async () => {
         <h1>Registration Form for {eventName}</h1>
       </div>
 
-        <div>
-          Current Fighters Registered: {rosterCount}<br></br>
-          Early Bird (under 50 Athletes): 65 | 50-80: 75 | 80-110: 85 | 110+: 95
-        </div>
+     
 
         <FighterForm
           onFormDataChange={setFighterData}
