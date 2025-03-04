@@ -35,16 +35,7 @@ export default async function Page({
     console.error('Error fetching event data for embed:', error);
   }
 
-if (eventData?.sanctioning === 'PMT') {
-  eventData.sanctioningLogoUrl = '/logos/pmt_logo_2024_sm.png';
-   
-  }
-  if (eventData?.sanctioning === 'PBSC') {
-    eventData.sanctioningLogoUrl = '/logos/pbsc_logo.png';
-    }
-    if (eventData?.sanctioning === 'IKF') {
-      eventData.sanctioningLogoUrl = 'techbouts.com/logos/ikf_logo.png';
-      }
+
 
   return (
     <EmbedRegistrationPage 

@@ -84,6 +84,11 @@ export default function PageContentEvent({
         />
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header Section */}
+
+
+          
+          
+          
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{eventData.name}</h1>
             {isAuthorizedPromoter && (
@@ -240,12 +245,14 @@ export default function PageContentEvent({
                   {registerOpen && (
                     <Register
                       eventId={eventId}
+                      promoterId={promoterId}
                       locale={locale}
                       eventName={eventData.event_name}
                       closeModal={() => setRegisterOpen(false)}
                       registrationFee={eventData.registration_fee}
                       user={user?.email || undefined}
                       sanctioningLogoUrl={eventData.sanctioningLogoUrl}
+                      promotionLogoUrl={eventData.promotionLogoUrl}
                     />
                   )}
                 </CardContent>

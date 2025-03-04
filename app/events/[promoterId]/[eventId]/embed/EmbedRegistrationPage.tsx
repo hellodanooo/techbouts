@@ -89,14 +89,17 @@ export default function EmbedRegistrationPage({
           {eventData.name} Registration
         </h2>
         
+
         {isLoaded && (
           <Register
             eventId={eventId}
+            promoterId={eventData.promoterId}
             locale={locale}
             eventName={eventData.event_name ?? eventData.name ?? 'Event'}
             closeModal={() => null}
             registrationFee={eventData.registration_fee ?? 0}
             sanctioningLogoUrl={eventData.sanctioningLogoUrl}
+            promotionLogoUrl={eventData.promotionLogoUrl}
 
      
           />

@@ -8,6 +8,9 @@ import { addPmtEvent } from '@/utils/apiFunctions/addPmtEvent';
 import { getGeocode } from "use-places-autocomplete";
 import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCollection';
 import { generateDocId } from '@/utils/eventManagement';
+import Image from 'next/image';
+import { Label } from "@/components/ui/label";
+
 
 
 import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer'; // export const uploadEventFlyer = async (file: File, eventId: string): Promise<string> => { this returns the download url
@@ -23,6 +26,18 @@ interface AddEventFormProps {
   promoter?: Promoter;
 }
 
+const getSanctioningLogo = (sanctioning: string) => {
+  switch (sanctioning?.toUpperCase()) {
+    case 'PMT':
+      return 'https://www.techbouts.com/logos/pmt_logo_2024_sm.png';
+    case 'IKF':
+      return 'https://www.techbouts.com/logos/ikf_logo.png';
+    case 'PBSC':
+      return 'https://www.techbouts.com/logos/pbsc_logo.png';
+    default:
+      return '';
+  }
+};
 
 const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialPromoter }) => {
   const [formData, setFormData] = useState<Partial<EventType>>({
@@ -54,6 +69,31 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
   const [promoterInput, setPromoterInput] = useState('');
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null);
 
+
+  const handleSanctioningChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSanctioning(value);
+    
+    // If a sanctioning is selected, update the formData with the logo URL
+    if (value) {
+      const logoUrl = getSanctioningLogo(value);
+      setFormData(prev => ({
+        ...prev,
+        sanctioning: value,
+        sanctioningLogoUrl: logoUrl
+      }));
+    } else {
+      // If no sanctioning selected, clear the logo
+      setFormData(prev => ({
+        ...prev,
+        sanctioning: '',
+        sanctioningLogoUrl: ''
+      }));
+    }
+  };
+
+
+ 
 
   const fetchPromoterSuggestions = async (query: string) => {
     if (query.length < 2) {
@@ -88,13 +128,23 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
     setSelectedPromoter(promoter);
     setPromoterInput(promoter.promotionName);
     setShowSuggestions(false);
+    
+    // Ensure logo URL starts with https:// if it exists
+    let logoUrl = promoter.logo || '';
+    if (logoUrl && !logoUrl.startsWith('http')) {
+      logoUrl = `https://${logoUrl}`;
+    }
+    
     setFormData(prev => ({
       ...prev,
       promoterId: promoter.promoterId,
       promoterEmail: promoter.email,
-      promotionName: promoter.promotionName
+      promotionName: promoter.promotionName,
+      promotionLogoUrl: logoUrl
     }));
   };
+
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -177,6 +227,15 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
         formData.flyer = await uploadEventFlyer(flyerFile, eventId);
       }
 
+
+      const sanctioningLogoUrl = formData.sanctioningLogoUrl || getSanctioningLogo(sanctioning);
+    
+      // Get the promoter logo URL, ensure it has https:// if needed
+      let promotionLogoUrl = formData.promotionLogoUrl || selectedPromoter?.logo || '';
+      if (promotionLogoUrl && !promotionLogoUrl.startsWith('http')) {
+        promotionLogoUrl = `https://${promotionLogoUrl}`;
+      }
+
       const eventData: EventType = {
         eventId, // ✅ Use the pre-generated event ID
         docId: eventId, // ✅ Use the same ID for consistency
@@ -234,9 +293,11 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
         coachRegPrice: formData.coachRegPrice ?? 0,
         photoPackageEnabled: formData.photoPackageEnabled ?? false,
         coachRegEnabled: formData.coachRegEnabled ?? false,
-        
-       
+  
+        sanctioningLogoUrl: sanctioningLogoUrl,
+        promotionLogoUrl: promotionLogoUrl,
 
+        
       };
       
   
@@ -358,16 +419,16 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
           )}
 
 
-          <select
-            value={sanctioning}
-            onChange={(e) => setSanctioning(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
-            <option value="">Select Sanctioning</option>
-            <option value="PMT">Point Muay Thai (PMT)</option>
-            <option value="IKF">International Kickboxing Federation (IKF)</option>
-            <option value="PBSC">Point Boxing Sparring Circuit (PBSC)</option>
-          </select>
+<select
+  value={sanctioning}
+  onChange={handleSanctioningChange}
+  className="w-full p-2 border rounded"
+>
+  <option value="">Select Sanctioning</option>
+  <option value="PMT">Point Muay Thai (PMT)</option>
+  <option value="IKF">International Kickboxing Federation (IKF)</option>
+  <option value="PBSC">Point Boxing Sparring Circuit (PBSC)</option>
+</select>
 
           <input
             type="text"
@@ -397,6 +458,55 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter: initialP
     className="w-full p-2 border rounded"
     onChange={(e) => setFlyerFile(e.target.files?.[0] ?? null)}
   />
+</div>
+
+
+<h2 className="text-xl font-semibold mb-4">Organization Logos</h2>
+  
+<div className="grid grid-cols-2 gap-4">
+  {/* Promoter Logo */}
+  <div>
+    <Label>Promoter Logo</Label>
+    <div className="mt-2 border rounded-lg p-2 min-h-32 flex items-center justify-center">
+      {formData.promotionLogoUrl ? (
+        <div className="text-center">
+          <Image
+            src={formData.promotionLogoUrl}
+            alt="Promoter Logo"
+            width={150}
+            height={150}
+            className="object-contain max-h-28"
+          />
+          <p className="text-xs text-gray-500 mt-2 break-all">{formData.promotionLogoUrl}</p>
+        </div>
+      ) : (
+        <div className="text-gray-400">No promoter logo available</div>
+      )}
+    </div>
+  </div>
+  
+  {/* Sanctioning Logo */}
+  <div>
+    <Label>Sanctioning Logo</Label>
+    <div className="mt-2 border rounded-lg p-2 min-h-32 flex items-center justify-center">
+  {sanctioning ? (
+    <div className="text-center">
+      <img
+        src={getSanctioningLogo(sanctioning)}
+        alt={`${sanctioning} Logo`}
+        className="object-contain max-h-28 max-w-[150px]"
+      />
+      <p className="text-xs text-gray-500 mt-2 break-all">{getSanctioningLogo(sanctioning)}</p>
+    </div>
+  ) : (
+    <div className="text-gray-400">No sanctioning selected</div>
+  )}
+</div>
+  </div>
+</div>
+
+<div className="text-sm text-gray-500 mt-2">
+  Note: These logos will be displayed on the event page and promotional materials.
 </div>
 
 

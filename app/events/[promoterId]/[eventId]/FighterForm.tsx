@@ -57,6 +57,10 @@ interface FighterFormData {
   mma_loss: number;
   pmt_win: number;
   pmt_loss: number;
+  pb_win: number;
+  pb_loss: number;
+
+  other_exp: string;
 
 
   // Legacy fields (maintained for compatibility)
@@ -260,6 +264,9 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     mma_loss: 0,
     pmt_win: 0,
     pmt_loss: 0,
+    pb_win: 0,
+    pb_loss: 0,
+    other_exp: '',
 
 
     // Legacy fields
@@ -308,7 +315,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   const [searchType, setSearchType] = useState<'email' | 'last'>('email');
 
   useEffect(() => {
-    
+
     const fetchFighters = async () => {
       if (fighterSearchTerm.length >= 3) {
         console.log(`Searching for ${searchType} containing:`, fighterSearchTerm);
@@ -371,6 +378,9 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               mma_loss: data.mma_loss || 0,
               pmt_win: data.pmt_win || 0,
               pmt_loss: data.pmt_loss || 0,
+              pb_win: data.pb_win || 0,
+              pb_loss: data.pb_loss || 0,
+
               gender: data.gender || '',
               other: data.other || '',
               years_exp: data.years_exp || 0,
@@ -385,6 +395,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               state: data.state || '',
               city: data.city || '',
               gym_id: data.gym_id || '',
+              other_exp: data.other_exp || '',
             };
           };
 
@@ -477,6 +488,12 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         (parseInt(selectedFighter.pmt_win as unknown as string) || 0),
       pmt_loss: typeof selectedFighter.pmt_loss === 'number' ? selectedFighter.pmt_loss :
         (parseInt(selectedFighter.pmt_loss as unknown as string) || 0),
+      pb_win: typeof selectedFighter.pb_win === 'number' ? selectedFighter.pb_win :
+        (parseInt(selectedFighter.pb_win as unknown as string) || 0),
+      pb_loss: typeof selectedFighter.pb_loss === 'number' ? selectedFighter.pb_loss :
+        (parseInt(selectedFighter.pb_loss as unknown as string) || 0),
+
+
 
       // Legacy fields
       win: typeof selectedFighter.win === 'number' ? selectedFighter.win :
@@ -489,6 +506,8 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       // Experience & Classification
       years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp :
         (parseInt(selectedFighter.years_exp as unknown as string) || 0),
+
+        other_exp: selectedFighter.other_exp || '',
 
       // Contact Information
       phone: selectedFighter.phone || '',
@@ -1141,6 +1160,10 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Fighter Record</h3>
 
+
+                  <div className='border rounded border-black-500 p-5'>
+<div>Full Contact Section</div>
+
                   {/* Muay Thai Record */}
                   <div className="space-y-2">
                     <h4 className="font-medium">Muay Thai Record</h4>
@@ -1228,33 +1251,75 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                     </div>
                   </div>
 
-                  {/* Point Muay Thai Record */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Point Muay Thai Record</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label htmlFor="pmt_win">Wins</Label>
-                        <Input
-                          id="pmt_win"
-                          name="pmt_win"
-                          type="number"
-                          min="0"
-                          value={formData.pmt_win}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="pmt_loss">Losses</Label>
-                        <Input
-                          id="pmt_loss"
-                          name="pmt_loss"
-                          type="number"
-                          min="0"
-                          value={formData.pmt_loss}
-                          onChange={handleInputChange}
-                        />
+
+                  </div>
+
+
+                  <div className='border rounded border-black-500 p-5'>
+
+                    <div>Semi Contact Point Sparring Section</div>
+                    {/* Point Muay Thai Record */}
+
+
+                    <div className="space-y-2 mt-5">
+                      <h4 className="font-medium">Point Muay Thai Record</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="pmt_win">Wins</Label>
+                          <Input
+                            id="pmt_win"
+                            name="pmt_win"
+                            type="number"
+                            min="0"
+                            value={formData.pmt_win}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="pmt_loss">Losses</Label>
+                          <Input
+                            id="pmt_loss"
+                            name="pmt_loss"
+                            type="number"
+                            min="0"
+                            value={formData.pmt_loss}
+                            onChange={handleInputChange}
+                          />
+                        </div>
                       </div>
                     </div>
+
+
+
+                    <div className="space-y-2 mt-5">
+                      <h4 className="font-medium">Point Boxing Record</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="pmt_win">Wins</Label>
+                          <Input
+                            id="pb_win"
+                            name="pb_win"
+                            type="number"
+                            min="0"
+                            value={formData.pb_win}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="pmt_loss">Losses</Label>
+                          <Input
+                            id="pb_loss"
+                            name="pb_loss"
+                            type="number"
+                            min="0"
+                            value={formData.pb_loss}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+
                   </div>
 
 
@@ -1290,6 +1355,18 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
                     </div>
                   </div>
+
+<div className="space-y-2">
+                    <Label htmlFor="other_exp">Other Experience</Label>
+                    <Input
+                      id="other_exp"
+                      name="other_exp"
+                      value={formData.other_exp}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+
                 </div>
 
 

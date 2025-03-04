@@ -12,8 +12,31 @@ export async function editTechBoutsEvent(promoterId: string, eventId: string, up
       // Ensure we have both name and event_name synced
       event_name: updatedEventData.name || updatedEventData.event_name,
       name: updatedEventData.name || updatedEventData.event_name,
+      
+      // Explicitly include numeric fields with proper conversion
+      registration_fee: typeof updatedEventData.registration_fee === 'number' 
+        ? updatedEventData.registration_fee 
+        : Number(updatedEventData.registration_fee) || 0,
+      
+      ticket_price: typeof updatedEventData.ticket_price === 'number' 
+        ? updatedEventData.ticket_price 
+        : Number(updatedEventData.ticket_price) || 0,
+      
+      photoPackagePrice: typeof updatedEventData.photoPackagePrice === 'number' 
+        ? updatedEventData.photoPackagePrice 
+        : Number(updatedEventData.photoPackagePrice) || 0,
+      
+      coachRegPrice: typeof updatedEventData.coachRegPrice === 'number' 
+        ? updatedEventData.coachRegPrice 
+        : Number(updatedEventData.coachRegPrice) || 0,
+      
+      numMats: typeof updatedEventData.numMats === 'number' 
+        ? updatedEventData.numMats 
+        : Number(updatedEventData.numMats) || 1,
+      
       // Include all other fields from the updated data
       ...updatedEventData,
+      
       // Ensure other specific mappings if needed
       tickets_enabled: updatedEventData.ticket_enabled,
       photos_enabled: updatedEventData.photoPackageEnabled,
@@ -21,6 +44,8 @@ export async function editTechBoutsEvent(promoterId: string, eventId: string, up
       coach_enabled: updatedEventData.coachRegEnabled,
       coach_price: updatedEventData.coachRegPrice
     };
+    
+    console.log('editTechBoutsEvent - Transformed data:', transformedData);
     
     const response = await fetch(url, {
       method: 'PATCH',
@@ -34,7 +59,8 @@ export async function editTechBoutsEvent(promoterId: string, eventId: string, up
     console.log('editTechBoutsEvent - Response status:', response.status);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
     }
     
     const data = await response.json();

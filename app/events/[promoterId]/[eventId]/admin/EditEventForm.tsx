@@ -15,7 +15,21 @@ import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
 import { getGeocode } from "use-places-autocomplete";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider"; // Import our provider
+import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider";
+import { deleteTechBoutsEvent } from '@/utils/apiFunctions/deleteTechBoutsEvent';
+
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 interface TimeFields {
   doors_open: string;
@@ -36,10 +50,34 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploadingFlyer, setIsUploadingFlyer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  
   const [openSections, setOpenSections] = useState({
     details: false,
 
   });
+
+
+  const handleDeleteEvent = async () => {
+    setIsDeleting(true);
+    try {
+      const success = await deleteTechBoutsEvent(promoterId, eventId);
+      if (success) {
+        router.push(`/events/${promoterId}`); // Redirect to events list
+        router.refresh();
+      } else {
+        throw new Error('Failed to delete event');
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete the event. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({
@@ -168,7 +206,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
           throw new Error('Failed to update event');
         }
 
-        router.push(`/events/${promoterId}/{${eventId}`);
+        router.push(`/events/${promoterId}/${eventId}`);
         router.refresh();
 
 
@@ -623,25 +661,64 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4 pt-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                disabled={isUpdating}
-              >
-                Cancel
-              </button>
 
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                disabled={isUpdating}
-              >
-                {isUpdating ? 'Saving...' : 'Save Changes'}
-              </button>
+            <div className="flex justify-between pt-4">
+  {/* Left side - Delete button */}
+  <div>
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogTrigger asChild>
+        <button
+          type="button"
+          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center"
+          disabled={isDeleting || isUpdating}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete Event
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the event
+            {formData.name} and all associated data.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteEvent}
+            className="bg-red-600 hover:bg-red-700"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Event'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </div>
+  
+  {/* Right side - Cancel and Save buttons */}
+  <div className="flex space-x-4">
+    <button
+      type="button"
+      onClick={handleCancel}
+      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+      disabled={isUpdating || isDeleting}
+    >
+      Cancel
+    </button>
 
-            </div>
+    <button
+      type="submit"
+      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+      disabled={isUpdating || isDeleting}
+    >
+      {isUpdating ? 'Saving...' : 'Save Changes'}
+    </button>
+  </div>
+</div>
+
           </form>
         </CollapsibleContent>
       </Collapsible>

@@ -11,6 +11,7 @@ import { FullContactFighter } from '@/utils/types';
 
 interface RegisterProps {
   eventId: string;
+  promoterId: string;
   locale: string;
   eventName: string;
   closeModal: () => void;
@@ -92,7 +93,7 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId }) => {
 
   const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -346,7 +347,9 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       paymentAmount?: number;
       paymentCurrency?: string;
     },
-    currentDate: string
+    currentDate: string,
+    promoterId: string
+
   ): Promise<boolean> {
     try {
       // Create payment info object, ensuring no undefined values
@@ -417,7 +420,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       };
       
       // Reference to the roster_json document
-      const rosterJsonRef = doc(db, 'events', eventId, 'roster_json', 'fighters');
+      const rosterJsonRef = doc(db, 'events', 'promotions', promoterId,  eventId, 'roster_json', 'fighters');
       
       // Check if the document exists
       const rosterJsonDoc = await getDoc(rosterJsonRef);
@@ -477,8 +480,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     }
   }
 
-
-
   function handleRegistrationError(error: unknown): RegistrationError {
     if (error instanceof Error) {
       return {
@@ -498,7 +499,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       details: error
     };
   }
-
 
 const handleRegistrationSubmit = async () => {
   if (isSubmitting) return;
@@ -527,7 +527,7 @@ const handleRegistrationSubmit = async () => {
     if (isFreeRegistration) {
       setStatusMessage('Submitting free registration data...');
 
-      await saveFighterToFirestore(db, eventId, fighterData, currentDate);
+      await saveFighterToFirestore(db, eventId, fighterData, currentDate, promoterId);
       setStatusMessage('Submitted Successfully.');
 
       // Update credit code as redeemed if using a credit code
@@ -586,7 +586,7 @@ const handleRegistrationSubmit = async () => {
           paymentCurrency: convertedFee.currency
         };
 
-        await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate);
+        await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate, promoterId);
 
         setStatusMessage('Submitted Successfully.');
         setStatusMessage('Sending confirmation email...');
@@ -622,36 +622,21 @@ const handleRegistrationSubmit = async () => {
    
    
 
-
-
-    {sanctioningLogoUrl && (
-      <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '10px',
-        marginBottom: '10px',
-        fontSize: '2.5rem',
-        border: '1px solid black',
-        borderRadius: '10px',
-      }}
-      >
-
-
-
-    <div>
-      <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20 w-auto mx-auto" />
-    </div>  
- 
-  
+<div className='flex flex-row justify-center items-center space-x-4'>
+  {sanctioningLogoUrl && (
+    <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20" />
+  )}
+  {promotionLogoUrl && (
+    <div className="overflow-hidden rounded-full h-20 w-20 border-2 border-gray-200 flex items-center justify-center bg-white">
+      <img 
+        src={promotionLogoUrl} 
+        alt="Promotion Logo" 
+        className="h-full w-full object-cover" 
+      />
     </div>
-
-  
-    )}
-   
-   
-      <div style={{ backgroundColor: 'black', color: 'white', padding: '10px', textAlign: 'center'
+  )}
+</div>
+      <div style={{ backgroundColor: 'black', color: 'white', padding: '10px', textAlign: 'center', borderRadius: '5px', marginTop: '5px'
         
        }}>
         <h1>Registration Form for {eventName}</h1>

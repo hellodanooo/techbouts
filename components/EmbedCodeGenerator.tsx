@@ -236,7 +236,7 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
           <h3 className="text-lg font-medium mb-2">Live Preview</h3>
           <div className="border rounded-md p-2 bg-gray-50">
             <iframe 
-              src={`${baseUrl}/events/${eventId}/embed${customization.hideHeader ? '?hideHeader=true' : ''}${customization.customColor ? `${customization.hideHeader ? '&' : '?'}color=${customization.primaryColor.replace('#', '')}` : ''}`}
+              src={`${baseUrl}/events/${promoterId}/${eventId}/embed${customization.hideHeader ? '?hideHeader=true' : ''}${customization.customColor ? `${customization.hideHeader ? '&' : '?'}color=${customization.primaryColor.replace('#', '')}` : ''}`}
               width={width} 
               height={height}
               frameBorder="0"
