@@ -1,7 +1,7 @@
 // app/events/[eventId]/embed/EmbedRegistrationPage.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import Register from '@/app/events/[promoterId]/[eventId]/Register';
@@ -17,16 +17,27 @@ export default function EmbedRegistrationPage({
   eventData
 }: Props) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [locale, setLocale] = useState('en');
 
   useEffect(() => {
     // Mark component as loaded
     setIsLoaded(true);
 
+    // Set locale based on event country
+    if (
+      eventData?.country === 'MEX' ||
+      eventData?.country?.toLowerCase() === 'mexico' ||
+      eventData?.country?.toLowerCase() === 'mx'
+    ) {
+      setLocale('es');
+    } else {
+      setLocale('en');
+    }
+
     // Function to adjust iframe height based on content
     const adjustHeight = () => {
       if (window.self !== window.top) { // Check if we're in an iframe
         const newHeight = document.body.scrollHeight;
-        
         
         // Notify parent window about height change
         window.parent.postMessage({
@@ -57,6 +68,22 @@ export default function EmbedRegistrationPage({
     };
   }, [eventId, eventData]);
 
+  // Initialize Stripe instances
+  const stripeUSD = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '');
+  const stripeMEX = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_MEX || '');
+  const stripePBSC = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_PBSC || '');
+
+  // Use the same logic as in PageContent to select the appropriate Stripe instance
+  const stripeInstance = useMemo(() => {
+    if (locale === 'es') {
+      return stripeMEX;
+    } else if (eventData?.sanctioning === 'PBSC') {
+      return stripePBSC;
+    } else {
+      return stripeUSD;
+    }
+  }, [locale, stripeMEX, stripeUSD, stripePBSC, eventData?.sanctioning]);
+
   if (!eventData) {
     return (
       <div className="p-4 text-center">
@@ -69,27 +96,13 @@ export default function EmbedRegistrationPage({
     );
   }
 
-  // Initialize Stripe based on country
-  const locale = eventData.country?.toLowerCase() === 'mexico' ||
-                 eventData.country?.toLowerCase() === 'mx' || 
-                 eventData.country === 'MEX' ? 'es' : 'en';
-  
-  const stripeKey = locale === 'es' 
-    ? process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_MEX 
-    : process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY;
-  
-  const stripePromise = loadStripe(stripeKey || '');
-
-
-
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripeInstance}>
       <div className="p-4 max-w-2xl mx-auto">
         <h2 className="mb-4 text-xl font-semibold">
           {eventData.name} Registration
         </h2>
         
-
         {isLoaded && (
           <Register
             eventId={eventId}

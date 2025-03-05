@@ -35,24 +35,11 @@ export default function PageContentEvent({
 
   const [showEmbedModal, setShowEmbedModal] = useState(false);
 
-  const stripeUSD = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '');
-  const stripeMEX = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_MEX || '');
 
-  useEffect(() => {
-    if (
-      eventData.country === 'MEX' ||
-      eventData.country.toLowerCase() === 'mexico' ||
-      eventData.country.toLowerCase() === 'mx'
-    ) {
-      setLocale('es');
-    } else {
-      setLocale('en');
-    }
-  }, [eventData.country]);
 
-  const stripeInstance = useMemo(() => {
-    return locale === 'es' ? stripeMEX : stripeUSD;
-  }, [locale, stripeMEX, stripeUSD]);
+
+
+
 
   const isAuthorizedPromoter = useMemo(() => {
     if (isAdmin) return true;
@@ -71,8 +58,48 @@ export default function PageContentEvent({
     }
   };
 
+
+  useEffect(() => {
+    if (
+      eventData.country === 'MEX' ||
+      eventData.country.toLowerCase() === 'mexico' ||
+      eventData.country.toLowerCase() === 'mx'
+    ) {
+      setLocale('es');
+    } else {
+      setLocale('en');
+    }
+  }, [eventData.country]);
+  
+
+  const stripeUSD = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '');
+  const stripeMEX = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_MEX || '');
+const stripePBSC = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_PBSC || '');
+
+// HERE IF THE LOCAL IS NOT ES, IF THE SANCTIONING IS PBSC, THEN USE THE STRIPEPBSC
+
+const stripeInstance = useMemo(() => {
+  console.log('Locale:', locale);
+  console.log('Sanctioning:', eventData.sanctioning);
+  
+  if (locale === 'es') {
+    return stripeMEX;
+  } else if (eventData.sanctioning === 'PBSC') {
+    console.log('PBSC Stripe Key exists:', !!process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_PBSC);
+    console.log('PBSC Stripe Key prefix:', process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_PBSC ? process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY_PBSC.substring(0, 7) : 'undefined');
+    
+    // Actually use the PBSC Stripe instance instead of falling back
+    return stripePBSC;
+  } else {
+    return stripeUSD;
+  }
+}, [locale, stripeMEX, stripeUSD, stripePBSC, eventData.sanctioning]);
+
+
+
   return (
     <Elements stripe={stripeInstance}>
+
       <div className="p-5">
         {user?.email}
         {eventData.promoterEmail}

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 const stripeUSD = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
 const stripeMXN = new Stripe(process.env.STRIPE_SECRET_KEY_MEX!, {});
-const stripePBSC = new Stripe(process.env.PBSC_STRIPE_SECRET_KEY!, {});
+const stripePBSC = new Stripe(process.env.STRIPE_SECRET_KEY_PBSC!, {});
 
 export async function OPTIONS(request: Request) {
   // Get origin directly from request headers
