@@ -8,7 +8,6 @@ import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import FighterForm from './FighterForm';
 import { format } from 'date-fns';
 import { FullContactFighter } from '@/utils/types';
-import Image from 'next/image';
 
 interface RegisterProps {
   eventId: string;
@@ -631,11 +630,18 @@ const handleRegistrationSubmit = async () => {
 
 <div className='flex flex-row justify-center items-center space-x-4'>
   {sanctioningLogoUrl && (
-    <Image width={100} src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20" />
+ <div className="overflow-hidden rounded-full h-20 w-20 border-2 border-gray-200 flex items-center justify-center bg-white">
+ <img 
+   src={sanctioningLogoUrl} 
+   width={100}
+   alt="Promotion Logo" 
+   className="h-full w-full object-cover" 
+ />
+</div>
   )}
   {promotionLogoUrl && (
     <div className="overflow-hidden rounded-full h-20 w-20 border-2 border-gray-200 flex items-center justify-center bg-white">
-      <Image 
+      <img 
         src={promotionLogoUrl} 
         width={100}
         alt="Promotion Logo" 

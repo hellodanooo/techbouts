@@ -101,8 +101,6 @@ export default function EmbedRegistrationPage({
             sanctioningLogoUrl={eventData.sanctioningLogoUrl}
             promotionLogoUrl={eventData.promotionLogoUrl}
             sanctioning={eventData.sanctioning}
-
-     
           />
         )}
       </div>
