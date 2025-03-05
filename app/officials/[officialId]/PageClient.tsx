@@ -1,6 +1,6 @@
 // app/officials/[officialId]/OfficialDetailsClient.tsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Official } from '@/utils/types';
 import Image from 'next/image';
 
@@ -13,11 +13,8 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchOfficialDetails();
-  }, [officialId]);
-
-  const fetchOfficialDetails = async () => {
+  // Use useCallback to memoize the fetchOfficialDetails function
+  const fetchOfficialDetails = useCallback(async () => {
     try {
       const [{ collection, doc, getDoc }, { db }] = await Promise.all([
         import('firebase/firestore'),
@@ -48,7 +45,11 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [officialId]); // Include officialId in the dependency array
+
+  useEffect(() => {
+    fetchOfficialDetails();
+  }, [fetchOfficialDetails]); // Now fetchOfficialDetails is properly included
 
   if (isLoading) {
     return (
@@ -70,11 +71,12 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
           <div className="flex-shrink-0">
             {official.photo ? (
               <div className="relative w-36 h-36 md:w-48 md:h-48 overflow-hidden rounded-lg border border-gray-200">
-                <Image src={official.photo}
+                <Image 
+                  src={official.photo}
                   alt={`${official.first} ${official.last}`}
                   className="object-cover w-full h-full"
-                  layout="fill"
-                 
+                  width={192}
+                  height={192}
                 />
               </div>
             ) : (
@@ -204,7 +206,6 @@ export default function OfficialDetailsClient({ officialId }: OfficialDetailsCli
                     {official.bouts_reffed || 0}
                   </span>
                 </div>
-
               </div>
             </div>
           </div>

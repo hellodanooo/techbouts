@@ -2,7 +2,18 @@
 'use client'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import FindPotentialMatchesModal from './PotentialMatchesModal';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import AddFighterModal from './AddFighterModal';
 
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,22 +24,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-import FindPotentialMatchesModal from './PotentialMatchesModal';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight } from "lucide-react";
-
-
-import AddFighterModal from './AddFighterModal';
-
-
 
 
 interface Fighter {
@@ -42,6 +37,8 @@ interface Fighter {
   [key: string]: string | number | undefined;
   gender: string;
 }
+
+
 
 interface RosterTableProps {
   roster: Fighter[];

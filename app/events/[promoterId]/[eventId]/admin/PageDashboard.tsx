@@ -4,6 +4,8 @@
 import EditEventForm from './EditEventForm';
 import RosterTable from './RosterTable';
 import OfficialsEvent from './OfficialsEvent';
+import Matches from '../matches/PageClient';
+
 import { EventType } from '@/utils/types';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
@@ -109,6 +111,15 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
             <div>
                 <RosterTable 
                     roster={roster}
+                    eventId={eventId}
+                    promoterId={promoterId}
+                />
+            </div>
+
+
+            <div>
+                <Matches 
+                    initialRoster={roster}
                     eventId={eventId}
                     promoterId={promoterId}
                 />

@@ -1,4 +1,5 @@
-// app/events/[promoterId]/[eventId]/edit/page.tsx
+// app/events/[promoterId]/[eventId]/officials/page.tsx
+
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 

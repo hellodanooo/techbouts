@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import { GymProfile } from '@/utils/types';
 import _ from 'lodash';
-
 
 interface FighterFormData {
   first: string;
@@ -69,8 +68,9 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
     setGymSearchTerm(mergedData.gym || '');
   }, [initialData]);
 
-  const fetchGyms = useCallback(
-    _.debounce(async (searchTerm: string) => {
+  // Create a memoized version of the debounced function
+  const debouncedFetchGyms = useMemo(
+    () => _.debounce(async (searchTerm: string) => {
       if (searchTerm.length >= 3) {
         const db = getFirestore();
         const gymCollections = ['gym_profiles_CA', 'gym_profiles_CO', 'gym_profiles_NV', 'gym_profiles_TX'];
@@ -97,8 +97,13 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
         setGymSearchResults([]);
       }
     }, 300),
-    [setGymSearchResults]
+    []
   );
+
+  // Now create a wrapper function using useCallback that calls the debounced function
+  const fetchGyms = useCallback((searchTerm: string) => {
+    debouncedFetchGyms(searchTerm);
+  }, [debouncedFetchGyms]);
 
   const handleGymSelect = (gym: GymProfile) => {
     setGymSearchTerm(gym.gym.toUpperCase());
@@ -127,8 +132,6 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
     onFormDataChange({ gym: value.toUpperCase() });
   };
 
-
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const upperCaseValue = value.toUpperCase();
@@ -150,7 +153,11 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
 
     if (name === 'first' || name === 'last') {
       if (formData.first && formData.last && formData.dob) {
-        updatedFormData.pmt_id = generatePmtId(formData.first, formData.last, formData.dob);
+        updatedFormData.pmt_id = generatePmtId(
+          name === 'first' ? upperCaseValue : formData.first, 
+          name === 'last' ? upperCaseValue : formData.last, 
+          formData.dob
+        );
       }
     }
 
@@ -290,8 +297,6 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
           <option value="FEMALE">Female</option>
         </select>
 
-
-
         <input
           type="text"
           name="dob"
@@ -308,10 +313,6 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
           placeholder="MM/DD/YYYY"
         />
         {dobError && <p style={{ color: 'red' }}>{dobError}</p>}
-
-
-
-
 
         <p>Number of Amateur Full contact Fights</p>
         <select

@@ -100,6 +100,7 @@ export default function EmbedRegistrationPage({
             registrationFee={eventData.registration_fee ?? 0}
             sanctioningLogoUrl={eventData.sanctioningLogoUrl}
             promotionLogoUrl={eventData.promotionLogoUrl}
+            sanctioning={eventData.sanctioning}
 
      
           />

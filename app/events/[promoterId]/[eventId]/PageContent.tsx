@@ -253,6 +253,7 @@ export default function PageContentEvent({
                       user={user?.email || undefined}
                       sanctioningLogoUrl={eventData.sanctioningLogoUrl}
                       promotionLogoUrl={eventData.promotionLogoUrl}
+                      sanctioning={eventData.sanctioning}
                     />
                   )}
                 </CardContent>

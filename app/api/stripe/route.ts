@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 const stripeUSD = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
 const stripeMXN = new Stripe(process.env.STRIPE_SECRET_KEY_MEX!, {});
+const stripePBSC = new Stripe(process.env.PBSC_STRIPE_SECRET_KEY!, {});
 
 export async function OPTIONS(request: Request) {
   // Get origin directly from request headers
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { token, eventId, amount, currency, idempotencyKey, pmt_id, locale } = body;
+    const { token, eventId, amount, currency, idempotencyKey, pmt_id, locale, sanctioning } = body;
     
 console.log('token', token);
 console.log('eventId', eventId);
@@ -39,7 +40,15 @@ console.log('pmt_id', pmt_id);
 console.log('locale', locale);
 
 
-    const stripeInstance = locale === 'es' ? stripeMXN : stripeUSD;
+let stripeInstance;
+if (locale === 'es') {
+  stripeInstance = stripeMXN;
+} else if (sanctioning === 'PBSC') {
+  stripeInstance = stripePBSC;
+} else {
+  stripeInstance = stripeUSD;
+}
+
     const amountInSmallestUnit = Math.round(amount * 100);
 
     // Create a payment method first

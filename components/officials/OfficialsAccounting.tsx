@@ -1,5 +1,5 @@
 // components/officials/OfficialsAccounting.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Official } from '@/utils/types';
 import html2canvas from 'html2canvas';
 import { Button } from "@/components/ui/button";
@@ -123,12 +123,42 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
     setDistances(defaultDistances);
   }, [officials]);
 
-
+  // Define calculateTotalPay using useCallback to properly memoize it
+  const calculateTotalPay = useCallback(() => {
+    if (!officials || officials.length === 0) {
+      setTotalPay(0);
+      setTotalRepresentativePay(0);
+      return;
+    }
+    
+    const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
+    let total = 0;
+    let totalRepPay = 0;
+  
+    officials.forEach(official => {
+      if (!official.id) return;
+      
+      if (official.position === 'Representative') {
+        const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
+        const totalRepPayForOfficial = (totalFighters * representativePay) + travelPay;
+        totalRepPay += totalRepPayForOfficial;
+      } else {
+        const stats = officialStats[official.id] || { amountJudged: 0, amountReffed: 0 };
+        const judgePayout = stats.amountJudged * judgePay;
+        const refereePayout = stats.amountReffed * refereePay;
+        const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
+        total += judgePayout + refereePayout + travelPay;
+      }
+    });
+  
+    setTotalPay(total);
+    setTotalRepresentativePay(totalRepPay);
+  }, [officials, distances, athleteCount, refereePay, judgePay, representativePay, officialStats]);
 
   // Calculate total pay whenever relevant values change
   useEffect(() => {
     calculateTotalPay();
-  }, [officials, distances, athleteCount, refereePay, judgePay, representativePay, officialStats]);
+  }, [calculateTotalPay]); // Now calculateTotalPay is properly included in the dependency array
 
   const formatInvoiceText = (official: Official, officialStats: { [id: string]: OfficialStats }, eventName: string, eventDate: string) => {
     if (!official || !official.id) return '';
@@ -198,37 +228,6 @@ Total: $${totalPay.toFixed(2)}`;
       console.error('Failed to copy invoice:', err);
       alert('Failed to copy invoice to clipboard');
     });
-  };
-
-  const calculateTotalPay = () => {
-    if (!officials || officials.length === 0) {
-      setTotalPay(0);
-      setTotalRepresentativePay(0);
-      return;
-    }
-    
-    const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
-    let total = 0;
-    let totalRepPay = 0;
-  
-    officials.forEach(official => {
-      if (!official.id) return;
-      
-      if (official.position === 'Representative') {
-        const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
-        const totalRepPayForOfficial = (totalFighters * representativePay) + travelPay;
-        totalRepPay += totalRepPayForOfficial;
-      } else {
-        const stats = officialStats[official.id] || { amountJudged: 0, amountReffed: 0 };
-        const judgePayout = stats.amountJudged * judgePay;
-        const refereePayout = stats.amountReffed * refereePay;
-        const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
-        total += judgePayout + refereePayout + travelPay;
-      }
-    });
-  
-    setTotalPay(total);
-    setTotalRepresentativePay(totalRepPay);
   };
 
   const captureScreenshot = async () => {
@@ -583,29 +582,23 @@ Total: $${totalPay.toFixed(2)}`;
         </div>
       </SheetContent>
   
-      Official Details Dialog
-
-
-
       <OfficialInvoice 
-  open={showPopup}
-  onOpenChange={setShowPopup}
-  selectedOfficial={selectedOfficial}
-  eventName={eventName}
-  eventDate={eventDate}
-  officialStats={officialStats}
-  distances={distances}
-  refereePay={refereePay}
-  judgePay={judgePay}
-  representativePay={representativePay}
-  totalFighters={totalFighters}
-  onCopyInvoice={copyInvoiceToClipboard}
-  onClose={closePopup}
-/>
-
+        open={showPopup}
+        onOpenChange={setShowPopup}
+        selectedOfficial={selectedOfficial}
+        eventName={eventName}
+        eventDate={eventDate}
+        officialStats={officialStats}
+        distances={distances}
+        refereePay={refereePay}
+        judgePay={judgePay}
+        representativePay={representativePay}
+        totalFighters={totalFighters}
+        onCopyInvoice={copyInvoiceToClipboard}
+        onClose={closePopup}
+      />
     </Sheet>
   );
-
 };
 
 export default OfficialsAccounting;

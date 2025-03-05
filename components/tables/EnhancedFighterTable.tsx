@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import Image from 'next/image';
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { FullContactFighter } from '@/utils/types';
+import FighterSearch from '@/components/searchbars/FighterSearch';
 
 interface FighterTableProps {
   initialFighters: FullContactFighter[];
@@ -14,6 +14,8 @@ interface FighterTableProps {
   editable?: boolean;
   onEditFighter?: (fighter: FullContactFighter) => void;
   onDeleteFighter?: (fighterId: string) => void;
+  initialNextLastDocId?: string | null;
+  initialHasMore?: boolean;
 }
 
 type SortConfig = {
@@ -48,7 +50,9 @@ const FighterRow = memo(({
   const router = useRouter();
   
   const handleRowClick = () => {
-    router.push(`/fighter/${fighter.fighter_id}`);
+    if (fighter.fighter_id) {
+      router.push(`/fighter/${fighter.fighter_id}`);
+    }
   };
   
   return (
@@ -88,7 +92,9 @@ const FighterRow = memo(({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDeleteFighter?.(fighter.fighter_id);
+              if (fighter.fighter_id) {
+                onDeleteFighter?.(fighter.fighter_id);
+              }
             }}
             className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
           >
@@ -107,17 +113,16 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
   totalCount = 0,
   editable = false,
   onEditFighter,
-  onDeleteFighter
+  onDeleteFighter,
+  initialNextLastDocId = null,
+  initialHasMore = true
 }) => {
-  // Search and API state
-  const [searchInput, setSearchInput] = useState('');
-  const [terms, setTerms] = useState<string[]>([]);
-  const [allFighters, setAllFighters] = useState<FullContactFighter[]>(initialFighters);
-  const [displayedFighters, setDisplayedFighters] = useState<FullContactFighter[]>([]);
-  const [page, setPage] = useState(1);
+  // Fighter state
+  const [fighters, setFighters] = useState<FullContactFighter[]>(initialFighters);
   const [loading, setLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [nextLastDocId, setNextLastDocId] = useState<string | null>(initialNextLastDocId);
+  const [searchMode, setSearchMode] = useState(false);
   
   // Filtering state
   const [selectedGym, setSelectedGym] = useState('');
@@ -132,33 +137,20 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
   const observer = useRef<IntersectionObserver | null>(null);
   const lastFighterElementRef = useRef<HTMLDivElement>(null);
 
-  // Extract unique values for filters from all fighters
+  // Extract unique values for filters from fighters
   const filterOptions = useMemo(() => {
     return {
-      gyms: [...new Set(allFighters.map(f => f.gym))].filter(Boolean).sort(),
-      weightClasses: [...new Set(allFighters.map(f => f.weightclass))].sort((a, b) => Number(a) - Number(b)),
-      genders: [...new Set(allFighters.map(f => {
+      gyms: [...new Set(fighters.map(f => f.gym))].filter(Boolean).sort(),
+      weightClasses: [...new Set(fighters.map(f => f.weightclass))]
+        .filter(Boolean)
+        .sort((a, b) => Number(a) - Number(b)),
+      genders: [...new Set(fighters.map(f => {
         const gender = f.gender || '';
         return gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
       }))].filter(Boolean).sort(),
-      states: [...new Set(allFighters.map(f => f.state || 'Unknown'))].filter(Boolean).sort(),
+      states: [...new Set(fighters.map(f => f.state || 'Unknown'))].filter(Boolean).sort(),
     };
-  }, [allFighters]);
-
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchInput(value);
-    
-    // Convert input to search terms
-    const newTerms = value
-      .trim()
-      .split(/\s+/)
-      .filter(term => term.length > 0);
-    
-    setTerms(newTerms);
-    setPage(1); // Reset pagination when search changes
-  };
+  }, [fighters]);
 
   // Handle sorting
   const handleSort = (key: keyof FullContactFighter) => {
@@ -166,33 +158,21 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
       key,
       direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
     }));
-    setPage(1); // Reset pagination when sorting changes
   };
 
-  // Filter fighters based on filters and search
+  // Filter fighters based on filters
   const filteredFighters = useMemo(() => {
-    return allFighters.filter(fighter => {
-      // Search term filtering
-      const searchMatch = terms.length === 0 || terms.every(term => {
-        const searchableText = `
-          ${fighter.first?.toLowerCase() || ''} 
-          ${fighter.last?.toLowerCase() || ''} 
-          ${fighter.gym?.toLowerCase() || ''}
-          ${fighter.email?.toLowerCase() || ''}
-          ${fighter.class?.toLowerCase() || ''}
-        `;
-        return searchableText.includes(term.toLowerCase());
-      });
-      
+    return fighters.filter(fighter => {
       // Dropdown filtering
       const gymMatch = !selectedGym || fighter.gym === selectedGym;
       const weightMatch = !selectedWeightClass || fighter.weightclass === Number(selectedWeightClass);
-      const genderMatch = !selectedGender || fighter.gender?.toLowerCase() === selectedGender.toLowerCase();
+      const genderMatch = !selectedGender || 
+        fighter.gender?.toLowerCase() === selectedGender.toLowerCase();
       const stateMatch = !selectedState || fighter.state === selectedState;
       
-      return searchMatch && gymMatch && weightMatch && genderMatch && stateMatch;
+      return gymMatch && weightMatch && genderMatch && stateMatch;
     });
-  }, [allFighters, terms, selectedGym, selectedWeightClass, selectedGender, selectedState]);
+  }, [fighters, selectedGym, selectedWeightClass, selectedGender, selectedState]);
 
   // Sort filtered fighters
   const sortedFighters = useMemo(() => {
@@ -212,28 +192,52 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
     });
   }, [filteredFighters, sortConfig]);
 
-  // Load more fighters when scrolling
-  const loadMoreFighters = useCallback(() => {
-    if (loading) return;
+  // Load more fighters from the API
+  const loadMoreFighters = useCallback(async () => {
+    if (loading || !hasMore || !nextLastDocId || searchMode) return;
     
     setLoading(true);
     
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const end = page * ITEMS_PER_PAGE;
-    const newFighters = sortedFighters.slice(start, end);
-    
-    // If we're at page 1, replace the displayed fighters
-    // Otherwise, append the new fighters
-    if (page === 1) {
-      setDisplayedFighters(newFighters);
-    } else {
-      setDisplayedFighters(prev => [...prev, ...newFighters]);
+    try {
+      const res = await fetch(`/api/fighters?pageSize=${ITEMS_PER_PAGE}&lastDocId=${nextLastDocId}`);
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch more fighters');
+      }
+      
+      const data = await res.json();
+      const newFighters = data.fighters;
+      
+      if (newFighters && newFighters.length > 0) {
+        setFighters(prev => [...prev, ...newFighters]);
+        setNextLastDocId(data.pagination.nextLastDocId);
+        setHasMore(data.pagination.hasMore);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more fighters:', error);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
     }
-    
-    setHasMore(end < sortedFighters.length);
-    setLoading(false);
-    setPage(prevPage => prevPage + 1);
-  }, [sortedFighters, loading, page]);
+  }, [loading, hasMore, nextLastDocId, searchMode]);
+
+  // Handler for fighter selection from search component
+  const handleFighterSelect = (selectedFighter: FullContactFighter) => {
+    // When a fighter is selected from search, we'll show just that fighter
+    setFighters([selectedFighter]);
+    setSearchMode(true);
+    setHasMore(false);
+  };
+
+  // Reset search results
+  const resetSearch = () => {
+    setSearchMode(false);
+    setFighters(initialFighters);
+    setNextLastDocId(initialNextLastDocId);
+    setHasMore(initialHasMore);
+  };
 
   // Set up intersection observer for infinite scrolling
   useEffect(() => {
@@ -260,53 +264,15 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
     };
   }, [hasMore, loading, loadMoreFighters]);
 
-  // When the search terms change, call the API to search for matching fighters
+  // Reset filters when fighters change significantly (like after a search)
   useEffect(() => {
-    const fetchSearchResults = async () => {
-      setSearchLoading(true);
-      try {
-        if (terms.length > 0) {
-          // Build a comma-separated string of terms
-          const queryParam = terms.join(',');
-          const res = await fetch(
-            `/api/fighters/searchFighters?year=${'2025'}&terms=${encodeURIComponent(queryParam)}`
-          );
-          
-          const data = await res.json();
-          if (res.ok) {
-            setAllFighters(data.fighters);
-            setPage(1); // Reset pagination
-          } else {
-            console.error(data.error);
-          }
-        } else {
-          // Reset to initial fighters if no search terms
-          setAllFighters(initialFighters);
-          setPage(1); // Reset pagination
-        }
-      } catch (error) {
-        console.error('Error fetching search results:', error);
-      } finally {
-        setSearchLoading(false);
-      }
-    };
-
-    // Add a small delay to prevent too many API calls while typing
-    const timeoutId = setTimeout(fetchSearchResults, 300);
-    return () => clearTimeout(timeoutId);
-  }, [terms, initialFighters]);
-
-  // Reset displayed fighters when filters or sorting changes
-  useEffect(() => {
-    setDisplayedFighters(sortedFighters.slice(0, page * ITEMS_PER_PAGE));
-    setHasMore(page * ITEMS_PER_PAGE < sortedFighters.length);
-  }, [sortedFighters, page]);
-
-  // Load the first page when the component mounts
-  useEffect(() => {
-    setAllFighters(initialFighters);
-    setPage(1);
-  }, [initialFighters]);
+    if (searchMode) {
+      setSelectedGym('');
+      setSelectedWeightClass('');
+      setSelectedGender('');
+      setSelectedState('');
+    }
+  }, [searchMode]);
 
   // Sort icon component
   const SortIcon = ({ column }: { column: keyof FullContactFighter }) => {
@@ -319,12 +285,11 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
   return (
     <div className="space-y-4">
       <div className="sticky top-0 bg-white z-10 p-4 shadow-md space-y-4">
-        {/* Main search */}
-        <Input
-          placeholder="Search fighters..."
-          value={searchInput}
-          onChange={handleSearchChange}
-          className="w-full"
+        {/* Main search - Using the FighterSearch component */}
+        <FighterSearch 
+          onFighterSelect={handleFighterSelect}
+          showCard={false}
+          searchResultLimit={10}
         />
         
         {/* Filter options */}
@@ -376,17 +341,20 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
         
         {/* Status display */}
         <div className="text-sm text-gray-500">
-          Showing {displayedFighters.length} of {filteredFighters.length} fighters
-          {totalCount > allFighters.length && ` (${totalCount} total in database)`}
+          {searchMode ? (
+            `Found ${sortedFighters.length} matching fighters`
+          ) : (
+            `Showing ${sortedFighters.length} fighters ${totalCount > 0 ? `(${totalCount} total)` : ''}`
+          )}
         </div>
       </div>
       
-      {searchLoading ? (
+      {/* {searchLoading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
         </div>
-      ) : (
-        <>
+      ) : ( 
+        <>*/}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -418,16 +386,16 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {displayedFighters.length === 0 ? (
+                {sortedFighters.length === 0 ? (
                   <tr>
                     <td colSpan={editable ? 10 : 9} className="text-center py-8">
                       No fighters found
                     </td>
                   </tr>
                 ) : (
-                  displayedFighters.map((fighter) => (
+                  sortedFighters.map((fighter) => (
                     <FighterRow
-                      key={fighter.fighter_id}
+                      key={fighter.fighter_id || fighter.docId}
                       fighter={fighter}
                       editable={editable}
                       onEditFighter={onEditFighter}
@@ -439,18 +407,20 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
             </table>
           </div>
           
-          {/* Load more trigger element */}
-          <div ref={lastFighterElementRef} className="h-20 flex items-center justify-center">
-            {loading && hasMore && (
-              <div className="animate-spin h-6 w-6 border-4 border-blue-500 rounded-full border-t-transparent"></div>
-            )}
-          </div>
+          {/* Infinite scroll trigger element */}
+          {!searchMode && (
+            <div ref={lastFighterElementRef} className="h-20 flex items-center justify-center">
+              {loading && hasMore && (
+                <div className="animate-spin h-6 w-6 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+              )}
+            </div>
+          )}
           
           {/* Manual load more button as fallback */}
-          {hasMore && !loading && (
+          {!searchMode && hasMore && !loading && (
             <div className="flex justify-center pb-8">
               <Button 
-                onClick={loadMoreFighters}
+                onClick={() => loadMoreFighters()}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Load More
@@ -458,13 +428,25 @@ const EnhancedFighterTable: React.FC<FighterTableProps> = ({
             </div>
           )}
           
-          {!hasMore && displayedFighters.length > 0 && (
+          {!hasMore && fighters.length > 0 && !searchMode && (
             <div className="text-center text-gray-500 pb-8">
-              No more fighters to load
+              All fighters loaded
             </div>
           )}
-        </>
-      )}
+          
+          {/* Reset search button when in search mode */}
+          {searchMode && (
+            <div className="flex justify-center pb-8">
+              <Button 
+                onClick={resetSearch}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Clear Search
+              </Button>
+            </div>
+          )}
+        {/* </>
+      )} */}
     </div>
   );
 };

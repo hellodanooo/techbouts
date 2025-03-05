@@ -8,6 +8,7 @@ import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import FighterForm from './FighterForm';
 import { format } from 'date-fns';
 import { FullContactFighter } from '@/utils/types';
+import Image from 'next/image';
 
 interface RegisterProps {
   eventId: string;
@@ -19,6 +20,7 @@ interface RegisterProps {
   user?: string;
   sanctioningLogoUrl?: string;
   promotionLogoUrl?: string;
+  sanctioning: string;
 }
 
 interface FighterFormData {
@@ -93,7 +95,7 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning }) => {
 
   const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -149,8 +151,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     gymSuspendedMessage: 'This Team is suspended for {days} more days.'
   });
 
+
+
+
+  /// NEEDS TO BE FIXED /////////////////////////////////////
+  /////////////////////////////////////
   useEffect(() => {
-   console.log('Sanctioning Logo URL:', sanctioningLogoUrl);
     const fetchRosterCount = async () => {
       try {
         // Get a reference to the single roster_json document that contains all fighters
@@ -572,7 +578,8 @@ const handleRegistrationSubmit = async () => {
         currency: convertedFee.currency,
         idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
         pmt_id: fighterData.fighter_id,
-        locale
+        locale,
+        sanctioning
       });
 
       if (paymentResponse.data.success && paymentResponse.data.paymentIntentId) {
@@ -624,12 +631,13 @@ const handleRegistrationSubmit = async () => {
 
 <div className='flex flex-row justify-center items-center space-x-4'>
   {sanctioningLogoUrl && (
-    <img src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20" />
+    <Image width={100} src={sanctioningLogoUrl} alt="Sanctioning Body Logo" className="h-20" />
   )}
   {promotionLogoUrl && (
     <div className="overflow-hidden rounded-full h-20 w-20 border-2 border-gray-200 flex items-center justify-center bg-white">
-      <img 
+      <Image 
         src={promotionLogoUrl} 
+        width={100}
         alt="Promotion Logo" 
         className="h-full w-full object-cover" 
       />
@@ -689,6 +697,7 @@ const handleRegistrationSubmit = async () => {
                 : `$${currentRegistrationFee} USD`
               }
             </p>
+            <p>Sanctioning: {sanctioning}</p>
           </div>
         )}
 

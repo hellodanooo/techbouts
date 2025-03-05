@@ -1,5 +1,7 @@
+// utils/apiFunctions/fetchTechBoutsRoster.ts
 import { db } from '@/lib/firebase_techbouts/config';
 import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+
 
 
 export const fetchTechBoutsRoster = async (promoterId: string, eventId: string) => {

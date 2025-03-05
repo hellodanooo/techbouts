@@ -158,6 +158,26 @@ export interface FullContactFighter {
     paymentCurrency: string | '';
   };
   eventIds?: string[];
+    // Fight History
+    fights?: Array<{
+      eventId: string;
+      eventName: string;
+      date: string;
+      result: string;
+      weightclass: number;
+      opponent_id?: string;
+      bout_type: string;
+      bodykick?: number;
+      boxing?: number;
+      clinch?: number;
+      defense?: number;
+      footwork?: number;
+      headkick?: number;
+      kicks?: number;
+      knees?: number;
+      legkick?: number;
+      ringawareness?: number;
+    }>;
 }
 
 export interface EventType {
@@ -220,6 +240,7 @@ export interface EventType {
   payLaterEnabled?: boolean;
   sanctioningLogoUrl?: string;
   promotionLogoUrl?: string;
+  stripeAccountId?: string;
 }
 
 export interface Promoter {
