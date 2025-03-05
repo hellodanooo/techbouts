@@ -243,6 +243,10 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       return 'Birthday must be in MM/DD/YYYY format.';
     }
 
+    if (fighterData.age < 2) {
+      return 'Please Selecte your Birthday To Calculate Age: You might need to select another year and then choose date again';
+    }
+
     // Gym validation
     if (!fighterData.gym) {
       return 'Please select a gym.';
@@ -710,13 +714,16 @@ const handleRegistrationSubmit = async () => {
         <button onClick={handleRegistrationSubmit} disabled={isSubmitting} className='submitButton'>
           {isSubmitting ? formContent.submittingButton : formContent.submitButton}
         </button>
-      </div>
-
-      {statusMessage && (
+     
+        {statusMessage && (
         <div className="mt-4 mb-4 p-4 rounded bg-gray-100">
           <p className="text-sm font-medium text-gray-900">{statusMessage}</p>
         </div>
       )}
+     
+      </div>
+
+   
 
     </div>
   );

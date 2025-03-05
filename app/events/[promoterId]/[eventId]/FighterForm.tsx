@@ -438,29 +438,51 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   const handleFighterSelect = (selectedFighter: FighterFormData) => {
     console.log('Selected fighter raw data:', selectedFighter);
-
+  
+    // Format the date string properly if it exists
+    let formattedDob = '';
+    let calculatedAge = 0;
+    
+    if (selectedFighter.dob) {
+      // Try to parse the date and format it consistently
+      try {
+        const dateValue = dayjs(selectedFighter.dob);
+        if (dateValue.isValid()) {
+          formattedDob = dateValue.format('MM/DD/YYYY');
+          calculatedAge = calculateAge(formattedDob);
+          console.log('Calculated age from DOB:', calculatedAge);
+        } else {
+          console.error('Invalid date format:', selectedFighter.dob);
+          formattedDob = '';
+        }
+      } catch (e) {
+        console.error('Error parsing date:', e);
+        formattedDob = '';
+      }
+    }
+  
     // Create a complete fighter object with proper data conversions and defaults
     const updatedFighter: FighterFormData = {
       // Basic Information with defaults for every field
       first: (selectedFighter.first || '').toUpperCase(),
       last: (selectedFighter.last || '').toUpperCase(),
       email: selectedFighter.email || '',
-      dob: selectedFighter.dob ? dayjs(selectedFighter.dob).format('MM/DD/YYYY') : '',
-      age: typeof selectedFighter.age === 'number' ? selectedFighter.age : (parseInt(selectedFighter.age as unknown as string) || 0),
+      dob: formattedDob,
+      age: calculatedAge, 
       gender: selectedFighter.gender || '',
       fighter_id: selectedFighter.fighter_id || '',
-
+  
       // Gym Information
       gym: selectedFighter.gym || '',
       gym_id: selectedFighter.gym_id || '',
       coach_name: selectedFighter.coach_name || '',
       coach_email: selectedFighter.coach_email || '',
       coach_phone: selectedFighter.coach_phone || '',
-
+  
       // Location Information
       state: selectedFighter.state || '',
       city: selectedFighter.city || '',
-
+  
       // Physical Information
       weightclass: typeof selectedFighter.weightclass === 'number' ? selectedFighter.weightclass :
         (parseInt(selectedFighter.weightclass as unknown as string) || 0),
@@ -470,7 +492,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         (parseInt(selectedFighter.heightFoot as unknown as string) || 0),
       heightInch: typeof selectedFighter.heightInch === 'number' ? selectedFighter.heightInch :
         (parseInt(selectedFighter.heightInch as unknown as string) || 0),
-
+  
       // Record fields with numeric conversion
       mt_win: typeof selectedFighter.mt_win === 'number' ? selectedFighter.mt_win :
         (parseInt(selectedFighter.mt_win as unknown as string) || 0),
@@ -492,9 +514,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         (parseInt(selectedFighter.pb_win as unknown as string) || 0),
       pb_loss: typeof selectedFighter.pb_loss === 'number' ? selectedFighter.pb_loss :
         (parseInt(selectedFighter.pb_loss as unknown as string) || 0),
-
-
-
+  
       // Legacy fields
       win: typeof selectedFighter.win === 'number' ? selectedFighter.win :
         (parseInt(selectedFighter.win as unknown as string) || 0),
@@ -502,28 +522,28 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         (parseInt(selectedFighter.loss as unknown as string) || 0),
       ammy: typeof selectedFighter.ammy === 'number' ? selectedFighter.ammy :
         (parseInt(selectedFighter.ammy as unknown as string) || 0),
-
+  
       // Experience & Classification
       years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp :
         (parseInt(selectedFighter.years_exp as unknown as string) || 0),
-
-        other_exp: selectedFighter.other_exp || '',
-
+  
+      other_exp: selectedFighter.other_exp || '',
+  
       // Contact Information
       phone: selectedFighter.phone || '',
-
+  
       // Additional Information
       other: selectedFighter.other || '',
     };
-
+  
     // Handle height conversion if needed
     if (updatedFighter.heightFoot === 0 && updatedFighter.heightInch === 0 && updatedFighter.height > 0) {
       updatedFighter.heightFoot = Math.floor(updatedFighter.height / 12);
       updatedFighter.heightInch = updatedFighter.height % 12;
     }
-
+  
     console.log('Processed fighter data:', updatedFighter);
-
+  
     // Parse the date for DatePicker - only if dob exists and is valid
     if (updatedFighter.dob) {
       try {
@@ -540,14 +560,14 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         setSelectedDate(null);
       }
     }
-
+  
     // Update form data - IMPORTANT: do this synchronously before the next step
     setFormData(updatedFighter);
-
+  
     // Notify parent component about the updated data
     console.log('Calling onFormDataChange with:', updatedFighter);
     onFormDataChange(updatedFighter);
-
+  
     // Clear search results
     setFighterSearchResults([]);
     setFighterSearchTerm('');
