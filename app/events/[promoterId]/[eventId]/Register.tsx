@@ -8,6 +8,16 @@ import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import FighterForm from './FighterForm';
 import { format } from 'date-fns';
 import { FullContactFighter } from '@/utils/types';
+// Shadcn UI Components
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, CheckCircle, AlertCircle, X } from "lucide-react";
+
 
 interface RegisterProps {
   eventId: string;
@@ -622,111 +632,175 @@ const handleRegistrationSubmit = async () => {
 };
 
 
-  return (
-
-    <div className="fixed bg-white inset-0 z-50 flex items-center justify-center">
-    
-
-
-      <div className="p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
-   
-   
-
-<div className='flex flex-row justify-center items-center space-x-4'>
-  {sanctioningLogoUrl && (
- <div className="overflow-hidden rounded-full h-20 w-20 border-2 border-gray-200 flex items-center justify-center bg-white">
- <img 
-   src={sanctioningLogoUrl} 
-   width={100}
-   alt="Promotion Logo" 
-   className="h-full w-full object-cover" 
- />
-</div>
-  )}
-  {promotionLogoUrl && (
-    <div className="overflow-hidden rounded-full h-20 w-20 border-2 border-gray-200 flex items-center justify-center bg-white">
-      <img 
-        src={promotionLogoUrl} 
-        width={100}
-        alt="Promotion Logo" 
-        className="h-full w-full object-cover" 
-      />
-    </div>
-  )}
-</div>
-      <div style={{ backgroundColor: 'black', color: 'white', padding: '10px', textAlign: 'center', borderRadius: '5px', marginTop: '5px'
+return (
+  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <CardHeader className="space-y-4">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-2xl font-bold">Registration Form</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={closeModal} 
+            className="rounded-full"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
         
-       }}>
-        <h1>Registration Form for {eventName}</h1>
-      </div>
-
-     
-
+        <div className="flex justify-center items-center space-x-4">
+          {sanctioningLogoUrl && (
+            <div className="h-16 w-16 rounded-full border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center">
+              <img 
+                src={sanctioningLogoUrl} 
+                alt="Sanctioning Logo" 
+                className="h-full w-full object-contain" 
+              />
+            </div>
+          )}
+          {promotionLogoUrl && (
+            <div className="h-16 w-16 rounded-full border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center">
+              <img 
+                src={promotionLogoUrl} 
+                alt="Promotion Logo" 
+                className="h-full w-full object-contain" 
+              />
+            </div>
+          )}
+        </div>
+        
+        <CardDescription className="text-center">
+          <Badge variant="outline" className="bg-black text-white py-1 px-4 text-base font-medium">
+            {eventName}
+          </Badge>
+        </CardDescription>
+        
+        <Separator />
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
         <FighterForm
           onFormDataChange={setFighterData}
           locale={locale}
           user={user}
         />
-
-        <div style={{ marginBottom: '30px' }} className='credit-code-container'>
-          <label htmlFor='creditCode'>
-            {formContent.creditCodeLabel}:
-          </label>
-          <input
-            type='text'
-            id='creditCode'
-            value={creditCode}
-            onChange={handleCreditCodeChange}
-          />
-          {showVerifyButton && (
-            <button onClick={validateCreditCode} className='verifyButton'>
-
-              {formContent.verifyButton}
-
-            </button>
+        
+        <div className="space-y-2">
+          <div className="flex items-end gap-2">
+            <div className="w-full space-y-1">
+              <Label htmlFor="creditCode">{formContent.creditCodeLabel}</Label>
+              <Input
+                id="creditCode"
+                value={creditCode}
+                onChange={handleCreditCodeChange}
+                placeholder="Enter credit code if you have one"
+              />
+            </div>
+            {showVerifyButton && (
+              <Button 
+                onClick={validateCreditCode} 
+                variant="outline"
+                size="default"
+              >
+                {formContent.verifyButton}
+              </Button>
+            )}
+          </div>
+          
+          {isCreditCodeValid !== null && (
+            <div className="mt-2">
+              {isCreditCodeValid ? (
+                <Alert variant="default" className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-600">Valid Code</AlertTitle>
+                  <AlertDescription className="text-green-600">
+                    {formContent.validCodeMessage}
+                  </AlertDescription>
+                </Alert>
+              ) : creditCodeRedeemed ? (
+                <Alert variant="default" className="bg-amber-50 border-amber-200">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertTitle className="text-amber-600">Already Redeemed</AlertTitle>
+                  <AlertDescription className="text-amber-600">
+                    {formContent.redeemedCodeMessage}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert variant="default" className="bg-red-50 border-red-200">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <AlertTitle className="text-red-600">Invalid Code</AlertTitle>
+                  <AlertDescription className="text-red-600">
+                    {formContent.invalidCodeMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
           )}
         </div>
-
-        {isCreditCodeValid === null ? null : isCreditCodeValid ? (
-          <p>{formContent.validCodeMessage}</p>
-        ) : creditCodeRedeemed ? (
-          <p>{formContent.redeemedCodeMessage}</p>
-        ) : (
-          <p>{formContent.invalidCodeMessage}</p>
-        )}
-
+        
+        <Separator />
+        
         {(isCreditCodeValid || currentRegistrationFee === 0) ? (
-          <p>Registration is free</p>
+          <Alert variant="default" className="bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-600">Free Registration</AlertTitle>
+            <AlertDescription className="text-green-600">
+              Your registration is free of charge.
+            </AlertDescription>
+          </Alert>
         ) : (
-          <div style={{ width: '100%' }} className='card-element-container'>
-            <CardElement options={CARD_ELEMENT_OPTIONS} />
-            <p>
-              {formContent.registrationFeeLabel}
-              {convertedFee.currency === 'MXN'
-                ? `${convertedFee.amount} MXN`
-                : `$${currentRegistrationFee} USD`
-              }
-            </p>
-            <p>Sanctioning: {sanctioning}</p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="card-element">{formContent.registrationFeeLabel}</Label>
+              <div className="border rounded-md p-3 bg-gray-50">
+                <CardElement id="card-element" options={CARD_ELEMENT_OPTIONS} />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Sanctioning: <Badge variant="outline" className="font-normal">{sanctioning}</Badge>
+              </div>
+              <div className="text-sm font-medium">
+                Fee: {convertedFee.currency === 'MXN'
+                  ? `${convertedFee.amount} MXN`
+                  : `$${currentRegistrationFee} USD`
+                }
+              </div>
+            </div>
           </div>
         )}
-
-        <button onClick={handleRegistrationSubmit} disabled={isSubmitting} className='submitButton'>
-          {isSubmitting ? formContent.submittingButton : formContent.submitButton}
-        </button>
-     
+        
         {statusMessage && (
-        <div className="mt-4 mb-4 p-4 rounded bg-gray-100">
-          <p className="text-sm font-medium text-gray-900">{statusMessage}</p>
-        </div>
-      )}
-     
-      </div>
-
-   
-
-    </div>
-  );
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertTitle className="text-blue-700">Status Update</AlertTitle>
+            <AlertDescription className="text-blue-600">
+              {statusMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+      
+      <CardFooter className="flex justify-end">
+        <Button 
+          onClick={handleRegistrationSubmit} 
+          disabled={isSubmitting}
+          className="w-full sm:w-auto"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {formContent.submittingButton}
+            </>
+          ) : (
+            formContent.submitButton
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
+  </div>
+);
 };
 
 export default RegistrationComponent;
