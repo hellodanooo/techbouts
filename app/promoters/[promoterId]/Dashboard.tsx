@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { EventType, Promoter } from '../../../utils/types';
-import { parseISO, format } from 'date-fns';
+import { parseISO } from 'date-fns';
 import Calendar from '../Calendar';
 import MonthTable from '../../../components/MonthTable';
 import Image from 'next/image';
@@ -13,6 +13,7 @@ import AuthDisplay from '@/components/ui/AuthDisplay';
 import AddEditPromoter from '@/components/AddEditPromoter';
 import { FaFacebookSquare, FaInstagram } from "react-icons/fa";
 import { TbWorldWww } from "react-icons/tb";
+import UpcomingEvents from './UpcomingEventsList';
 
 
 
@@ -194,20 +195,11 @@ export default function PromoterDashboard({
         <Calendar />
       </div>
 
+      <UpcomingEvents
+       events={allEvents}
+        />
 
-        <div className="mt-6">
-          <h2 className="text-center text-xl font-semibold mb-4">Upcoming Events</h2>
-          <div className="events-list">
-            {allEvents
-              .filter(event => event.status === 'confirmed')
-              .map(event => (
-                <div key={event.id}>
-                  {event.event_name} - {format(event.parsedDate, 'MMMM d, yyyy')}
-               
-                </div>
-              ))}
-          </div>
-        </div>
+     
 
     </div>
   );

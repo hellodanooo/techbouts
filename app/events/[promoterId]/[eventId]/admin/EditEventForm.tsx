@@ -438,7 +438,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                   <input
                     type="email"
                     name="email"
-                    value={formData.email}
+                    value={formData.promoterEmail}
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                   />
@@ -541,16 +541,20 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                   />
                 </div>
 
-                <div>
-                  <Label>Ticket Price</Label>
-                  <input
-                    type="number"
-                    name="ticket_price"
-                    value={formData.ticket_price}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  />
-                </div>
+{eventData.ticket_enabled && (
+   <div>
+   <Label>Ticket Price</Label>
+   <input
+     type="number"
+     name="ticket_price"
+     value={formData.ticket_price}
+     onChange={handleInputChange}
+     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+   />
+ </div>
+
+)}
+               
 
                 <div className="flex items-center space-x-4">
                   <Switch

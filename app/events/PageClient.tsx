@@ -180,7 +180,7 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
       />
       <h1>Events Dashboard</h1>
 
-      {isAdmin && (
+      {isAdmin || isPromoter && (
 
         <div
           style={{

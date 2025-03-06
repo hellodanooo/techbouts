@@ -349,6 +349,7 @@ const PromoterDashboard = ({
               <p style={styles.cardSubText}>
                 {promoter.city}, {promoter.state}
               </p>
+              
               <p style={styles.cardSubText}>
                 {promoterEvents.length} upcoming events
               </p>
