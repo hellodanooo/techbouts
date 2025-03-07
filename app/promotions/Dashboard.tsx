@@ -193,7 +193,7 @@ const PromoterDashboard = ({
   }, [activeSanctioning, initialConfirmedEvents, initialPendingEvents, allTechBoutsEvents]);
 
   const handlePromoterClick = (promoter: Promoter) => {
-    const routePrefix = '/promoters/';
+    const routePrefix = '/promotions/';
     const promoterId = promoter.sanctioning.includes('PMT') ? 
       promoter.promoterId.toLowerCase() : 
       promoter.promoterId;

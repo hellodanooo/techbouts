@@ -19,7 +19,7 @@ const HeaderHome = ({ isAdmin }: HeaderHomeProps) => {
 
   const navigationLinks = [
     { href: '/events', label: 'Events' },
-    { href: '/promoters', label: 'Promoters' },
+    { href: '/promotions', label: 'Promotions' },
     { href: '/sanctioning', label: 'Sanctioning' },
     { href: '/database', label: 'Database' },
     ...(isAdmin ? [{ href: '/emails/pmt', label: 'Emails' }] : []),

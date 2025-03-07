@@ -1,7 +1,6 @@
-// components/UpcomingEvents.tsx
 import React from 'react';
 import { EventType } from '@/utils/types';
-import { format } from 'date-fns';
+import { format, addDays, isAfter } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from 'lucide-react';
@@ -12,16 +11,26 @@ interface UpcomingEventsProps {
     parsedDate: Date;
     status: 'confirmed' | 'pending';
     eventType?: 'pmt';
-    promoterId?: string; // Added promoterId for navigation
+    promoterId?: string;
   }>;
 }
 
 const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events }) => {
   const router = useRouter();
   
+  // Get current date
+  const currentDate = new Date();
+  
+  // Filter events:
+  // 1. Must be confirmed
+  // 2. Must not have occurred more than 2 days ago
+  // 3. Sort by date (ascending)
   const confirmedEvents = events
-    .filter(event => event.status === 'confirmed')
-    .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime()); // Sort by date ascending
+    .filter(event => 
+      event.status === 'confirmed' && 
+      isAfter(addDays(event.parsedDate, 2), currentDate) // Keep events that happened less than 2 days ago
+    )
+    .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime());
   
   // Handler to navigate to event details page
   const handleEventClick = (promoterId: string, eventId: string) => {
