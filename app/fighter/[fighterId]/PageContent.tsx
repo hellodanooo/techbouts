@@ -219,6 +219,90 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
           </div>
         )}
 
+
+
+{fighter.bouts && fighter.bouts.length > 0 && (
+  <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <h2 className="text-2xl font-bold text-[#8B7355] mb-4">
+      Verified Bouts
+    </h2>
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white border border-gray-300">
+        <thead>
+          <tr className="bg-[#f8f5f0]">
+            <th className="px-4 py-2 border">Date</th>
+            <th className="px-4 py-2 border">Result</th>
+            <th className="px-4 py-2 border">Opponent</th>
+            <th className="px-4 py-2 border">Promotion</th>
+            <th className="px-4 py-2 border">Sanctioning Body</th>
+            <th className="px-4 py-2 border">Verification</th>
+            <th className="px-4 py-2 border">Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fighter.bouts.map((bout, index) => (
+            <tr key={index} className="text-center border-t">
+              <td className="px-4 py-2">{bout.date}</td>
+              <td className="px-4 py-2 font-bold">
+                {bout.result === 'W' ? (
+                  <span className="text-green-600">Win</span>
+                ) : bout.result === 'L' ? (
+                  <span className="text-red-600">Loss</span>
+                ) : bout.result === 'DRAW' ? (
+                  <span className="text-blue-600">Draw</span>
+                ) : bout.result === 'NC' ? (
+                  <span className="text-gray-600">No Contest</span>
+                ) : bout.result === 'DQ' ? (
+                  <span className="text-orange-600">DQ</span>
+                ) : (
+                  <span className="text-gray-600">{bout.result}</span>
+                )}
+              </td>
+              <td className="px-4 py-2">{bout.opponentName}</td>
+              <td className="px-4 py-2">{bout.promotionName}</td>
+              <td className="px-4 py-2">{bout.sanctioningBody}</td>
+              <td className="px-4 py-2">
+                <div className="flex flex-col items-center">
+                  {bout.namePresent && bout.opponentPresent && bout.datePresent ? (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                      </svg>
+                      Partial
+                    </span>
+                  )}
+                </div>
+              </td>
+              <td className="px-4 py-2">
+                {bout.url && (
+                  <a 
+                    href={bout.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+
         {/* Bout Form */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-2xl font-bold text-[#8B7355] mb-4">

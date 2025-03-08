@@ -178,7 +178,40 @@ export interface FullContactFighter {
       legkick?: number;
       ringawareness?: number;
     }>;
+ 
+    bouts?: BoutData[];
 }
+
+
+export interface BoutData {
+  url: string;
+  namePresent: boolean;
+  date: string;
+  datePresent: boolean;
+  promotionName: string;
+  promotionPresent: boolean;
+  sanctioningBody: string;
+  sanctioningPresent: boolean;
+  opponentName: string;
+  opponentPresent: boolean;
+  timestamp: string;
+  inputDate: string;
+  inputOpponentFirst: string;
+  inputOpponentLast: string;
+  result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+}
+
+// Existing FightRecord interface
+export interface FightRecord {
+  date: string;
+  eventName: string;
+  result: string;
+  opponent_id?: string;
+  weightclass?: number;
+  bout_type?: string;
+}
+
+
 
 export interface EventType {
   competition_type: 'FightCard' | 'Tournament';

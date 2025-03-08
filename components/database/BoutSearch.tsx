@@ -2,7 +2,13 @@
 
 import React, { useState } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { doc, updateDoc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { 
+
+  updateDoc, 
+  doc,
+  getDoc,
+
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
 
 interface FightVerification extends SearchResults {
@@ -245,82 +251,54 @@ const verifyFightResult = (
   return { verified, reason };
 };
 
-  const saveBoutData = async (boutData: BoutData) => {
-    setIsSaving(true);
-    setSaveMessage(null);
-  
-    try {
-      // Get all documents from fighters_database collection
-      const fightersRef = collection(db, 'techbouts_fighters');
-      const fightersSnapshot = await getDocs(fightersRef);
-      
-      let docId: string | null = null;
-      let fighterIndex: number = -1;
-      
-      fightersSnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.fighters) {
-          const index = data.fighters.findIndex(
-            (f: { fighter_id: string }) => f.fighter_id === fighterId
-          );
-          if (index !== -1) {
-            docId = doc.id;
-            fighterIndex = index;
-          }
-        }
-      });
-  
-      if (!docId || fighterIndex === -1) {
-        throw new Error('Fighter not found in database');
-      }
-  
-      // Reference to the specific document
-      const docRef = doc(db, 'fighters_database', docId);
-      
-      // Get current document data
-      const docSnap = await getDoc(docRef);
-      const docData = docSnap.data();
-      
-      if (!docData) {
-        throw new Error('Document data not found');
-      }
-  
-      // Make a copy of the fighters array
-      const updatedFighters = [...docData.fighters];
-      
-      // Add or initialize the bouts array for the specific fighter
-      if (!updatedFighters[fighterIndex].bouts) {
-        updatedFighters[fighterIndex].bouts = [];
-      }
-      
-      // Add the new bout data
-      updatedFighters[fighterIndex].bouts.push(boutData);
-  
-      // Update the document with the modified fighters array
-      await updateDoc(docRef, {
-        fighters: updatedFighters
-      });
-  
-      setSaveMessage('Bout data saved successfully!');
-      
-      // Clear form after successful save
-      setUrl('');
-      setDate('');
-      setOpponentFirstName('');
-      setOpponentLastName('');
-      setPromotionName('');
-      setSanctioningBody('');
-      setSearchResults(null);
-      setResult('W');
-setSearchResults(null);
-      
-    } catch (error) {
-      console.error('Error saving bout data:', error);
-      setSaveMessage('Error saving bout data. Please try again.');
-    } finally {
-      setIsSaving(false);
+
+
+const saveBoutData = async (boutData: BoutData) => {
+  setIsSaving(true);
+  setSaveMessage(null);
+
+  try {
+    // Get the fighter document directly using the fighter_id as the document ID
+    const docRef = doc(db, 'techbouts_fighters', fighterId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      throw new Error('Fighter not found in database');
     }
-  };
+
+    // Get the current data
+    const fighterData = docSnap.data();
+    
+    // Initialize bouts array if it doesn't exist
+    const existingBouts = fighterData.bouts || [];
+    
+    // Add the new bout data
+    const updatedBouts = [...existingBouts, boutData];
+    
+    // Update the document with the new bouts array
+    await updateDoc(docRef, {
+      bouts: updatedBouts
+    });
+
+    setSaveMessage('Bout data saved successfully!');
+    
+    // Clear form after successful save
+    setUrl('');
+    setDate('');
+    setOpponentFirstName('');
+    setOpponentLastName('');
+    setPromotionName('');
+    setSanctioningBody('');
+    setSearchResults(null);
+    setResult('W');
+    
+  } catch (error) {
+    console.error('Error saving bout data:', error);
+    setSaveMessage('Error saving bout data. Please try again.');
+  } finally {
+    setIsSaving(false);
+  }
+};
 
 
   const constructBoutData = (

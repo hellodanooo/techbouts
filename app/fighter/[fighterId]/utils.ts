@@ -24,6 +24,25 @@ interface FighterFight {
   ringawareness: number;
 }
 
+// Add BoutData interface
+interface BoutData {
+  url: string;
+  namePresent: boolean;
+  date: string;
+  datePresent: boolean;
+  promotionName: string;
+  promotionPresent: boolean;
+  sanctioningBody: string;
+  sanctioningPresent: boolean;
+  opponentName: string;
+  opponentPresent: boolean;
+  timestamp: string;
+  inputDate: string;
+  inputOpponentFirst: string;
+  inputOpponentLast: string;
+  result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+}
+
 // Define the structure of the raw fighter data from Firestore
 interface FirestoreFighterData {
   fighter_id?: string;
@@ -81,6 +100,9 @@ interface FirestoreFighterData {
   // Fights data
   fights?: Partial<FighterFight>[];
   pmt_fights?: Partial<FighterFight>[];
+  
+  // Bout data
+  bouts?: BoutData[];
 }
 
 export async function getFighterData(fighterId: string): Promise<FullContactFighter | null> {
@@ -149,6 +171,9 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
       
       // Process fights data
       fights: processAndSortFights(data),
+      
+      // Include bouts data if available
+      bouts: data.bouts || [],
       
       // Payment information with defaults
       payment_info: {
