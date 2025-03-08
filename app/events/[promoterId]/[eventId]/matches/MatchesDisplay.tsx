@@ -2,7 +2,8 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import Link  from 'next/link';
 
 interface Fighter {
   first?: string;
@@ -66,11 +67,7 @@ export default function MatchesDisplay({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Bout</TableHead>
-                <TableHead>Ring</TableHead>
-                <TableHead>Red Corner</TableHead>
-                <TableHead>Blue Corner</TableHead>
-                <TableHead>Weight</TableHead>
+              
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -83,15 +80,68 @@ export default function MatchesDisplay({
                 
                 return (
                   <TableRow key={index}>
-                    <TableCell>{redFighter.bout}</TableCell>
-                    <TableCell>{redFighter.ring}</TableCell>
-                    <TableCell>{`${redFighter.first || ''} ${redFighter.last || ''}`}</TableCell>
-                    <TableCell>{`${blueFighter.first || ''} ${blueFighter.last || ''}`}</TableCell>
+                   
+                 
                     <TableCell>
-                      {redFighter.weightclass === blueFighter.weightclass 
-                        ? redFighter.weightclass 
-                        : `${redFighter.weightclass} / ${blueFighter.weightclass}`}
-                    </TableCell>
+                    <div
+                    className='flex flex-col justify-center items-center'
+                    >
+ <Link
+   target="_blank"
+  rel="noopener noreferrer"
+ href={`/fighter/${redFighter.fighter_id}`}
+                      >
+                    <div
+                    className='custom-font-megapunch text-2xl tracking-[.1em]'
+                    >
+                     
+                      {`${redFighter.first || ''} ${redFighter.last || ''}`}
+                      </div>
+                      </Link>
+
+                      <div>
+                        {redFighter.gym}
+                      </div>
+                      
+                      </div>
+                      </TableCell>
+                   
+                    <TableCell>
+                      <div
+                    className='flex flex-col justify-center items-center'
+                    >
+                      <div>Bout {redFighter.bout}</div>
+                      <div
+                      className='custom-font-megapunch text-2xl'
+                      >VS</div>
+                      <div>{redFighter.weightclass} lbs</div>
+                      </div>
+                      </TableCell>
+
+                    <TableCell>
+                    <div
+                    className='flex flex-col justify-center items-center'
+                    >
+ <Link
+   target="_blank"
+  rel="noopener noreferrer"
+ href={`/fighter/${blueFighter.fighter_id}`}
+                      >
+                     <div
+                                         className='custom-font-megapunch text-2xl tracking-[.1em]'
+
+                     > {`${blueFighter.first || ''} ${blueFighter.last || ''}`}
+                     </div>
+</Link>
+                      <div>{blueFighter.gym}</div>
+                      </div>
+
+                      </TableCell>
+
+
+                
+
+                  
                   </TableRow>
                 );
               })}

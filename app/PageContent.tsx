@@ -4,7 +4,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import HeaderHome from "@/components/ui/HeaderHome";
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import LoadingScreen from '@/components/loading_screens/LandingLoading';
@@ -52,7 +51,7 @@ export default function PageContent() {
         isNewUser={isNewUser}
       />
       
-      <HeaderHome isAdmin={isAdmin} />
+
 
       {/* Hero Section with Conditional Content */}
       <section className="text-center sm:text-left max-w-4xl px-4">

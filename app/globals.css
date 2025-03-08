@@ -54,6 +54,18 @@ body {
   color: hsl(var(--foreground));
 }
 
+
+@font-face {
+  font-family: 'Megapunch';
+  src: url('/fonts/Megapunch-nRlX4.ttf') format('truetype');
+}
+.custom-font-megapunch {
+  font-family: 'Megapunch';
+}
+
+
+
+
 @layer base {
   :root {
     --radius: 0.5rem;

@@ -11,6 +11,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isPromoter: boolean;
   isNewUser: boolean;
+  promoterId: string | null; // Added promoterId
   isAuthLoading: boolean;
   authError: string | null;
   isInEmbeddedBrowser: boolean;
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPromoter, setIsPromoter] = useState(false);
+  const [promoterId, setPromoterId] = useState<string | null>(null); // Added state for promoterId
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isInEmbeddedBrowser, setIsInEmbeddedBrowser] = useState(false);
@@ -76,19 +78,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const promoterEmails = data.promoters.map((p: any) => p.email.toLowerCase());
         logDebug('All promoter emails:', promoterEmails);
 
-        const isPromoter = data.promoters.some(
+        // Find the promoter with the matching email
+        const matchingPromoter = data.promoters.find(
           (promoter: any) => promoter.email.toLowerCase() === email.toLowerCase()
         );
 
-        logDebug('Is promoter result:', isPromoter);
-        return isPromoter;
+        if (matchingPromoter) {
+          logDebug('Found matching promoter:', matchingPromoter);
+          // Set the promoterId if found
+          setPromoterId(matchingPromoter.id || null);
+          return true;
+        }
+
+        logDebug('No matching promoter found');
+        setPromoterId(null);
+        return false;
       }
 
       logDebug('No promoters data found');
+      setPromoterId(null);
       return false;
     } catch (error) {
       console.error('Error checking promoter status:', error);
       logDebug('Error checking promoter status:', error);
+      setPromoterId(null);
       return false;
     }
   };
@@ -144,10 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           logDebug('Setting isPromoter to:', promoterStatus);
         } else {
           setIsPromoter(false);
+          setPromoterId(null);
         }
       } else {
         setIsAdmin(false);
         setIsPromoter(false);
+        setPromoterId(null);
       }
     });
 
@@ -208,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await firebaseSignOut(auth);
       setIsAdmin(false);
       setIsPromoter(false);
+      setPromoterId(null);
       logDebug('Sign out successful');
     } catch (error) {
       console.error('Sign out error:', error);
@@ -223,6 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       isPromoter,
       isNewUser: !(isAdmin || isPromoter),
+      promoterId, // Added promoterId to the context
       isAuthLoading,
       authError,
       isInEmbeddedBrowser,

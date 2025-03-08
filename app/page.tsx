@@ -1,4 +1,4 @@
-// app/page.tsx (Server Component)
+// app/page.tsx 
 import { Metadata } from 'next';
 import PageContent from './PageContent';
 

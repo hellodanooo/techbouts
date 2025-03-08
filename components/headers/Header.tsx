@@ -1,151 +1,222 @@
-"use client";
+'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import styles from '../../styles/LandingPage.module.css';
-import Link from 'next/link';
-import Image from 'next/image';
-import DropDowns from '../../styles/DropDowns.module.css';
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useAuth } from '@/context/AuthContext';
+import { usePathname } from 'next/navigation';
+import GoogleAuthButton from '@/components/ui/GoogleAuthButton';
 
-const LandingHeader: React.FC = () => {
-    const [isLoading] = useState(false);
+interface HeaderProps {
+  transparent?: boolean;
+}
 
-    const rulesBtnRef = useRef(null);
-    const awardsBtnRef = useRef(null);
-    const rankingsBtnRef = useRef(null);
-    const gymRankingsBtnRef = useRef(null);
-    const logoRef = useRef(null);
+export default function Header({ transparent = false }: HeaderProps) {
+  const { user, isAdmin, isPromoter, promoterId, signOut } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const overlayRef = useRef<HTMLDivElement>(null);
-    const [dropdownVisible, setDropdownVisible] = useState(false);
-
-    const animateHeaderAndLogo = () => {
-        gsap.fromTo(rulesBtnRef.current, { x: -200 }, { x: 0, duration: 1 });
-        gsap.fromTo(awardsBtnRef.current, { x: -200 }, { x: 0, duration: 1 });
-        gsap.fromTo(rankingsBtnRef.current, { x: 200 }, { x: 0, duration: 1 });
-        gsap.fromTo(gymRankingsBtnRef.current, { x: 200 }, { x: 0, duration: 1 });
-        gsap.fromTo(logoRef.current, { y: -200 }, { y: 0, duration: 1 });
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
     };
 
-    useEffect(() => {
-        if (!isLoading) {
-            animateHeaderAndLogo();
-        }
-    }, [isLoading]);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    useEffect(() => {
-        if (dropdownVisible) {
-            gsap.fromTo(
-                dropdownRef.current,
-                { y: -10, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.5, delay: 0.2 }
-            );
-        }
-    }, [dropdownVisible]);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-    const toggleDropdown = () => {
-        setDropdownVisible(!dropdownVisible);
-    };
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+  
+  const isActive = (path: string) => {
+    return pathname === path;
+  };
 
-    return (
-        <div className="headerLinks">
-            {dropdownVisible && (
-                <div className={DropDowns.overlay} ref={overlayRef} onClick={toggleDropdown}>
-                    <div
-                        className={DropDowns.dropdown}
-                        ref={dropdownRef}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div style={{ display: 'flex', backgroundColor: 'white', borderRadius: '5px' }}>
-                            <Link
-                                style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
-                                href="/rankings/CA"
-                            >
-                                California
-                                <Image
-                                    width={100}
-                                    height={100}
-                                    src="https://firebasestorage.googleapis.com/v0/b/pmt-app2.appspot.com/o/web_graphics%2Fcali_shape.png?alt=media&token=a44401fd-8da3-43d5-9dbd-b5c19037b08a"
-                                    alt="California shape"
-                                    style={{ width: '100px', height: 'auto' }}
-                                />
-                            </Link>
-                            <Link
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                }}
-                                href="/rankings/TX"
-                            >
-                                Texas
-                                <Image
-                                    width={100}
-                                    height={100}
-                                    src="https://firebasestorage.googleapis.com/v0/b/pmt-app2.appspot.com/o/web_graphics%2Ftexas_shp.png?alt=media&token=6fe508db-5819-4e3f-8cd9-3f565f3f040e"
-                                    alt="Texas shape"
-                                    style={{ width: '100px', height: 'auto' }}
-                                />
-                            </Link>
-                            <Link
-                                style={{ display: 'flex', flexDirection: 'column' }}
-                                href="/rankings/CO"
-                            >
-                                Colorado
-                                <Image
-                                    width={100}
-                                    height={100}
-                                    src="https://firebasestorage.googleapis.com/v0/b/pmt-app2.appspot.com/o/web_graphics%2Fcoloradoi_shape.png?alt=media&token=c0d63748-65c6-4e2f-a004-98cccd65a9fb"
-                                    alt="Colorado shape"
-                                    style={{ width: '100px', height: 'auto' }}
-                                />
-                            </Link>
-                        </div>
-                        <Image
-                            width={800}
-                            height={200}
-                            src="https://firebasestorage.googleapis.com/v0/b/pmt-app2.appspot.com/o/web_graphics%2Frankings.png?alt=media&token=99a521db-1850-42eb-9152-7d0a9f0c3e65"
-                            alt="Rankings"
-                            style={{ width: '80%', height: 'auto' }}
-                        />
-                    </div>
-                </div>
-            )}
-            <div className={styles.leftHeader}>
-                <div className={styles.rules_btn} ref={rulesBtnRef}>
-                    <Link href={`/rules`}>Rules</Link>
-                </div>
-                <div className={styles.awards_btn} ref={awardsBtnRef}>
-                    <Link href={`/awards`}>Awards</Link>
-                </div>
-            </div>
+  // Determine the dashboard path
+  const dashboardPath = promoterId 
+    ? `/promotions/${promoterId}` 
+    : `/promotions/dashboard`; // Fallback in case promoterId is not available
 
-            <div className={styles.logo_container}>
-                <Link href="/" passHref>
-                    <Image
-                        src="/PMT_Logo_2021_wh.png"
-                        alt="PMT Logo"
-                        width={200}
-                        height={100}
-                        className="logo"
-                        ref={logoRef}
-                        style={{ width: 'auto', height: 'auto' }}
-                    />
-                </Link>
-            </div>
-
-            <div className={styles.rightHeader}>
-                <div className={styles.rankings_btn} ref={rankingsBtnRef} onClick={toggleDropdown}>
-                    Rankings
-                </div>
-                <div className={styles.gym_rankings_btn} ref={gymRankingsBtnRef}>
-                    <Link href={`/results`}>Results</Link>
-                </div>
-            </div>
+  return (
+    <header 
+      className={`w-full fixed top-0 z-50 transition-all duration-300 ${
+        transparent && !scrolled 
+          ? 'bg-transparent' 
+          : 'bg-white shadow-md'
+      }`}
+    >
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo */}
+        <div className="relative">
+         <Link  href="/" >
+          <Image 
+            src="/logos/techboutslogoFlat.png" 
+            alt="Logo" 
+            width={150} 
+            height={60}
+            className="mix-blend-multiply dark:mix-blend-screen drop-shadow-sm"
+          />
+          </Link>
         </div>
-    );
-};
 
-export default LandingHeader;
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-6">
+      
+          <Link 
+            href="/events" 
+            className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
+          >
+            Events
+          </Link>
+
+          <Link 
+            href="/promotions" 
+            className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
+          >
+            Promotions
+          </Link>
+
+          <Link 
+            href="/database" 
+            className={`${isActive('/database') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
+          >
+            Database
+          </Link>
+          
+          {isPromoter && (
+            <Link 
+              href={dashboardPath}
+              className={`${pathname.startsWith('/promoters/') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
+            >
+              Dashboard
+            </Link>
+          )}
+          
+          {isAdmin && (
+            <Link 
+              href="/emails" 
+              className={`${pathname.startsWith('/emails') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
+            >
+              Email
+            </Link>
+          )}
+
+          {user ? (
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={signOut}
+                className="border-2 border-[#DD5746] text-[#DD5746] py-1 px-4 rounded hover:bg-[#DD5746] hover:text-white transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+ 
+              <GoogleAuthButton />
+              
+            </div>
+          )}
+        </nav>
+
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden text-[#8B322C]" 
+          onClick={toggleMenu}
+          aria-label="Toggle menu"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor" 
+            className="w-6 h-6"
+          >
+            {isMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white shadow-lg">
+          <div className="container mx-auto px-4 py-2 flex flex-col space-y-3">
+            <Link 
+              href="/" 
+              className={`${isActive('/') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
+              onClick={closeMenu}
+            >
+              Home
+            </Link>
+            <Link 
+              href="/events" 
+              className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
+              onClick={closeMenu}
+            >
+              Events
+            </Link>
+            <Link 
+              href="/database" 
+              className={`${isActive('/database') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
+              onClick={closeMenu}
+            >
+              Database
+            </Link>
+            
+            {isPromoter && (
+              <Link 
+                href={dashboardPath}
+                className={`${pathname.startsWith('/promoters/') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
+                onClick={closeMenu}
+              >
+                Dashboard
+              </Link>
+            )}
+            
+            {isAdmin && (
+              <Link 
+                href="/admin" 
+                className={`${pathname.startsWith('/admin') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
+                onClick={closeMenu}
+              >
+                Admin
+              </Link>
+            )}
+            
+            {user ? (
+              <div className="py-2 flex items-center justify-between">
+                <button 
+                  onClick={() => {
+                    signOut();
+                    closeMenu();
+                  }}
+                  className="text-sm text-[#DD5746]"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/auth/login" 
+                className="bg-[#DD5746] text-white py-2 px-4 rounded text-center"
+                onClick={closeMenu}
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
