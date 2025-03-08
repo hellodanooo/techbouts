@@ -251,7 +251,7 @@ const verifyFightResult = (
   
     try {
       // Get all documents from fighters_database collection
-      const fightersRef = collection(db, 'fighters_database');
+      const fightersRef = collection(db, 'techbouts_fighters');
       const fightersSnapshot = await getDocs(fightersRef);
       
       let docId: string | null = null;
