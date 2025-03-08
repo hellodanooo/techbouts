@@ -19,16 +19,16 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
   
   // Calculate total record for display
   const totalWins = 
-    (fighter.mt_win || 0) + 
-    (fighter.boxing_win || 0) + 
-    (fighter.mma_win || 0) + 
-    (fighter.pmt_win || 0);
+    (fighter.mt_win-0 || 0) + 
+    (fighter.boxing_win-0 || 0) + 
+    (fighter.mma_win-0 || 0) + 
+    (fighter.pmt_win-0 || 0);
   
   const totalLosses = 
-    (fighter.mt_loss || 0) + 
-    (fighter.boxing_loss || 0) + 
-    (fighter.mma_loss || 0) + 
-    (fighter.pmt_loss || 0);
+    (fighter.mt_loss-0 || 0) + 
+    (fighter.boxing_loss-0 || 0) + 
+    (fighter.mma_loss-0 || 0) + 
+    (fighter.pmt_loss-0 || 0);
   
   // Determine if a URL is valid
   const isValidUrl = (url: string | undefined): boolean => {
