@@ -180,6 +180,7 @@ export interface FullContactFighter {
     }>;
  
     bouts?: BoutData[];
+    boutRefs?: string[];
 }
 
 
@@ -198,7 +199,25 @@ export interface BoutData {
   inputDate: string;
   inputOpponentFirst: string;
   inputOpponentLast: string;
-  result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  redResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  blueResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  id?: string;
+  redCornerId: string;
+  blueCornerId: string;
+  redGymId: string;
+  blueGymId: string;
+  redFighterName: string;
+  blueFighterName: string;
+  redGymName: string;
+  blueGymName: string;
+  redFighterPhoto: string;
+  blueFighterPhoto: string;
+  redGymLogo: string;
+  blueGymLogo: string;
+  resultVerified: boolean;
+  
+
+
 }
 
 // Existing FightRecord interface
@@ -444,63 +463,6 @@ export interface FighterDisplay extends BaseFighter {
 }
 
 
-//   first: string;
-//   last: string;
-//   gym: string;
-//   dob: string;
-//   gender: string;
-
-//   weightclass: number;
-//   mtp_id: string;
-//   email: string;
-//   age: number;
-//   city:string;
-//   state: string;
-//   photo?: string;
-//   gymlogo: string;
-//   gymwebsite: string;
-//   gymaddress: string;
-
-//   height: number;
-//   heightFoot?: number;
-//   heightInch?: number;
-
-//   win: number;
-//   loss: number;
-//   pmt_win: number;
-//   pmt_loss: number;
-//   mma_win: number;
-//   mma_loss: number;
-//   boxing_win: number;
-//   boxing_loss: number;
-
-//   docId: string;
-//   boutNum?:number;
-//   confirmed?:boolean;
-
-//   gym_id:string;
-//   fighterId?:string;
-//   titleFight?:boolean;
-//   result?: 'W' | 'L' | 'NC' | 'DQ';
-//   phone: string;
-
-//     coach_email?: string;
-//   coach_name: string;
-//   coach_phone: string;
-//   website:string;
-//   address:string;
-
-//   score?: number;
-//   bracket?: number;
-//   bout?: number;
-//   fighterNum?:number;
-//   id?: string;
-//   class: string;
-//   division: string;
-
-
-//   } 
-
 export type GymProfile = {
   gym: string;
   win: number;
@@ -527,9 +489,11 @@ export type GymProfile = {
   suspensionDate: string;
   suspensionReason: string;
   athletes: ResultsFighter[];
-  coach_name?: string;
+  coaches_names?: string[];
   coach_phone?: string;
   coach_email: string;
+  coach_name?: string;
+
 }
 
 

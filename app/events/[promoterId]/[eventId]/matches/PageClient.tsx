@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase_techbouts/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -66,24 +66,84 @@ export default function PageClient({
   initialRoster = [],
 }: PageClientProps) {
   const router = useRouter();
-  const [roster, setRoster] = useState<Fighter[]>(initialRoster);
+  
+  // Only keep necessary UI state variables, not roster state
   const [red, setRed] = useState<Fighter | null>(null);
   const [blue, setBlue] = useState<Fighter | null>(null);
-  const [boutNumber, setBoutNumber] = useState<number>(() => {
-    // Find the highest bout number in the roster
-    const highestBout = Math.max(...initialRoster
-      .filter(fighter => fighter.bout !== undefined)
-      .map(fighter => fighter.bout || 0), 0);
-    
-    return highestBout + 1;
-  });
   const [ringNumber, setRingNumber] = useState<number>(1);
   const [isCreatingMatch, setIsCreatingMatch] = useState(false);
+  const [isDeletingMatch, setIsDeletingMatch] = useState<{[key: string]: boolean}>({});
+  const [isResequencing, setIsResequencing] = useState(false);
+  const [rosterData, setRosterData] = useState<Fighter[]>(initialRoster);
+  const [rosterPath, setRosterPath] = useState<string | null>(null);
+  const [boutNumber, setBoutNumber] = useState<number>(1);
   
-  // Filter unmatched fighters
+  // Find the active path to the roster document and set up listener
+  useEffect(() => {
+    if (!eventId || !promoterId) return;
+    
+    const pathsToTry = [
+      `events/promotions/${promoterId}/${eventId}/roster_json/fighters`,
+      `events/${promoterId}/${eventId}/roster_json/fighters`,
+      `promotions/${promoterId}/events/${eventId}/roster_json/fighters`
+    ];
+    
+    // Function to check if a path exists
+    const checkPath = async (path: string): Promise<boolean> => {
+      const docRef = doc(db, path);
+      const docSnap = await getDoc(docRef);
+      return docSnap.exists();
+    };
+    
+    // Find the first valid path
+    const findValidPath = async () => {
+      for (const path of pathsToTry) {
+        if (await checkPath(path)) {
+          setRosterPath(path);
+          return path;
+        }
+      }
+      return null;
+    };
+    
+    // Initialize
+    findValidPath().then(validPath => {
+      if (validPath) {
+        // Set up a listener for real-time updates
+        const unsubscribe = onSnapshot(
+          doc(db, validPath),
+          (docSnapshot) => {
+            if (docSnapshot.exists()) {
+              const data = docSnapshot.data();
+              if (data && Array.isArray(data.fighters)) {
+                setRosterData(data.fighters);
+                
+                // Calculate next bout number based on current data
+                const highestBout = Math.max(
+                  ...data.fighters
+                    .filter((fighter: Fighter) => fighter.bout !== undefined)
+                    .map((fighter: Fighter) => fighter.bout || 0),
+                  0
+                );
+                setBoutNumber(highestBout + 1);
+              }
+            }
+          },
+          (error) => {
+            console.error("Error listening to roster changes:", error);
+          }
+        );
+        
+        // Clean up the listener when component unmounts
+        return () => unsubscribe();
+      }
+    });
+  }, [eventId, promoterId]);
+  
+  // Filter unmatched fighters directly from rosterData
   const unmatchedFighters = useMemo(() => {
-    return roster.filter(fighter => fighter.bout === undefined || fighter.ring === undefined);
-  }, [roster]);
+    return rosterData.filter(fighter => fighter.bout === undefined || fighter.ring === undefined);
+  }, [rosterData]);
   
   // Sort unmatched fighters by weight class
   const sortedUnmatchedFighters = useMemo(() => {
@@ -99,6 +159,43 @@ export default function PageClient({
       return Number(weightA) - Number(weightB);
     });
   }, [unmatchedFighters]);
+  
+  // Group matched fighters by bout and ring
+  const matchedPairs = useMemo(() => {
+    const matches: { [key: string]: Fighter[] } = {};
+    
+    // Get all fighters with bout and ring numbers
+    const matchedFighters = rosterData.filter(fighter => 
+      fighter.bout !== undefined && 
+      fighter.ring !== undefined
+    );
+    
+    // Group them by bout and ring
+    matchedFighters.forEach(fighter => {
+      const key = `bout${fighter.bout}-ring${fighter.ring}`;
+      if (!matches[key]) {
+        matches[key] = [];
+      }
+      matches[key].push(fighter);
+    });
+    
+    // Convert to array and sort by bout number
+    return Object.entries(matches)
+      .map(([key, fighters]) => ({
+        key,
+        bout: fighters[0].bout as number,
+        ring: fighters[0].ring as number,
+        fighters
+      }))
+      .sort((a, b) => {
+        // First sort by ring number
+        if (a.ring !== b.ring) {
+          return a.ring - b.ring;
+        }
+        // Then by bout number
+        return a.bout - b.bout;
+      });
+  }, [rosterData]);
   
   const handleSelectFighter = (fighter: Fighter, position: 'red' | 'blue') => {
     if (position === 'red') {
@@ -119,8 +216,8 @@ export default function PageClient({
   };
   
   const createMatch = async () => {
-    if (!red || !blue || !eventId || !promoterId) {
-      toast.error("Please select two fighters first");
+    if (!red || !blue || !eventId || !promoterId || !rosterPath) {
+      toast.error(rosterPath ? "Please select two fighters first" : "No valid roster path found");
       return;
     }
     
@@ -133,7 +230,6 @@ export default function PageClient({
       
       if (!redId || !blueId) {
         toast.error("Fighter IDs are missing");
-        setIsCreatingMatch(false);
         return;
       }
       
@@ -142,7 +238,8 @@ export default function PageClient({
         bout: boutNumber,
         ring: ringNumber,
         opponent_id: blueId,
-        opponent_name: `${blue.first || ''} ${blue.last || ''}`
+        opponent_name: `${blue.first || ''} ${blue.last || ''}`,
+        corner: 'red'
       };
       
       const blueUpdate = {
@@ -150,68 +247,39 @@ export default function PageClient({
         bout: boutNumber,
         ring: ringNumber,
         opponent_id: redId,
-        opponent_name: `${red.first || ''} ${red.last || ''}`
+        opponent_name: `${red.first || ''} ${red.last || ''}`,
+        corner: 'blue'
       };
       
-      // Find the path to the roster document
-      const pathsToTry = [
-        { path: `events/promotions/${promoterId}/${eventId}/roster_json/fighters` },
-        { path: `events/${promoterId}/${eventId}/roster_json/fighters` },
-        { path: `promotions/${promoterId}/events/${eventId}/roster_json/fighters` }
-      ];
+      // Get current fighters array
+      const rosterRef = doc(db, rosterPath);
+      const rosterDoc = await getDoc(rosterRef);
       
-      let rosterUpdated = false;
-      let errorMsg = "";
-      
-      for (const { path } of pathsToTry) {
-        try {
-          // First check if the document exists
-          const rosterRef = doc(db, path);
-          const rosterDoc = await getDoc(rosterRef);
-          
-          if (rosterDoc.exists()) {
-            // Get the current fighters array
-            const data = rosterDoc.data();
-            const fighters = data.fighters || [];
-            
-            // Replace the fighters in the array
-            const updatedFighters = fighters.map((fighter: Fighter) => {
-              if (fighter.id === redId || fighter.fighter_id === redId) {
-                return redUpdate;
-              }
-              if (fighter.id === blueId || fighter.fighter_id === blueId) {
-                return blueUpdate;
-              }
-              return fighter;
-            });
-            
-            // Update the document with the new fighters array
-            await setDoc(rosterRef, { fighters: updatedFighters });
-            rosterUpdated = true;
-            
-            // Update local state
-            setRoster(updatedFighters);
-            console.log(`Roster updated at path: ${path}`);
-            break;
+      if (rosterDoc.exists()) {
+        const data = rosterDoc.data();
+        const fighters = data.fighters || [];
+        
+        // Replace the fighters in the array
+        const updatedFighters = fighters.map((fighter: Fighter) => {
+          if (fighter.id === redId || fighter.fighter_id === redId) {
+            return redUpdate;
           }
-        } catch (e) {
-          const error = e instanceof Error ? e.message : String(e);
-          errorMsg += (errorMsg ? " | " : "") + error;
-          console.log(`Failed to update roster at path: ${path} - ${error}`);
-        }
-      }
-      
-      if (rosterUpdated) {
+          if (fighter.id === blueId || fighter.fighter_id === blueId) {
+            return blueUpdate;
+          }
+          return fighter;
+        });
+        
+        // Update the document with the new fighters array
+        await setDoc(rosterRef, { fighters: updatedFighters });
+        
         toast.success(`Match created: ${red.first} ${red.last} vs ${blue.first} ${blue.last}`);
         
         // Reset selected fighters
         setRed(null);
         setBlue(null);
-        
-        // Increment bout number for next match
-        setBoutNumber(prev => prev + 1);
       } else {
-        toast.error(`Failed to create match: ${errorMsg}`);
+        toast.error("Roster document not found");
       }
     } catch (error) {
       console.error('Error creating match:', error);
@@ -221,7 +289,189 @@ export default function PageClient({
     }
   };
   
-  if (!roster || roster.length === 0) {
+  const deleteMatch = async (bout: number, ring: number) => {
+    if (!rosterPath) {
+      toast.error("No valid roster path found");
+      return;
+    }
+    
+    const matchKey = `bout${bout}-ring${ring}`;
+    setIsDeletingMatch(prev => ({ ...prev, [matchKey]: true }));
+    
+    try {
+      // Find fighters in this match
+      const fightersToUpdate = rosterData.filter(fighter => 
+        fighter.bout === bout && fighter.ring === ring
+      );
+      
+      if (fightersToUpdate.length === 0) {
+        toast.error("No fighters found for this match");
+        return;
+      }
+      
+      // Get fighter IDs to identify them in the update
+      const fighterIds = fightersToUpdate.map(fighter => fighter.fighter_id || fighter.id);
+      
+      // Get current roster from Firebase
+      const rosterRef = doc(db, rosterPath);
+      const rosterDoc = await getDoc(rosterRef);
+      
+      if (rosterDoc.exists()) {
+        const data = rosterDoc.data();
+        const fighters = data.fighters || [];
+        
+        // Update the fighters in the array by removing match info
+        const updatedFighters = fighters.map((fighter: Fighter) => {
+          if (fighterIds.includes(fighter.fighter_id || fighter.id)) {
+            // Create a shallow copy of the fighter object
+            const updatedFighter = { ...fighter };
+            
+            // Delete the match-related properties
+            delete updatedFighter.bout;
+            delete updatedFighter.ring;
+            delete updatedFighter.opponent_id;
+            delete updatedFighter.opponent_name;
+            delete updatedFighter.corner;
+            
+            return updatedFighter;
+          }
+          return fighter;
+        });
+        
+        // Update the document with the new fighters array
+        await setDoc(rosterRef, { fighters: updatedFighters });
+        
+        toast.success(`Match deleted: Bout ${bout}, Ring ${ring}`);
+        
+        // Automatically resequence bouts after successful deletion
+        await resequenceBouts(false);
+      } else {
+        toast.error("Roster document not found");
+      }
+    } catch (error) {
+      console.error('Error deleting match:', error);
+      toast.error("Failed to delete match");
+    } finally {
+      setIsDeletingMatch(prev => ({ ...prev, [matchKey]: false }));
+    }
+  };
+  
+  // Resequence bout numbers by ring
+  const resequenceBouts = async (showToast = true) => {
+    if (!rosterPath) {
+      if (showToast) toast.error("No valid roster path found");
+      return;
+    }
+    
+    setIsResequencing(true);
+    
+    try {
+      // Get current roster from Firebase
+      const rosterRef = doc(db, rosterPath);
+      const rosterDoc = await getDoc(rosterRef);
+      
+      if (!rosterDoc.exists()) {
+        if (showToast) toast.error("Roster document not found");
+        return;
+      }
+      
+      const data = rosterDoc.data();
+      const fighters = data.fighters || [];
+      
+      // Group fighters by ring
+      const ringGroups: { [key: number]: Fighter[] } = {};
+      
+      // Get all fighters with bout and ring numbers
+      const matchedFighters = fighters.filter((fighter: Fighter) => 
+        fighter.bout !== undefined && 
+        fighter.ring !== undefined
+      );
+      
+      if (matchedFighters.length === 0) {
+        if (showToast) toast.error("No matches to resequence");
+        return;
+      }
+      
+      // Group fighters by ring number
+      matchedFighters.forEach((fighter: Fighter) => {
+        const ring = fighter.ring as number;
+        if (!ringGroups[ring]) {
+          ringGroups[ring] = [];
+        }
+        ringGroups[ring].push(fighter);
+      });
+      
+      // For each ring, sort the bouts by their current number and reassign sequential numbers
+      const updatedFighterMap: { [key: string]: Fighter } = {};
+      
+      // Process each ring
+      Object.entries(ringGroups).forEach(([ringStr, ringFighters]) => {
+        const ringNumber = parseInt(ringStr);
+        console.log(`Processing ring ${ringNumber}`);
+        
+        // Group fighters in the same ring by bout number (to keep pairs together)
+        const boutGroups: { [key: number]: Fighter[] } = {};
+        
+        // Make sure you're actually using ringFighters here
+        ringFighters.forEach(fighter => {
+          const bout = fighter.bout as number;
+          if (!boutGroups[bout]) {
+            boutGroups[bout] = [];
+          }
+          boutGroups[bout].push(fighter);
+        });
+  
+        
+        // Sort the bout groups by their current bout number
+        const sortedBoutNumbers = Object.keys(boutGroups)
+          .map(Number)
+          .sort((a, b) => a - b);
+        
+        // Assign new sequential bout numbers starting from 1
+        let newBoutNumber = 1;
+        sortedBoutNumbers.forEach(oldBoutNumber => {
+          boutGroups[oldBoutNumber].forEach(fighter => {
+            const id = fighter.fighter_id || fighter.id;
+            if (id) {
+              updatedFighterMap[id] = {
+                ...fighter,
+                bout: newBoutNumber
+              };
+            }
+          });
+          newBoutNumber++;
+        });
+      });
+      
+      // Create updated roster with resequenced bout numbers
+      const updatedFighters = fighters.map((fighter: Fighter) => {
+        const id = fighter.fighter_id || fighter.id;
+        if (id && updatedFighterMap[id]) {
+          return {
+            ...fighter,
+            bout: updatedFighterMap[id].bout
+          };
+        }
+        return fighter;
+      });
+      
+      // Update the document with the new fighters array
+      await setDoc(rosterRef, { fighters: updatedFighters });
+      
+      if (showToast) {
+        toast.success("Bouts successfully resequenced");
+      }
+    } catch (error) {
+      console.error('Error resequencing bouts:', error);
+      if (showToast) {
+        toast.error("Failed to resequence bouts");
+      }
+    } finally {
+      setIsResequencing(false);
+    }
+  };
+  
+  if (!rosterData || rosterData.length === 0) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -308,7 +558,7 @@ export default function PageClient({
                 
                 <Button 
                   onClick={createMatch} 
-                  disabled={!red || !blue || isCreatingMatch}
+                  disabled={!red || !blue || isCreatingMatch || !rosterPath}
                   className="w-full mt-4"
                 >
                   {isCreatingMatch ? "Creating Match..." : "Create Match"}
@@ -341,6 +591,82 @@ export default function PageClient({
             </div>
           </div>
           
+          {/* Matched Pairs Section */}
+          {matchedPairs.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Paired Fighters</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Fighters that have been paired in matches. Delete a match to return fighters to the available pool.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => resequenceBouts(true)}
+                  disabled={isResequencing || !rosterPath}
+                >
+                  {isResequencing ? "Resequencing..." : "Resequence Bouts"}
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Bout</TableHead>
+                        <TableHead>Ring</TableHead>
+                        <TableHead>Red Corner</TableHead>
+                        <TableHead>Weight</TableHead>
+                        <TableHead>Blue Corner</TableHead>
+                        <TableHead>Weight</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {matchedPairs.map(({ key, bout, ring, fighters }) => {
+                        // Find red and blue fighters by checking if they have opponent_id
+                        // This makes it more reliable than just assuming first is red and second is blue
+                        const redFighter = fighters.find(f => f.opponent_id);
+                        const blueFighter = fighters.find(f => 
+                          f.id !== redFighter?.id && 
+                          f.fighter_id !== redFighter?.fighter_id
+                        );
+                        
+                        return (
+                          <TableRow key={key}>
+                            <TableCell>{bout}</TableCell>
+                            <TableCell>{ring}</TableCell>
+                            <TableCell className="font-medium text-red-600">
+                              {redFighter ? `${redFighter.first || ''} ${redFighter.last || ''}` : 'Missing'}
+                            </TableCell>
+                            <TableCell>{redFighter?.weightclass || '-'}</TableCell>
+                            <TableCell className="font-medium text-blue-600">
+                              {blueFighter ? `${blueFighter.first || ''} ${blueFighter.last || ''}` : 'Missing'}
+                            </TableCell>
+                            <TableCell>{blueFighter?.weightclass || '-'}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => deleteMatch(bout, ring)}
+                                disabled={isDeletingMatch[key] || !rosterPath}
+                              >
+                                {isDeletingMatch[key] ? "Deleting..." : "Delete Match"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Available Fighters Section */}
           <Card>
             <CardHeader>
               <CardTitle>Available Fighters</CardTitle>
@@ -427,8 +753,8 @@ export default function PageClient({
         </CardContent>
       </Card>
       
-      {/* Using the separate MatchesDisplay component */}
-      <MatchesDisplay roster={roster} promoterId={promoterId} eventId={eventId} />
+      {/* Keep the existing MatchesDisplay component */}
+      <MatchesDisplay roster={rosterData} promoterId={promoterId} eventId={eventId} />
     </div>
   );
 }

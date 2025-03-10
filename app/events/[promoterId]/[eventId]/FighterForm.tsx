@@ -1,4 +1,5 @@
-// pages/components/FighterForm.tsx
+// app/events/[promoterId]/[eventId]/FighterForm.tsx
+
 // this component should create the fighter and pass to the root screen to submit to roster
 'use client';
 import React, { useState, useEffect } from 'react';
@@ -812,6 +813,8 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               </div>
             </CardContent>
           </Card>
+
+
 
 
 

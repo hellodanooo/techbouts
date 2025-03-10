@@ -1,5 +1,5 @@
 // app/fighter/[fighterId]/utils.ts
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
 import { FullContactFighter } from '@/utils/types';
 
@@ -24,7 +24,8 @@ interface FighterFight {
   ringawareness: number;
 }
 
-// Add BoutData interface
+
+
 interface BoutData {
   url: string;
   namePresent: boolean;
@@ -41,6 +42,48 @@ interface BoutData {
   inputOpponentFirst: string;
   inputOpponentLast: string;
   result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  redResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  blueResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  redCornerId: '',
+  blueCornerId: '',
+  redFighterId: '',
+  blueFighterId: '',
+  redGymId: '',
+  blueGymId: '',
+  redFighterName: '',
+  blueFighterName: '',
+  redGymName: '',
+  blueGymName: '',
+  redFighterPhoto: '',
+  blueFighterPhoto: '',
+  redGymLogo: '',
+  blueGymLogo: '',
+  resultVerified: boolean;
+
+
+}
+
+// New interface for bouts stored in the separate collection
+export interface VerifiedBout {
+  id: string;
+  fighter_id: string;
+  fighterName: string;
+  opponentName: string;
+  url: string;
+  date: string;
+  result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+  promotionName: string;
+  sanctioningBody: string;
+  promotionId?: string;
+  sanctioningId?: string;
+  opponentId?: string;
+  namePresent: boolean;
+  datePresent: boolean;
+  promotionPresent: boolean;
+  sanctioningPresent: boolean;
+  opponentPresent: boolean;
+  resultVerified: boolean;
+  timestamp: string;
 }
 
 // Define the structure of the raw fighter data from Firestore
@@ -101,8 +144,11 @@ interface FirestoreFighterData {
   fights?: Partial<FighterFight>[];
   pmt_fights?: Partial<FighterFight>[];
   
-  // Bout data
+  // Legacy bout data (deprecated)
   bouts?: BoutData[];
+  
+  // References to bouts in the new collection
+  boutRefs?: string[];
 }
 
 export async function getFighterData(fighterId: string): Promise<FullContactFighter | null> {
@@ -172,8 +218,11 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
       // Process fights data
       fights: processAndSortFights(data),
       
-      // Include bouts data if available
+      // Include legacy bouts data if available
       bouts: data.bouts || [],
+      
+      // Add references to bouts in the separate collection
+      boutRefs: data.boutRefs || [],
       
       // Payment information with defaults
       payment_info: {
@@ -248,4 +297,33 @@ function processAndSortFights(data: FirestoreFighterData): FighterFight[] {
     // Sort in descending order (newest first)
     return dateB.getTime() - dateA.getTime();
   });
+}
+
+// New helper function to fetch verified bouts for a fighter from the separate collection
+export async function getVerifiedBoutsForFighter(fighterId: string): Promise<VerifiedBout[]> {
+  try {
+    // Query the verified bouts collection for this fighter
+    const boutsRef = collection(db, 'techbouts_verified_bouts');
+    const q = query(boutsRef, where('fighter_id', '==', fighterId));
+    const querySnapshot = await getDocs(q);
+    
+    // Process and return the bouts
+    const bouts: VerifiedBout[] = [];
+    querySnapshot.forEach((doc) => {
+      bouts.push({
+        id: doc.id,
+        ...doc.data()
+      } as VerifiedBout);
+    });
+    
+    // Sort by date (most recent first)
+    return bouts.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : new Date(0);
+      const dateB = b.date ? new Date(b.date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  } catch (error) {
+    console.error('Error fetching verified bouts:', error);
+    return [];
+  }
 }
