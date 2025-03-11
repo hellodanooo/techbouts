@@ -1,4 +1,4 @@
-// app/events/[eventId]/embed/page.tsx
+// app/events/[promoterId]/[eventId]/embed/page.tsx
 import { Metadata } from 'next';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';

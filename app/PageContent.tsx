@@ -45,6 +45,7 @@ export default function PageContent() {
   return (
     
     <div className="flex flex-col items-center justify-center min-h-screen gap-16 sm:p-5 font-[family-name:var(--font-geist-sans)] relative bg-gradient-to-b from-white to-[#4793AF]/10">
+    
       <AuthDisplay 
         user={user}
         isAdmin={isAdmin}

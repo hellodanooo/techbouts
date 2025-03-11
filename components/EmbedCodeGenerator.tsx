@@ -20,7 +20,7 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
   const [width, setWidth] = useState(600);
   const [height, setHeight] = useState(700);
   const [customization, setCustomization] = useState({
-    hideHeader: false,
+    hideHeader: true,
     customColor: false,
     primaryColor: '#3B82F6',
     allowResize: true

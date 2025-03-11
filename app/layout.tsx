@@ -2,7 +2,6 @@
 import type { Viewport } from "next";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
-import Header from "@/components/headers/Header";
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -24,7 +23,7 @@ export default function RootLayout({
           <main className="flex-1 w-full">
              <AuthProvider> 
               <div className="mb-16">
-              <Header />
+        
               </div>
               {children}
              </AuthProvider> 

@@ -5,7 +5,7 @@ import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { db } from '@/lib/firebase_techbouts/config';
 import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
-import FighterForm from './FighterForm';
+import FighterForm from '../../app/events/[promoterId]/[eventId]/FighterForm';
 import { format } from 'date-fns';
 import { FullContactFighter } from '@/utils/types';
 // Shadcn UI Components

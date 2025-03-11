@@ -1,10 +1,10 @@
-// app/events/[eventId]/embed/EmbedRegistrationPage.tsx
+// app/events/[promoterId]/[eventId]/embed/EmbedRegistrationPage.tsx
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import Register from '@/app/events/[promoterId]/[eventId]/Register';
+import Register from '@/components/events/Register';
 import { EventType } from '@/utils/types';
 
 type Props = {

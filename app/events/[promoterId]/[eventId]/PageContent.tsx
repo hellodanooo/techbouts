@@ -10,7 +10,7 @@ import AuthDisplay from '@/components/ui/AuthDisplay';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import Register from './Register';
+import Register from '../../../../components/events/Register';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import EmbedCodeGenerator from '@/components/EmbedCodeGenerator';
