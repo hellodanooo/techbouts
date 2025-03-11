@@ -86,7 +86,7 @@ export default function EmailBlast({ promotion }: EmailBlastProps) {
       setLoading(true);
       setError(null);
       try {
-        const emailsRef = doc(db, 'emails_pmt', selectedYear, 'emails_json', 'data');
+        const emailsRef = doc(db, 'emails_muaythaipurist', selectedYear, 'emails_json', 'data');
         const emailsSnap = await getDoc(emailsRef);
         
         if (!emailsSnap.exists()) {

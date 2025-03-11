@@ -53,7 +53,13 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
   style="border: none; max-width: 100%;"
   title="${eventName} Registration"
   ${customization.allowResize ? 'data-auto-resize="true"' : ''}
-></iframe>`;
+></iframe>
+ <div style="text-align: right; margin-top: 4px; font-size: 11px; font-family: Arial, sans-serif; color: #6b7280;">
+    <a href="https://techbouts.com" target="_blank" style="display: inline-flex; align-items: center; text-decoration: none; color: #6b7280;">
+      <span style="margin-right: 4px;">Powered by</span>
+      <img src="https://www.techbouts.com/logos/techboutslogoFlat.png" alt="TechBouts" style="height: 14px; width: auto;" />
+    </a>
+  </div>`;
   };
   
   // Generate the JavaScript embed code (more advanced)

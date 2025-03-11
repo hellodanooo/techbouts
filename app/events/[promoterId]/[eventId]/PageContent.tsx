@@ -14,6 +14,7 @@ import Register from '../../../../components/events/Register';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import EmbedCodeGenerator from '@/components/EmbedCodeGenerator';
+import Header from '@/components/headers/Header';
 
 interface TournamentDashboardProps {
   eventId: string;
@@ -99,7 +100,7 @@ const stripeInstance = useMemo(() => {
 
   return (
     <Elements stripe={stripeInstance}>
-
+<Header />
       <div className="p-5">
         {user?.email}
         {eventData.promoterEmail}

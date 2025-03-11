@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import LoadingScreen from '@/components/loading_screens/LandingLoading';
+import Header from "@/components/headers/Header";
 
 export default function PageContent() {
   const { user, isAdmin, isNewUser } = useAuth();
@@ -45,6 +46,7 @@ export default function PageContent() {
   return (
     
     <div className="flex flex-col items-center justify-center min-h-screen gap-16 sm:p-5 font-[family-name:var(--font-geist-sans)] relative bg-gradient-to-b from-white to-[#4793AF]/10">
+    <Header/>
     
       <AuthDisplay 
         user={user}

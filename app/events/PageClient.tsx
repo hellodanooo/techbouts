@@ -10,6 +10,7 @@ import AddEventForm from '@/components/AddEventForm';
 
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
+import Header from '@/components/headers/Header';
 
 interface Props {
   initialConfirmedEvents?: EventType[];
@@ -49,48 +50,7 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
     marginBottom: '20px',
   };
 
-  const styles = {
-    container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '40px',
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-      gap: '5px',
-      width: '95%',
-      margin: 'auto'
-    },
-    card: (isHighlighted: boolean, isHovered: boolean) => ({
-      padding: '20px',
-      backgroundColor: isHighlighted ? '#fee2e2' : 'white',
-      borderRadius: '8px',
-      border: '1px solid #ddd',
-      cursor: 'pointer',
-      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-      boxShadow: isHovered
-        ? '0 4px 6px rgba(0, 0, 0, 0.1)'
-        : '0 1px 3px rgba(0, 0, 0, 0.1)',
-      transform: isHovered ? 'translateY(-2px)' : 'none',
-      textDecoration: 'none',
-    }),
-    cardTitle: {
-      margin: '0 0 10px 0',
-      fontSize: '1.1rem',
-      fontWeight: '600',
-      textTransform: 'capitalize' as const,
-      color: 'black',
-    },
-    cardSubText: {
-      margin: '0',
-      color: '#666',
-      fontSize: '0.9rem',
-    },
-  };
+
 
 
 
@@ -171,7 +131,8 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
   };
 
   return (
-    <div style={styles.container}>
+    <div>
+      <Header />
   <AuthDisplay 
         user={user}
         isAdmin={isAdmin}
@@ -183,6 +144,7 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
       {isAdmin || isPromoter && (
 
         <div
+      
           style={{
             width: '50%'
           }}
@@ -229,7 +191,9 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
 
 
 
-      <div style={toggleButtons}>
+      <div
+        className='p5'
+      style={toggleButtons}>
       <button
   style={toggleButton(activeSanctioning === 'ALL')}
   onClick={() => setActiveSanctioning('ALL')}
