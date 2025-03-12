@@ -330,34 +330,99 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     setShowVerifyButton(true); // Show the "Verify" button when the user starts typing
   };
 
-  const sendConfirmationEmail = async (fighterData: FighterFormData, eventName: string, eventId: string) => {
-    try {
-      const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
-        email: fighterData.email.toLowerCase(),
-        firstName: fighterData.first,
-        lastName: fighterData.last,
-        weightClass: fighterData.weightclass,
-        gym: fighterData.gym,
-        gender: fighterData.gender,
-        dob: fighterData.dob,
-        age: fighterData.age,
-        eventName,
-        eventId,
-        ammy: fighterData.ammy,
-        heightFoot: fighterData.heightFoot,
-        heightInch: fighterData.heightInch,
-        phone: fighterData.phone,
-        coach: fighterData.coach_name,
-        coach_phone: fighterData.coach_phone
-      });
-
-      if (emailResponse.status === 200) {
-        alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
+  const sendConfirmationEmail = async (sanctioning: string, fighterData: FighterFormData, eventName: string, eventId: string) => {
+    
+    if (sanctioning === 'PBSC') {
+      try {
+        const emailResponse = await axios.post('/api/emails/sendConfirmationEmailPBSC', {
+          email: fighterData.email.toLowerCase(),
+          firstName: fighterData.first,
+          lastName: fighterData.last,
+          weightClass: fighterData.weightclass,
+          gym: fighterData.gym,
+          gender: fighterData.gender,
+          dob: fighterData.dob,
+          age: fighterData.age,
+          eventName,
+          eventId,
+          ammy: fighterData.ammy,
+          heightFoot: fighterData.heightFoot,
+          heightInch: fighterData.heightInch,
+          phone: fighterData.phone,
+          coach: fighterData.coach_name,
+          coach_phone: fighterData.coach_phone
+        });
+        if (emailResponse.status === 200) {
+          alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
+        }
+      } catch (error) {
+        console.error('Error sending confirmation email:', error);
+        alert(formContent.emailErrorMessage);
       }
-    } catch (error) {
-      console.error('Error sending confirmation email:', error);
-      alert(formContent.emailErrorMessage);
-    }
+        
+        } else if (sanctioning === 'PMT') {
+
+          try {
+            const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
+              email: fighterData.email.toLowerCase(),
+              firstName: fighterData.first,
+              lastName: fighterData.last,
+              weightClass: fighterData.weightclass,
+              gym: fighterData.gym,
+              gender: fighterData.gender,
+              dob: fighterData.dob,
+              age: fighterData.age,
+              eventName,
+              eventId,
+              ammy: fighterData.ammy,
+              heightFoot: fighterData.heightFoot,
+              heightInch: fighterData.heightInch,
+              phone: fighterData.phone,
+              coach: fighterData.coach_name,
+              coach_phone: fighterData.coach_phone
+            });
+      
+            if (emailResponse.status === 200) {
+              alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
+            }
+          } catch (error) {
+            console.error('Error sending confirmation email:', error);
+            alert(formContent.emailErrorMessage);
+          }
+
+        } else if (sanctioning === 'IKF') {
+
+          try {
+            const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
+              email: fighterData.email.toLowerCase(),
+              firstName: fighterData.first,
+              lastName: fighterData.last,
+              weightClass: fighterData.weightclass,
+              gym: fighterData.gym,
+              gender: fighterData.gender,
+              dob: fighterData.dob,
+              age: fighterData.age,
+              eventName,
+              eventId,
+              ammy: fighterData.ammy,
+              heightFoot: fighterData.heightFoot,
+              heightInch: fighterData.heightInch,
+              phone: fighterData.phone,
+              coach: fighterData.coach_name,
+              coach_phone: fighterData.coach_phone
+            });
+      
+            if (emailResponse.status === 200) {
+              alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
+            }
+          } catch (error) {
+            console.error('Error sending confirmation email:', error);
+            alert(formContent.emailErrorMessage);
+          }
+
+        }
+
+
   };
 
   async function saveFighterToFirestore(
@@ -566,7 +631,9 @@ const handleRegistrationSubmit = async () => {
       }
 
       setStatusMessage('Sending confirmation email...');
-      await sendConfirmationEmail(fighterData, eventName, eventId);
+
+      await sendConfirmationEmail(sanctioning,fighterData, eventName, eventId);
+
       setStatusMessage('Email Sent');
       closeModal();
     } else {
@@ -613,7 +680,7 @@ const handleRegistrationSubmit = async () => {
         setStatusMessage('Submitted Successfully.');
         setStatusMessage('Sending confirmation email...');
 
-        await sendConfirmationEmail(fighterData, eventName, eventId);
+        await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
         setStatusMessage('Email Sent');
         setStatusMessage('Registration Successful');
 
