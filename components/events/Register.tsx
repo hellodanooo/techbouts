@@ -393,7 +393,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         } else if (sanctioning === 'IKF') {
 
           try {
-            const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
+            const emailResponse = await axios.post('/api/emails/sendConfirmationEmailIKF', {
               email: fighterData.email.toLowerCase(),
               firstName: fighterData.first,
               lastName: fighterData.last,
