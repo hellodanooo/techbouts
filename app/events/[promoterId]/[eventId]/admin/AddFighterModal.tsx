@@ -228,6 +228,7 @@ export default function AddFighterModal({
           <FighterForm 
           onFormDataChange={setFighterData}
           source='add-fighter-modal'
+         
            />
         </div>
         

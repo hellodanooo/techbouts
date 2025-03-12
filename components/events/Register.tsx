@@ -753,6 +753,7 @@ return (
           onFormDataChange={setFighterData}
           locale={locale}
           user={user}
+          sanctioning={sanctioning}
         />
         
         <div className="space-y-2">
