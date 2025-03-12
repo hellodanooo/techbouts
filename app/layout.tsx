@@ -1,4 +1,5 @@
 // app/layout.tsx
+import { Analytics } from "@vercel/analytics/react"
 import type { Viewport } from "next";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
@@ -26,6 +27,7 @@ export default function RootLayout({
         
               </div>
               {children}
+              <Analytics />
              </AuthProvider> 
           </main>
         </div>

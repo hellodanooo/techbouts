@@ -188,6 +188,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     fetchRosterCount();
   }, [eventId]);
 
+
+  
   useEffect(() => {
     const fetchExchangeRate = async () => {
       if (locale === 'es') {

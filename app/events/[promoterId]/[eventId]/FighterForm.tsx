@@ -676,7 +676,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
                   <p>
                     <strong>1. Assumption of Risk & Liability Release</strong><br />
-                    I voluntarily participate in events organized by <strong>IKF Point Muay Thai</strong> and <strong>Point Boxing Sparring Circuit</strong>, hosted on <strong>pmt-west.app</strong> and <strong>pmtwest.org</strong>, operated by <strong>Ryan Hodges, and Rafael Mendoza, and Daniel Hodges</strong> and originally founded by <strong>Johnny Davis Enterprises DBA (AK Promotions)</strong> and recognize the continued involvement of various promoters, officials, and organizations.
+                    I voluntarily participate in events organized by <strong>Muay Thai Purist</strong> <strong>IKF Point Muay Thai</strong> and <strong>Point Boxing Sparring Circuit</strong>, hosted on <strong>pmt-west.app</strong> and <strong>pmtwest.org</strong>, operated by <strong>Ryan Hodges, and Rafael Mendoza, and Daniel Hodges</strong> and originally founded by <strong>Johnny Davis Enterprises DBA (AK Promotions)</strong> and recognize the continued involvement of various promoters, officials, and organizations.
                   </p>
 
                   <p>
