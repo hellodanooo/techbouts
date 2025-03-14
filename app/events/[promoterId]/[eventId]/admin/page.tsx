@@ -51,24 +51,10 @@ if (eventData) {
 
 
   return (
-    <div className="container mx-auto px-2 py-2">
+    <div>
       
-      <div className='flex flex-col items-center justify-center ' >
 
-      <div className="font-bold mb-2">Event Dashboard</div>
-
-
-    <div className='flex flex-wrap items-center justify-center '>
-
-<div className='mr-5'>Event: {eventData.event_name}</div>
-
-      <div className='mr-5'>Sanctioning: {eventData.sanctioning}</div>
-
-       <div> Promoter: {eventData.promoterEmail}</div>
-
-       </div>
-
-      </div>
+  
       <PageDashboard
       eventData={eventData}
       eventId={eventId}

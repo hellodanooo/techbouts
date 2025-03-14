@@ -76,6 +76,7 @@ export default function PromoterDashboard({
         isPromoter={isPromoter}
         isNewUser={isNewUser}
       />
+      
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <div className="relative h-10 w-10">
@@ -94,7 +95,7 @@ export default function PromoterDashboard({
 
       {/* ADMIN SECTION */}
       {canManageEvents && (
-        <div className='flex justify-between items-center'>
+        <div className='flex justify-between items-center m-5'>
           <button
             onClick={() => setShowEventModal(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

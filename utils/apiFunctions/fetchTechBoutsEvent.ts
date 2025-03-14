@@ -87,7 +87,6 @@ export async function fetchTechBoutsEvent(promoterId: string, eventId: string): 
       photoPackagePrice: data.photoPackagePrice || 0,
       coachRegPrice: data.coachRegPrice || 0,
       photoPackageEnabled: data.photoPackageEnabled || false,
-      coachRegEnabled: data.coachRegEnabled || false,
 
       promotionLogoUrl: data.promotionLogoUrl || '',
       sanctioningLogoUrl: data.sanctioningLogoUrl || '',

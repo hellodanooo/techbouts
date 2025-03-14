@@ -114,7 +114,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     status: eventData.status || 'confirmed',
     sanctioning: eventData.sanctioning || '',
     photoPackageEnabled: eventData.photoPackageEnabled || false,
-    coachRegEnabled: eventData.coachRegEnabled || false,
+    coach_enabled: eventData.coach_enabled || false,
     disableRegistration: eventData.disableRegistration || false,
     payLaterEnabled: eventData.payLaterEnabled || false,
   });
@@ -630,13 +630,13 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                 <div className="flex items-center space-x-4">
                   <Switch
                     id="coach-reg"
-                    checked={formData.coachRegEnabled}
-                    onCheckedChange={handleSwitchChange('coachRegEnabled')}
+                    checked={formData.coach_enabled}
+                    onCheckedChange={handleSwitchChange('coach_enabled')}
                   />
                   <Label htmlFor="coach-reg">Coach Registration</Label>
                 </div>
 
-                {formData.coachRegEnabled && (
+                {formData.coach_enabled && (
                   <div>
                     <Label>Coach Registration Price</Label>
                     <input

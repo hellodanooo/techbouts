@@ -289,7 +289,7 @@ export interface EventType {
   photoPackagePrice: number;
   coachRegPrice: number;
   photoPackageEnabled: boolean;
-  coachRegEnabled: boolean;
+
   payLaterEnabled?: boolean;
   sanctioningLogoUrl?: string;
   promotionLogoUrl?: string;

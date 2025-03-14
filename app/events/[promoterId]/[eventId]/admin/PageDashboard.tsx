@@ -9,6 +9,7 @@ import Matches from '../matches/PageClient';
 import { EventType } from '@/utils/types';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
+import Header from '@/components/headers/Header';
 
 interface Fighter {
   first?: string;
@@ -42,7 +43,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
     // Return unauthorized message if not authorized
     if (!isAuthorized) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="mx-auto">
                 <AuthDisplay 
                     user={user}
                     isAdmin={isAdmin}
@@ -92,7 +93,8 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
   
     // Original content for authorized users
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div>
+            <Header />
             <AuthDisplay 
                 user={user}
                 isAdmin={isAdmin}

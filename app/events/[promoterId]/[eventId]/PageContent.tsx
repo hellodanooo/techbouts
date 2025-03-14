@@ -235,7 +235,7 @@ const stripeInstance = useMemo(() => {
                     )}
 
                     {/* Coach Registration Button - Show if coachRegEnabled */}
-                    {eventData.coachRegEnabled && (
+                    {eventData.coach_enabled && (
                       <button
                         onClick={() => setRegisterOpen(true)}
                         className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"

@@ -240,7 +240,6 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       photoPackagePrice: pendingEvent.photoPackagePrice || 0,
       coachRegPrice: pendingEvent.coachRegPrice || 0,
       photoPackageEnabled: pendingEvent.photoPackageEnabled || false,
-      coachRegEnabled: pendingEvent.coachRegEnabled || false
       
     };
 

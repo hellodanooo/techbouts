@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { EventType, Promoter } from '@/utils/types';
 import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
 import { addEvent } from '@/utils/eventManagement';
+
 import { addPmtEvent } from '@/utils/apiFunctions/addPmtEvent';
-import { getGeocode } from "use-places-autocomplete";
 import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCollection';
+
+import { getGeocode } from "use-places-autocomplete";
 import { generateDocId } from '@/utils/eventManagement';
 import Image from 'next/image';
 import { Label } from "@/components/ui/label";
@@ -174,7 +176,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
       if (flyerFile) {
         formData.flyer = await uploadEventFlyer(flyerFile, eventId);
       }
-
+  
       const sanctioningLogoUrl = formData.sanctioningLogoUrl || getSanctioningLogo(sanctioning);
   
       const eventData: EventType = {
@@ -234,28 +236,30 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
         photoPackagePrice: formData.photoPackagePrice ?? 0,
         coachRegPrice: formData.coachRegPrice ?? 0,
         photoPackageEnabled: formData.photoPackageEnabled ?? false,
-        coachRegEnabled: formData.coachRegEnabled ?? false,
         sanctioningLogoUrl: sanctioningLogoUrl,
         promotionLogoUrl: formData.promotionLogoUrl ?? "",
       };
       
       // Call the appropriate API based on sanctioning type
-      const result = (sanctioning === 'PMT') ? await addPmtEvent(eventData) : await addEvent(eventData);
-  
-
-      // Check if the event exists
-      if (!result.success || !('event' in result) || !result.event?.eventId) {
-        throw new Error(result.message || 'Error creating event');
-      }
-  
-
-      // Now that we have an eventId, create the event collection with full event data
-      if (sanctioning === 'PMT' && result.event) {
-        console.log('Creating PMT event collection, Data Sent', result.event);
-        const createCollectionResult = await createPmtEventCollection(result.event);
-  
+      if (sanctioning === 'PMT') {
+        const result = await addPmtEvent(eventData);
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Error creating event');
+        }
+        
+        // Now that we have verified success, create the event collection
+        console.log('Creating PMT event collection, Data Sent', eventData);
+        const createCollectionResult = await createPmtEventCollection(eventData);
+        
         if (!createCollectionResult.success) {
           throw new Error(createCollectionResult.message || 'Failed to create event collection');
+        }
+      } else {
+        const result = await addEvent(eventData);
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Error creating event');
         }
       }
   
@@ -379,7 +383,6 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                       alt={`${sanctioning} Logo`}
                       className="object-contain max-h-28 max-w-[150px]"
                     />
-                    <p className="text-xs text-gray-500 mt-2 break-all">{getSanctioningLogo(sanctioning)}</p>
                   </div>
                 ) : (
                   <div className="text-gray-400">No sanctioning selected</div>

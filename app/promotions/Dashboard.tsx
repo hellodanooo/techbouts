@@ -9,6 +9,7 @@ import AddEditPromoter from '@/components/AddEditPromoter';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import Image from 'next/image';
+import Header from '@/components/headers/Header';
 
 interface Props {
   initialConfirmedEvents?: EventType[];
@@ -257,7 +258,9 @@ const PromoterDashboard = ({
   };
 
   return (
-    <div style={styles.container}>
+    <div>
+      <Header/>
+
       <AuthDisplay
         user={user}
         isAdmin={isAdmin}
