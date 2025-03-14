@@ -135,42 +135,42 @@ export const addEvent = async (eventData: EventType): Promise<{ success: boolean
 
 
 
-export const updateEvent = async (eventId: string, updatedData: Partial<EventType>): Promise<{ success: boolean; message: string }> => {
-  try {
-    const eventRef = doc(db, 'techbouts_events', eventId);
-    const snapshot = await getDoc(eventRef);
+// export const updateEvent = async (eventId: string, updatedData: Partial<EventType>): Promise<{ success: boolean; message: string }> => {
+//   try {
+//     const eventRef = doc(db, 'techbouts_events', eventId);
+//     const snapshot = await getDoc(eventRef);
 
-    if (!snapshot.exists()) {
-      throw new Error(`Event with ID ${eventId} does not exist.`);
-    }
+//     if (!snapshot.exists()) {
+//       throw new Error(`Event with ID ${eventId} does not exist.`);
+//     }
 
-    const existingEvent = snapshot.data() as EventType;
-    const updatedEvent = { ...existingEvent, ...updatedData };
+//     const existingEvent = snapshot.data() as EventType;
+//     const updatedEvent = { ...existingEvent, ...updatedData };
 
-    await updateDoc(eventRef, updatedData);
-    await saveToFirestore(updatedEvent, 'update');
+//     await updateDoc(eventRef, updatedData);
+//     await saveToFirestore(updatedEvent, 'update');
 
-    return { success: true, message: 'Event updated successfully' };
-  } catch (error) {
-    console.error('Error updating event:', error);
-    return { success: false, message: 'Error updating event' };
-  }
-};
+//     return { success: true, message: 'Event updated successfully' };
+//   } catch (error) {
+//     console.error('Error updating event:', error);
+//     return { success: false, message: 'Error updating event' };
+//   }
+// };
 
 
-export const deleteEvent = async (eventId: string): Promise<{ success: boolean; message: string }> => {
-  try {
-    const eventRef = doc(db, 'techbouts_events', eventId);
-    await deleteDoc(eventRef);
+// export const deleteEvent = async (eventId: string): Promise<{ success: boolean; message: string }> => {
+//   try {
+//     const eventRef = doc(db, 'techbouts_events', eventId);
+//     await deleteDoc(eventRef);
 
-    await saveToFirestore({ eventId: eventId }, 'delete');
+//     await saveToFirestore({ eventId: eventId }, 'delete');
 
-    return { success: true, message: 'Event deleted successfully' };
-  } catch (error) {
-    console.error('Error deleting event:', error);
-    return { success: false, message: 'Error deleting event' };
-  }
-};
+//     return { success: true, message: 'Event deleted successfully' };
+//   } catch (error) {
+//     console.error('Error deleting event:', error);
+//     return { success: false, message: 'Error deleting event' };
+//   }
+// };
 
 
 export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ success: boolean; message: string }> => {

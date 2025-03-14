@@ -10,7 +10,6 @@ import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCol
 import { generateDocId } from '@/utils/eventManagement';
 import Image from 'next/image';
 import { Label } from "@/components/ui/label";
-
 import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
 import { FaRegFileImage } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa"; // Icons for dropdown
@@ -243,11 +242,13 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
       // Call the appropriate API based on sanctioning type
       const result = (sanctioning === 'PMT') ? await addPmtEvent(eventData) : await addEvent(eventData);
   
+
       // Check if the event exists
       if (!result.success || !('event' in result) || !result.event?.eventId) {
         throw new Error(result.message || 'Error creating event');
       }
   
+
       // Now that we have an eventId, create the event collection with full event data
       if (sanctioning === 'PMT' && result.event) {
         console.log('Creating PMT event collection, Data Sent', result.event);

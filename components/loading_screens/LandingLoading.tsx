@@ -22,7 +22,7 @@ export default function LandingLoading() {
       <div className="text-center space-y-8 animate-scale-down">
         <div className="relative w-64 h-64 mx-auto">
           <Image
-            src="/logos/techboutsLogo.png"
+            src="/logos/techbouts_graphic.png"
             fill
             className="object-contain"
             alt="TechBouts Logo"

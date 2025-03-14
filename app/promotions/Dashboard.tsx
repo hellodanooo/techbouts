@@ -339,11 +339,13 @@ const PromoterDashboard = ({
                   className="rounded-full object-cover"
                 />
               ) : (
-                <div className="w-[150px] h-[150px] bg-gray-200 rounded-full flex items-center justify-center">
-                  <span className="text-gray-400 text-lg">
-                    {promoter.name?.charAt(0)?.toUpperCase() || 'P'}
-                  </span>
-                </div>
+                <Image
+                  src="/logos/techbouts_graphic.png"
+                  alt="TechBouts Logo"
+                  width={150}
+                  height={150}
+                  className="rounded-full object-cover"
+                />
               )}
               <h2 style={styles.cardTitle}>{promoter.name}</h2>
               <p style={styles.cardSubText}>

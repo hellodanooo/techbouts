@@ -527,10 +527,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
       }
       
-      // Also save an individual document for this fighter in a separate collection for easier querying
-      const individualFighterRef = doc(db, 'events', eventId, 'fighters', fighterData.fighter_id);
-      batch.set(individualFighterRef, fullContactFighterData);
-      
+ 
       // Commit the batch
       await batch.commit();
       

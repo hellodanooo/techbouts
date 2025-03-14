@@ -130,7 +130,7 @@ export default function PromoterDashboard({
 
       {/* Social Media Links Section */}
       {hasSocialLinks ? (
-        <div className="social-media-links flex justify-center gap-4 mt-4">
+        <div className="social-media-links flex justify-center gap-4 m-4">
           {promoter.facebook && (
             <a
               href={promoter.facebook}
