@@ -244,6 +244,7 @@ export interface EventType {
   date: string;
   flyer: string;
   coordinates?: { latitude: number; longitude: number };
+  currency?: string;
   disableRegistration: boolean;
   registration_link?: string;
   matches_link?: string;

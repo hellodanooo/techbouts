@@ -6,7 +6,7 @@ import { EventType } from '../../utils/types';
 
 import MonthTable from '../../components/MonthTable';
 import AddPromoter from '@/components/AddEditPromoter';
-import AddEventForm from '@/components/AddEventForm';
+import AddEventForm from '@/components/events/AddEventForm';
 
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';

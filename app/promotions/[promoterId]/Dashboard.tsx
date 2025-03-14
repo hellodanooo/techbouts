@@ -7,7 +7,7 @@ import { parseISO } from 'date-fns';
 import Calendar from '../Calendar';
 import MonthTable from '../../../components/MonthTable';
 import Image from 'next/image';
-import AddEventForm from '@/components/AddEventForm';
+import AddEventForm from '@/components/events/AddEventForm';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import AddEditPromoter from '@/components/AddEditPromoter';

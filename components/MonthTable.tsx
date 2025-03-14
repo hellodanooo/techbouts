@@ -183,52 +183,60 @@ const MonthTable: React.FC<MonthTableProps> = ({ events, isAdmin }) => {
             <tbody>
               {states.map((state) => (
                 <tr key={state}>
-                  <td className="px-4 py-2 border border-gray-300 bg-gray-50">{state}</td>
+                  <td className="px-4 py-2 border border-gray-300 bg-gray-50 font-medium">{state}</td>
                   {months.map((month) => {
                     const monthKey = format(month, "MMM");
                     const monthEvents = eventsByStateAndMonth[state]?.[monthKey] || [];
                     return (
-                      <td key={monthKey} className="px-4 py-2 border border-gray-300">
+                      <td key={monthKey} className="px-4 py-2 border border-gray-300 min-width-[150px]">
                         {monthEvents.length > 0 ? (
-                          <div className="space-y-2">
+                          <div className="grid grid-cols-1 gap-2 justify-items-center">
                             {monthEvents.map((event) => {
                               const isPastEvent = isPast(parseISO(event.date));
                               return (
                                 <Card
-                                key={event.id}
-                                className={`relative transition-colors cursor-pointer ${
-                                  event.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' :
-                                  event.status === 'approved' ? 'bg-blue-50 hover:bg-blue-100' :
-                                  event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
-                                } ${isPastEvent ? 'opacity-50' : ''}`}
-                                onClick={() => handleEventClick(event)}
-                              >
-                                <CardHeader className="p-2">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <CardTitle className="text-sm">{event.event_name}</CardTitle>
-                                      <CardDescription>
-                                        {format(parseISO(event.date), "MMM d, yyyy")}<br />
-                                        {event.city}
-                                      </CardDescription>
+                                  key={event.id}
+                                  className={`relative transition-colors cursor-pointer h-32 w-32 flex flex-col ${
+                                    event.status === 'confirmed' ? 'bg-green-50 hover:bg-green-100' :
+                                    event.status === 'approved' ? 'bg-blue-50 hover:bg-blue-100' :
+                                    event.status === 'pending' ? 'bg-orange-50 hover:bg-orange-100' : 'bg-white'
+                                  } ${isPastEvent ? 'opacity-50' : ''}`}
+                                  onClick={() => handleEventClick(event)}
+                                >
+                                  <CardHeader className="p-2 flex-1 flex flex-col">
+                                    <div className="flex items-start justify-between h-full">
+                                      <div className="flex-1 overflow-hidden">
+                                        <CardTitle className="text-sm font-medium truncate">
+                                          {event.event_name}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs mt-1">
+                                          {format(parseISO(event.date), "MMM d, yyyy")}
+                                          <br />
+                                          <span className="truncate block">{event.city}</span>
+                                          {event.status === 'pending' && (
+  <span className="font-bold text-orange-700">PENDING</span>
+)}
+                                        </CardDescription>
+                                      </div>
+                                      <div className="w-6 h-6 relative flex-shrink-0 overflow-hidden ml-1">
+                                        <Image
+                                          src={getSanctioningLogo(event.sanctioning)}
+                                          alt={`${event.sanctioning || 'PMT'} logo`}
+                                          fill
+                                          sizes="24px"
+                                          className="object-contain pointer-events-none"
+                                        />
+                                      </div>
                                     </div>
-                                    <div className="w-8 h-8 relative flex-shrink-0 overflow-hidden">
-                                      <Image
-                                        src={getSanctioningLogo(event.sanctioning)}
-                                        alt={`${event.sanctioning || 'PMT'} logo`}
-                                        fill
-                                        sizes="32px"
-                                        className="object-contain pointer-events-none"
-                                      />
-                                    </div>
-                                  </div>
-                                </CardHeader>
-                              </Card>
+                                  </CardHeader>
+                                </Card>
                               );
                             })}
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-400">No events</span>
+                          <div className="h-32 w-32 flex items-center justify-center mx-auto">
+                            <span className="text-sm text-gray-400">No events</span>
+                          </div>
                         )}
                       </td>
                     );
