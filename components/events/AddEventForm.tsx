@@ -396,19 +396,16 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
           </div>
 
           {/* Expandable Advanced Options Section */}
-          <div className="flex justify-center py-4">
-            <button type="button" className="btn-space" onClick={() => setShowAdvanced(!showAdvanced)}>
-              {showAdvanced ? 'Hide' : 'Advanced'}
-              {showAdvanced ? <FaChevronUp className="ml-2" /> : <FaChevronDown className="ml-2" />}
-              <div id="btn-space-container-stars">
-                <div id="btn-space-stars"></div>
-              </div>
-              <div id="btn-space-glow">
-                <div className="btn-space-circle"></div>
-                <div className="btn-space-circle"></div>
-              </div>
-            </button>
-          </div>
+            <div className="flex justify-center py-4">
+            <button 
+        type="button" 
+        className="button-80 flex flex-col items-center justify-center gap-1" 
+        onClick={() => setShowAdvanced(!showAdvanced)}
+      >
+        <span>{showAdvanced ? 'Hide' : 'Advanced'}</span>
+        {showAdvanced ? <FaChevronUp size={16} /> : <FaChevronDown size={16} />}
+      </button>
+            </div>
 
     
         

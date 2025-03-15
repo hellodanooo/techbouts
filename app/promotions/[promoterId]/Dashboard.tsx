@@ -98,16 +98,16 @@ export default function PromoterDashboard({
         <div className='flex justify-between items-center m-5'>
           <button
             onClick={() => setShowEventModal(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="button-2"
           >
-            Create Event
+            <div className='text-2'>Create Event</div>
           </button>
 
           <button
             onClick={() => setShowAddEditPromoterModal(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="button-2"
           >
-            Edit Promotion
+            <div className='text-2'>Edit Promotion</div>
           </button>
         </div>
       )}

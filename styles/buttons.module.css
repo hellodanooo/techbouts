@@ -127,28 +127,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .flatLeft {
   border-radius: 0 10px 10px 0;
   padding: 2px 10px;
@@ -314,17 +292,7 @@
 
 
 
-.upDate {
-  border-radius: 5px;
-  font-size: 1rem!important;
-  color: green;
-  cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease;
-background-color!:none;  
-padding: 10px 20px;
-  border: 2px solid green;
-  margin-right: 10px;
-}
+
 
 .cancel {
   display: flex;
