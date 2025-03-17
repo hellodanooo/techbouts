@@ -14,6 +14,19 @@ import {
   } from 'firebase/firestore';
   import { db } from '@/lib/firebase_pmt/config';
   
+
+  export interface ProcessedEvent {
+    eventId: string;
+    eventName: string;
+    date: string;
+    processedAt: string;
+  }
+  
+  export interface CalculationResult {
+    fighterRecords: Map<string, FighterRecord>;
+    processedEvents: ProcessedEvent[];
+  }
+
   // Define interfaces that will be shared between files
   export interface FighterResult {
     id: string;
@@ -129,13 +142,15 @@ import {
    */
   export async function calculateRecordsAll(
     progressCallback?: (message: string) => void
-  ): Promise<Map<string, FighterRecord>> {
+  ): Promise<CalculationResult> {
     const BATCH_SIZE = 500;
     const fighterRecords = new Map<string, FighterRecord>();
     let lastEventDoc: DocumentSnapshot | null = null;
     let totalEventsProcessed = 0;
     let totalEvents = 0;
-  
+    const processedEvents: ProcessedEvent[] = [];
+    
+    
     try {
       progressCallback?.("Starting calculation of all PMT records...");
       
@@ -176,6 +191,16 @@ import {
           
           if (!resultsJsonSnap.exists()) continue;
           
+          // HERE ADD THE eventId TO THE processedEvents ARRAY  
+          processedEvents.push({
+            eventId: eventDoc.id,
+            eventName: eventData.event_name || 'Unnamed Event',
+            date: eventData.date || '',
+            processedAt: new Date().toISOString()
+          });
+
+
+
           const resultsData = resultsJsonSnap.data();
           const fighters = resultsData.fighters as FighterResult[];
   
@@ -291,7 +316,9 @@ import {
       }
   
       progressCallback?.(`Completed calculation. Total fighters with records: ${fighterRecords.size} (100%)`);
-      return fighterRecords;
+     
+      return { fighterRecords: fighterRecords, processedEvents: processedEvents };
+
       
     } catch (error) {
       console.error('Error calculating all records:', error);

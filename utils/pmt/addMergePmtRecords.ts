@@ -9,11 +9,12 @@ import {
     where, 
     Firestore,
     getDoc,
+    setDoc,
     DocumentData
   } from 'firebase/firestore';
   
   // Import the FighterRecord interface from the shared location
-  import { FighterRecord, computeKeywords } from './calculateRecordsAll';
+  import { FighterRecord, computeKeywords, ProcessedEvent } from './calculateRecordsAll';
   
   /**
    * Generates a formatted fighter ID in the format firstlastDDMMYYYY
@@ -63,7 +64,9 @@ import {
   export async function addMergePmtRecords(
     techboutsDb: Firestore,
     pmtRecords: Map<string, FighterRecord>,
-    progressCallback?: (message: string) => void
+    progressCallback?: (message: string) => void,
+    processedEvents: ProcessedEvent[] = []
+
   ): Promise<{ success: boolean; updated: number; created: number; message: string }> {
     const BATCH_SIZE = 500;
     let batch = writeBatch(techboutsDb);
@@ -246,6 +249,20 @@ import {
         await batch.commit();
       }
       
+
+      if (processedEvents.length > 0) {
+        progressCallback?.(`Saving ${processedEvents.length} processed events to Firestore...`);
+        
+        // Save the processed events to a document in the system_metadata collection
+        await setDoc(doc(techboutsDb, 'system_metadata', 'processedPmtEventsJson'), {
+          events: processedEvents,
+          lastUpdated: new Date().toISOString()
+        });
+        
+        progressCallback?.(`Successfully saved processed events to Firestore.`);
+      }
+
+
       return {
         success: true,
         updated: updatedCount,
@@ -257,4 +274,8 @@ import {
       console.error('Error merging PMT records with TechBouts:', error);
       throw error;
     }
+
+// here can the processed events be saved to firestore
+
+
   }

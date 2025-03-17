@@ -14,6 +14,7 @@ import AddEditPromoter from '@/components/AddEditPromoter';
 import { FaFacebookSquare, FaInstagram } from "react-icons/fa";
 import { TbWorldWww } from "react-icons/tb";
 import UpcomingEvents from './UpcomingEventsList';
+import Header from '@/components/headers/Header';
 
 interface PromoterDashboardProps {
   promoter: Promoter; 
@@ -70,6 +71,9 @@ export default function PromoterDashboard({
   
   return (
     <div className="p-5">
+
+      <Header/>
+      
       <AuthDisplay 
         user={user}
         isAdmin={isAdmin}

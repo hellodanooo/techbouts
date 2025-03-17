@@ -43,6 +43,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
     tickets_enabled: false,
     coach_enabled: false,
     photos_enabled: false,
+    disableRegistration: false,
     registration_fee: 0,
     ticket_price: 0,
     ticket_price2: 0,
@@ -87,10 +88,11 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target;
+  
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value,
+      [name]: type === 'number' ? parseFloat(value) : type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -166,6 +168,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
   
       // Generate the event ID before making API calls
       const eventId = generateDocId(
+        formData.sanctioning ?? "",
         formData.event_name!,
         formData.city ?? "", 
         formData.state ?? "", 

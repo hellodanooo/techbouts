@@ -69,7 +69,7 @@ const sanitizeString = (str: string): string => {
     .trim();                     // Remove leading/trailing spaces
 };
 
-export const generateDocId = (eventName: string, city: string, state: string, date: string): string => {
+export const generateDocId = (sanctioning: string, eventName: string, city: string, state: string, date: string): string => {
   // Validate and parse the date
   if (!date || !/^\d{4}-\d{2}-\d{2}/.test(date)) {
     throw new Error('Invalid date format. Expected YYYY-MM-DD');
@@ -79,7 +79,7 @@ export const generateDocId = (eventName: string, city: string, state: string, da
   const sanitizedEventName = sanitizeString(eventName);
   const sanitizedCity = sanitizeString(city);
   const sanitizedState = sanitizeString(state);
-  
+  const sanctioningLowercase = sanctioning.toLowerCase();
   // Parse date components
   const [year, month, day] = date.split('-').map(s => s.padStart(2, '0'));
   
@@ -87,7 +87,7 @@ export const generateDocId = (eventName: string, city: string, state: string, da
     throw new Error('Invalid date components');
   }
 
-  return `${sanitizedEventName}_${sanitizedCity}_${sanitizedState}_${month}_${day}_${year}`;
+  return `${sanctioningLowercase}${sanitizedEventName}_${sanitizedCity}_${sanitizedState}_${month}_${day}_${year}`;
 };
 
 export const addEvent = async (eventData: EventType): Promise<{ success: boolean; message: string }> => {
@@ -102,6 +102,7 @@ export const addEvent = async (eventData: EventType): Promise<{ success: boolean
 
     // Generate document ID with sanitized inputs
     const docId = generateDocId(
+      eventData.sanctioning,
       eventData.event_name,
       eventData.city,
       eventData.state,
@@ -178,6 +179,7 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
     // Generate document ID for the new confirmed event
     const cityFormatted = pendingEvent.city.replace(/\s+/g, '_');
     const docId = generateDocId(
+      pendingEvent.sanctioning,
       pendingEvent.event_name,
       pendingEvent.city,
       pendingEvent.state,

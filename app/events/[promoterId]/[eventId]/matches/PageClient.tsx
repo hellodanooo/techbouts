@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
+
 import MatchesDisplay from './MatchesDisplay';
 
 interface Fighter {
@@ -84,7 +85,6 @@ export default function PageClient({
     
     const pathsToTry = [
       `events/promotions/${promoterId}/${eventId}/roster_json/fighters`,
-      `events/${promoterId}/${eventId}/roster_json/fighters`,
       `promotions/${promoterId}/events/${eventId}/roster_json/fighters`
     ];
     

@@ -7,6 +7,8 @@ import { collection, getDocs, query, limit, orderBy, getCountFromServer } from '
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
 import EnhancedFighterTable from '@/components/tables/EnhancedFighterTable';
 import { FullContactFighter } from '@/utils/types';
+import Header from '@/components/headers/Header';
+import TransferPmtToTechbouts from './TransferPmtToTechbouts';
 
 // Placeholder loading component
 const LoadingFighters = () => (
@@ -112,8 +114,13 @@ export default async function FighterDatabase() {
 
     return (
       <div className="w-full flex flex-col items-center space-y-6">
-        <h1 className="text-2xl font-bold">TechBouts Fighter Database</h1>
         
+        
+        <Header />
+        <h1 className="text-2xl font-bold">TechBouts Fighter Database</h1>
+ 
+<TransferPmtToTechbouts />
+
         <Image
           src="/logos/techboutslogoFlat.png"
           alt="TechBouts Database"

@@ -5,7 +5,6 @@ import EditEventForm from './EditEventForm';
 import RosterTable from './RosterTable';
 import OfficialsEvent from './OfficialsEvent';
 import Matches from '../matches/PageClient';
-
 import { EventType } from '@/utils/types';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';

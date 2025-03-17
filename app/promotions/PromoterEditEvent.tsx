@@ -276,7 +276,7 @@ const PromoterEditEvent: FC<PromoterEditEventProps> = ({
       const db = getFirestore(app);
       const fullAddress = formatAddress();
       const cityFormatted = city.replace(/\s+/g, '_');
-      const docId = generateDocId(event.event_name, cityFormatted, state, zip);
+      const docId = generateDocId(event.sanctioning, event.event_name, cityFormatted, state, zip);
       const newEventData = {
         ...event,
         name: event.event_name,

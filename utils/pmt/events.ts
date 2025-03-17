@@ -8,6 +8,7 @@ export async function fetchEvents(): Promise<EventType[]> {
     console.log('Utility: Starting fetch...');
     const eventCalendarRef = doc(db, 'event_calendar', 'upcoming_events');
     const snapshot = await getDoc(eventCalendarRef);
+    const sanctioning = 'PMT';
     console.log('Utility: Got Firestore snapshot');
 
     if (snapshot.exists()) {
@@ -20,6 +21,7 @@ export async function fetchEvents(): Promise<EventType[]> {
           
           
           const docId = generateDocId(
+            sanctioning,
             event.name ?? 'Unnamed Event',
             cityFormatted,
             event.state ?? 'unknown_state',

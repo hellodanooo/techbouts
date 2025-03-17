@@ -1,5 +1,5 @@
 import { EventType } from '@/utils/types';
-import { collection, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { generateDocId } from '@/utils/eventManagement';
 import { db } from '@/lib/firebase_pmt/config';
 
@@ -8,6 +8,7 @@ export async function fetchEvents(): Promise<EventType[]> {
     console.log('Utility: Starting fetch...');
     const eventCalendarRef = doc(db, 'event_calendar', 'upcoming_events');
     const snapshot = await getDoc(eventCalendarRef);
+    const sanctioning = 'IKF';
     console.log('Utility: Got Firestore snapshot');
 
     if (snapshot.exists()) {
@@ -20,6 +21,7 @@ export async function fetchEvents(): Promise<EventType[]> {
           
           
           const docId = generateDocId(
+            sanctioning,
             event.name ?? 'Unnamed Event',
             cityFormatted,
             event.state ?? 'unknown_state',
