@@ -37,16 +37,26 @@ export default function PageContentEvent({
   const [showEmbedModal, setShowEmbedModal] = useState(false);
 
 
-
-
-
-
-
   const isAuthorizedPromoter = useMemo(() => {
     if (isAdmin) return true;
     if (!user?.email) return false;
-    return user.email === eventData.promoterEmail || user.email === eventData.email;
-  }, [user?.email, eventData.promoterEmail, eventData.email, isAdmin]);
+  
+    let currentSanctioningEmail = '';
+    if (eventData.sanctioning === 'PMT') {
+      currentSanctioningEmail = 'info@pointmuaythaica.com';
+    } else if (eventData.sanctioning === 'PBSC') {
+      currentSanctioningEmail = 'borntowincsc@gmail.com';
+    }
+  
+    return user.email === eventData.promoterEmail || 
+           user.email === eventData.email || 
+           user.email === currentSanctioningEmail;
+  }, [user?.email, eventData.promoterEmail, eventData.email, eventData.sanctioning, isAdmin]);
+  
+
+
+
+
 
   const handleImageError = () => setImageError(true);
 

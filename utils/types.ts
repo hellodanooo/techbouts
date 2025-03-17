@@ -269,6 +269,7 @@ export interface EventType {
   photos_enabled?: boolean;
   photos_price?: number;
   sanctioning: string;
+  sanctioningEmail?: string;
   email: string;
   promoterId: string;
   promoterEmail: string;

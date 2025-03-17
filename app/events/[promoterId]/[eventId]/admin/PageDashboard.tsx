@@ -1,6 +1,7 @@
 // app/events/[promoterId]/[eventId]/edit/PageDashboard.tsx
 'use client';
 
+import { useState, useEffect } from 'react';
 import EditEventForm from './EditEventForm';
 import RosterTable from './RosterTable';
 import OfficialsEvent from './OfficialsEvent';
@@ -31,13 +32,25 @@ interface PageDashboardProps {
 
 export default function PageDashboard({ eventData, eventId, promoterId, roster }: PageDashboardProps) {
     const { user, isAdmin } = useAuth();
-    
+
+    const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
 
     const isPromoter = user?.email === eventData.promoterEmail;
 
+    useEffect(() => {
+        if (eventData.sanctioning === 'PMT') {
+            setSanctioningEmail('info@pointmuaythaica.com');
+        } else if (eventData.sanctioning === 'PBSC') {
+            setSanctioningEmail('borntowincsc@gmail.com');
+        } else {
+            setSanctioningEmail('');
+        }
+    }, [eventData.sanctioning]);  // ✅ Runs only when eventData.sanctioning changes
+
+    const isSanctioning = user?.email === sanctioningEmail;
 
     // Check if user is authorized
-    const isAuthorized = isAdmin || isPromoter;
+    const isAuthorized = isAdmin || isPromoter || isSanctioning;
     
     // Return unauthorized message if not authorized
     if (!isAuthorized) {

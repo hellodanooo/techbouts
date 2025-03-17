@@ -22,6 +22,8 @@ interface AuthContextType {
 
 const ADMIN_EMAIL = 'info@nakmuay.foundation';
 
+
+
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 // Detect if we're in an embedded browser
@@ -149,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const adminStatus = email === ADMIN_EMAIL;
         setIsAdmin(adminStatus);
         logDebug('Is admin:', adminStatus);
+
 
         // Check promoter status
         if (!adminStatus) {
