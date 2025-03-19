@@ -172,6 +172,12 @@ export default function Header({ transparent = false }: HeaderProps) {
             >
               Database
             </Link>
+            <Link 
+            href="/promotions" 
+            className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
+          >
+            Promotions
+          </Link>
             
             {isPromoter && (
               <Link 

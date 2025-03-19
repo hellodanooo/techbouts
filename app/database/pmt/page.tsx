@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import { collection, getDocs, query, limit, orderBy, getCountFromServer } from 'firebase/firestore';
-import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
+import { db as pmtDb } from '@/lib/firebase_pmt/config';
 import EnhancedFighterTable from '@/components/tables/EnhancedFighterTable';
 import { FullContactFighter } from '@/utils/types';
 import Header from '@/components/headers/Header';
@@ -22,7 +22,7 @@ const LoadingFighters = () => (
 async function getInitialData() {
   try {
     // Get total count
-    const fightersRef = collection(techboutsDb, 'techbouts_fighters');
+    const fightersRef = collection(pmtDb, 'pmt_records_2022');
     const countSnapshot = await getCountFromServer(fightersRef);
     const totalCount = countSnapshot.data().count;
     
