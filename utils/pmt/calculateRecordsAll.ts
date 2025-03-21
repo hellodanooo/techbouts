@@ -20,6 +20,7 @@ import {
     eventName: string;
     date: string;
     processedAt: string;
+    uniqueFighterCount: number;
   }
   
   export interface CalculationResult {
@@ -67,8 +68,6 @@ import {
     losses: number;
     nc: number;
     dq: number;
-    tournament_wins: number;
-    tournament_losses: number;
     bodykick: number;
     boxing: number;
     clinch: number;
@@ -188,25 +187,27 @@ import {
           const eventData = eventDoc.data();
           const resultsJsonRef = doc(db, 'events', eventDoc.id, 'resultsJson', 'fighters');
           const resultsJsonSnap = await getDoc(resultsJsonRef);
-          
+          const uniqueFighterIds = new Set<string>();
+
           if (!resultsJsonSnap.exists()) continue;
-          
-          // HERE ADD THE eventId TO THE processedEvents ARRAY  
-          processedEvents.push({
-            eventId: eventDoc.id,
-            eventName: eventData.event_name || 'Unnamed Event',
-            date: eventData.date || '',
-            processedAt: new Date().toISOString()
-          });
+
+
+
+       
 
 
 
           const resultsData = resultsJsonSnap.data();
           const fighters = resultsData.fighters as FighterResult[];
   
+
+
           fighters.forEach((fighter) => {
             const fighterId = fighter.pmt_id;
-            if (!fighterId) return; // Skip if no PMT ID
+            if (!fighterId) return;
+            if (fighter.pmt_id) {
+              uniqueFighterIds.add(fighter.pmt_id);
+            }
             
             if (!fighterRecords.has(fighterId)) {
               fighterRecords.set(fighterId, {
@@ -220,8 +221,6 @@ import {
                 losses: 0,
                 nc: 0,
                 dq: 0,
-                tournament_wins: 0,
-                tournament_losses: 0,
                 bodykick: 0,
                 boxing: 0,
                 clinch: 0,
@@ -249,11 +248,8 @@ import {
             }
   
             // Process fight result
-            if (fighter.result) {
-              if (fighter.bout_type === 'tournament') {
-                if (fighter.result === 'W') record.tournament_wins++;
-                else if (fighter.result === 'L') record.tournament_losses++;
-              } else {
+            if (fighter.result.toUpperCase()) {
+              {
                 switch (fighter.result.toUpperCase()) {
                   case 'W':
                     record.wins++;
@@ -309,7 +305,19 @@ import {
               record.weightclasses.push(fighter.weightclass);
               record.weightclasses.sort((a, b) => a - b);
             }
+
+
+
           });
+
+          processedEvents.push({
+            eventId: eventDoc.id,
+            eventName: eventData.event_name || 'Unnamed Event',
+            date: eventData.date || '',
+            processedAt: new Date().toISOString(),
+            uniqueFighterCount: uniqueFighterIds.size,
+          });
+
         }
         
         progressCallback?.(`Processed batch of ${eventsSnapshot.size} events. Total fighters so far: ${fighterRecords.size} (${progressPercentage}%)`);

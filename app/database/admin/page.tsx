@@ -4,8 +4,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Header from '@/components/headers/Header';
-import TransferPmtToTechbouts from '../TransferPmtToTechbouts';
-//import EventsTab from '@/components/events/EventsTab'; 
+import TransferPmtToTechbouts from './TransferPmtToTechbouts';
+import EventsTab from '@/components/events/EventsTab'; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext'; // Import auth context
@@ -68,9 +68,7 @@ export default function FighterDatabase() {
               <p className="text-muted-foreground">
                 Monitor which events have been processed and which need attention.
               </p>
-              
-              {/* The Events Tab Component */}
-              {/* <EventsTab /> */}
+              <EventsTab />
             </TabsContent>
             
             <TabsContent value="data-transfer">

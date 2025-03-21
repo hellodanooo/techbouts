@@ -1,14 +1,5 @@
-// components/events/EventsTab.tsx
-import { useState } from 'react';
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  query, 
-  orderBy, 
-  limit, 
-} from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 
 import { ProcessedEvent } from '@/utils/pmt/calculateRecordsAll';
 import { db as pmtDb } from '@/lib/firebase_pmt/config';
@@ -18,111 +9,120 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface EventStatus {
-  id: string;
-  name: string;
-  date: string;
-  hasResults: boolean;
-  isProcessed: boolean;
-}
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { calcRecordOneEvent } from '@/utils/pmt/calcRecordOneEvent';
+import { saveOneEventRecord } from '@/utils/pmt/addMergePmtOneEvent';
 
 export default function EventsTab() {
   const [processedEvents, setProcessedEvents] = useState<ProcessedEvent[]>([]);
-  const [unprocessedEvents, setUnprocessedEvents] = useState<EventStatus[]>([]);
+  const [latestEvents, setLatestEvents] = useState<{ id: string; name: string; date: string; hasResults: boolean }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFetchingLatest, setIsFetchingLatest] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  
+  const [selectedEventName, setSelectedEventName] = useState<string | null>(null);
+  const [processedFighters, setProcessedFighters] = useState<{ pmt_id: string; wins: number; losses: number }[]>([]);
+const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  
-  // Load event data
-  const loadEventData = async () => {
+  // Load processed events from Firestore
+  const loadProcessedEvents = async () => {
     setIsLoading(true);
-    
     try {
-      // Load processed events
-      const processedEvents = await loadProcessedEvents();
-      setProcessedEvents(processedEvents);
-      
-      // Load unprocessed events
-      const unprocessedEvents = await loadUnprocessedEvents(processedEvents);
-      setUnprocessedEvents(unprocessedEvents);
-      
+      const docRef = doc(techboutsDb, 'system_metadata', 'processedPmtEventsJson');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProcessedEvents(data.events || []);
+      } else {
+        setProcessedEvents([]);
+      }
     } catch (error) {
-      console.error('Error loading event data:', error);
+      console.error('Error loading processed events:', error);
+      setProcessedEvents([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Load data on mount
+  useEffect(() => {
+    loadProcessedEvents();
+  }, []);
+
+  useEffect(() => {
+    console.log("✅ Processed Fighters Updated: ", processedFighters);
+    console.log("✅ Selected Event ID: ", selectedEventId);
+    console.log("✅ Selected Event Name: ", selectedEventName);
+  }, [processedFighters, selectedEventId, selectedEventName]);
   
-  // Load processed events from Firestore
-  const loadProcessedEvents = async (): Promise<ProcessedEvent[]> => {
-    const docRef = doc(techboutsDb, 'system_metadata', 'processedPmtEventsJson');
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      return data.events || [];
-    }
-    
-    return [];
-  };
-  
-  // Load unprocessed events by checking PMT database
-  const loadUnprocessedEvents = async (
-    processedEvents: ProcessedEvent[],
-    limitCount = 50
-  ): Promise<EventStatus[]> => {
-    // Create a set of processed event IDs for quick lookup
-    const processedEventIds = new Set(processedEvents.map(event => event.eventId));
-    
-    // Query recent events from PMT database
-    const eventsQuery = query(
-      collection(pmtDb, 'events'),
-      orderBy('date', 'desc'),
-      limit(limitCount)
-    );
-    
-    const eventsSnapshot = await getDocs(eventsQuery);
-    const events: EventStatus[] = [];
-    
-    // Check each event for results
-    for (const eventDoc of eventsSnapshot.docs) {
-      const eventId = eventDoc.id;
-      const eventData = eventDoc.data();
-      
-      // Skip if already processed
-      if (processedEventIds.has(eventId)) continue;
-      
-      // Check if this event has results
-      const resultsJsonRef = doc(pmtDb, 'events', eventId, 'resultsJson', 'fighters');
-      const resultsJsonSnap = await getDoc(resultsJsonRef);
-      const hasResults = resultsJsonSnap.exists();
-      
-      events.push({
-        id: eventId,
-        name: eventData.event_name || 'Unnamed Event',
-        date: eventData.date || '',
-        hasResults,
-        isProcessed: false
-      });
-    }
-    
-    return events;
-  };
-  
-  // Handle refresh button click
+
+  // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadEventData();
+    await loadProcessedEvents();
     setIsRefreshing(false);
   };
+
+  // Fetch latest events after the latest processed event date
+  const fetchLatestEvents = async () => {
+    if (!processedEvents.length) return;
+    setIsFetchingLatest(true);
   
+    try {
+      // Get the latest processed event date
+      const latestDate = processedEvents.reduce((latest, event) => {
+        return event.date > latest ? event.date : latest;
+      }, processedEvents[0].date);
+  
+      // Create a set of processed event IDs for quick lookup
+      const processedEventIds = new Set(processedEvents.map(event => event.eventId));
+  
+      // Query events from PMT database after the latest processed date
+      const eventsQuery = query(
+        collection(pmtDb, 'events'),
+        where('date', '>=', latestDate),
+        orderBy('date', 'desc')
+      );
+  
+      const eventsSnapshot = await getDocs(eventsQuery);
+      const events = [];
+  
+      for (const eventDoc of eventsSnapshot.docs) {
+        const eventData = eventDoc.data();
+        const eventId = eventDoc.id;
+  
+        // Skip events that are already processed
+        if (processedEventIds.has(eventId)) continue;
+  
+        // Check if the event has a resultsJson file
+        const resultsJsonRef = doc(pmtDb, 'events', eventId, 'resultsJson', 'fighters');
+        const resultsJsonSnap = await getDoc(resultsJsonRef);
+        const hasResults = resultsJsonSnap.exists();
+  
+        // **Only add events that have results**
+        if (hasResults) {
+          events.push({
+            id: eventId,
+            name: eventData.event_name || 'Unnamed Event',
+            date: eventData.date || '',
+            hasResults
+          });
+        }
+      }
+  
+      setLatestEvents(events);
+    } catch (error) {
+      console.error('Error fetching latest events:', error);
+    } finally {
+      setIsFetchingLatest(false);
+    }
+  };
+  
+  
+
   // Format date for display
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'Unknown';
@@ -132,67 +132,107 @@ export default function EventsTab() {
       return dateStr;
     }
   };
+
+  // Filter events based on search term
+  const filteredEvents = processedEvents.filter(event =>
+    event.eventName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+
+
+  const handleProcessEvent = async (eventId: string, eventName: string) => {
+    console.log(`Processing single event: ${eventId}`);
+    
+    setSelectedEventName(eventName);
+    setSelectedEventId(eventId);
+    
+    const result = await calcRecordOneEvent(eventId);
+    
+    if (result) {
+      const fighterData = Array.from(result.fighterRecords.values()).map(fighter => ({
+        pmt_id: fighter.pmt_id,
+        wins: fighter.wins,
+        losses: fighter.losses
+      }));
   
-  // Filter and prepare events for display
-  const getFilteredEvents = () => {
-    // Combine processed and unprocessed events
-    let events: EventStatus[] = [];
-    
-    // Add processed events
-    events = events.concat(
-      processedEvents.map(event => ({
-        id: event.eventId,
-        name: event.eventName,
-        date: event.date,
-        hasResults: true,
-        isProcessed: true
-      }))
+      setProcessedFighters(fighterData);
+    } else {
+      alert(`Failed to process event ${eventName}`);
+    }
+  };
+
+
+  const handleSaveToFirestore = async () => {
+    if (!selectedEventId || !selectedEventName || processedFighters.length === 0) {
+      alert('Missing event ID, event name, or processed fighter data.');
+      return;
+    }
+  
+    // Convert processedFighters array back to a Map<string, FighterRecord>
+    const fighterRecordsMap = new Map(
+      processedFighters.map(fighter => [
+        fighter.pmt_id,
+        {
+          pmt_id: fighter.pmt_id,
+          wins: fighter.wins,
+          losses: fighter.losses,
+          weightclasses: [],
+          fights: [],
+          first: '',
+          last: '',
+          gym: '',
+          email: '',
+          gender: '',
+          age: 0,
+          dob: '',
+          nc: 0,
+          dq: 0,
+          bodykick: 0,
+          boxing: 0,
+          clinch: 0,
+          defense: 0,
+          footwork: 0,
+          headkick: 0,
+          kicks: 0,
+          knees: 0,
+          legkick: 0,
+          ringawareness: 0,
+          lastUpdated: new Date().toISOString(),
+          searchKeywords: [],
+        },
+      ])
     );
-    
-    // Add unprocessed events
-    events = events.concat(unprocessedEvents);
-    
-    // Filter by search term
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      events = events.filter(event => 
-        event.name.toLowerCase().includes(lowerSearch)
-      );
+  
+    const processedEvent: ProcessedEvent = {
+      eventId: selectedEventId,  // Ensured to be a string
+      eventName: selectedEventName,
+      date: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
+      uniqueFighterCount: processedFighters.length,
+    };
+  
+    const response = await saveOneEventRecord(techboutsDb, fighterRecordsMap, processedEvent);
+  
+    if (response.success) {
+      alert(`Successfully saved ${response.updated} updated and ${response.created} new fighters.`);
+      await loadProcessedEvents(); // Refresh the list of processed events
+    } else {
+      alert(`Failed to save records: ${response.message}`);
     }
-    
-    // Filter by tab selection
-    if (activeTab === 'processed') {
-      events = events.filter(event => event.isProcessed);
-    } else if (activeTab === 'unprocessed') {
-      events = events.filter(event => !event.isProcessed && event.hasResults);
-    } else if (activeTab === 'needsResults') {
-      events = events.filter(event => !event.hasResults);
-    }
-    
-    // Sort by date (newest first)
-    events.sort((a, b) => {
-      try {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      } catch {
-        return b.date.localeCompare(a.date);
-      }
-    });
-    
-    return events;
   };
   
-  const filteredEvents = getFilteredEvents();
+
+
   
- 
   
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <CardTitle>Event Processing Status</CardTitle>
+            <CardTitle>Processed Events</CardTitle>
             <CardDescription>
-              Monitor which events have been processed and which need attention
+              Displaying events that have been processed from <code>processedPmtEventsJson</code>.
             </CardDescription>
           </div>
           <div className="flex gap-4">
@@ -215,115 +255,116 @@ export default function EventsTab() {
               )}
               Refresh
             </Button>
-          </div>
-        </div>
-        
-        {/* Quick stats */}
-        <div className="grid grid-cols-4 gap-4 mt-4">
-          <div className="flex flex-col items-center p-2 bg-muted/20 rounded-md">
-            <span className="text-sm text-muted-foreground">All Events</span>
-            <span className="text-xl font-bold">
-              {processedEvents.length + unprocessedEvents.length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center p-2 bg-green-50 rounded-md">
-            <span className="text-sm text-green-700">Processed</span>
-            <span className="text-xl font-bold text-green-700">
-              {processedEvents.length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center p-2 bg-yellow-50 rounded-md">
-            <span className="text-sm text-yellow-700">Unprocessed</span>
-            <span className="text-xl font-bold text-yellow-700">
-              {unprocessedEvents.filter(e => e.hasResults).length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center p-2 bg-muted/20 rounded-md">
-            <span className="text-sm text-muted-foreground">Needs Results</span>
-            <span className="text-xl font-bold">
-              {unprocessedEvents.filter(e => !e.hasResults).length}
-            </span>
+            <Button 
+              onClick={fetchLatestEvents}
+              disabled={isFetchingLatest || processedEvents.length === 0}
+              variant="default"
+              size="sm"
+            >
+              {isFetchingLatest ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Search className="h-4 w-4 mr-2" />
+              )}
+              Fetch Latest Events
+            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-      {isLoading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Loading events...</span>
+            <span className="ml-2 text-muted-foreground">Loading processed events...</span>
           </div>
         ) : (
-          <>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-              <TabsList>
-                <TabsTrigger value="all">
-                  All Events ({processedEvents.length + unprocessedEvents.length})
-                </TabsTrigger>
-                <TabsTrigger value="processed">
-                  Processed ({processedEvents.length})
-                </TabsTrigger>
-                <TabsTrigger value="unprocessed">
-                  Unprocessed ({unprocessedEvents.filter(e => e.hasResults).length})
-                </TabsTrigger>
-                <TabsTrigger value="needsResults">
-                  Needs Results ({unprocessedEvents.filter(e => !e.hasResults).length})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
-            <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event Name</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
+          <ScrollArea className="max-h-[400px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Processed At</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEvents.map(event => (
+                  <TableRow key={event.eventId}>
+                    <TableCell className="font-medium">{event.eventName}</TableCell>
+                    <TableCell>{formatDate(event.date)}</TableCell>
+                    <TableCell>{formatDate(event.processedAt)}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvents.length > 0 ? (
-                    filteredEvents.map(event => (
-                      <TableRow key={event.id}>
-                        <TableCell className="font-medium">
-                          {event.name}
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(event.date)}
-                        </TableCell>
-                        <TableCell>
-                          {event.isProcessed ? (
-                            <Badge className="bg-green-50 text-green-700 border-green-200">
-                              Processed
-                            </Badge>
-                          ) : event.hasResults ? (
-                            <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                              Unprocessed
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-muted-foreground">
-                              No Results
-                            </Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="h-24 text-center">
-                        {searchTerm ? (
-                          <span className="text-muted-foreground">No events found matching {searchTerm}</span>
-                        ) : (
-                          <span className="text-muted-foreground">No events found for the selected filter</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         )}
       </CardContent>
-    </Card>
+
+      {/* Modal for latest events */}
+    
+        <CardContent>
+          <CardHeader>
+            <CardTitle>Latest Events with Results</CardTitle>
+          </CardHeader>
+          <ScrollArea className="max-h-[400px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Results JSON</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {latestEvents.map(event => (
+                  <TableRow key={event.id}>
+                    <TableCell>{event.name}</TableCell>
+                    <TableCell>{formatDate(event.date)}</TableCell>
+                    <TableCell>
+                      {event.hasResults ? <Badge className="bg-green-500">Yes</Badge> : <Badge>No</Badge>}
+                    </TableCell>
+                      <Button variant="default" size="sm" onClick={() => handleProcessEvent(event.id, event.name)}>
+                      Process
+                    </Button>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+
+        {processedFighters.length > 0 && (
+        <CardContent>
+          <CardTitle>{selectedEventName} - Fighter Records</CardTitle>
+          <Button 
+      variant="default" 
+      size="sm" 
+      onClick={handleSaveToFirestore}
+    >
+      Save to Firestore
+    </Button>          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>PMT ID</TableHead>
+                <TableHead>Wins</TableHead>
+                <TableHead>Losses</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {processedFighters.map(fighter => (
+                <TableRow key={fighter.pmt_id}>
+                  <TableCell>{fighter.pmt_id}</TableCell>
+                  <TableCell>{fighter.wins}</TableCell>
+                  <TableCell>{fighter.losses}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      )}
+
+ </Card>
   );
 }

@@ -10,6 +10,7 @@ import { EventType } from '@/utils/types';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import Header from '@/components/headers/Header';
+import EmbedMatchesGenerator from '@/components/EmbedMatchesGenerator';
 
 interface Fighter {
   first?: string;
@@ -36,6 +37,8 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
     const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
 
     const isPromoter = user?.email === eventData.promoterEmail;
+    const [showEmbed, setShowEmbed] = useState(false);
+
 
     useEffect(() => {
         if (eventData.sanctioning === 'PMT') {
@@ -138,6 +141,26 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
                     promoterId={promoterId}
                 />
             </div>
+
+            <div className="mt-8">
+  <button
+    onClick={() => setShowEmbed(prev => !prev)}
+    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+  >
+    {showEmbed ? 'Hide Embed Code' : 'Embed Matches'}
+  </button>
+
+  {showEmbed && (
+    <div className="mt-4">
+      <EmbedMatchesGenerator 
+        eventId={eventId}
+        eventName={eventData.name || eventData.event_name || 'Event'}
+        promoterId={promoterId}
+      />
+    </div>
+  )}
+</div>
+
 
             <div className="mt-8 border-t border-gray-200 pt-5">
                 <OfficialsEvent

@@ -6,7 +6,9 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface Fighter {
+
+
+export type Fighter = {
   first?: string;
   last?: string;
   gym?: string;

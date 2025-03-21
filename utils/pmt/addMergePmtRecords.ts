@@ -120,9 +120,7 @@ import {
             pmt_nc: record.nc, // No contests
             pmt_dq: record.dq, // Disqualifications
             
-            // Tournament stats
-            pmt_tournament_wins: record.tournament_wins,
-            pmt_tournament_losses: record.tournament_losses,
+     
             
             // Skill ratings
             pmt_bodykick: record.bodykick,
@@ -176,9 +174,7 @@ import {
             pmt_nc: record.nc,
             pmt_dq: record.dq,
             
-            // Tournament stats
-            pmt_tournament_wins: record.tournament_wins,
-            pmt_tournament_losses: record.tournament_losses,
+       
             
             // Skill ratings
             pmt_bodykick: record.bodykick,
@@ -275,7 +271,6 @@ import {
       throw error;
     }
 
-// here can the processed events be saved to firestore
 
 
   }
