@@ -3,6 +3,9 @@ import { Suspense } from 'react';
 import PageClient from './PageClient';
 import { Toaster } from 'sonner';
 import { db } from '@/lib/firebase_techbouts/config';
+// can the be both db as pmt_db and techbouts_db with the path for pmt db lib/firebase_pmt/config.ts
+
+
 import { doc, getDoc } from 'firebase/firestore';
 import { notFound } from 'next/navigation';
 
@@ -14,44 +17,34 @@ interface PageProps {
   }>;
 }
 
-// Fetch roster data from Firestore
-async function fetchRoster(promoterId: string, eventId: string) {
-  // Try different paths to find the roster
-  const pathsToTry = [
-    { path: `events/promotions/${promoterId}/${eventId}/roster_json/fighters` },
-    { path: `events/${promoterId}/${eventId}/roster_json/fighters` },
-    { path: `promotions/${promoterId}/events/${eventId}/roster_json/fighters` }
-  ];
+
+async function fetchTechboutsRoster(promoterId: string, eventId: string) {
+  const techboutsPath =  `events/promotions/${promoterId}/${eventId}/roster_json/fighters`
+
 
   let rosterData = [];
-  let foundPath = false;
 
-  for (const { path } of pathsToTry) {
+
     try {
-      const rosterRef = doc(db, path);
+      const rosterRef = doc(db, techboutsPath);
       const rosterDoc = await getDoc(rosterRef);
       
       if (rosterDoc.exists()) {
         const data = rosterDoc.data();
         if (data && data.fighters) {
           rosterData = data.fighters;
-          foundPath = true;
-          console.log(`Found roster at path: ${path}`);
-          break;
+     
+          console.log(`Found roster at path: ${techboutsPath}`);
         }
       }
     } catch (err) {
-      console.log(`Failed to fetch from path: ${path}`, err);
+      console.log(`Failed to fetch from path: ${techboutsPath}`, err);
     }
+    return rosterData;
   }
 
-  if (!foundPath) {
-    console.log("Could not find roster in any of the attempted paths");
-  }
 
-  return rosterData;
-}
-
+  
 export default async function MatchesPage({ params }: PageProps) {
   // Now we need to await params since it's a Promise in the updated type
   const { promoterId, eventId } = await params;
@@ -69,7 +62,7 @@ export default async function MatchesPage({ params }: PageProps) {
   const matchesData = [];
   
   try {
-    rosterData = await fetchRoster(promoterId, eventId);
+    rosterData = await fetchTechboutsRoster(promoterId, eventId);
     
     console.log(`Fetched ${rosterData.length} fighters and ${matchesData.length} matches`);
   } catch (err) {

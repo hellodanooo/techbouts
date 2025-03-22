@@ -2,7 +2,9 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
 import { db } from '@/lib/firebase_techbouts/config';
+
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -36,6 +38,7 @@ interface PageClientProps {
   eventId: string;
   promoterId: string;
   initialRoster: Fighter[];
+  sanctioning?: string;
 }
 
 // Function to calculate weight difference

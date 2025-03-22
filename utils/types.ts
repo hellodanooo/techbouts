@@ -1,4 +1,122 @@
 
+export type GymRecord = {
+  boysWin: number;
+  boysLoss: number;
+  girlsWin: number;
+  girlsLoss: number;
+  menWin: number;
+  menLoss: number;
+  womanWin: number;
+  womanLoss: number;
+  address: string;
+  city: string;
+  state: string;
+  id: string;
+  name: string;
+  pmt_wins?: number;
+  pmt_losses?: number;
+  pmt_nc?: number;
+  pmt_dq?: number;
+  wins: number;
+  losses: number;
+  nc: number;
+  dq: number;
+  totalFighters: number;
+  pmt_total_fighters?: number;
+  stats?: {
+    bodykick: number;
+    boxing: number;
+    clinch: number;
+    defense: number;
+    footwork: number;
+    headkick: number;
+    kicks: number;
+    knees: number;
+    legkick: number;
+    ringawareness: number;
+  };
+  pmt_stats?: {
+    bodykick: number;
+    boxing: number;
+    clinch: number;
+    defense: number;
+    footwork: number;
+    headkick: number;
+    kicks: number;
+    knees: number;
+    legkick: number;
+    ringawareness: number;
+  };
+  yearlyStats?: {
+    [year: string]: {
+      wins: number;
+      losses: number;
+      nc: number;
+      dq: number;
+      tournament_wins: number;
+      tournament_losses: number;
+      total_fighters: number;
+      fights: number;
+    }
+  };
+  pmt_yearly_stats?: {
+    [year: string]: {
+      wins: number;
+      losses: number;
+      nc: number;
+      dq: number;
+      tournament_wins: number;
+      tournament_losses: number;
+      total_fighters: number;
+      fights: number;
+      by_location?: {
+        [locationKey: string]: {
+          wins: number;
+          losses: number;
+          nc: number;
+          dq: number;
+          tournament_wins: number;
+          tournament_losses: number;
+          fights: number;
+        }
+      }
+    }
+  };
+  pmt_location_stats?: {
+    [locationKey: string]: {
+      wins: number;
+      losses: number;
+      nc: number;
+      dq: number;
+      tournament_wins: number;
+      tournament_losses: number;
+      fights: number;
+    }
+  };
+  pmt_top_locations?: Array<{
+    name: string;
+    win_percentage: number;
+    wins: number;
+    losses: number;
+    fights: number;
+  }>;
+  fighters?: Array<{
+    pmt_id: string;
+    first: string;
+    last: string;
+    email: string;
+  }>;
+  pmt_fighters?: Array<{
+    pmt_id: string;
+    first: string;
+    last: string;
+    email: string;
+  }>;
+  lastUpdated: string;
+  source: string;
+}
+
+
 export type Official = {
   email: string;
   city: string;

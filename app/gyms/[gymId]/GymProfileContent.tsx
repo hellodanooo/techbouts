@@ -1,15 +1,17 @@
+// app/gyms/[gymId]/GymProfileContent.tsx
+
 'use client';
 
 import { useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import EditGymDetails from '@/components/gyms/EditGymDetails';
-import { GymProfile } from '@/utils/types';
+import { GymRecord } from '@/utils/types';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
 interface GymProfileContentProps {
-  gymProfile: GymProfile;
+  gymProfile: GymRecord;
   logoUrl: string | null;
   gymId: string;
 }
@@ -21,7 +23,7 @@ export default function GymProfileContent({ gymProfile, logoUrl, gymId }: GymPro
     window.location.reload();
   };
 
-  const { gym: gymName, win, loss, boysWin, girlsWin, menWin, womanWin, address, state, city } = gymProfile;
+  const { name: gymName, wins, losses, boysWin, girlsWin, menWin, womanWin, address, state, city } = gymProfile;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -45,11 +47,11 @@ export default function GymProfileContent({ gymProfile, logoUrl, gymId }: GymPro
         <div className="stats grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
           <div className="stat-item">
             <p className="font-semibold">Total Wins</p>
-            <p className="text-lg">{win || 0}</p>
+            <p className="text-lg">{wins || 0}</p>
           </div>
           <div className="stat-item">
             <p className="font-semibold">Total Losses</p>
-            <p className="text-lg">{loss || 0}</p>
+            <p className="text-lg">{losses || 0}</p>
           </div>
           <div className="stat-item">
             <p className="font-semibold">Boys Wins</p>

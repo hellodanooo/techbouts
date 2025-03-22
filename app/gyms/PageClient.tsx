@@ -1,3 +1,5 @@
+// app/gyms/PageClient.tsx
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -31,6 +33,8 @@ import {
   FirestoreError
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
+
+import Link from 'next/link'
 
 interface GymRecord {
   id: string;
@@ -576,8 +580,11 @@ export default function GymsPageClient() {
             <div className="p-6 md:w-2/3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-xl font-bold mb-2">{gym.name}</h3>
-                  <div className="flex flex-wrap gap-2 mb-4">
+                <h3 className="text-xl font-bold mb-2">
+  <Link href={`/gyms/${gym.id}`} className="hover:underline text-primary">
+    {gym.name}
+  </Link>
+</h3>                  <div className="flex flex-wrap gap-2 mb-4">
                     <Badge variant="secondary" className="flex items-center">
                       <Trophy className="mr-1 h-3 w-3" /> 
                       {stats.wins} W

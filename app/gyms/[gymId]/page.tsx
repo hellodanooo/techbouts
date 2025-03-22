@@ -1,7 +1,10 @@
+// app/gyms/[gymId]/page.tsx
+
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { fetchGymById } from '@/utils/gyms/fetchGymById';
 import GymProfileContent from './GymProfileContent';
+import { fetchGymById } from '@/utils/gyms/fetchGymById'; 
+
 
 type PageProps = {
   params: Promise<{ gymId: string }>;
@@ -12,6 +15,8 @@ type GenerateMetadataProps = {
   params: Promise<{ gymId: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
+
+
 
 export async function generateMetadata(
   { params }: GenerateMetadataProps,
@@ -35,10 +40,10 @@ export async function generateMetadata(
       };
     }
 
-    const pageTitle = `${gymProfile.gym} - Muay Thai Gym Profile`;
-    const pageDescription = `${gymProfile.gym} has a total of ${
-      gymProfile.win || 0
-    } wins and ${gymProfile.loss || 0} losses. Located in ${
+    const pageTitle = `${gymProfile.name} - Muay Thai Gym Profile`;
+    const pageDescription = `${gymProfile.name} has a total of ${
+      gymProfile.wins || 0
+    } wins and ${gymProfile.losses || 0} losses. Located in ${
       gymProfile.city || 'Unknown City'
     }, ${gymProfile.state || 'Unknown State'}, it offers top-notch training facilities.`;
 

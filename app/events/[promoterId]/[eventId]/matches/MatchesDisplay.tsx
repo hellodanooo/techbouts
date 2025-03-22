@@ -32,6 +32,7 @@ interface MatchesDisplayProps {
   roster: Fighter[];
   promoterId: string;
   eventId: string;
+
 }
 
 export default function MatchesDisplay({
@@ -78,12 +79,20 @@ export default function MatchesDisplay({
       return false;
     }
   };
-  
+
   const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
-  
+
   const getPhotoUrl = (fighter: Fighter): string => {
     return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
   };
+
+  const getGymId = (gym: string | undefined): string => {
+    if (!gym) return '';
+    return gym.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+
+  }
+
+
 
   return (
     <Card className="w-full">
@@ -98,9 +107,7 @@ export default function MatchesDisplay({
             <TableHeader>
               <TableRow>
                 <th className="text-center">Red Corner</th>
-                <th></th>
                 <th className="text-center">Match Info</th>
-                <th></th>
                 <th className="text-center">Blue Corner</th>
               </TableRow>
             </TableHeader>
@@ -109,13 +116,13 @@ export default function MatchesDisplay({
                 // Find red and blue fighters using the corner property first
                 let redFighter = pair.find((f: Fighter) => f.corner === 'red');
                 let blueFighter = pair.find((f: Fighter) => f.corner === 'blue');
-                
+
                 // Fallback methods if corner property isn't set
                 if (!redFighter || !blueFighter) {
                   // Try to find pairs by opponent_id relationships
                   const firstFighter = pair[0];
                   const secondFighter = pair[1];
-                  
+
                   if (firstFighter && secondFighter) {
                     // If we can't find by corner, just assign the first fighter as red and second as blue
                     redFighter = firstFighter;
@@ -130,9 +137,23 @@ export default function MatchesDisplay({
 
                 return (
                   <TableRow key={index}>
+
+              
+
                     <TableCell>
-                      <div className="flex flex-col justify-center items-center">
-                        <Link
+<div>
+
+                      <div className="relative h-24 w-24 mx-auto overflow-hidden rounded-md">
+                        <Image
+                          src={getPhotoUrl(redFighter)}
+                          alt={`${redFighter.first} ${redFighter.last}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+
+
+                      <Link
                           target="_blank"
                           rel="noopener noreferrer"
                           href={`/fighter/${redFighter.fighter_id}`}
@@ -141,21 +162,19 @@ export default function MatchesDisplay({
                             {`${redFighter.first || ''} ${redFighter.last || ''}`}
                           </div>
                         </Link>
-                        <div>
-                          {redFighter.gym}
-                        </div>
-                      </div>
-                    </TableCell>
 
-                    <TableCell>
-                      <div className="relative h-24 w-24 mx-auto overflow-hidden rounded-md">
-                        <Image 
-                          src={getPhotoUrl(redFighter)} 
-                          alt={`${redFighter.first} ${redFighter.last}`}
-                          fill
-                          className="object-cover"
-                        />
+                        <Link
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            href={`/gyms/${getGymId(redFighter.gym)}`}
+                          >
+                          <div className="tracking-[.1em] text-center">
+                          {redFighter.gym}
+                            </div>
+                          </Link>
+
                       </div>
+
                     </TableCell>
 
                     <TableCell className="flex flex-col justify-center items-center text-center">
@@ -169,19 +188,19 @@ export default function MatchesDisplay({
                     </TableCell>
 
                     <TableCell>
+                    <div>
+
                       <div className="relative h-24 w-24 mx-auto overflow-hidden rounded-md">
-                        <Image 
-                          src={getPhotoUrl(blueFighter)} 
+                        <Image
+                          src={getPhotoUrl(blueFighter)}
                           alt={`${blueFighter.first} ${blueFighter.last}`}
                           fill
                           className="object-cover"
                         />
                       </div>
-                    </TableCell>
 
-                    <TableCell>
-                      <div className="flex flex-col justify-center items-center">
-                        <Link
+
+                      <Link
                           target="_blank"
                           rel="noopener noreferrer"
                           href={`/fighter/${blueFighter.fighter_id}`}
@@ -190,11 +209,25 @@ export default function MatchesDisplay({
                             {`${blueFighter.first || ''} ${blueFighter.last || ''}`}
                           </div>
                         </Link>
-                        <div className="text-center">
+
+                        <Link
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            href={`/gyms/${getGymId(blueFighter.gym)}`}
+                          >
+                          <div className="tracking-[.1em] text-center">
                           {blueFighter.gym}
-                        </div>
+                            </div>
+                          </Link>
+
                       </div>
+
+
+
                     </TableCell>
+
+                 
+
                   </TableRow>
                 );
               })}

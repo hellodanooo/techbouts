@@ -1,13 +1,13 @@
 // utils/gyms/fetchGymById.ts
-import { doc, getDoc } from 'firebase/firestore';
 import { db, app } from '@/lib/firebase_techbouts/config';
-import { GymProfile } from '@/utils/types';
+import { GymRecord } from '@/utils/types';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
-const DEFAULT_STATE = "CA";
+// utils/gyms/fetchGymById.ts
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 export const fetchGymById = async (gymId: string): Promise<{
-  gymProfile: GymProfile | null;
+  gymProfile: GymRecord | null;
   logoUrl: string | null;
   success: boolean;
   error?: string;
@@ -22,46 +22,21 @@ export const fetchGymById = async (gymId: string): Promise<{
   }
 
   try {
-    const winGroups = ["0_win", "1_5_win", "6_10_win", "11_20_win", "21_more_win"];
-    const collectionName = `gym_profiles_${DEFAULT_STATE}_json_data`;
-    
-    // Query each group until we find the gym
-    let gymData: GymProfile | null = null;
-    let foundGroup: string | null = null;
-    
-    // Use Promise.all to fetch all groups in parallel
-    const groupSnapshots = await Promise.all(
-      winGroups.map(group => getDoc(doc(db, collectionName, group)))
-    );
+    // Directly query Gym_Profiles collection
+    const gymDoc = await getDoc(doc(db, 'Gym_Profiles', gymId));
 
-    // Find the gym by searching through each group's gyms array
-    for (let i = 0; i < groupSnapshots.length; i++) {
-      const docSnap = groupSnapshots[i];
-      if (docSnap.exists()) {
-        const data = docSnap.data() as { gyms: Record<string, GymProfile> };
-        if (data.gyms) {
-          // Search through all gyms in this group
-          const foundGym = Object.values(data.gyms).find(gym => gym.id === gymId);
-          if (foundGym) {
-            gymData = foundGym;
-            foundGroup = winGroups[i];
-            break;
-          }
-        }
-      }
-    }
-
-    if (!gymData) {
-      console.log(`Gym not found in any group: ${gymId}`);
-      return { 
-        gymProfile: null, 
-        logoUrl: null, 
-        success: false, 
-        error: 'Gym not found' 
+    if (!gymDoc.exists()) {
+      return {
+        gymProfile: null,
+        logoUrl: null,
+        success: false,
+        error: 'Gym not found'
       };
     }
 
-    // Fetch logo in parallel with gym data
+    const gymData = { id: gymDoc.id, ...gymDoc.data() } as GymRecord;
+
+    // Fetch logo as before
     const storage = getStorage(app);
     const logoRef = ref(storage, `gym_logos/${gymId}.png`);
     let logoUrl: string | null = null;
@@ -69,7 +44,6 @@ export const fetchGymById = async (gymId: string): Promise<{
     try {
       logoUrl = await getDownloadURL(logoRef);
     } catch (error) {
-      console.log('Using default logo for gym:', gymId);
       logoUrl = '/default-gym-logo.png';
     }
 
@@ -88,3 +62,4 @@ export const fetchGymById = async (gymId: string): Promise<{
     };
   }
 };
+
