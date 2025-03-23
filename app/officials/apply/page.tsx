@@ -2,6 +2,7 @@
 'use client';
 import React, { useState } from 'react';
 import type { DocumentData } from 'firebase/firestore';
+import Header from '@/components/headers/Header';
 
 interface QuizQuestion {
   question: string;
@@ -165,8 +166,19 @@ export default function OfficialsApplication() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Point Muay Thai Official Application</h1>
+    <div>
+<Header />
+
+    <div className="flex justify-center mb-6">
+      <img
+        src="/logos/pmt_logo_2024_sm.png"
+        alt="PMT Logo"
+        className="w-48"
+        style={{ width: '200px' }}
+      />
+    </div>
+
+      <h1 className="text-2xl font-bold mb-6 text-center">Point Muay Thai Official Application</h1>
       
       {error && (
         <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded">
@@ -174,9 +186,20 @@ export default function OfficialsApplication() {
         </div>
       )}
 
+<div className="flex flex-col items-center text-center">
+  <div>Review the Rules and take this short quiz to open up your contact information form</div>
+  <div className="m-4">
+    <a
+      href="https://www.pmt-west.app/rules"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">      View PMT Rules
+    </a>
+  </div>
+</div>
       {currentStep === 'quiz' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Rules Quiz</h2>
+        <div className='pr-10 pl-10'>
+                    <h2 className="text-xl font-semibold mb-4">Rules Quiz</h2>
           {quizQuestions.map((q, qIndex) => (
             <div key={qIndex} className="mb-6">
               <p className="font-medium mb-2">{q.question}</p>
@@ -200,13 +223,20 @@ export default function OfficialsApplication() {
               ))}
             </div>
           ))}
+
+
+<div className="flex flex-col items-center text-center">
+
           <button
             onClick={handleQuizSubmit}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Submit Quiz
           </button>
+</div>
+
         </div>
+
       )}
 
       {currentStep === 'form' && (

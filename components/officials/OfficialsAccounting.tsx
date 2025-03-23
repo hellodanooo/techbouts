@@ -52,8 +52,8 @@ interface OfficialStats {
   amountReffed: number;
 }
 
-const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({ 
-  officials, 
+const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
+  officials,
   eventAddress = '',
   eventName = '',
   eventDate = '',
@@ -112,7 +112,7 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
     });
 
     setOfficialsPositions(positions);
-    
+
     // Set default distances for officials (30 miles)
     const defaultDistances: { [id: string]: number } = {};
     officials.forEach(official => {
@@ -130,14 +130,14 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
       setTotalRepresentativePay(0);
       return;
     }
-    
+
     const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
     let total = 0;
     let totalRepPay = 0;
-  
+
     officials.forEach(official => {
       if (!official.id) return;
-      
+
       if (official.position === 'Representative') {
         const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
         const totalRepPayForOfficial = (totalFighters * representativePay) + travelPay;
@@ -150,7 +150,7 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
         total += judgePayout + refereePayout + travelPay;
       }
     });
-  
+
     setTotalPay(total);
     setTotalRepresentativePay(totalRepPay);
   }, [officials, distances, athleteCount, refereePay, judgePay, representativePay, officialStats]);
@@ -162,7 +162,7 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
 
   const formatInvoiceText = (official: Official, officialStats: { [id: string]: OfficialStats }, eventName: string, eventDate: string) => {
     if (!official || !official.id) return '';
-    
+
     const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
     let invoiceText = `Point Muay Thai West
 ${eventName || 'Event'}
@@ -170,7 +170,7 @@ ${eventDate || 'Date'}
 ${official.first || ''} ${official.last || ''}
 ${official.city || ''}, ${official.state || ''}
 `;
-  
+
     if (official.position === 'Representative') {
       invoiceText += `
 Pay Per Fighter: $${representativePay.toFixed(2)}
@@ -178,14 +178,14 @@ Number of Fighters: ${totalFighters}
 Pay: $${(totalFighters * representativePay).toFixed(2)}`;
     } else {
       const stats = officialStats[official.id] || { amountJudged: 0, amountReffed: 0 };
-      
+
       if (stats.amountJudged > 0) {
         invoiceText += `
 $${judgePay.toFixed(2)} per bout
 Bouts Judged: ${stats.amountJudged}
 Judge Pay: $${(stats.amountJudged * judgePay).toFixed(2)}`;
       }
-      
+
       if (stats.amountReffed > 0) {
         invoiceText += `
 $${refereePay.toFixed(2)} per bout
@@ -193,7 +193,7 @@ Bouts Reffed: ${stats.amountReffed}
 Referee Pay: $${(stats.amountReffed * refereePay).toFixed(2)}`;
       }
     }
-  
+
     if (official.id && distances[official.id]) {
       const travelPay = distances[official.id] * 0.55;
       invoiceText += `
@@ -202,26 +202,26 @@ City: ${official.city || ''}, ${official.state || ''}
 Distance: ${distances[official.id].toFixed(2)} miles
 Travel Pay: $${travelPay.toFixed(2)}`;
     }
-  
+
     const totalPay = official.position === 'Representative'
       ? ((totalFighters * representativePay) + ((official.id && distances[official.id]) ? distances[official.id] * 0.55 : 0))
       : (
-          ((official.id && officialStats[official.id]?.amountJudged) ? officialStats[official.id].amountJudged * judgePay : 0) +
-          ((official.id && officialStats[official.id]?.amountReffed) ? officialStats[official.id].amountReffed * refereePay : 0) +
-          ((official.id && distances[official.id]) ? distances[official.id] * 0.55 : 0)
-        );
-  
+        ((official.id && officialStats[official.id]?.amountJudged) ? officialStats[official.id].amountJudged * judgePay : 0) +
+        ((official.id && officialStats[official.id]?.amountReffed) ? officialStats[official.id].amountReffed * refereePay : 0) +
+        ((official.id && distances[official.id]) ? distances[official.id] * 0.55 : 0)
+      );
+
     invoiceText += `
 Total: $${totalPay.toFixed(2)}`;
-  
+
     return invoiceText;
   };
-  
+
   const copyInvoiceToClipboard = () => {
     if (!selectedOfficial || !selectedOfficial.id) return;
-    
+
     const invoiceText = formatInvoiceText(selectedOfficial, officialStats, eventName, eventDate);
-    
+
     navigator.clipboard.writeText(invoiceText).then(() => {
       alert('Invoice copied to clipboard!');
     }).catch(err => {
@@ -293,20 +293,20 @@ Total: $${totalPay.toFixed(2)}`;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      
+
       <SheetContent side="right" className="w-full sm:max-w-full p-0 bg-background">
-       
+
         <div className="makeAImageOfthis h-full flex flex-col bg-background">
           <SheetHeader className="p-6 border-b bg-white">
             <div className="flex items-center justify-between">
               <SheetTitle className="text-2xl font-bold">Officials Accounting</SheetTitle>
-          
+
             </div>
             {eventName && <p className="text-muted-foreground">{eventName}</p>}
             {eventDate && <p className="text-muted-foreground">{eventDate}</p>}
             {eventAddress && <p className="text-muted-foreground">{eventAddress}</p>}
           </SheetHeader>
-  
+
           <ScrollArea className="flex-1 p-6">
             {/* Event Configuration Card */}
             <Card className="mb-6">
@@ -316,7 +316,7 @@ Total: $${totalPay.toFixed(2)}`;
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline">{numMats} Mats</Badge>
                     <Badge variant="outline">{totalFighters} Athletes</Badge>
-                    <Badge variant="outline">{Math.floor(totalFighters/2)} Bouts</Badge>
+                    <Badge variant="outline">{Math.floor(totalFighters / 2)} Bouts</Badge>
                   </div>
                 </CardDescription>
               </CardHeader>
@@ -338,7 +338,7 @@ Total: $${totalPay.toFixed(2)}`;
                             }))}
                             className="w-16 h-8 text-center"
                           />
-                          <span className="text-sm text-muted-foreground">({Math.floor(count/2)} bouts)</span>
+                          <span className="text-sm text-muted-foreground">({Math.floor(count / 2)} bouts)</span>
                         </div>
                       ))}
                     </div>
@@ -346,7 +346,7 @@ Total: $${totalPay.toFixed(2)}`;
                 </div>
               </CardContent>
             </Card>
-  
+
             {/* Pay Rates Card */}
             <Card className="mb-6">
               <CardHeader>
@@ -397,7 +397,7 @@ Total: $${totalPay.toFixed(2)}`;
                 </div>
               </CardContent>
             </Card>
-  
+
             {/* Representatives Table */}
             {officials.some(o => o.position === 'Representative' && o.id) && (
               <Card className="mb-6">
@@ -423,11 +423,11 @@ Total: $${totalPay.toFixed(2)}`;
                         .map(official => {
                           const travelPay = official.id && distances[official.id] ? distances[official.id] * 0.55 : 0;
                           const totalRepresentativePay = (totalFighters * representativePay) + travelPay;
-  
+
                           return (
-                            <TableRow 
+                            <TableRow
                               key={official.id}
-                              className="cursor-pointer" 
+                              className="cursor-pointer"
                               onClick={() => handleOfficialClick(official)}
                             >
                               <TableCell className="font-medium">
@@ -459,10 +459,10 @@ Total: $${totalPay.toFixed(2)}`;
                 </CardContent>
               </Card>
             )}
-  
+
             {/* Mat Official Tables */}
             {Object.entries(officialsPositions)
-              .filter(([mat]) => mat !== "undefined" && mat !== "-1" && mat !== "unassigned")
+              .filter(([mat]) => !["undefined", "-1", "unassigned", "0"].includes(mat))
               .map(([mat, matOfficials]) => (
                 <Card key={mat} className="mb-6">
                   <CardHeader>
@@ -488,17 +488,17 @@ Total: $${totalPay.toFixed(2)}`;
                           .filter(official => official.id)
                           .map(official => {
                             if (!official.id) return null;
-                            
+
                             const stats = officialStats[official.id] || { amountJudged: 0, amountReffed: 0 };
                             const judgePayout = stats.amountJudged * judgePay;
                             const refereePayout = stats.amountReffed * refereePay;
                             const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
                             const totalPay = judgePayout + refereePayout + travelPay;
-  
+
                             return (
                               <TableRow key={official.id}>
                                 <TableCell>{official.location || 'N/A'}</TableCell>
-                                <TableCell 
+                                <TableCell
                                   className="font-medium cursor-pointer"
                                   onClick={() => handleOfficialClick(official)}
                                 >
@@ -549,7 +549,7 @@ Total: $${totalPay.toFixed(2)}`;
                   </CardContent>
                 </Card>
               ))}
-  
+
             {/* Summary Card */}
             <Card className="mb-6">
               <CardHeader>
@@ -581,8 +581,8 @@ Total: $${totalPay.toFixed(2)}`;
           </ScrollArea>
         </div>
       </SheetContent>
-  
-      <OfficialInvoice 
+
+      <OfficialInvoice
         open={showPopup}
         onOpenChange={setShowPopup}
         selectedOfficial={selectedOfficial}

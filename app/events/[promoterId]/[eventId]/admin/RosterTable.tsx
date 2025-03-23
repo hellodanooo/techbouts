@@ -231,6 +231,8 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
       {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
     </CollapsibleTrigger>
     <CollapsibleContent className="p-4 bg-white">
+
+    
  
     <div className="flex justify-end mb-4">
           <Button 

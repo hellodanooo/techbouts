@@ -11,6 +11,8 @@ import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
 import Header from '@/components/headers/Header';
 import EmbedMatchesGenerator from '@/components/EmbedMatchesGenerator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface Fighter {
   first?: string;
@@ -38,6 +40,18 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
 
     const isPromoter = user?.email === eventData.promoterEmail;
     const [showEmbed, setShowEmbed] = useState(false);
+
+
+    const [openSections, setOpenSections] = useState({
+        matches: true,
+      });
+    
+      const toggleSection = (section: keyof typeof openSections) => {
+        setOpenSections(prev => ({
+          ...prev,
+          [section]: !prev[section]
+        }));
+      };
 
 
     useEffect(() => {
@@ -125,7 +139,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
                 />
             </div>
         
-            <div>
+            <div className='mb-6'> 
                 <RosterTable 
                     roster={roster}
                     eventId={eventId}
@@ -134,12 +148,29 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
             </div>
 
 
-            <div>
+            <div className='mb-6'> 
+
+            <Collapsible
+    open={openSections.matches}
+    onOpenChange={() => toggleSection('matches')}
+    className="w-full border rounded-lg overflow-hidden"
+  >
+    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
+      <h2 className="text-xl font-semibold">Matches</h2>
+      {openSections.matches ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+    </CollapsibleTrigger>
+    <CollapsibleContent className="p-4 bg-white">
                 <Matches 
                     initialRoster={roster}
                     eventId={eventId}
                     promoterId={promoterId}
                 />
+    </CollapsibleContent>
+    </Collapsible>
+
+
+
+
             </div>
 
             <div className="mt-8">
