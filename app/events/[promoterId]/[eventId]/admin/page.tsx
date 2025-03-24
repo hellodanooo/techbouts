@@ -44,17 +44,12 @@ if (eventData) {
     notFound();
   }
 
-// if (eventData.promoterId === 'muaythaipurist') {
-//   roster = await fetchPuristRoster(eventId);
-//   console.log('purist roster:', roster);
-// }
+
 
 
   return (
     <div>
       
-
-  
       <PageDashboard
       eventData={eventData}
       eventId={eventId}

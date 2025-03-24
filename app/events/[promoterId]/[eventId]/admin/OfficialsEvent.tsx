@@ -55,8 +55,6 @@ interface OfficialsEventProps {
   eventName: string;
   eventDate: string;
   eventAddress: string;
-
-
 }
 
 interface SelectLocationDropdownProps {
@@ -89,7 +87,7 @@ const SelectLocationDropdown: FC<SelectLocationDropdownProps> = ({ officialsList
   );
 };
 
-const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId, eventName, eventDate, eventAddress }) => {
+const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId, eventName, eventDate, eventAddress, sanctioning }) => {
   const [officials, setOfficials] = useState<Official[]>([]);
   const [allOfficials, setAllOfficials] = useState<Official[]>([]);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
@@ -585,6 +583,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId,
   eventDate={eventDate}
   eventAddress={eventAddress}
   numMats={numMats}
+  sanctioning={sanctioning}
 />
       </CollapsibleContent>
     </Collapsible>

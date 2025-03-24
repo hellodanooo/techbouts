@@ -1,7 +1,11 @@
 // components/officials/OfficialsAccounting.tsx
+'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Official } from '@/utils/types';
 import html2canvas from 'html2canvas';
+import { fetchPmtResults } from '@/utils/apiFunctions/fetchPmtResults';
+
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +47,7 @@ interface OfficialsAccountingProps {
   eventName?: string;
   eventDate?: string;
   numMats: number;
+  sanctioning: string;
   onClose: () => void;
   isOpen: boolean;
 }
@@ -59,7 +64,9 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
   eventDate = '',
   numMats,
   onClose,
-  isOpen
+  isOpen,
+  sanctioning,
+  eventId,
 }) => {
   // State variables
   const [athleteCount, setAthleteCount] = useState<{ [mat: number]: number }>({});
@@ -68,6 +75,7 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
   const [totalPay, setTotalPay] = useState<number>(0);
   const [totalRepresentativePay, setTotalRepresentativePay] = useState<number>(0);
   const [officialStats, setOfficialStats] = useState<{ [id: string]: OfficialStats }>({});
+  const [uniquePmtFighterCount, setUniquePmtFighterCount] = useState<number>(0);
 
   // State variables for pay rates
   const [refereePay, setRefereePay] = useState<number>(9);
@@ -101,6 +109,7 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
       positions[matKey].push(official);
     });
 
+
     // Sort officials by location for each mat
     Object.keys(positions).forEach(mat => {
       positions[mat].sort((a: Official, b: Official) => {
@@ -123,6 +132,20 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
     setDistances(defaultDistances);
   }, [officials]);
 
+
+
+  useEffect(() => {
+    const getResults = async () => {
+      if (sanctioning === 'PMT' && eventId) {
+        const { uniqueFighterCount } = await fetchPmtResults(eventId);
+        setUniquePmtFighterCount(uniqueFighterCount);
+      }
+    };
+  
+    getResults();
+  }, [sanctioning, eventId]);
+
+
   // Define calculateTotalPay using useCallback to properly memoize it
   const calculateTotalPay = useCallback(() => {
     if (!officials || officials.length === 0) {
@@ -131,7 +154,12 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
       return;
     }
 
-    const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
+    const calculatedTotalFighters =
+    sanctioning === 'PMT'
+      ? uniquePmtFighterCount
+      : Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
+  
+
     let total = 0;
     let totalRepPay = 0;
 
@@ -140,7 +168,7 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
 
       if (official.position === 'Representative') {
         const travelPay = distances[official.id] ? distances[official.id] * 0.55 : 0;
-        const totalRepPayForOfficial = (totalFighters * representativePay) + travelPay;
+        const totalRepPayForOfficial = (calculatedTotalFighters * representativePay) + travelPay;
         totalRepPay += totalRepPayForOfficial;
       } else {
         const stats = officialStats[official.id] || { amountJudged: 0, amountReffed: 0 };
@@ -163,8 +191,13 @@ const OfficialsAccounting: React.FC<OfficialsAccountingProps> = ({
   const formatInvoiceText = (official: Official, officialStats: { [id: string]: OfficialStats }, eventName: string, eventDate: string) => {
     if (!official || !official.id) return '';
 
-    const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
-    let invoiceText = `Point Muay Thai West
+    const calculatedTotalFighters =
+    sanctioning === 'PMT'
+      ? uniquePmtFighterCount
+      : Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
+  
+
+      let invoiceText = `Point Muay Thai West
 ${eventName || 'Event'}
 ${eventDate || 'Date'}
 ${official.first || ''} ${official.last || ''}
@@ -174,8 +207,8 @@ ${official.city || ''}, ${official.state || ''}
     if (official.position === 'Representative') {
       invoiceText += `
 Pay Per Fighter: $${representativePay.toFixed(2)}
-Number of Fighters: ${totalFighters}
-Pay: $${(totalFighters * representativePay).toFixed(2)}`;
+Number of Fighters: ${calculatedTotalFighters}
+Pay: $${(calculatedTotalFighters * representativePay).toFixed(2)}`;
     } else {
       const stats = officialStats[official.id] || { amountJudged: 0, amountReffed: 0 };
 
@@ -204,7 +237,7 @@ Travel Pay: $${travelPay.toFixed(2)}`;
     }
 
     const totalPay = official.position === 'Representative'
-      ? ((totalFighters * representativePay) + ((official.id && distances[official.id]) ? distances[official.id] * 0.55 : 0))
+      ? ((calculatedTotalFighters * representativePay) + ((official.id && distances[official.id]) ? distances[official.id] * 0.55 : 0))
       : (
         ((official.id && officialStats[official.id]?.amountJudged) ? officialStats[official.id].amountJudged * judgePay : 0) +
         ((official.id && officialStats[official.id]?.amountReffed) ? officialStats[official.id].amountReffed * refereePay : 0) +
@@ -287,7 +320,11 @@ Total: $${totalPay.toFixed(2)}`;
     }));
   };
 
-  const totalFighters = Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
+  const calculatedTotalFighters =
+  sanctioning === 'PMT'
+    ? uniquePmtFighterCount
+    : Object.values(athleteCount).reduce((sum, count) => sum + count, 0);
+
 
   if (!isOpen) return null;
 
@@ -305,6 +342,7 @@ Total: $${totalPay.toFixed(2)}`;
             {eventName && <p className="text-muted-foreground">{eventName}</p>}
             {eventDate && <p className="text-muted-foreground">{eventDate}</p>}
             {eventAddress && <p className="text-muted-foreground">{eventAddress}</p>}
+            <p>Sanctionining: {sanctioning}</p>
           </SheetHeader>
 
           <ScrollArea className="flex-1 p-6">
@@ -315,8 +353,8 @@ Total: $${totalPay.toFixed(2)}`;
                 <CardDescription>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline">{numMats} Mats</Badge>
-                    <Badge variant="outline">{totalFighters} Athletes</Badge>
-                    <Badge variant="outline">{Math.floor(totalFighters / 2)} Bouts</Badge>
+                    <Badge variant="outline">{calculatedTotalFighters} Athletes</Badge>
+                    <Badge variant="outline">{Math.floor(calculatedTotalFighters / 2)} Bouts</Badge>
                   </div>
                 </CardDescription>
               </CardHeader>
@@ -422,7 +460,7 @@ Total: $${totalPay.toFixed(2)}`;
                         .filter(o => o.position === 'Representative' && o.id)
                         .map(official => {
                           const travelPay = official.id && distances[official.id] ? distances[official.id] * 0.55 : 0;
-                          const totalRepresentativePay = (totalFighters * representativePay) + travelPay;
+                          const totalRepresentativePay = (calculatedTotalFighters * representativePay) + travelPay;
 
                           return (
                             <TableRow
@@ -434,8 +472,8 @@ Total: $${totalPay.toFixed(2)}`;
                                 {official.first || 'N/A'} {official.last || 'N/A'}
                               </TableCell>
                               <TableCell>${representativePay.toFixed(2)}</TableCell>
-                              <TableCell>{totalFighters}</TableCell>
-                              <TableCell>${(totalFighters * representativePay).toFixed(2)}</TableCell>
+                              <TableCell>{calculatedTotalFighters}</TableCell>
+                              <TableCell>${(calculatedTotalFighters * representativePay).toFixed(2)}</TableCell>
                               <TableCell>
                                 <Input
                                   type="number"
@@ -593,7 +631,7 @@ Total: $${totalPay.toFixed(2)}`;
         refereePay={refereePay}
         judgePay={judgePay}
         representativePay={representativePay}
-        totalFighters={totalFighters}
+        totalFighters={calculatedTotalFighters}
         onCopyInvoice={copyInvoiceToClipboard}
         onClose={closePopup}
       />
