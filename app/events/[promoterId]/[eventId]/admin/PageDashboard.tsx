@@ -46,7 +46,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
 
 
     const [openSections, setOpenSections] = useState({
-        matches: true,
+        matches: false,
         emails: false,
     });
 
@@ -169,15 +169,10 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
                             eventId={eventId}
                             promoterId={promoterId}
                         />
-                    </CollapsibleContent>
-                </Collapsible>
 
 
 
-
-            </div>
-
-            <div className="mt-8">
+<div className="mt-8">
                 <button
                     onClick={() => setShowEmbed(prev => !prev)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -195,6 +190,16 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
                     </div>
                 )}
             </div>
+
+                    </CollapsibleContent>
+                </Collapsible>
+
+
+           
+
+            </div>
+
+         
 
 
             <div className="mt-8 border-t border-gray-200 pt-5">

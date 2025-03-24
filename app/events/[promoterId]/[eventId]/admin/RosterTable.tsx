@@ -63,7 +63,7 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
   const [openAddFighterModal, setOpenAddFighterModal] = useState(false);
   
   const [openSections, setOpenSections] = useState({
-    roster: true,
+    roster: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {

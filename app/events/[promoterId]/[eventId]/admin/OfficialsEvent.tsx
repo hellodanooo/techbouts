@@ -379,14 +379,7 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId,
     </Card>
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-3 text-muted-foreground">Loading officials...</span>
-      </div>
-    );
-  }
+
 
   if (loadingError) {
     return (
@@ -420,7 +413,12 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId,
           <Badge className="ml-2" variant="outline">
             {officials.length}
           </Badge>
-        </div>
+        {isLoading &&
+                  <RefreshCw className="h-4 w-8 animate-spin text-primary" />
+
+        }
+
+          </div>
         {openSections.officials ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
       </CollapsibleTrigger>
       
