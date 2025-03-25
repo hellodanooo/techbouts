@@ -649,6 +649,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                   </div>
                 )}
 {/* ///////////// COACH AREA ^^^^^^^^^ */}
+
 <div className="flex items-center space-x-4">
                   <Switch
                     id="payLater"
@@ -660,7 +661,14 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
 
 
-
+                <div className="flex items-center space-x-4">
+  <Switch
+    id="disable-registration"
+    checked={formData.disableRegistration}
+    onCheckedChange={handleSwitchChange('disableRegistration')}
+  />
+  <Label htmlFor="disable-registration">Disable Registration</Label>
+</div>
 
               </div>
             </div>

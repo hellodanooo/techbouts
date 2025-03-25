@@ -5,35 +5,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  
-} from '@/components/ui/tabs';
+import {Tabs, TabsList, TabsTrigger,} from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Loader2, Search, TrendingUp, Trophy, Users, MapPin, Globe, 
-  BarChart4, CircleUser, Info, Medal, Calendar
-} from 'lucide-react';
+import { Loader2, Search, TrendingUp, Trophy, Users, MapPin, Globe, BarChart4, CircleUser, Info, Medal, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  startAfter,
-  getDocs,
-  where,
-  QuerySnapshot,
-  DocumentData,
-  FirestoreError
-} from 'firebase/firestore';
+import { collection, query, orderBy, limit, startAfter, getDocs, where, QuerySnapshot, DocumentData, FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
-
 import Link from 'next/link'
 
 interface GymRecord {
