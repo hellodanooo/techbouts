@@ -1,6 +1,6 @@
 import { EventType } from '@/utils/types';
 import { doc, getDoc } from 'firebase/firestore';
-import { generateDocId } from '@/utils/eventManagement';
+import { generateDocId } from '@/utils/events/eventManagement';
 import { db } from '@/lib/firebase_pmt/config';
 
 export async function fetchEvents(): Promise<EventType[]> {

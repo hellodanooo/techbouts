@@ -115,8 +115,8 @@ import {
             pmt_id: pmtId,
             
             // Basic fight record stats
-            pmt_win: record.wins,
-            pmt_loss: record.losses,
+            pmt_win: record.win,
+            pmt_loss: record.loss,
             pmt_nc: record.nc, // No contests
             pmt_dq: record.dq, // Disqualifications
             
@@ -169,8 +169,8 @@ import {
             gender: record.gender || '',
             
             // Basic fight record stats
-            pmt_win: record.wins,
-            pmt_loss: record.losses,
+            pmt_win: record.win,
+            pmt_loss: record.loss,
             pmt_nc: record.nc,
             pmt_dq: record.dq,
             

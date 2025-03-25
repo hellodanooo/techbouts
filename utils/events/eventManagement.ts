@@ -1,8 +1,9 @@
 // utils/eventManagement.ts
 
 import { doc, getDoc, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase_techbouts/config';
-import { EventType } from './types';
+import { db } from '@/lib/firebase_techbouts/config';
+import { EventType } from '@/utils/types';
+
 
 const getEventsJson = async (): Promise<EventType[]> => {
   const docRef = doc(db, 'events', 'events_json');

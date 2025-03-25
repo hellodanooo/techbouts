@@ -120,7 +120,7 @@ export default function OfficialsApplication() {
         const { collection, doc, getDoc, setDoc } = (await import('firebase/firestore'));
         const { db } = (await import('@/lib/firebase_techbouts/config'));
   
-        const officialId = `${formData.first.toLowerCase()}${formData.last.toLowerCase()}${Math.floor(Math.random() * 10000)}`;
+        const officialId = `${formData.first.replace(/\s+/g, '').toLowerCase()}${formData.last.replace(/\s+/g, '').toLowerCase()}${Math.floor(Math.random() * 10000)}`;
   
         const officialsRef = collection(db, 'officials');
         const officialsDoc = doc(officialsRef, 'officials_json');

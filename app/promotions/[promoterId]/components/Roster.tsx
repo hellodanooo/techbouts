@@ -90,8 +90,8 @@ export default function Roster({ rosterData, isLoading = false }: RosterProps) {
                   <TableCell>{fighter.weightclass ? `${fighter.weightclass} lbs` : 'N/A'}</TableCell>
                   <TableCell>{fighter.age || 'N/A'}</TableCell>
                   <TableCell>
-                    {typeof fighter.wins === 'number' || typeof fighter.win === 'number' 
-                      ? `${fighter.wins || fighter.win || 0} fights` 
+                    {typeof fighter.win === 'number' || typeof fighter.win === 'number' 
+                      ? `${fighter.win || fighter.win || 0} fights` 
                       : 'N/A'}
                   </TableCell>
                   <TableCell>{fighter.years_exp || 'N/A'}</TableCell>

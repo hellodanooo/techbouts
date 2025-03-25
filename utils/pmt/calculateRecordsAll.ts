@@ -64,8 +64,8 @@ import {
     gym: string;
     email: string;
     weightclasses: number[];
-    wins: number;
-    losses: number;
+    win: number;
+    loss: number;
     nc: number;
     dq: number;
     bodykick: number;
@@ -217,8 +217,8 @@ import {
                 gym: fighter.gym?.toUpperCase() || '',
                 email: fighter.email || '',
                 weightclasses: [fighter.weightclass],
-                wins: 0,
-                losses: 0,
+                win: 0,
+                loss: 0,
                 nc: 0,
                 dq: 0,
                 bodykick: 0,
@@ -252,10 +252,10 @@ import {
               {
                 switch (fighter.result.toUpperCase()) {
                   case 'W':
-                    record.wins++;
+                    record.win++;
                     break;
                   case 'L':
-                    record.losses++;
+                    record.loss++;
                     break;
                   case 'NC':
                     record.nc++;

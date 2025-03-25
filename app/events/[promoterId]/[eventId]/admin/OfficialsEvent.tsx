@@ -380,7 +380,6 @@ const OfficialsEvent: FC<OfficialsEventProps> = ({ eventId, numMats, promoterId,
   );
 
 
-
   if (loadingError) {
     return (
       <Alert variant="destructive" className="mb-4">

@@ -139,11 +139,11 @@ const PmtFighterTable: React.FC<PmtFighterTableProps> = ({ fighters, editable, o
               <th className="p-2 cursor-pointer" onClick={() => handleSort('gym')}>
                 Gym <SortIcon column="gym" />
               </th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('wins')}>
-                Wins <SortIcon column="wins" />
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('win')}>
+                Wins <SortIcon column="win" />
               </th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('losses')}>
-                Losses <SortIcon column="losses" />
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('loss')}>
+                Losses <SortIcon column="loss" />
               </th>
             
               {editable && <th className="p-2">Actions</th>}
@@ -160,8 +160,8 @@ const PmtFighterTable: React.FC<PmtFighterTableProps> = ({ fighters, editable, o
                 <td className="p-2">{fighter.last}</td>
                 <td className="p-2">{fighter.weightclass}</td>
                 <td className="p-2">{fighter.gym}</td>
-                <td className="p-2">{fighter.wins}</td>
-                <td className="p-2">{fighter.losses}</td>
+                <td className="p-2">{fighter.win}</td>
+                <td className="p-2">{fighter.loss}</td>
                 {editable && (
                   <td className="p-2">
                     <button

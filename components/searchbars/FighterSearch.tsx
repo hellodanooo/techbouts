@@ -110,7 +110,7 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
               photo: data.photo || '',
               photo_package: data.photo_package || false,
               docId: doc.id,
-              fights: data.pmt_fights || data.fights || [],
+              pmt_fights: data.pmt_fights || data.fights || [],
               payment_info: {
                 paymentIntentId: '',
                 paymentAmount: 0,

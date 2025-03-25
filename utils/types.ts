@@ -1,211 +1,4 @@
-
-export type GymRecord = {
-  boysWin: number;
-  boysLoss: number;
-  girlsWin: number;
-  girlsLoss: number;
-  menWin: number;
-  menLoss: number;
-  womanWin: number;
-  womanLoss: number;
-  address: string;
-  city: string;
-  state: string;
-  id: string;
-  name: string;
-  pmt_wins?: number;
-  pmt_losses?: number;
-  pmt_nc?: number;
-  pmt_dq?: number;
-  wins: number;
-  losses: number;
-  nc: number;
-  dq: number;
-  totalFighters: number;
-  pmt_total_fighters?: number;
-  stats?: {
-    bodykick: number;
-    boxing: number;
-    clinch: number;
-    defense: number;
-    footwork: number;
-    headkick: number;
-    kicks: number;
-    knees: number;
-    legkick: number;
-    ringawareness: number;
-  };
-  pmt_stats?: {
-    bodykick: number;
-    boxing: number;
-    clinch: number;
-    defense: number;
-    footwork: number;
-    headkick: number;
-    kicks: number;
-    knees: number;
-    legkick: number;
-    ringawareness: number;
-  };
-  yearlyStats?: {
-    [year: string]: {
-      wins: number;
-      losses: number;
-      nc: number;
-      dq: number;
-      tournament_wins: number;
-      tournament_losses: number;
-      total_fighters: number;
-      fights: number;
-    }
-  };
-  pmt_yearly_stats?: {
-    [year: string]: {
-      wins: number;
-      losses: number;
-      nc: number;
-      dq: number;
-      tournament_wins: number;
-      tournament_losses: number;
-      total_fighters: number;
-      fights: number;
-      by_location?: {
-        [locationKey: string]: {
-          wins: number;
-          losses: number;
-          nc: number;
-          dq: number;
-          tournament_wins: number;
-          tournament_losses: number;
-          fights: number;
-        }
-      }
-    }
-  };
-  pmt_location_stats?: {
-    [locationKey: string]: {
-      wins: number;
-      losses: number;
-      nc: number;
-      dq: number;
-      tournament_wins: number;
-      tournament_losses: number;
-      fights: number;
-    }
-  };
-  pmt_top_locations?: Array<{
-    name: string;
-    win_percentage: number;
-    wins: number;
-    losses: number;
-    fights: number;
-  }>;
-  fighters?: Array<{
-    pmt_id: string;
-    first: string;
-    last: string;
-    email: string;
-  }>;
-  pmt_fighters?: Array<{
-    pmt_id: string;
-    first: string;
-    last: string;
-    email: string;
-  }>;
-  lastUpdated: string;
-  source: string;
-}
-
-
-export type Official = {
-  email: string;
-  city: string;
-  first: string;
-  last: string;
-  payment: string;
-  paymentId: string;
-  phone: string;
-  photo: string;
-  position?: string;
-  state: string;
-  official_id: string;
-  id: string;
-  bouts_judged: number;
-  bouts_reffed: number;
-  facebookUrl: string;
-  mat?: number;
-  location?: string;
-  judgedBefore: boolean;
-  muayThaiExperience: string;
-  paymentType: string;
-  officialId: string;
-  quizScore?: number;
-
-}
-
-interface EmailCampaign {
-  id: string;
-  promotion: string;
-  subject: string;
-  sentAt: string;
-  totalSent: number;
-  totalOpened: number;
-  sentEmails: string[];
-  openedEmails: string[];
-  isTest: boolean;
-}
-
-export interface PmtFighterRecord {
-  pmt_id: string;
-  first: string;
-  last: string;
-  gym?: string;
-  email?: string;
-  age?: number;
-  weightclass?: number; // Single weight class instead of an array
-  wins?: number;
-  win?: number;
-  losses?: number;
-  loss?: number;
-  tournament_wins?: number;
-  tournament_losses?: number;
-  nc?: number;
-  dq?: number;
-  lastUpdated?: string;
-
-  // Skill Ratings (Optional)
-  bodykick?: number;
-  boxing?: number;
-  clinch?: number;
-  defense?: number;
-  footwork?: number;
-  headkick?: number;
-  kicks?: number;
-  knees?: number;
-  legkick?: number;
-  ringawareness?: number;
-
-  // Fight History
-  fights?: Array<{
-    eventId: string;
-    eventName: string;
-    date: string;
-    result: string;
-    weightclass: number;
-    opponent_id?: string;
-    bout_type: string;
-    bodykick?: number;
-    boxing?: number;
-    clinch?: number;
-    defense?: number;
-    footwork?: number;
-    headkick?: number;
-    kicks?: number;
-    knees?: number;
-    legkick?: number;
-    ringawareness?: number;
-  }>;
-}
+// utils/types.ts
 
 export interface FullContactFighter {
   // Basic Information
@@ -276,33 +69,18 @@ export interface FullContactFighter {
     paymentCurrency: string | '';
   };
   eventIds?: string[];
-    // Fight History
-    fights?: Array<{
-      eventId: string;
-      eventName: string;
-      date: string;
-      result: string;
-      weightclass: number;
-      opponent_id?: string;
-      bout_type: string;
-      bodykick?: number;
-      boxing?: number;
-      clinch?: number;
-      defense?: number;
-      footwork?: number;
-      headkick?: number;
-      kicks?: number;
-      knees?: number;
-      legkick?: number;
-      ringawareness?: number;
-    }>;
- 
-    bouts?: BoutData[];
-    boutRefs?: string[];
+
+  pmt_fights?: PMTFight[];
+
+  fullContactbouts?: FullContactBoutData[];
+  boutRefs?: string[];
 }
 
 
-export interface BoutData {
+
+export interface FullContactBoutData {
+  eventId: string;
+  eventName: string;
   url: string;
   namePresent: boolean;
   date: string;
@@ -333,10 +111,311 @@ export interface BoutData {
   redGymLogo: string;
   blueGymLogo: string;
   resultVerified: boolean;
-  
-
+  weightclass: number;
+  bout_type: 'MT' | 'Boxing' | 'MMA';
 
 }
+
+
+export interface PMTFight {
+  eventId: string;
+  eventName: string;
+  date: string;
+  result: string;
+  weightclass: number;
+  opponent_id?: string;
+  bout_type: string;
+  bodykick?: number;
+  boxing?: number;
+  clinch?: number;
+  defense?: number;
+  footwork?: number;
+  headkick?: number;
+  kicks?: number;
+  knees?: number;
+  legkick?: number;
+  ringawareness?: number;
+}
+
+
+
+export interface EventType {
+  competition_type: 'FightCard' | 'Tournament';
+  event_name: string;
+  venue_name?: string;
+  address: string;
+  eventId: string;
+  id: string;
+  city: string;
+  state: string;
+  date: string;
+  flyer: string;
+  coordinates?: { latitude: number; longitude: number };
+  currency?: string;
+  disableRegistration: boolean;
+  registration_link?: string;
+  matches_link?: string;
+  weighin_date?: string;
+  weighin_start_time?: string;
+  weighin_end_time?: string;
+  rules_meeting_time?: string;
+  bouts_start_time?: string;
+  docId?: string;
+  doors_open?: string;
+  spectator_info?: string;
+  registration_enabled: boolean;
+  registration_fee: number;
+  tickets_enabled: boolean;
+  ticket_price: number;
+  ticket_price_description?: string;
+  ticket_price2?: number;
+  ticket_price2_description?: string;
+  event_details?: string;
+  coach_price?: number;
+  coach_enabled?: boolean;
+  photos_enabled?: boolean;
+  photos_price?: number;
+  sanctioning: string;
+  sanctioningEmail?: string;
+  email: string;
+  promoterId: string;
+  promoterEmail: string;
+  promotionName: string;
+  status?: string;
+  street?: string;
+  postal_code?: string;
+  country: string;
+  colonia?: string;
+  municipality?: string;
+  ticket_enabled?: boolean;
+  ticket_system_option?: 'inHouse' | 'thirdParty' | 'none';
+  ticket_link?: string;
+  zip?: string;
+  name?: string;
+  numMats: number;
+  locale: string;
+  photoPackagePrice: number;
+  coachRegPrice: number;
+  photoPackageEnabled: boolean;
+
+  payLaterEnabled?: boolean;
+  sanctioningLogoUrl?: string;
+  promotionLogoUrl?: string;
+  stripeAccountId?: string;
+}
+
+
+
+
+
+
+
+
+export type GymRecord = {
+  boysWin: number;
+  boysLoss: number;
+  girlsWin: number;
+  girlsLoss: number;
+  menWin: number;
+  menLoss: number;
+  womanWin: number;
+  womanLoss: number;
+  address: string;
+  city: string;
+  state: string;
+  id: string;
+  name: string;
+  pmt_win?: number;
+  pmt_loss?: number;
+  pmt_nc?: number;
+  pmt_dq?: number;
+  win: number;
+  loss: number;
+  nc: number;
+  dq: number;
+  totalFighters: number;
+  pmt_total_fighters?: number;
+  stats?: {
+    bodykick: number;
+    boxing: number;
+    clinch: number;
+    defense: number;
+    footwork: number;
+    headkick: number;
+    kicks: number;
+    knees: number;
+    legkick: number;
+    ringawareness: number;
+  };
+  pmt_stats?: {
+    bodykick: number;
+    boxing: number;
+    clinch: number;
+    defense: number;
+    footwork: number;
+    headkick: number;
+    kicks: number;
+    knees: number;
+    legkick: number;
+    ringawareness: number;
+  };
+  yearlyStats?: {
+    [year: string]: {
+      win: number;
+      loss: number;
+      nc: number;
+      dq: number;
+
+      total_fighters: number;
+      fights: number;
+    }
+  };
+  pmt_yearly_stats?: {
+    [year: string]: {
+      win: number;
+      loss: number;
+      nc: number;
+      dq: number;
+ 
+      total_fighters: number;
+      fights: number;
+      by_location?: {
+        [locationKey: string]: {
+          win: number;
+          loss: number;
+          nc: number;
+          dq: number;
+    
+          fights: number;
+        }
+      }
+    }
+  };
+  pmt_location_stats?: {
+    [locationKey: string]: {
+      win: number;
+      loss: number;
+      nc: number;
+      dq: number;
+      fights: number;
+    }
+  };
+  pmt_top_locations?: Array<{
+    name: string;
+    win_percentage: number;
+    win: number;
+    loss: number;
+    fights: number;
+  }>;
+  fighters?: Array<{
+    pmt_id: string;
+    first: string;
+    last: string;
+    email: string;
+  }>;
+  pmt_fighters?: Array<{
+    pmt_id: string;
+    first: string;
+    last: string;
+    email: string;
+  }>;
+  lastUpdated: string;
+  source: string;
+}
+
+
+export type Official = {
+  email: string;
+  city: string;
+  first: string;
+  last: string;
+  payment: string;
+  paymentId: string;
+  phone: string;
+  photo: string;
+  position?: string;
+  state: string;
+  official_id: string;
+  id: string;
+  bouts_judged: number;
+  bouts_reffed: number;
+  facebookUrl: string;
+  mat?: number;
+  location?: string;
+  judgedBefore: boolean;
+  muayThaiExperience: string;
+  paymentType: string;
+  officialId: string;
+  quizScore?: number;
+
+}
+
+interface EmailCampaign {
+  id: string;
+  promotion: string;
+  subject: string;
+  sentAt: string;
+  totalSent: number;
+  totalOpened: number;
+  sentEmails: string[];
+  openedEmails: string[];
+  isTest: boolean;
+}
+
+export interface PmtFighterRecord {
+  pmt_id: string;
+  first: string;
+  last: string;
+  gym?: string;
+  email?: string;
+  age?: number;
+  weightclass?: number; // Single weight class instead of an array
+  win?: number;
+
+  loss?: number;
+  tournament_win?: number;
+  tournament_loss?: number;
+  nc?: number;
+  dq?: number;
+  lastUpdated?: string;
+
+  // Skill Ratings (Optional)
+  bodykick?: number;
+  boxing?: number;
+  clinch?: number;
+  defense?: number;
+  footwork?: number;
+  headkick?: number;
+  kicks?: number;
+  knees?: number;
+  legkick?: number;
+  ringawareness?: number;
+
+  // Fight History
+  fights?: Array<{
+    eventId: string;
+    eventName: string;
+    date: string;
+    result: string;
+    weightclass: number;
+    opponent_id?: string;
+    bout_type: string;
+    bodykick?: number;
+    boxing?: number;
+    clinch?: number;
+    defense?: number;
+    footwork?: number;
+    headkick?: number;
+    kicks?: number;
+    knees?: number;
+    legkick?: number;
+    ringawareness?: number;
+  }>;
+}
+
+
+
+
 
 // Existing FightRecord interface
 export interface FightRecord {
@@ -464,8 +543,8 @@ export interface BaseFighter {
   last: string;
   gym: string;
   gender: string;
-  wins: number;
-  losses: number;
+  win: number;
+  loss: number;
   age: number;
   dob: string;
   email: string;
@@ -545,10 +624,10 @@ export interface ResultsFighter extends BaseFighter {
   other?: string;
   championship_result?: string;
   bracket?: number;
-  ikf_wins?: number;
-  ikf_losses?: number;
-  win?: number;
-  loss?: number;
+  ikf_win?: number;
+  ikf_loss?: number;
+ 
+
 }
 
 export interface FighterProfile {
@@ -556,8 +635,8 @@ export interface FighterProfile {
   first: string;
   last: string;
   photo?: string;
-  wins: number;
-  losses: number;
+  win: number;
+  loss: number;
   gym: string;
   weightclass: number;
   age: number;

@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { addDoc, updateDoc, doc, getDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
-import { Promoter, BoutData, FullContactFighter } from '@/utils/types'; 
+import { Promoter, FullContactBoutData, FullContactFighter } from '@/utils/types';
 import { handleSearch } from '@/utils/scrape/scrapeBout';
 import FighterSearch from '@/components/searchbars/FighterSearch';
+import { EventType } from '@/utils/types';
 
-
-
+// PICKUP HERE TO IMPORT THE ADDRESS GOOGLE MAP TO GET THE CITY STATE FOR THE EVENT ID
+// import { generateDocId } from '@/utils/events/eventManagement';
+// THEN HERE TO INCORPARATE THE GYM SEARCH, OR TO CREATE A NEW GYM PROFILE
 //import GymSearch from '@/components/searchbars/GymSearch'; // You'll need to create/import this component
 
 
@@ -27,6 +29,7 @@ interface BoutSearchProps {
   firstName: string;
   lastName: string;
   fighterId: string;
+  gym: string;
 }
 
 interface SearchResults {
@@ -53,6 +56,7 @@ interface Gym {
 const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId }) => {
   const [url, setUrl] = useState('');
   const [date, setDate] = useState('');
+  const [eventName, setEventName] = useState('');
   const [opponentFirstName, setOpponentFirstName] = useState('');
   const [opponentLastName, setOpponentLastName] = useState('');
   const [sanctioningBody, setSanctioningBody] = useState('');
@@ -71,7 +75,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
   const [promotionId, setPromotionId] = useState('');
   const [isLoadingPromotions, setIsLoadingPromotions] = useState(false);
   const [blueCornerId, setBlueCornerId] = useState('');
-  
+
   // New fields from BoutData interface
   const [redGymId, setRedGymId] = useState('');
   const [blueGymId, setBlueGymId] = useState('');
@@ -81,7 +85,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
   const [blueFighterPhoto, setBlueFighterPhoto] = useState('');
   const [redGymLogo, setRedGymLogo] = useState('');
   const [blueGymLogo, setBlueGymLogo] = useState('');
-  
+
   // Add state for selected opponent
   const [selectedOpponent, setSelectedOpponent] = useState<Fighter | null>(null);
   const [showManualOpponentInput, setShowManualOpponentInput] = useState(true);
@@ -91,6 +95,15 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
   const [selectedBlueGym, setSelectedBlueGym] = useState<Gym | null>(null);
   const [showManualRedGymInput, setShowManualRedGymInput] = useState(true);
   const [showManualBlueGymInput, setShowManualBlueGymInput] = useState(true);
+
+
+  const [eventNameInput, setEventNameInput] = useState('');
+  const [eventNameResults, setEventNameResults] = useState<EventType[]>([]);
+  const [showEventNameDropdown, setShowEventNameDropdown] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState('');
+  const [isLoadingEventNames, setIsLoadingEventNames] = useState(false);
+
+
 
   // Function to handle when an opponent is selected from FighterSearch
   const handleOpponentSelect = (fighter: FullContactFighter) => {
@@ -109,7 +122,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
 
 
 
- 
+
   // Function to toggle between fighter search and manual input
   const toggleOpponentInput = () => {
     setShowManualOpponentInput(!showManualOpponentInput);
@@ -163,14 +176,14 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
       if (!response.ok) {
         throw new Error('Failed to fetch promoters');
       }
-      
+
       const data = await response.json();
-      
+
       // Filter promoters that match the search text
-      const filteredPromoters = data.promoters.filter((promoter: Promoter) => 
+      const filteredPromoters = data.promoters.filter((promoter: Promoter) =>
         promoter.promotionName?.toLowerCase().includes(searchText.toLowerCase())
       );
-      
+
       setPromotionResults(filteredPromoters);
       setShowPromotionDropdown(filteredPromoters.length > 0);
     } catch (error) {
@@ -181,17 +194,59 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
     }
   };
 
+  const searchEventNames = async (input: string) => {
+    if (input.length < 3 || !promotionId) return;
+    setIsLoadingEventNames(true);
+    try {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+
+      const filtered = (data.events as EventType[]).filter(
+        (event) =>
+          event.promoterId === promotionId &&
+          event.event_name?.toLowerCase().includes(input.toLowerCase())
+      );
+
+      setEventNameResults(filtered);
+      setShowEventNameDropdown(filtered.length > 0);
+    } catch (err) {
+      console.error('Failed to fetch events', err);
+    } finally {
+      setIsLoadingEventNames(false);
+    }
+  };
+
+  // Handle input change for event name
+  const handleEventNameInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEventNameInput(value);
+    setEventName(value);
+    if (value.length >= 3) {
+      searchEventNames(value);
+    } else {
+      setEventNameResults([]);
+      setShowEventNameDropdown(false);
+    }
+  };
+
+  const handleSelectEvent = (event: EventType) => {
+    setEventNameInput(event.event_name);
+    setEventName(event.event_name);
+    setSelectedEventId(event.eventId);
+    setShowEventNameDropdown(false);
+  };
+
   // Handle input change for promotion name
   const handlePromotionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPromotionNameInput(value);
     setPromotionName(value); // Also update the actual promotion name
-    
+
     // Reset promotionId if the input is cleared
     if (value === '') {
       setPromotionId('');
     }
-    
+
     // Search promotions when input length is >= 3
     if (value.length >= 3) {
       searchPromotions(value);
@@ -240,7 +295,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
 
 
 
-  const saveBoutData = async (boutData: BoutData) => {
+  const saveBoutData = async (boutData: FullContactBoutData) => {
     setIsSaving(true);
     setSaveMessage(null);
 
@@ -256,15 +311,15 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
     try {
       // Add the bout document to the "techbouts_verified_bouts" collection
       const boutCollectionRef = collection(db, 'techbouts_verified_bouts');
-      
+
       // Add the document and get the reference
       const newBoutDocRef = await addDoc(boutCollectionRef, boutData);
-      
+
       // Optionally, you might want to add a reference to this bout in the fighter's document
       // This allows quick access to a fighter's bouts without needing to query the entire collection
       const fighterRef = doc(db, 'techbouts_fighters', fighterId);
       const fighterDoc = await getDoc(fighterRef);
-      
+
       if (fighterDoc.exists()) {
         // Add the new bout ID to the fighter's bout references
         const boutRefs = fighterDoc.data().boutRefs || [];
@@ -278,7 +333,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
         try {
           const opponentRef = doc(db, 'techbouts_fighters', boutData.blueCornerId);
           const opponentDoc = await getDoc(opponentRef);
-          
+
           if (opponentDoc.exists()) {
             // Add the new bout ID to the opponent's bout references
             const boutRefs = opponentDoc.data().boutRefs || [];
@@ -291,11 +346,15 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
         }
       }
 
+      if (eventName) {
+
+      }
+
       setSaveMessage('Bout data saved successfully!');
 
       // Clear form after successful save
       resetForm();
-      
+
     } catch (error) {
       console.error('Error saving bout data:', error);
       setSaveMessage('Error saving bout data. Please try again.');
@@ -307,6 +366,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
   const resetForm = () => {
     setUrl('');
     setDate('');
+    setEventName('')
     setOpponentFirstName('');
     setOpponentLastName('');
     setPromotionName('');
@@ -335,61 +395,50 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
 
 
 
-  const constructBoutData = (
+  const constructFullContactBoutData = (
     url: string,
     searchResults: SearchResults & { resultVerified: boolean },
-    inputDate: string
-  ): BoutData => {
-  
-   
-  
-
+    inputDate: string,
+    eventId: string
+  ): FullContactBoutData => {
     return {
-      // Fighter information
       redCornerId: fighterId,
       redFighterName: `${firstName} ${lastName}`,
       blueFighterName: `${opponentFirstName} ${opponentLastName}`,
       opponentName: `${opponentFirstName} ${opponentLastName}`,
-      
-      // Bout details
       url: url,
       date: inputDate,
       redResult: redResult,
       blueResult: blueResult,
       promotionName: promotionName,
       sanctioningBody: sanctioningBody,
-      
-      // Gym information
       redGymId: redGymId,
       blueGymId: blueGymId,
       redGymName: redGymName,
       blueGymName: blueGymName,
-      
-      // Media
       redFighterPhoto: redFighterPhoto,
       blueFighterPhoto: blueFighterPhoto,
       redGymLogo: redGymLogo,
       blueGymLogo: blueGymLogo,
-      
-      // IDs for relationships
       blueCornerId: blueCornerId,
-      
-      // Verification fields
       namePresent: searchResults.fighterName,
       datePresent: searchResults.date,
       promotionPresent: searchResults.promotionName,
       sanctioningPresent: searchResults.sanctioningBody,
       opponentPresent: searchResults.opponentName,
       resultVerified: searchResults.resultVerified,
-      
-      // Additional metadata
       timestamp: new Date().toISOString(),
       inputDate: inputDate,
       inputOpponentFirst: opponentFirstName,
-      inputOpponentLast: opponentLastName
+      inputOpponentLast: opponentLastName,
+      eventId,
+  
+      // ✅ Add the missing required fields
+      eventName: eventName || '',       // From state
+      weightclass: 0,                   // Set your default or real value here
+      bout_type: 'MT',                    // If you have this info, populate it
     };
   };
-
 
 
 
@@ -421,18 +470,114 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
 
   return (
     <div className="space-y-6">
+      <div className="text-center">Enter Bout Details Here</div><br></br>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
+
+
+
+
+
+        {/* Promotion Selection Section */}
+        <div className="relative">
           <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Enter URL to search"
+            type="text"
+            value={promotionNameInput}
+            onChange={handlePromotionInputChange}
+            placeholder="Promotion Name"
+            className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
+            required
+            onClick={(e) => {
+              e.stopPropagation();
+              if (promotionNameInput.length >= 3) {
+                setShowPromotionDropdown(promotionResults.length > 0);
+              }
+            }}
+          />
+
+          {showPromotionDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+              {isLoadingPromotions ? (
+                <div className="p-2 text-center text-gray-500">Loading...</div>
+              ) : promotionResults.length === 0 ? (
+                <div className="p-2 text-center text-gray-500">No promotions found</div>
+              ) : (
+                promotionResults.map((promoter) => (
+                  <div
+                    key={promoter.promoterId}
+                    className="p-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectPromotion(promoter);
+                    }}
+                  >
+                    {promoter.logo && (
+                      <img src={promoter.logo} alt="" className="w-6 h-6 mr-2 rounded-full" />
+                    )}
+                    <span>{promoter.promotionName}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+
+        {/* Event Name (eventId) Selection Section */}
+        <div className="relative">
+          <input
+            type="text"
+            value={eventNameInput}
+            onChange={handleEventNameInputChange}
+            placeholder="Event Name"
+            className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
+            required
+            onClick={(e) => {
+              e.stopPropagation();
+              if (eventNameInput.length >= 3) {
+                setShowEventNameDropdown(eventNameResults.length > 0);
+              }
+            }}
+          />
+          {showEventNameDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+              {isLoadingEventNames ? (
+                <div className="p-2 text-center text-gray-500">Loading...</div>
+              ) : eventNameResults.length === 0 ? (
+                <div className="p-2 text-center text-gray-500">No events found</div>
+              ) : (
+                eventNameResults.map((event) => (
+                  <div
+                    key={event.eventId}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectEvent(event);
+                    }}
+                  >
+                    {event.event_name} ({event.date})
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+
+        <div>
+          <input
+            type="text"
+            value={sanctioningBody}
+            onChange={(e) => setSanctioningBody(e.target.value)}
+            placeholder="Sanctioning Body"
             className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
             required
           />
         </div>
-  
+
+
+
+
         <div>
           <input
             type="date"
@@ -443,25 +588,43 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
             required
           />
         </div>
-  
+
+
+
+
+        {/* URL Search */}
+        <div className="md:col-span-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Enter URL to search"
+            className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
+            required
+          />
+        </div>
+
+
+
         <select
           value={redResult}
           onChange={(e) => setRedResult(e.target.value as 'W' | 'L' | 'NC' | 'DQ' | 'DRAW')}
           className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
           required
         >
-          <option value="W">Win (Red Corner)</option>
-          <option value="L">Loss (Red Corner)</option>
+          <option value="W">Decision(Red Corner)</option>
+          <option value="W">Win</option>
+          <option value="L">Loss</option>
           <option value="NC">No Contest</option>
           <option value="DQ">Disqualification</option>
           <option value="DRAW">Draw</option>
         </select>
-  
+
         {/* Opponent Selection Section */}
         <div className="md:col-span-2 p-4 border border-[#d4c5b1] rounded-lg bg-[#f8f5f0]">
           <div className="flex justify-start items-center mb-3">
             <h3 className="font-medium">Opponent Information (Blue Corner)</h3>
-            <button 
+            <button
               type="button"
               onClick={toggleOpponentInput}
               className="text-sm text-[#8B7355] hover:underline ml-10"
@@ -469,7 +632,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
               {showManualOpponentInput ? "Search For Opponent" : "Enter Manually"}
             </button>
           </div>
-          
+
           {showManualOpponentInput ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -504,9 +667,9 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
             </div>
           ) : (
             <div>
-<FighterSearch onFighterSelect={handleOpponentSelect} />
+              <FighterSearch onFighterSelect={handleOpponentSelect} />
 
-{selectedOpponent && (
+              {selectedOpponent && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm font-medium">Selected: {selectedOpponent.firstName} {selectedOpponent.lastName}</p>
                   <p className="text-xs text-gray-600">Fighter ID: {selectedOpponent.fighterId}</p>
@@ -520,7 +683,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
         <div className="p-4 border border-[#d4c5b1] rounded-lg bg-[#f8f5f0]">
           <div className="flex justify-start items-center mb-3">
             <h3 className="font-medium">Red Corner Gym</h3>
-            <button 
+            <button
               type="button"
               onClick={toggleRedGymInput}
               className="text-sm text-[#8B7355] hover:underline ml-10"
@@ -528,7 +691,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
               {showManualRedGymInput ? "Search For Gym" : "Enter Manually"}
             </button>
           </div>
-          
+
           {showManualRedGymInput ? (
             <div className="space-y-3">
               <input
@@ -564,7 +727,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
         <div className="p-4 border border-[#d4c5b1] rounded-lg bg-[#f8f5f0]">
           <div className="flex justify-start items-center mb-3">
             <h3 className="font-medium">Blue Corner Gym</h3>
-            <button 
+            <button
               type="button"
               onClick={toggleBlueGymInput}
               className="text-sm text-[#8B7355] hover:underline ml-10"
@@ -572,7 +735,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
               {showManualBlueGymInput ? "Search For Gym" : "Enter Manually"}
             </button>
           </div>
-          
+
           {showManualBlueGymInput ? (
             <div className="space-y-3">
               <input
@@ -603,60 +766,14 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
             </div>
           )}
         </div>
-  
-        <div className="relative">
-          <input
-            type="text"
-            value={promotionNameInput}
-            onChange={handlePromotionInputChange}
-            placeholder="Promotion Name"
-            className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
-            required
-            onClick={(e) => {
-              e.stopPropagation();
-              if (promotionNameInput.length >= 3) {
-                setShowPromotionDropdown(promotionResults.length > 0);
-              }
-            }}
-          />
-          
-          {showPromotionDropdown && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-              {isLoadingPromotions ? (
-                <div className="p-2 text-center text-gray-500">Loading...</div>
-              ) : promotionResults.length === 0 ? (
-                <div className="p-2 text-center text-gray-500">No promotions found</div>
-              ) : (
-                promotionResults.map((promoter) => (
-                  <div
-                    key={promoter.promoterId}
-                    className="p-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectPromotion(promoter);
-                    }}
-                  >
-                    {promoter.logo && (
-                      <img src={promoter.logo} alt="" className="w-6 h-6 mr-2 rounded-full" />
-                    )}
-                    <span>{promoter.promotionName}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-        
-        <div>
-          <input
-            type="text"
-            value={sanctioningBody}
-            onChange={(e) => setSanctioningBody(e.target.value)}
-            placeholder="Sanctioning Body"
-            className="w-full px-4 py-3 border border-[#d4c5b1] rounded-lg focus:ring-2 focus:ring-[#8B7355] focus:border-[#8B7355] bg-[#f8f5f0]"
-            required
-          />
-        </div>
+
+
+
+
+
+
+
+
 
         {/* Red Fighter Photo */}
         <div>
@@ -669,7 +786,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
           />
         </div>
       </div>
-  
+
       <button
         onClick={handleSearchClick}
         disabled={isSearching || !url || !date || (!selectedOpponent && (!opponentFirstName || !opponentLastName))}
@@ -689,15 +806,14 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
           </div>
           <div className="space-y-1 text-sm">
             {scrapeStatus.map((status, index) => (
-              <div 
-                key={index} 
-                className={`py-1 ${
-                  status.includes('✅') 
-                    ? 'text-green-600' 
-                    : status.includes('❌') 
-                      ? 'text-red-600' 
-                      : 'text-gray-600'
-                }`}
+              <div
+                key={index}
+                className={`py-1 ${status.includes('✅')
+                  ? 'text-green-600'
+                  : status.includes('❌')
+                    ? 'text-red-600'
+                    : 'text-gray-600'
+                  }`}
               >
                 {status}
               </div>
@@ -710,7 +826,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
         <div className="mt-4 p-4 bg-white rounded-lg shadow border border-[#d4c5b1]">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">Scraper Results</h3>
-            <button 
+            <button
               onClick={() => setShowScrapeDetails(!showScrapeDetails)}
               className="text-sm text-[#8B7355] hover:underline"
             >
@@ -720,22 +836,21 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
           {showScrapeDetails && (
             <div className="space-y-1 text-sm max-h-64 overflow-y-auto">
               {scrapeStatus.map((status, index) => (
-                <div 
-                  key={index} 
-                  className={`py-1 ${
-                    status.includes('✅') 
-                      ? 'text-green-600' 
-                      : status.includes('❌') 
-                        ? 'text-red-600' 
-                        : 'text-gray-600'
-                  }`}
+                <div
+                  key={index}
+                  className={`py-1 ${status.includes('✅')
+                    ? 'text-green-600'
+                    : status.includes('❌')
+                      ? 'text-red-600'
+                      : 'text-gray-600'
+                    }`}
                 >
                   {status}
                 </div>
               ))}
             </div>
           )}
-          
+
           {/* Only show the error message if there was actually an error */}
           {scrapeStatus.some(status => status.includes('❌')) && (
             <div className="mt-3 text-center text-red-600 font-medium">
@@ -749,27 +864,26 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
         <div className="mt-4 p-4 bg-white rounded-lg shadow">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">Search Results</h3>
-            <button 
+            <button
               onClick={() => setShowScrapeDetails(!showScrapeDetails)}
               className="text-sm text-[#8B7355] hover:underline"
             >
               {showScrapeDetails ? 'Hide Details' : 'Show Scraper Details'}
             </button>
           </div>
-          
+
           {showScrapeDetails && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-64 overflow-y-auto">
               <div className="space-y-1 text-sm">
                 {scrapeStatus.map((status, index) => (
-                  <div 
-                    key={index} 
-                    className={`py-1 ${
-                      status.includes('✅') 
-                        ? 'text-green-600' 
-                        : status.includes('❌') 
-                          ? 'text-red-600' 
-                          : 'text-gray-600'
-                    }`}
+                  <div
+                    key={index}
+                    className={`py-1 ${status.includes('✅')
+                      ? 'text-green-600'
+                      : status.includes('❌')
+                        ? 'text-red-600'
+                        : 'text-gray-600'
+                      }`}
                   >
                     {status}
                   </div>
@@ -777,40 +891,40 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
               </div>
             </div>
           )}
-          
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span>Fighter Name ({firstName} {lastName})</span>
-              {searchResults.fighterName ? 
-                <CheckCircle className="text-green-500 w-5 h-5" /> : 
+              {searchResults.fighterName ?
+                <CheckCircle className="text-green-500 w-5 h-5" /> :
                 <XCircle className="text-red-500 w-5 h-5" />
               }
             </div>
             <div className="flex items-center justify-between">
               <span>Opponent Name ({opponentFirstName} {opponentLastName})</span>
-              {searchResults.opponentName ? 
-                <CheckCircle className="text-green-500 w-5 h-5" /> : 
+              {searchResults.opponentName ?
+                <CheckCircle className="text-green-500 w-5 h-5" /> :
                 <XCircle className="text-red-500 w-5 h-5" />
               }
             </div>
             <div className="flex items-center justify-between">
               <span>Date ({date})</span>
-              {searchResults.date ? 
-                <CheckCircle className="text-green-500 w-5 h-5" /> : 
+              {searchResults.date ?
+                <CheckCircle className="text-green-500 w-5 h-5" /> :
                 <XCircle className="text-red-500 w-5 h-5" />
               }
             </div>
             <div className="flex items-center justify-between">
               <span>Promotion ({promotionName})</span>
-              {searchResults.promotionName ? 
-                <CheckCircle className="text-green-500 w-5 h-5" /> : 
+              {searchResults.promotionName ?
+                <CheckCircle className="text-green-500 w-5 h-5" /> :
                 <XCircle className="text-red-500 w-5 h-5" />
               }
             </div>
             <div className="flex items-center justify-between">
               <span>Sanctioning Body ({sanctioningBody})</span>
-              {searchResults.sanctioningBody ? 
-                <CheckCircle className="text-green-500 w-5 h-5" /> : 
+              {searchResults.sanctioningBody ?
+                <CheckCircle className="text-green-500 w-5 h-5" /> :
                 <XCircle className="text-red-500 w-5 h-5" />
               }
             </div>
@@ -818,8 +932,8 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
             <div className="flex flex-col space-y-2">
               <div className="flex items-center justify-between">
                 <span>Fight Result ({redResult})</span>
-                {searchResults.resultVerified ? 
-                  <CheckCircle className="text-green-500 w-5 h-5" /> : 
+                {searchResults.resultVerified ?
+                  <CheckCircle className="text-green-500 w-5 h-5" /> :
                   <XCircle className="text-red-500 w-5 h-5" />
                 }
               </div>
@@ -830,15 +944,16 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
               )}
             </div>
           </div>
-          
+
           <div className="mt-4 space-y-2">
             <button
               onClick={() => {
                 if (searchResults) {
-                  const boutData = constructBoutData(
+                  const boutData = constructFullContactBoutData(
                     url,
                     searchResults,
-                    date
+                    date,
+                    selectedEventId
                   );
                   saveBoutData(boutData);
                 } else {
@@ -852,11 +967,10 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ firstName, lastName, fighterId 
             </button>
 
             {saveMessage && (
-              <div className={`p-3 rounded-lg text-center ${
-                saveMessage.includes('success') 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
-              }`}>
+              <div className={`p-3 rounded-lg text-center ${saveMessage.includes('success')
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+                }`}>
                 {saveMessage}
               </div>
             )}

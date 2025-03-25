@@ -296,7 +296,7 @@ export default function TransferPmtToTechbouts() {
                                 <TableCell>{fighter.pmt_id}</TableCell>
                                 <TableCell>{fighter.gym}</TableCell>
                                 <TableCell className="text-right">
-                                  {fighter.wins}-{fighter.losses}
+                                  {fighter.win}-{fighter.loss}
                                   {fighter.nc > 0 && `-${fighter.nc}NC`}
                                   {fighter.dq > 0 && `-${fighter.dq}DQ`}
                                 </TableCell>

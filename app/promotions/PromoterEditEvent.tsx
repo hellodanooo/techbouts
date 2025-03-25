@@ -5,7 +5,7 @@ import { getFirestore, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore
 import { app } from '@/lib/firebase_pmt/config';
 import { EventType } from '../../utils/types';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import { generateDocId } from '../../utils/eventManagement';
+import { generateDocId } from '@/utils/events/eventManagement';
 import Image from 'next/image';
 
 interface PendingEventData {

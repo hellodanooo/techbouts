@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ChevronLeft, Edit, ChevronDown, ChevronUp, Save, X, Upload } from "lucide-react";
 import VerifiedBoutsDisplay from "@/components/database/VerifiedBoutsDisplay";
 import PhotoUpload from "@/components/images/PhotoUpload";
-
+import { Radar } from "lucide-react";
 // Import shadcn/ui components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -268,12 +268,7 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-muted">
-                    <CardContent className="pt-4 text-center">
-                      <h2 className="text-primary font-semibold text-sm">Class</h2>
-                      <p className="text-foreground font-bold">{fighter.class || "Unknown"}</p>
-                    </CardContent>
-                  </Card>
+
                   
                   <Card className="bg-muted">
                     <CardContent className="pt-4 text-center">
@@ -466,50 +461,49 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
         />
 
 
-        {/* Fight History Section */}
-        {fighter.fights && fighter.fights.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="text-2xl">Fight History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Result</TableHead>
-                      <TableHead>Opponent</TableHead>
-                      <TableHead>Weightclass</TableHead>
-                      <TableHead>Bout Type</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fighter.fights.map((fight, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{fight.date}</TableCell>
-                        <TableCell>{fight.eventName}</TableCell>
-                        <TableCell className="font-bold">
-                          {fight.result === 'W' ? (
-                            <Badge variant="outline" className="text-green-600 border-green-600">Win</Badge>
-                          ) : fight.result === 'L' ? (
-                            <Badge variant="outline" className="text-red-600 border-red-600">Loss</Badge>
-                          ) : (
-                            <Badge variant="outline">{fight.result}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>{fight.opponent_id || 'N/A'}</TableCell>
-                        <TableCell>{fight.weightclass} lbs</TableCell>
-                        <TableCell>{fight.bout_type}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+{fighter.pmt_fights && fighter.pmt_fights.length > 0 && (
+  <Card className="mb-8">
+    <CardHeader>
+      <CardTitle className="text-2xl">PMT Fight History</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Event</TableHead>
+              <TableHead>Result</TableHead>
+              <TableHead>Opponent</TableHead>
+              <TableHead>Weightclass</TableHead>
+              <TableHead>Bout Type</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {fighter.pmt_fights.map((fight, index) => (
+              <TableRow key={index}>
+                <TableCell>{fight.date}</TableCell>
+                <TableCell>{fight.eventName}</TableCell>
+                <TableCell className="font-bold">
+                  {fight.result === 'W' ? (
+                    <Badge variant="outline" className="text-green-600 border-green-600">Win</Badge>
+                  ) : fight.result === 'L' ? (
+                    <Badge variant="outline" className="text-red-600 border-red-600">Loss</Badge>
+                  ) : (
+                    <Badge variant="outline">{fight.result}</Badge>
+                  )}
+                </TableCell>
+                <TableCell>{fight.opponent_id || 'N/A'}</TableCell>
+                <TableCell>{fight.weightclass} lbs</TableCell>
+                <TableCell>{fight.bout_type}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </CardContent>
+  </Card>
+)}
 
         {/* Verified Bouts Section */}
         <VerifiedBoutsDisplay
@@ -519,39 +513,42 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
 
         {/* Bout Form */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Verify Bout with Techbouts Web Scraper</CardTitle>
-            <CardDescription>
-              <Button 
-                variant="ghost"
-                onClick={toggleCollapse}
-                className="flex items-center justify-center text-muted-foreground hover:text-primary text-center"
-              >
-                {isCollapsed ? (
-                  <>
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                    Show form
-                  </>
-                ) : (
-                  <>
-                    <ChevronUp className="h-4 w-4 mr-1" />
-                    Hide form
-                  </>
-                )}
-              </Button>
-            </CardDescription>
-          </CardHeader>
-          
-          {!isCollapsed && (
-            <CardContent>
-              <BoutSearch
-                firstName={fighter.first}
-                lastName={fighter.last}
-                fighterId={fighter.fighter_id}
-              />
-            </CardContent>
-          )}
-        </Card>
+  <CardHeader className="text-center space-y-2">
+    <CardTitle className="text-2xl">Add Bout Record</CardTitle>
+    <CardDescription>
+      <Button 
+        variant="ghost"
+        onClick={toggleCollapse}
+        className="mx-auto flex items-center justify-center text-muted-foreground hover:text-primary"
+      >
+        {isCollapsed ? (
+          <>
+            <ChevronDown className="h-4 w-4 mr-1" />
+            <Radar className="h-4 w-4" />
+            <span className="ml-2">Show Add Bout</span>
+          </>
+        ) : (
+          <>
+            <ChevronUp className="h-4 w-4 mr-1" />
+            <span>Hide Add Bout</span>
+          </>
+        )}
+      </Button>
+    </CardDescription>
+  </CardHeader>
+
+  {!isCollapsed && (
+    <CardContent>
+      <BoutSearch
+        firstName={fighter.first}
+        lastName={fighter.last}
+        fighterId={fighter.fighter_id}
+        gym={fighter.gym}
+      />
+    </CardContent>
+  )}
+</Card>
+
       </div>
     </div>
   );

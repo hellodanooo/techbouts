@@ -60,8 +60,8 @@ export async function calcRecordOneEvent(eventId: string): Promise<CalculationRe
             gym: fighter.gym?.toUpperCase() || '',
             email: fighter.email || '',
             weightclasses: [fighter.weightclass],
-            wins: 0,
-            losses: 0,
+            win: 0,
+            loss: 0,
             nc: 0,
             dq: 0,
             bodykick: 0,
@@ -93,10 +93,10 @@ export async function calcRecordOneEvent(eventId: string): Promise<CalculationRe
         // Process fight result
         switch (fighter.result.toUpperCase()) {
           case 'W':
-            record.wins++;
+            record.win++;
             break;
           case 'L':
-            record.losses++;
+            record.loss++;
             break;
           case 'NC':
             record.nc++;

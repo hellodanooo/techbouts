@@ -151,8 +151,8 @@ const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     if (result) {
       const fighterData = Array.from(result.fighterRecords.values()).map(fighter => ({
         pmt_id: fighter.pmt_id,
-        wins: fighter.wins,
-        losses: fighter.losses
+        wins: fighter.win,
+        losses: fighter.loss
       }));
   
       setProcessedFighters(fighterData);
@@ -174,8 +174,8 @@ const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
         fighter.pmt_id,
         {
           pmt_id: fighter.pmt_id,
-          wins: fighter.wins,
-          losses: fighter.losses,
+          win: fighter.wins,
+          loss: fighter.losses,
           weightclasses: [],
           fights: [],
           first: '',

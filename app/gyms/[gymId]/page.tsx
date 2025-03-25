@@ -42,8 +42,8 @@ export async function generateMetadata(
 
     const pageTitle = `${gymProfile.name} - Muay Thai Gym Profile`;
     const pageDescription = `${gymProfile.name} has a total of ${
-      gymProfile.wins || 0
-    } wins and ${gymProfile.losses || 0} losses. Located in ${
+      gymProfile.win || 0
+    } wins and ${gymProfile.loss || 0} losses. Located in ${
       gymProfile.city || 'Unknown City'
     }, ${gymProfile.state || 'Unknown State'}, it offers top-notch training facilities.`;
 

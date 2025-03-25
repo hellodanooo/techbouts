@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { EventType, Promoter } from '@/utils/types';
 import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
-import { addEvent } from '@/utils/eventManagement';
+import { addEvent } from '@/utils/events/eventManagement';
 
 import { addPmtEvent } from '@/utils/apiFunctions/addPmtEvent';
 import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCollection';
 
 import { getGeocode } from "use-places-autocomplete";
-import { generateDocId } from '@/utils/eventManagement';
+import { generateDocId } from '@/utils/events/eventManagement';
 import Image from 'next/image';
 import { Label } from "@/components/ui/label";
 import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';

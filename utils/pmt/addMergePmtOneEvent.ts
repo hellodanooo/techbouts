@@ -57,8 +57,8 @@ export async function saveOneEventRecord(
                 const fighterDoc = fighterSnapshot.docs[0];
 
                 batch.update(doc(techboutsDb, 'techbouts_fighters', fighterDoc.id), {
-                    pmt_win: record.wins,
-                    pmt_loss: record.losses,
+                    pmt_win: record.win,
+                    pmt_loss: record.loss,
                     pmt_nc: record.nc,
                     pmt_dq: record.dq,
                     pmt_bodykick: record.bodykick,
@@ -87,8 +87,8 @@ export async function saveOneEventRecord(
                     pmt_id: pmtId,
                     email: record.email || '',
                     gender: record.gender || '',
-                    pmt_win: record.wins,
-                    pmt_loss: record.losses,
+                    pmt_win: record.win,
+                    pmt_loss: record.loss,
                     pmt_nc: record.nc,
                     pmt_dq: record.dq,
                     pmt_bodykick: record.bodykick,

@@ -1,4 +1,4 @@
-// app/api/ikf/events/route.ts
+// app/api/events/route.ts
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase_techbouts/config'; // Import Firestore instance
 import { doc, getDoc } from 'firebase/firestore';
@@ -24,7 +24,7 @@ export async function GET() {
             id: docId,
             eventId: event.eventId ?? "",
             event_name: event.event_name ?? "Unnamed Event",
-            name: event.name ?? "Unnamed Event",
+          
             address: event.address ?? "No address provided",
             city: event.city ?? "Unknown City",
             state: event.state ?? "Unknown State",
