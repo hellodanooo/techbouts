@@ -110,20 +110,46 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     currency: 'USD'
   });
 
-  const [formContent] = useState({
-    creditCodeLabel: 'Credit Code:',
-    verifyButton: 'Verify',
-    validCodeMessage: 'Credit code is valid. Registration will be free.',
-    redeemedCodeMessage: 'This credit code has already been redeemed.',
-    invalidCodeMessage: 'Invalid credit code. Please try again.',
-    registrationFeeLabel: 'Registration Fee:',
-    submitButton: 'Submit Registration',
-    submittingButton: 'Submitting...',
-    successMessage: 'Registration successful! Confirmation email sent to',
-    emailErrorMessage: 'Registration successful but there was an error sending confirmation email. Please email info@pointmuaythaica.com for details.',
-    paymentFailedMessage: 'Payment failed. Please try again.',
-    generalErrorMessage: 'An error occurred. Please try again.',
-    gymSuspendedMessage: 'This Team is suspended for {days} more days.'
+  const [formContent] = useState(() => {
+    const en = {
+      creditCodeLabel: 'Credit Code:',
+      verifyButton: 'Verify',
+      validCodeMessage: 'Credit code is valid. Registration will be free.',
+      redeemedCodeMessage: 'This credit code has already been redeemed.',
+      invalidCodeMessage: 'Invalid credit code. Please try again.',
+      registrationFeeLabel: 'Registration Fee:',
+      submitButton: 'Submit Registration',
+      submittingButton: 'Submitting...',
+      successMessage: 'Registration successful! Confirmation email sent to',
+      emailErrorMessage: 'Registration successful but there was an error sending confirmation email. Please email info@pointmuaythaica.com for details.',
+      paymentFailedMessage: 'Payment failed. Please try again.',
+      generalErrorMessage: 'An error occurred. Please try again.',
+      gymSuspendedMessage: 'This Team is suspended for {days} more days.',
+      freeRegistrationTitle: 'Free Registration',
+      freeRegistrationText: 'Your registration is free of charge.',
+      statusTitle: 'Status Update'
+    };
+  
+    const es = {
+      creditCodeLabel: 'Código de crédito:',
+      verifyButton: 'Verificar',
+      validCodeMessage: 'El código de crédito es válido. El registro será gratuito.',
+      redeemedCodeMessage: 'Este código de crédito ya ha sido usado.',
+      invalidCodeMessage: 'Código de crédito inválido. Inténtalo de nuevo.',
+      registrationFeeLabel: 'Cuota de inscripción:',
+      submitButton: 'Enviar registro',
+      submittingButton: 'Enviando...',
+      successMessage: '¡Registro exitoso! Correo de confirmación enviado a',
+      emailErrorMessage: 'Registro exitoso, pero hubo un error al enviar el correo de confirmación. Por favor escribe a info@pointmuaythaica.com para más información.',
+      paymentFailedMessage: 'El pago falló. Inténtalo de nuevo.',
+      generalErrorMessage: 'Ocurrió un error. Inténtalo de nuevo.',
+      gymSuspendedMessage: 'Este equipo está suspendido por {days} días más.',
+      freeRegistrationTitle: 'Registro gratuito',
+      freeRegistrationText: 'Tu inscripción no tiene costo.',
+      statusTitle: 'Actualización de estado'
+    };
+  
+    return locale === 'es' ? es : en;
   });
 
 
