@@ -9,6 +9,7 @@ export interface FullContactFighter {
   age: number;
   gender: string;
   email: string;
+  phone: string;
   // Gym Information
   gym: string;
   gym_id: string;
@@ -25,7 +26,7 @@ export interface FullContactFighter {
   // Physical Information
   weighin?: number;
   weightclass: number;
-  height: number;
+  height?: number;
   // Record
   mt_win: number;
   mt_loss: number;
@@ -35,6 +36,10 @@ export interface FullContactFighter {
   mma_loss: number;
   pmt_win: number;
   pmt_loss: number;
+  pb_win: number;
+  pb_loss: number;
+  other_exp?: string;
+
   nc: number;
   dq: number;
   // Event Information
@@ -53,9 +58,7 @@ export interface FullContactFighter {
   championship_result?: string;
   // Experience & Classification
   years_exp: number;
-  class: 'A' | 'B' | 'C';
   age_gender: 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
-  confirmed: boolean;
   // Media & Documentation
   photo?: string;
   photo_package?: boolean;
@@ -74,9 +77,10 @@ export interface FullContactFighter {
 
   fullContactbouts?: FullContactBoutData[];
   boutRefs?: string[];
+  heightFoot?: number;
+  heightInch?: number;
+  heightCm?: number;
 }
-
-
 
 export interface FullContactBoutData {
   eventId: string;
@@ -202,6 +206,7 @@ export interface EventType {
   sanctioningLogoUrl?: string;
   promotionLogoUrl?: string;
   stripeAccountId?: string;
+  customWaiver?: string;
 }
 
 

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { db } from '@/lib/firebase_techbouts/config';
 import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
-import FighterForm from '../FighterForm';
+import FighterForm from '../../../../../components/events/FighterForm';
 import {
   Dialog,
   DialogContent,
@@ -15,42 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { FullContactFighter } from '@/utils/types';
 
-interface FighterFormData {
-    first: string;
-    last: string;
-    email: string;
-    dob: string;
-    gym: string;
-    age: number;
-    weightclass: number;
-    fighter_id: string;
-    win: number;
-    loss: number;
-    gender: string;
-    years_exp: number;
-    other: string;
-    ammy: number;
-    height: number;
-    heightFoot: number;
-    heightInch: number;
-    phone: string;
-    coach_phone: string;
-    coach_name: string;
-    coach_email: string;
-    state: string;
-    city: string;
-    mt_win: number;
-    mt_loss: number;
-    boxing_win: number;
-    boxing_loss: number;
-    mma_win: number;
-    mma_loss: number;
-    pmt_win: number;
-    pmt_loss: number;
-    gym_id?: string;
-  
-  }
 
 interface AddFighterModalProps {
   eventId: string;
@@ -58,7 +24,7 @@ interface AddFighterModalProps {
   isOpen: boolean;
   promoterId: string;
   onClose: () => void;
-  onFighterAdded?: (fighter: FighterFormData) => void;
+  onFighterAdded?: (fighter: FullContactFighter) => void;
 }
 
 export default function AddFighterModal({ 
@@ -69,7 +35,7 @@ export default function AddFighterModal({
   onClose,
   onFighterAdded 
 }: AddFighterModalProps) {
-    const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
+    const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
   // Using Sonner toast instead of the deprecated toast component
 
@@ -113,25 +79,23 @@ export default function AddFighterModal({
     }
   };
 
-  const saveToTechBoutsFighters = async (fighter: FighterFormData) => {
+  const saveToTechBoutsFighters = async (fighter: FullContactFighter) => {
     // Save the fighter to the global fighters collection
     const fighterId = fighter.fighter_id || `${fighter.first}${fighter.last}${Date.now()}`;
     await setDoc(doc(db, 'techbouts_fighters', fighterId), fighter);
   };
 
-  const saveToRoster = async (fighter: FighterFormData) => {
+  const saveToRoster = async (fighter: FullContactFighter) => {
     try {
       // Get current date
       const currentDate = new Date().toISOString();
       
       // Determine fighter class based on experience and amateur status
-      const fighterClass = determineClass(fighter.years_exp || 0, fighter.ammy || 0);
       
       // Determine age_gender classification
       const ageGenderClassification = determineAgeGender(fighter.age, fighter.gender);
       
       // Calculate height in inches
-      const heightInInches = calculateHeightInInches(fighter.heightFoot, fighter.heightInch);
       
       // Prepare fighter data with additional fields
       const fullContactFighterData = {
@@ -144,8 +108,7 @@ export default function AddFighterModal({
         email: fighter.email.toLowerCase(),
         
         // Add calculated fields
-        height: heightInInches,
-        class: fighterClass,
+       
         age_gender: ageGenderClassification,
         confirmed: true,
         
@@ -185,21 +148,6 @@ export default function AddFighterModal({
     }
   };
   
-
-
-
-  // Helper functions
-  const calculateHeightInInches = (feet: number, inches: number): number => {
-    return (feet * 12) + inches;
-  };
-  
-  const determineClass = (yearsExp: number, ammy: number): string => {
-    if (ammy === 0) return 'PRO';
-    if (yearsExp >= 5) return 'A';
-    if (yearsExp >= 3) return 'B';
-    if (yearsExp >= 1) return 'C';
-    return 'N';
-  };
   
   const determineAgeGender = (age: number, gender: string): string => {
     if (age >= 40) return gender === 'MALE' ? 'MASTER MALE' : 'MASTER FEMALE';
@@ -226,7 +174,17 @@ export default function AddFighterModal({
         
         <div className="py-4">
           <FighterForm 
-          onFormDataChange={setFighterData}
+          onFormDataChange={(data: FullContactFighter) => {
+            const mappedData: FullContactFighter = {
+              ...data,
+              mt_win: data.mt_win || 0,
+              mt_loss: data.mt_loss || 0,
+              pmt_win: data.pmt_win || 0,
+              pmt_loss: data.pmt_loss || 0,
+
+            };
+            setFighterData(mappedData as FullContactFighter);
+          }}
           source='add-fighter-modal'
          
            />

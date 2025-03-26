@@ -75,7 +75,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
     const fighters = Object.values(bouts).flat();
     const weightclass = fighters[0]?.weightclass;
     const ageGender = fighters[0]?.age_gender;
-    const fighterClass = fighters[0]?.class;
+
 
     return (
       <div key={bracketNum} style={{ margin: '20px 0', border: '2px solid black', padding: '10px' }}>
@@ -84,7 +84,7 @@ const FightcardImage: React.FC<FightcardImageProps> = ({ fightcardData }) => {
           backgroundColor: 'black',
           color: 'white',
         }}>
-          Bracket {bracketNum}: {fighterClass} Class {ageGender} {weightclass} lbs
+          Bracket {bracketNum}: {ageGender} {weightclass} lbs
         </div>
         {Object.entries(bouts).map(([boutNum, fighters]) => renderBout(parseInt(boutNum), fighters))}
       </div>

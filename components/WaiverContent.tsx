@@ -7,7 +7,7 @@ export type WaiverContent = {
 }
 
 // Object to store all waivers by sanctioning body
-export const waivers: Record<string, WaiverContent> = {
+export const waivers: Record<string, WaiverContent | Record<string, WaiverContent>> = {
   'PMT': {
     title: 'Waiver and Release Agreement - Point Muay Thai',
     content: (
@@ -67,6 +67,7 @@ export const waivers: Record<string, WaiverContent> = {
   },
   
   'PBSC': {
+    en: {
     title: 'Waiver and Release of Liability - PBSC Point Boxing Sparring Circuit',
     content: (
       <div className="space-y-4 text-sm">
@@ -126,7 +127,38 @@ export const waivers: Record<string, WaiverContent> = {
       </div>
     )
   },
-  
+  es: {
+    title: 'Acuerdo de Exención de Responsabilidad - PBSC',
+    content: (
+      <div className="space-y-4 text-sm">
+        <p><strong>1. Asunción de Riesgo y Exención de Responsabilidad</strong><br />
+        Participo voluntariamente en eventos organizados por IKF Point Muay Thai y Point Boxing Sparring Circuit, alojados en pmt-west.app y pmtwest.org, operados por Ryan Hodges, Rafael Mendoza y Daniel Hodges...</p>
+
+        <p><strong>2. Uso de Datos y Consentimiento Digital</strong><br />
+        Reconozco que mi información personal, historial de peleas y detalles de participación...</p>
+
+        <p><strong>3. Autorización de Imagen y Consentimiento para Publicidad</strong><br />
+        Autorizo a IKF Point Muay Thai League, PMT-West.app y TechBouts.com el uso completo...</p>
+
+        <p><strong>4. Acuerdo con el Reglamento y la Política de Conducta</strong><br />
+        Acepto cumplir con todas las reglas y regulaciones oficiales de la Muay Thai League...</p>
+
+        <p><strong>5. Responsabilidad Médica y de Seguro</strong><br />
+        Declaro estar en condiciones físicas y mentales adecuadas...</p>
+
+        <p><strong>6. Identificación y Elegibilidad</strong><br />
+        Entiendo que se puede requerir una acta de nacimiento válida...</p>
+
+        <p><strong>7. Política de Reembolsos</strong><br />
+        Acepto que las tarifas de inscripción o ventas de boletos no son reembolsables...</p>
+
+        <p><strong>8. Consentimiento de Padres/Tutores para Menores de Edad</strong><br />
+        Si el competidor es menor de 18 años, un padre o tutor legal debe firmar esta exención...</p>
+      </div>
+    )
+  }
+},
+
   'IKF': {
     title: 'Waiver and Release Agreement - International Kickboxing Federation',
     content: (
@@ -154,6 +186,12 @@ export const waivers: Record<string, WaiverContent> = {
 };
 
 // Helper function to get waiver with fallback to PMT
-export const getWaiver = (sanctioning: string): WaiverContent => {
-  return waivers[sanctioning] || waivers['PMT'];
+export const getWaiver = (sanctioning: string, locale: string): WaiverContent => {
+  const waiver = waivers[sanctioning];
+
+  if (typeof waiver === 'object' && 'en' in waiver) {
+    return (waiver as Record<string, WaiverContent>)[locale] || (waiver as Record<string, WaiverContent>)['en'];
+  }
+
+  return waiver as WaiverContent || waivers['PMT'];
 };

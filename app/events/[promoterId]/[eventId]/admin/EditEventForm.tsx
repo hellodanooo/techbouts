@@ -4,8 +4,10 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { EventType } from '@/utils/types';
+
 import { editPmtEvent } from '@/utils/apiFunctions/editPmtEvent';
 import { editTechBoutsEvent } from '@/utils/apiFunctions/editTechBoutsEvent';
+
 import { useRouter } from 'next/navigation';
 import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
 import { Switch } from "@/components/ui/switch";
@@ -120,6 +122,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   });
 
 
+  const [customWaiverEnabled, setCustomWaiverEnabled] = useState(!!formData.customWaiver);
 
 
  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -658,6 +661,39 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                   />
                   <Label htmlFor="coach-reg">Allow Pay Later</Label>
                 </div>
+
+
+
+                <div className="space-y-4">
+  <div className="flex items-center space-x-4">
+    <Switch
+      id="custom-waiver"
+      checked={customWaiverEnabled}
+      onCheckedChange={(checked) => {
+        setCustomWaiverEnabled(checked);
+        if (!checked) {
+          setFormData(prev => ({ ...prev, customWaiver: '' }));
+        }
+      }}
+    />
+    <Label htmlFor="custom-waiver">Add Custom Waiver</Label>
+  </div>
+
+  {customWaiverEnabled && (
+    <div>
+      <Label htmlFor="customWaiver">Custom Waiver Content</Label>
+      <textarea
+        id="customWaiver"
+        name="customWaiver"
+        value={formData.customWaiver || ''}
+        onChange={handleInputChange}
+        className="h-40 mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        placeholder="Enter your custom waiver text here..."
+      />
+    </div>
+  )}
+</div>
+
 
 
 

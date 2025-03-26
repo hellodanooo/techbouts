@@ -18,86 +18,26 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// TYPES
+import { FullContactFighter } from '@/utils/types';
+// MAIN COMPONENTS
 import { getWaiver } from '@/components/WaiverContent';
 
-
-interface FighterFormData {
-  // Basic Information
-  first: string;
-  last: string;
-  email: string;
-  dob: string;
-  age: number;
-  gender: string;
-  fighter_id: string;
-
-  // Gym Information
-  gym: string;
-  gym_id: string;
-  coach_name: string;
-  coach_email: string;
-  coach_phone: string;
-
-  // Location Information
-  state: string;
-  city: string;
-
-
-  // Physical Information
-
-  weightclass: number;
-  height: number;
-  heightFoot: number;
-  heightInch: number;
-
-  // Record
-  mt_win: number;
-  mt_loss: number;
-  boxing_win: number;
-  boxing_loss: number;
-  mma_win: number;
-  mma_loss: number;
-  pmt_win: number;
-  pmt_loss: number;
-  pb_win: number;
-  pb_loss: number;
-
-  other_exp: string;
-
-
-  // Legacy fields (maintained for compatibility)
-  win: number;
-  loss: number;
-  ammy: number;
-
-  // Experience & Classification
-  years_exp: number;
-
-  // Contact Information
-  phone: string;
-
-  // Additional Information
-  other: string;
-}
-
 interface FighterFormProps {
-  onFormDataChange: (data: FighterFormData) => void;
+  onFormDataChange: (data: FullContactFighter) => void;
   locale?: string;
   user?: string;
   source?: string;
   sanctioning?: string;
+  customWaiver?: string;
 }
 
-
-
 const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, user, source, sanctioning }) => {
-
   const [emailError, setEmailError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
   const [isWaiverChecked, setIsWaiverChecked] = useState(false);
-  const currentWaiver = getWaiver(sanctioning || 'None');
 
-
+  const currentWaiver = getWaiver(sanctioning || 'None', locale || 'en');
 
   const [formLabels] = useState({
     returningAthletes: 'RETURNING ATHLETES',
@@ -230,35 +170,40 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   };
 
 
-  const [formData, setFormData] = useState<FighterFormData>({
+  const [formData, setFormData] = useState<FullContactFighter>({
     // Basic Information
+    id: '',
     first: '',
     last: '',
-    email: user || '',
     dob: '',
     age: 0,
     gender: '',
-    fighter_id: '',
-
+    email: user || '',
+    phone: '',
+  
     // Gym Information
     gym: '',
     gym_id: '',
-    coach_name: '',
+    coach: '',
     coach_email: '',
+    coach_name: '',
     coach_phone: '',
-
+  
     // Location Information
     state: '',
     city: '',
-
-
+    address: '',
+    comp_city: '',
+    comp_state: '',
+  
     // Physical Information
-
+    weighin: 0,
     weightclass: 0,
     height: 0,
     heightFoot: 0,
     heightInch: 0,
-
+    heightCm: 0,
+  
     // Record
     mt_win: 0,
     mt_loss: 0,
@@ -271,22 +216,48 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     pb_win: 0,
     pb_loss: 0,
     other_exp: '',
-
-
-    // Legacy fields
-    win: 0,
-    loss: 0,
-    ammy: 0,
-
-    // Experience & Classification
+    nc: 0,
+    dq: 0,
+  
+    // Event Info
+    event: '',
+    eventDocId: '',
+    bout: 0,
+    bout_type: '',
+    boutid: '',
+    boutmat: '',
+    mat: 0,
+    bracket: 0,
+    day: 0,
+    fighternum: '',
+    opponent_id: '',
+    result: '',
+    championship_result: '',
+  
+    // Experience
     years_exp: 0,
-
-    // Contact Information
-    phone: '',
-
-    // Additional Information
-    other: '',
+  
+    age_gender: 'MEN', // or WOMEN, BOYS, GIRLS depending on logic
+   
+  
+    // Media & Docs
+    photo: '',
+    photo_package: false,
+    docId: '',
+    fighter_id: '',
+    website: '',
+    date_registered: '',
+    payment_info: {
+      paymentIntentId: '',
+      paymentAmount: 0,
+      paymentCurrency: '',
+    },
+    eventIds: [],
+    pmt_fights: [],
+    fullContactbouts: [],
+    boutRefs: [],
   });
+  
 
 
   const [dobError, setDobError] = useState<string | null>(null);
@@ -315,7 +286,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   //////////////////////////////////////////////////////////////////
   /////////////////// fighterId SEARCH ///////////////////////////////////////////////
   const [fighterSearchTerm, setFighterSearchTerm] = useState<string>('');
-  const [fighterSearchResults, setFighterSearchResults] = useState<FighterFormData[]>([]);
+  const [fighterSearchResults, setFighterSearchResults] = useState<FullContactFighter[]>([]);
   const [searchType, setSearchType] = useState<'email' | 'last'>('email');
 
   useEffect(() => {
@@ -361,7 +332,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           const combinedResults = new Map();
 
           // Helper function to map document data to our FighterFormData type
-          const mapDocToFighterData = (doc: QueryDocumentSnapshot<DocumentData>): FighterFormData => {
+          const mapDocToFighterData = (doc: QueryDocumentSnapshot<DocumentData>): FullContactFighter => {
             const data = doc.data();
             return {
               first: data.first || '',
@@ -372,8 +343,13 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               age: data.age || 0,
               weightclass: data.weightclass || 0,
               fighter_id: data.fighter_id || '',
-              win: data.win || 0,
-              loss: data.loss || 0,
+            id: data.id || '',
+            docId: data.docId || '',
+            coach: data.coach || '',
+            nc: data.nc || 0,
+            dq: data.dq || 0,
+age_gender: data.age_gender || '',
+
               mt_win: data.mt_win || 0,
               mt_loss: data.mt_loss || 0,
               boxing_win: data.boxing_win || 0,
@@ -386,9 +362,9 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               pb_loss: data.pb_loss || 0,
 
               gender: data.gender || '',
-              other: data.other || '',
+             
               years_exp: data.years_exp || 0,
-              ammy: data.ammy || 0,
+          
               height: data.height || 0,
               heightFoot: data.heightFoot || 0,
               heightInch: data.heightInch || 0,
@@ -440,7 +416,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
 
 
-  const handleFighterSelect = (selectedFighter: FighterFormData) => {
+  const handleFighterSelect = (selectedFighter: FullContactFighter) => {
     console.log('Selected fighter raw data:', selectedFighter);
   
     // Format the date string properly if it exists
@@ -466,7 +442,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     }
   
     // Create a complete fighter object with proper data conversions and defaults
-    const updatedFighter: FighterFormData = {
+    const updatedFighter: FullContactFighter = {
       // Basic Information with defaults for every field
       first: (selectedFighter.first || '').toUpperCase(),
       last: (selectedFighter.last || '').toUpperCase(),
@@ -475,6 +451,16 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       age: calculatedAge, 
       gender: selectedFighter.gender || '',
       fighter_id: selectedFighter.fighter_id || '',
+      id: selectedFighter.id || '',
+      docId: selectedFighter.docId || '',
+      coach: selectedFighter.coach || '',
+      nc: selectedFighter.nc || 0,
+      dq: selectedFighter.dq || 0,
+      age_gender: selectedFighter.age_gender || '',
+
+
+
+
   
       // Gym Information
       gym: selectedFighter.gym || '',
@@ -519,13 +505,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       pb_loss: typeof selectedFighter.pb_loss === 'number' ? selectedFighter.pb_loss :
         (parseInt(selectedFighter.pb_loss as unknown as string) || 0),
   
-      // Legacy fields
-      win: typeof selectedFighter.win === 'number' ? selectedFighter.win :
-        (parseInt(selectedFighter.win as unknown as string) || 0),
-      loss: typeof selectedFighter.loss === 'number' ? selectedFighter.loss :
-        (parseInt(selectedFighter.loss as unknown as string) || 0),
-      ammy: typeof selectedFighter.ammy === 'number' ? selectedFighter.ammy :
-        (parseInt(selectedFighter.ammy as unknown as string) || 0),
+   
   
       // Experience & Classification
       years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp :
@@ -536,15 +516,11 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       // Contact Information
       phone: selectedFighter.phone || '',
   
-      // Additional Information
-      other: selectedFighter.other || '',
+  
+
     };
   
-    // Handle height conversion if needed
-    if (updatedFighter.heightFoot === 0 && updatedFighter.heightInch === 0 && updatedFighter.height > 0) {
-      updatedFighter.heightFoot = Math.floor(updatedFighter.height / 12);
-      updatedFighter.heightInch = updatedFighter.height % 12;
-    }
+ 
   
     console.log('Processed fighter data:', updatedFighter);
   
@@ -630,7 +606,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
       default:
         if (name in newFormData) {
-          (newFormData[name as keyof FighterFormData] as string) = upperCaseValue;
+          (newFormData[name as keyof FullContactFighter] as string) = upperCaseValue;
         }
 
         if (name === 'first' || name === 'last') {
@@ -671,6 +647,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               <CardTitle>Waiver and Release Agreement</CardTitle>
             </CardHeader>
             <CardContent>
+
 
 
             {source !== 'add-fighter-modal' && (
@@ -849,81 +826,115 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
                   {/* Height Selection */}
                   <div className="space-y-2">
-                    <Label>{formLabels.height}</Label>
-                    <div className="flex space-x-2">
-                      {locale === 'es' ? (
-                        <Select
-                          name="heightCm"
-                          value={(formData.heightFoot * 30.48 + formData.heightInch * 2.54).toFixed(0)}
-                          onValueChange={(value) => {
-                            const cm = parseInt(value);
-                            const { feet, inches } = cmToFeetAndInches(cm);
-                            handleInputChange({
-                              target: { name: 'heightFoot', value: feet.toString() }
-                            } as React.ChangeEvent<HTMLInputElement>);
-                            handleInputChange({
-                              target: { name: 'heightInch', value: inches.toString() }
-                            } as React.ChangeEvent<HTMLInputElement>);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select height" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {heightOptions.centimeters.map(({ value, label }) => (
-                              <SelectItem key={value} value={value.toString()}>
-                                {label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <Select
-                            name="heightFoot"
-                            value={formData.heightFoot.toString()}
-                            onValueChange={(value) =>
-                              handleInputChange({
-                                target: { name: 'heightFoot', value }
-                              } as React.ChangeEvent<HTMLSelectElement>)
-                            }
-                          >
-                            <SelectTrigger className="w-[110px]">
-                              <SelectValue placeholder="Feet" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {heightOptions.feet.map(({ value, label }) => (
-                                <SelectItem key={value} value={value.toString()}>
-                                  {label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+  <Label>{formLabels.height}</Label>
+  <div className="flex space-x-2">
+    {locale === 'es' ? (
+      <Select
+        name="heightCm"
+        value={formData.heightCm?.toString() || ''}
+        onValueChange={(value) => {
+          const cm = parseInt(value, 10);
+          const { feet, inches } = cmToFeetAndInches(cm);
+          setFormData({
+            ...formData,
+            heightCm: cm,
+            heightFoot: feet,
+            heightInch: inches,
+            height: Math.round(cm / 2.54),
+          });
+          onFormDataChange({
+            ...formData,
+            heightCm: cm,
+            heightFoot: feet,
+            heightInch: inches,
+            height: Math.round(cm / 2.54),
+          });
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select height (cm)" />
+        </SelectTrigger>
+        <SelectContent>
+          {heightOptions.centimeters.map(({ value, label }) => (
+            <SelectItem key={value} value={value.toString()}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ) : (
+      <>
+        <Select
+          name="heightFoot"
+          value={formData.heightFoot?.toString() || '0'}
+          onValueChange={(value) => {
+            const foot = parseInt(value, 10);
+            const heightInches = foot * 12 + (formData.heightInch || 0);
+            const heightCm = Math.round(heightInches * 2.54);
+            setFormData({
+              ...formData,
+              heightFoot: foot,
+              height: heightInches,
+              heightCm,
+            });
+            onFormDataChange({
+              ...formData,
+              heightFoot: foot,
+              height: heightInches,
+              heightCm,
+            });
+          }}
+        >
+          <SelectTrigger className="w-[110px]">
+            <SelectValue placeholder="Feet" />
+          </SelectTrigger>
+          <SelectContent>
+            {heightOptions.feet.map(({ value, label }) => (
+              <SelectItem key={value} value={value.toString()}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-                          <Select
-                            name="heightInch"
-                            value={formData.heightInch.toString()}
-                            onValueChange={(value) =>
-                              handleInputChange({
-                                target: { name: 'heightInch', value }
-                              } as React.ChangeEvent<HTMLSelectElement>)
-                            }
-                          >
-                            <SelectTrigger className="w-[110px]">
-                              <SelectValue placeholder="Inches" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {heightOptions.inches.map(({ value }) => (
-                                <SelectItem key={value} value={value.toString()}>
-                                  {value}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </>
-                      )}
-                    </div>
-                  </div>
+        <Select
+          name="heightInch"
+          value={formData.heightInch?.toString() || '0'}
+          onValueChange={(value) => {
+            const inch = parseInt(value, 10);
+            const heightInches = (formData.heightFoot || 0) * 12 + inch;
+            const heightCm = Math.round(heightInches * 2.54);
+            setFormData({
+              ...formData,
+              heightInch: inch,
+              height: heightInches,
+              heightCm,
+            });
+            onFormDataChange({
+              ...formData,
+              heightInch: inch,
+              height: heightInches,
+              heightCm,
+            });
+          }}
+        >
+          <SelectTrigger className="w-[110px]">
+            <SelectValue placeholder="Inches" />
+          </SelectTrigger>
+          <SelectContent>
+            {heightOptions.inches.map(({ value }) => (
+              <SelectItem key={value} value={value.toString()}>
+                {value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </>
+    )}
+  </div>
+</div>
+
+
                 </div>
 
                 {/* Date of Birth and Gender */}

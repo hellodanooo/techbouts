@@ -5,7 +5,6 @@ import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { db } from '@/lib/firebase_techbouts/config';
 import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
-import FighterForm from '../../app/events/[promoterId]/[eventId]/FighterForm';
 import { format } from 'date-fns';
 import { FullContactFighter } from '@/utils/types';
 // Shadcn UI Components
@@ -17,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, CheckCircle, AlertCircle, X } from "lucide-react";
-
+// MAIN COMPONENTS
+import FighterForm from './FighterForm';
 
 interface RegisterProps {
   eventId: string;
@@ -30,43 +30,9 @@ interface RegisterProps {
   sanctioningLogoUrl?: string;
   promotionLogoUrl?: string;
   sanctioning: string;
+  customWaiver?: string;
 }
 
-interface FighterFormData {
-  first: string;
-  last: string;
-  email: string;
-  dob: string;
-  gym: string;
-  age: number;
-  weightclass: number;
-  fighter_id: string;
-  win: number;
-  loss: number;
-  gender: string;
-  years_exp: number;
-  other: string;
-  ammy: number;
-  height: number;
-  heightFoot: number;
-  heightInch: number;
-  phone: string;
-  coach_phone: string;
-  coach_name: string;
-  coach_email: string;
-  state: string;
-  city: string;
-  mt_win: number;
-  mt_loss: number;
-  boxing_win: number;
-  boxing_loss: number;
-  mma_win: number;
-  mma_loss: number;
-  pmt_win: number;
-  pmt_loss: number;
-  gym_id?: string;
-
-}
 
 
 
@@ -104,9 +70,9 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning, customWaiver }) => {
 
-  const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
+  const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isCreditCodeValid, setIsCreditCodeValid] = useState<boolean | null>(null);
@@ -330,7 +296,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     setShowVerifyButton(true); // Show the "Verify" button when the user starts typing
   };
 
-  const sendConfirmationEmail = async (sanctioning: string, fighterData: FighterFormData, eventName: string, eventId: string) => {
+  const sendConfirmationEmail = async (sanctioning: string, fighterData: FullContactFighter, eventName: string, eventId: string) => {
     
     if (sanctioning === 'PBSC') {
       try {
@@ -345,7 +311,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           age: fighterData.age,
           eventName,
           eventId,
-          ammy: fighterData.ammy,
+         
           heightFoot: fighterData.heightFoot,
           heightInch: fighterData.heightInch,
           phone: fighterData.phone,
@@ -374,7 +340,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
               age: fighterData.age,
               eventName,
               eventId,
-              ammy: fighterData.ammy,
+            
               heightFoot: fighterData.heightFoot,
               heightInch: fighterData.heightInch,
               phone: fighterData.phone,
@@ -404,7 +370,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
               age: fighterData.age,
               eventName,
               eventId,
-              ammy: fighterData.ammy,
+             
               heightFoot: fighterData.heightFoot,
               heightInch: fighterData.heightInch,
               phone: fighterData.phone,
@@ -428,7 +394,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   async function saveFighterToFirestore(
     db: Firestore,
     eventId: string,
-    fighterData: FighterFormData & {
+    fighterData: FullContactFighter & {
       paymentIntentId?: string;
       paymentAmount?: number;
       paymentCurrency?: string;
@@ -446,7 +412,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       };
       
       // Determine class based on experience and amateur status
-      const fighterClass = determineClass(fighterData.years_exp || 0, fighterData.ammy || 0);
+
       
       // Determine age_gender classification
       const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
@@ -477,7 +443,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         
         // Physical Information
         weightclass: fighterData.weightclass,
-        height: calculateHeightInInches(fighterData.heightFoot, fighterData.heightInch),
+    
         
         // Record
         mt_win: fighterData.mt_win || 0,
@@ -491,12 +457,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         
         // Experience & Classification
         years_exp: fighterData.years_exp || 0,
-        class: fighterClass,
         age_gender: ageGenderClassification,
-        confirmed: true,
-        
-   
-        
+      
         // Documentation
         docId: fighterData.fighter_id,
         
@@ -538,21 +500,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     }
   }
   
-  // Helper function to calculate height in inches
-  function calculateHeightInInches(feet: number, inches: number): number {
-    return (feet * 12) + inches;
-  }
-  
-  // Helper function to determine fighter class based on experience
-  function determineClass(yearsExp: number, ammy: number): 'A' | 'B' | 'C' {
-    if (ammy === 0) {
-      return 'A'; // Professional
-    } else if (yearsExp > 3) {
-      return 'B'; // Experienced amateur
-    } else {
-      return 'C'; // Novice amateur
-    }
-  }
+ 
   
   // Helper function to determine age_gender classification
   function determineAgeGender(age: number, gender: string): 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS' {
@@ -751,6 +699,7 @@ return (
           locale={locale}
           user={user}
           sanctioning={sanctioning}
+          customWaiver={customWaiver}
         />
         
         <div className="space-y-2">

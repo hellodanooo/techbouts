@@ -292,6 +292,7 @@ const stripeInstance = useMemo(() => {
                       sanctioningLogoUrl={eventData.sanctioningLogoUrl}
                       promotionLogoUrl={eventData.promotionLogoUrl}
                       sanctioning={eventData.sanctioning}
+                      customWaiver={eventData.customWaiver}
                     />
                   )}
                 </CardContent>

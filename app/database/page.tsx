@@ -65,6 +65,22 @@ async function getInitialData() {
         years_exp: data.years_exp || 0,
         class: data.class || '',
         docId: doc.id,
+        id: data.id || '',
+        dob: data.dob || '',
+        phone: data.phone || '',
+        gym_id: data.gym_id || '',
+        coach: data.coach || '',
+        coach_email: data.coach_email || '',
+        coach_name: data.coach_name || '',
+        coach_phone: data.coach_phone || '',
+        fight_record: data.fight_record || '',
+        fight_style: data.fight_style || '',
+        fight_team: data.fight_team || '',
+        pmt_win: data.pmt_win || 0,
+        pmt_loss: data.pmt_loss || 0,
+        pb_win: data.pb_win || 0,
+        pb_loss: data.pb_loss || 0,
+        age_gender: data.age_gender || '',
       } as FullContactFighter;
     });
     

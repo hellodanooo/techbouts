@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
         gym: data.gym || '',
         email: data.email || '',
         weightclass: Number(data.weightclass) || 0,
-        // Split age_gender into age and gender if needed
         age: data.age || (data.age_gender ? data.age_gender.split('/')[0] : ''),
         gender: data.gender || (data.age_gender ? data.age_gender.split('/')[1] : ''),
         mt_win: data.win || 0,
@@ -81,6 +80,22 @@ export async function GET(request: NextRequest) {
         years_exp: data.years_exp || 0,
         class: data.class || '',
         docId: doc.id,
+        id: data.id || '',
+        dob: data.dob || '',
+        phone: data.phone || '',
+        gym_id: data.gym_id || '',
+        coach: data.coach || '',
+        coach_email: data.coach_email || '',
+        coach_name: data.coach_name || '',
+        coach_phone: data.coach_phone || '',
+        fight_record: data.fight_record || '',
+        achievements: data.achievements || '',
+        bio: data.bio || '',
+        pmt_win: data.pmt_win || 0,
+        pmt_loss: data.pmt_loss || 0,
+        pb_win: data.pb_win || 0,
+        pb_loss: data.pb_loss || 0,
+        age_gender: data.age_gender || '',
       } as FullContactFighter;
     });
     
@@ -140,6 +155,22 @@ export async function POST(request: NextRequest) {
         years_exp: data.years_exp || 0,
         class: data.class || '',
         docId: doc.id,
+        id: data.id || '',
+        dob: data.dob || '',
+        phone: data.phone || '',
+        gym_id: data.gym_id || '',
+        coach: data.coach || '',
+        coach_email: data.coach_email || '',
+        coach_name: data.coach_name || '',
+        coach_phone: data.coach_phone || '',
+        fight_record: data.fight_record || '',
+        achievements: data.achievements || '',
+        bio: data.bio || '',
+        pmt_win: data.pmt_win || 0,
+        pmt_loss: data.pmt_loss || 0,
+        pb_win: data.pb_win || 0,
+        pb_loss: data.pb_loss || 0,
+        age_gender: data.age_gender || '',
       } as FullContactFighter;
     });
     
@@ -151,7 +182,7 @@ export async function POST(request: NextRequest) {
         ${fighter.last?.toLowerCase() || ''} 
         ${fighter.gym?.toLowerCase() || ''}
         ${fighter.email?.toLowerCase() || ''}
-        ${fighter.class?.toLowerCase() || ''}
+        ${fighter.weightclass?.toString().toLowerCase() || ''}
       `;
       
       return searchTermsLower.every(term => searchableText.includes(term));

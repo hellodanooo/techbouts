@@ -59,14 +59,17 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
       
       // Experience & Classification
       years_exp: data.years_exp || 0,
-      class: (data.class as 'A' | 'B' | 'C') || 'C',
       age_gender: (data.age_gender as 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS') || 'MEN',
-      confirmed: data.confirmed || false,
       
       // Media & Documentation
       photo: data.photo || '',
       photo_package: data.photo_package || false,
       docId: fighterSnap.id,
+      
+      // Additional required fields
+      phone: data.phone || '',
+      pb_win: data.pb_win || 0,
+      pb_loss: data.pb_loss || 0,
       
       // Process fights data
       pmt_fights: processAndSortPMTFights(data),

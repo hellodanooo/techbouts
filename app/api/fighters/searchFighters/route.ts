@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         years_exp: data.years_exp || 0,
         class: data.class || '',
         docId: doc.id,
-      } as FullContactFighter;
+      } as unknown as FullContactFighter;
     });
     
     // Filter fighters based on search terms
@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
         ${fighter.last?.toLowerCase() || ''} 
         ${fighter.gym?.toLowerCase() || ''}
         ${fighter.email?.toLowerCase() || ''}
-        ${fighter.class?.toLowerCase() || ''}
       `;
       
       return searchTermsLower.every(term => searchableText.includes(term));

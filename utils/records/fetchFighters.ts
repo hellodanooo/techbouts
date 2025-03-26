@@ -44,7 +44,7 @@ export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> =>
         nc: data.nc || 0,
         dq: data.dq || 0,
         years_exp: data.years_exp || 0,
-        class: data.class || '',
+  
         // additional fields
         address: data.address || '',
         age: Number(data.age) || 0,
@@ -63,7 +63,10 @@ export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> =>
         state: data.state || '',
         website: data.website || '',
         id: data.id || '',
-        confirmed: data.confirmed || false,
+        phone: data.phone || '',
+        pb_win: data.pb_win || 0,
+        pb_loss: data.pb_loss || 0,
+    
      
       };
       

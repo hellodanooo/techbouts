@@ -65,7 +65,7 @@ async function getInitialData() {
         years_exp: data.years_exp || 0,
         class: data.class || '',
         docId: doc.id,
-      } as FullContactFighter;
+      } as unknown as FullContactFighter;
     });
     
     return {

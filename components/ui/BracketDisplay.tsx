@@ -8,8 +8,7 @@ import buttons from '@/styles/buttons.module.css';
 import { MdOutlineSwapHorizontalCircle } from "react-icons/md";
 import { MdOutlineRefresh } from "react-icons/md";
 import FightcardImage from '@/components/FightcardImage';
-import { FaRegCheckCircle } from "react-icons/fa";
-import { CgCloseO } from "react-icons/cg";
+
 import { FaChevronDown } from "react-icons/fa";
 import { FaChevronUp } from "react-icons/fa";
 
@@ -64,7 +63,7 @@ interface Video {
 
 const BracketDisplay: React.FC<BracketDisplayProps> = ({
   fightcardData,
-  selectedClass,
+
   selectedDivision,
   selectedWeightClasses,
   isEditable,
@@ -223,23 +222,22 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     if (fighters.length === 0) return { weightclass: '', class: '', ageGender: '' };
 
     const weightclass = fighters[0].weightclass;
-    const fighterClass = fighters[0].class;
+
     const ageGender = fighters[0].age_gender;
 
-    return { weightclass, class: fighterClass, ageGender };
+    return { weightclass, ageGender };
   };
 
 
 
  const renderBracket = (day: number, bracketNum: number, bouts: { [key: number]: FullContactFighter[] }) => {
-  const isCClass = Object.values(bouts).flat().some(fighter => fighter.class === 'C');
   const { weightclass, class: fighterClass, ageGender } = getBracketInfo(Object.values(bouts).flat());
-  const firstFighter = Object.values(bouts).flat()[0];
-  const isConfirmed = firstFighter?.confirmed === true;
+
+
 
   const filteredBouts = Object.entries(bouts).filter(([, fighters]) =>
     fighters.some(fighter =>
-      (selectedClass === 'ALL' || fighter.class === selectedClass) &&
+
       (selectedDivision === 'ALL' || fighter.age_gender === selectedDivision) &&
       (selectedWeightClasses.length === 0 || selectedWeightClasses.includes(fighter.weightclass)) &&
       (matchingBrackets.length === 0 || matchingBrackets.includes(`${day}-${bracketNum}`))
@@ -485,11 +483,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
           >
 
 CONFIRMED:
-          {isConfirmed ? (
-            <FaRegCheckCircle color='lightgreen' style={{marginLeft:'10px'}} />
-          ) : (
-            <CgCloseO color='red' style={{marginLeft:'5px'}} />
-          )}
+        
             </div> 
 
             
@@ -517,7 +511,7 @@ CONFIRMED:
             }}
           >
             <div style={{ backgroundColor: 'black', color: 'white', padding: '5px 10px', borderRadius: '5px' }}>
-              {championshipWinner.weightclass} lbs {championshipWinner.class} Class
+              {championshipWinner.weightclass} lbs
             </div>
             <h3 style={{ color: 'black', fontSize: '24px', marginBottom: '10px' }}>Championship Winner</h3>
             <p style={{ fontSize: '20px', fontWeight: 'bold', margin: '10px 0' }}>
@@ -532,12 +526,7 @@ CONFIRMED:
               priority
             />
             <div style={{ marginTop: '-10px' }}>
-              <Image
-                src={championshipWinner.class === 'C' ? '/trophy2.png' : '/belt.png'}
-                alt={championshipWinner.class === 'C' ? 'Championship Trophy' : 'Championship Belt'}
-                width={200}
-                height={100}
-              />
+            
             </div>
             <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
               (Click to view bracket details)
@@ -757,16 +746,7 @@ CONFIRMED:
                 width: '100%',
                 height: '100%',
               }}>
-                <Image
-                  src={isCClass ? '/trophy2.png' : '/belt.png'}
-                  alt={isCClass ? "Championship Trophy" : "Championship Belt"}
-                  fill
-                  style={{
-                    objectFit: 'contain',
-                    objectPosition: 'center bottom'
-                  }}
-                  priority
-                />
+             
               </div>
             )}
           </div>
@@ -874,6 +854,8 @@ const renderBout = (bout: number, fighters: FullContactFighter[]) => {
     mma_loss: 0,
     pmt_win: 0,
     pmt_loss: 0,
+    pb_win: 0, // Added missing property
+    pb_loss: 0, // Added missing property
   
     nc: 0,
     dq: 0,
@@ -893,9 +875,9 @@ const renderBout = (bout: number, fighters: FullContactFighter[]) => {
     
     // Experience & Classification
     years_exp: 0,
-    class: 'C',
+ 
     age_gender: 'MEN',
-    confirmed: false,
+
     
   
     
@@ -904,8 +886,9 @@ const renderBout = (bout: number, fighters: FullContactFighter[]) => {
     photo_package: false,
     docId: '',
     website: '',
-
- 
+    
+    // Contact Information
+    phone: '', // Added missing property
   };
 
   const displayFighters = fighters.length === 1
