@@ -135,6 +135,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       freeRegistrationText: 'Your registration is free of charge.',
       statusTitle: 'Status Update',
       payLaterLabel: 'Pay at Weigh-ins',
+      submittingOverlayMessage: 'Submitting...',
+
     };
   
     const es = {
@@ -155,6 +157,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       freeRegistrationText: 'Tu inscripción no tiene costo.',
       statusTitle: 'Actualización de estado',
       payLaterLabel: 'Pagar en el pesaje',
+      submittingOverlayMessage: 'Enviando...',
+
     };
   
     return locale === 'es' ? es : en;
@@ -657,10 +661,19 @@ const handleRegistrationSubmit = async () => {
         setStatusMessage('Sending confirmation email...');
 
         await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
+        
         setStatusMessage('Email Sent');
         setStatusMessage('Registration Successful');
+setTimeout(() => {
+  setFighterData(null);
+  setCreditCode('');
+  setIsCreditCodeValid(null);
+  setCreditCodeRedeemed(null);
+  setIsPayLater(false);
+  setStatusMessage('');
+  closeModal();
+}, 2000);
 
-        closeModal();
       } else {
         setStatusMessage(formContent.paymentFailedMessage);
         throw new Error('Payment failed: Unable to process payment');
@@ -874,19 +887,31 @@ return (
           disabled={isSubmitting}
           className="w-full sm:w-auto"
         >
+
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {formContent.submittingButton}
+              {formContent.submittingButton}              
             </>
           ) : (
             formContent.submitButton
           )}
+
         </Button>
       </CardFooter>
     </Card>
+
+    {isSubmitting && (
+  <div className="fixed inset-0 z-50 bg-white/80 flex flex-col items-center justify-center space-y-4">
+    <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
+    <p className="text-gray-700">{statusMessage || formContent.submittingOverlayMessage}</p>
+  </div>
+)}
+
   </div>
 );
 };
 
 export default RegistrationComponent;
+
+

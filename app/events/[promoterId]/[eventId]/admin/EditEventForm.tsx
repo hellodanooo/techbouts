@@ -20,7 +20,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider";
 import { deleteTechBoutsEvent } from '@/utils/apiFunctions/deleteTechBoutsEvent';
 
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -53,9 +53,9 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
   const [isUploadingFlyer, setIsUploadingFlyer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  
+
   const [openSections, setOpenSections] = useState({
     details: false,
 
@@ -125,24 +125,24 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [customWaiverEnabled, setCustomWaiverEnabled] = useState(!!formData.customWaiver);
 
 
- const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-  const { name, value } = e.target;
-  
-  // Explicitly convert numeric fields
-  const numericFields = ['numMats', 'registration_fee', 'ticket_price', 'photoPackagePrice', 'coachRegPrice'];
-  
-  if (numericFields.includes(name)) {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value === '' ? '' : Number(value)
-    }));
-  } else {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }
-};
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
+    // Explicitly convert numeric fields
+    const numericFields = ['numMats', 'registration_fee', 'ticket_price', 'photoPackagePrice', 'coachRegPrice'];
+
+    if (numericFields.includes(name)) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === '' ? '' : Number(value)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
 
   const handleSwitchChange = (name: string) => (checked: boolean) => {
     setFormData(prev => ({
@@ -544,20 +544,20 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                   />
                 </div>
 
-{eventData.ticket_enabled && (
-   <div>
-   <Label>Ticket Price</Label>
-   <input
-     type="number"
-     name="ticket_price"
-     value={formData.ticket_price}
-     onChange={handleInputChange}
-     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-   />
- </div>
+                {eventData.ticket_enabled && (
+                  <div>
+                    <Label>Ticket Price</Label>
+                    <input
+                      type="number"
+                      name="ticket_price"
+                      value={formData.ticket_price}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                  </div>
 
-)}
-               
+                )}
+
 
                 <div className="flex items-center space-x-4">
                   <Switch
@@ -629,7 +629,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                   </div>
                 )}
 
-{/* ///////////// COACH AREA */}
+                {/* ///////////// COACH AREA */}
                 <div className="flex items-center space-x-4">
                   <Switch
                     id="coach-reg"
@@ -651,9 +651,9 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
                     />
                   </div>
                 )}
-{/* ///////////// COACH AREA ^^^^^^^^^ */}
+                {/* ///////////// COACH AREA ^^^^^^^^^ */}
 
-<div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4">
                   <Switch
                     id="payLater"
                     checked={formData.payLaterEnabled}
@@ -665,107 +665,107 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
 
                 <div className="space-y-4">
-  <div className="flex items-center space-x-4">
-    <Switch
-      id="custom-waiver"
-      checked={customWaiverEnabled}
-      onCheckedChange={(checked) => {
-        setCustomWaiverEnabled(checked);
-        if (!checked) {
-          setFormData(prev => ({ ...prev, customWaiver: '' }));
-        }
-      }}
-    />
-    <Label htmlFor="custom-waiver">Add Custom Waiver</Label>
-  </div>
+                  <div className="flex items-center space-x-4">
+                    <Switch
+                      id="custom-waiver"
+                      checked={customWaiverEnabled}
+                      onCheckedChange={(checked) => {
+                        setCustomWaiverEnabled(checked);
+                        if (!checked) {
+                          setFormData(prev => ({ ...prev, customWaiver: '' }));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="custom-waiver">Add Custom Waiver</Label>
+                  </div>
 
-  {customWaiverEnabled && (
-    <div>
-      <Label htmlFor="customWaiver">Custom Waiver Content</Label>
-      <textarea
-        id="customWaiver"
-        name="customWaiver"
-        value={formData.customWaiver || ''}
-        onChange={handleInputChange}
-        className="h-40 mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        placeholder="Enter your custom waiver text here..."
-      />
-    </div>
-  )}
-</div>
+                  {customWaiverEnabled && (
+                    <div>
+                      <Label htmlFor="customWaiver">Custom Waiver Content</Label>
+                      <textarea
+                        id="customWaiver"
+                        name="customWaiver"
+                        value={formData.customWaiver || ''}
+                        onChange={handleInputChange}
+                        className="h-40 mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        placeholder="Enter your custom waiver text here..."
+                      />
+                    </div>
+                  )}
+                </div>
 
 
 
 
                 <div className="flex items-center space-x-4">
-  <Switch
-    id="disable-registration"
-    checked={formData.disableRegistration}
-    onCheckedChange={handleSwitchChange('disableRegistration')}
-  />
-  <Label htmlFor="disable-registration">Disable Registration</Label>
-</div>
+                  <Switch
+                    id="disable-registration"
+                    checked={formData.disableRegistration}
+                    onCheckedChange={handleSwitchChange('disableRegistration')}
+                  />
+                  <Label htmlFor="disable-registration">Disable Registration</Label>
+                </div>
 
               </div>
             </div>
 
 
             <div className="flex justify-between pt-4">
-  {/* Left side - Delete button */}
-  <div>
-    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-      <AlertDialogTrigger asChild>
-        <button
-          type="button"
-          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center"
-          disabled={isDeleting || isUpdating}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete Event
-        </button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the event
-            {formData.name} and all associated data.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDeleteEvent}
-            className="bg-red-600 hover:bg-red-700"
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Deleting...' : 'Delete Event'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  </div>
-  
-  {/* Right side - Cancel and Save buttons */}
-  <div className="flex space-x-4">
-    <button
-      type="button"
-      onClick={handleCancel}
-      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-      disabled={isUpdating || isDeleting}
-    >
-      Cancel
-    </button>
+              {/* Left side - Delete button */}
+              <div>
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center"
+                      disabled={isDeleting || isUpdating}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Event
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the event
+                        {formData.name} and all associated data.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteEvent}
+                        className="bg-red-600 hover:bg-red-700"
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete Event'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
 
-    <button
-      type="submit"
-      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-      disabled={isUpdating || isDeleting}
-    >
-      {isUpdating ? 'Saving...' : 'Save Changes'}
-    </button>
-  </div>
-</div>
+              {/* Right side - Cancel and Save buttons */}
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  disabled={isUpdating || isDeleting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  disabled={isUpdating || isDeleting}
+                >
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
 
           </form>
         </CollapsibleContent>
