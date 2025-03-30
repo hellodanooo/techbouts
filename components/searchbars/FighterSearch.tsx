@@ -30,48 +30,23 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
 }) => {
   const [fighterSearchTerm, setFighterSearchTerm] = useState<string>('');
   const [fighterSearchResults, setFighterSearchResults] = useState<FullContactFighter[]>([]);
-  const [searchType, setSearchType] = useState<'email' | 'last'>('email');
+  const [searchType, setSearchType] = useState<'email' | 'last' | 'weight'>('email');
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isAddFighterModalOpen, setIsAddFighterModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchFighters = async () => {
-      if (fighterSearchTerm.length >= 3) {
+      const isWeightSearch = searchType === 'weight';
+      const isValidTextSearch = fighterSearchTerm.length >= 3;
+      const isValidWeightSearch = isWeightSearch && !isNaN(Number(fighterSearchTerm));
+    
+      if (isValidTextSearch || isValidWeightSearch) {
         setIsSearching(true);
         console.log(`Searching for ${searchType} containing:`, fighterSearchTerm);
-
+    
         try {
           const colRef = collection(db, 'techbouts_fighters');
-          let optimizedSearchTerm = fighterSearchTerm;
-          
-          if (searchType === 'email') {
-            optimizedSearchTerm = fighterSearchTerm.toLowerCase();
-          }
-          if (searchType === 'last') {
-            optimizedSearchTerm = fighterSearchTerm.toUpperCase();
-          }
-
-          const fightersQuery = query(
-            colRef,
-            where(searchType, '>=', optimizedSearchTerm),
-            where(searchType, '<=', optimizedSearchTerm + '\uf8ff')
-          );
-
-          console.log('Executing query...');
-          const querySnapshot = await getDocs(fightersQuery);
-          console.log('Query returned', querySnapshot.size, 'results');
-
-          const originalCaseQuery = query(
-            colRef,
-            where(searchType, '>=', fighterSearchTerm),
-            where(searchType, '<=', fighterSearchTerm + '\uf8ff')
-          );
-
-          const originalCaseSnapshot = await getDocs(originalCaseQuery);
-          console.log('Original case query returned', originalCaseSnapshot.size, 'results');
-
           const combinedResults = new Map();
-
           const mapDocToFighterData = (doc: QueryDocumentSnapshot<DocumentData>): FullContactFighter => {
             const data = doc.data();
             return {
@@ -114,21 +89,56 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
               gym_address: data.gym_address || '',
             };
           };
-
-          querySnapshot.docs.forEach(doc => {
-            combinedResults.set(doc.id, mapDocToFighterData(doc));
-          });
-
-          originalCaseSnapshot.docs.forEach(doc => {
-            if (!combinedResults.has(doc.id)) {
-              combinedResults.set(doc.id, mapDocToFighterData(doc));
+    
+          let querySnapshot;
+    
+          if (isWeightSearch) {
+            const weight = parseFloat(fighterSearchTerm);
+            const fightersQuery = query(
+              colRef,
+              where('weightclass', '>=', weight - 6),
+              where('weightclass', '<=', weight + 6)
+            );
+            console.log('Executing weight query...');
+            querySnapshot = await getDocs(fightersQuery);
+          } else {
+            let optimizedSearchTerm = fighterSearchTerm;
+            if (searchType === 'email') {
+              optimizedSearchTerm = fighterSearchTerm.toLowerCase();
+            } else if (searchType === 'last') {
+              optimizedSearchTerm = fighterSearchTerm.toUpperCase();
             }
-          });
-
-          const fighters = Array.from(combinedResults.values()).slice(0);
-
+    
+            const fightersQuery = query(
+              colRef,
+              where(searchType, '>=', optimizedSearchTerm),
+              where(searchType, '<=', optimizedSearchTerm + '\uf8ff')
+            );
+            console.log('Executing query...');
+            querySnapshot = await getDocs(fightersQuery);
+    
+            const originalCaseQuery = query(
+              colRef,
+              where(searchType, '>=', fighterSearchTerm),
+              where(searchType, '<=', fighterSearchTerm + '\uf8ff')
+            );
+            const originalCaseSnapshot = await getDocs(originalCaseQuery);
+    
+            // Combine original + case-optimized results
+            querySnapshot.docs.forEach(doc => combinedResults.set(doc.id, mapDocToFighterData(doc)));
+            originalCaseSnapshot.docs.forEach(doc => {
+              if (!combinedResults.has(doc.id)) {
+                combinedResults.set(doc.id, mapDocToFighterData(doc));
+              }
+            });
+          }
+    
+          if (isWeightSearch) {
+            querySnapshot.docs.forEach(doc => combinedResults.set(doc.id, mapDocToFighterData(doc)));
+          }
+    
+          const fighters = Array.from(combinedResults.values());
           console.log('Total combined fighters:', fighters.length);
-
           setFighterSearchResults(fighters);
         } catch (error) {
           console.error("Error fetching fighters:", error);
@@ -140,6 +150,7 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
         setFighterSearchResults([]);
       }
     };
+    
 
     const debounceTimeout = setTimeout(() => {
       fetchFighters();
@@ -158,10 +169,26 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
   const searchContent = (
     <div className="space-y-4">
       <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="email">Search by Email</TabsTrigger>
-          <TabsTrigger value="last">Search by Last Name</TabsTrigger>
-        </TabsList>
+      <TabsList className="grid sm:grid-cols-3 gap-2">
+  <TabsTrigger
+    value="email"
+    className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2"
+  >
+    Email
+  </TabsTrigger>
+  <TabsTrigger
+    value="last"
+    className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2"
+  >
+    Last Name
+  </TabsTrigger>
+  <TabsTrigger
+    value="weight"
+    className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2"
+  >
+    Weight
+  </TabsTrigger>
+</TabsList>
         <TabsContent value="email" className="space-y-2">
           <Label htmlFor="emailSearch">Search by Email</Label>
           <Input
@@ -188,6 +215,19 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
             placeholder="Enter last name..."
           />
         </TabsContent>
+        <TabsContent value="weight" className="space-y-2">
+  <Label htmlFor="weightSearch">Search by Weight (±6 lbs)</Label>
+  <Input
+    id="weightSearch"
+    type="number"
+    value={searchType === 'weight' ? fighterSearchTerm : ''}
+    onChange={(e) => {
+      setFighterSearchTerm(e.target.value);
+      if (e.target.value.length === 0) setFighterSearchResults([]);
+    }}
+    placeholder="Enter weight..."
+  />
+</TabsContent>
       </Tabs>
 
       {isSearching && (
@@ -209,7 +249,7 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
                 <div className="flex flex-col items-start">
                   <div className="font-medium">{fighter.first} {fighter.last}</div>
                   <div className="text-sm text-muted-foreground">
-                    Email: {fighter.email || 'N/A'} | Age: {fighter.age || 'N/A'} | Gym: {fighter.gym || 'N/A'}
+                    Email: {fighter.email || 'N/A'} | Weight: {fighter.weightclass} | Age: {fighter.age || 'N/A'} | Gym: {fighter.gym || 'N/A'}
                   </div>
                 </div>
               </Button>

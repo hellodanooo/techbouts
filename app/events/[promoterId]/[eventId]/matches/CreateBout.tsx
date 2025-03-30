@@ -6,7 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { RosterFighter } from '@/utils/types';
+import { RosterFighter, EventType } from '@/utils/types';
+import { createMatch as createMatchUtil } from '@/utils/events/matches';
+import { toast } from 'sonner';
+
 
 interface CreateBoutProps {
   red: RosterFighter | null;
@@ -24,10 +27,13 @@ interface CreateBoutProps {
   boutConfirmed: boolean;
   setBoutConfirmed: (value: boolean) => void;
   isCreatingMatch: boolean;
-  setRed: (value: RosterFighter | null) => void;
-  setBlue: (value: RosterFighter | null) => void;
-  createMatch: () => void;
-  disableCreate: boolean;
+  setIsCreatingMatch: (val: boolean) => void;
+  setRed: (val: RosterFighter | null) => void;
+  setBlue: (val: RosterFighter | null) => void;
+  promoterId: string;
+  eventId: string;
+  rosterPath: string | null;
+  eventData: EventType;
 }
 
 export default function CreateBout({
@@ -46,11 +52,43 @@ export default function CreateBout({
   boutConfirmed,
   setBoutConfirmed,
   isCreatingMatch,
+  setIsCreatingMatch,
   setRed,
   setBlue,
-  createMatch,
-  disableCreate
+  promoterId,
+  eventId,
+  rosterPath,
+  eventData
 }: CreateBoutProps) {
+
+  const handleCreateMatch = () => {
+    if (!red || !blue || !rosterPath) {
+      toast.error("Missing required fields for match creation");
+      return;
+    }
+
+    createMatchUtil({
+      red,
+      blue,
+      weightclass,
+      boutNum,
+      ringNum,
+      eventId,
+      promoterId,
+      setIsCreatingMatch,
+      setRed,
+      setBlue,
+      date: eventData.date,
+      sanctioning: eventData.sanctioning,
+      eventName: eventData.event_name,
+      promotionName: eventData.promoterId,
+      bout_type,
+      dayNum,
+    });
+  };
+
+
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -131,9 +169,10 @@ export default function CreateBout({
                 </div>
               </div>
 
-              <Button onClick={createMatch} disabled={disableCreate} className="w-full mt-4">
+              <Button onClick={handleCreateMatch} disabled={!red || !blue || isCreatingMatch || !rosterPath} className="w-full mt-4">
                 {isCreatingMatch ? "Creating Match..." : "Create Match"}
               </Button>
+              
             </div>
           </div>
 

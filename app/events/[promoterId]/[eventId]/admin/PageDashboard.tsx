@@ -137,6 +137,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                     eventId={eventId}
                     promoterId={promoterId}
                     isAdmin={isAdmin}
+                    eventData={eventData}
                 />
             </div>
 

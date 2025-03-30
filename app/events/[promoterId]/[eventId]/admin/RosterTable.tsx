@@ -10,7 +10,9 @@ import AddFighterModal from '../../../../../components/database/AddFighterModal'
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
 import { toast } from 'sonner';
-import { RosterFighter } from '@/utils/types';
+import { RosterFighter, EventType } from '@/utils/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import CreateBout from '@/app/events/[promoterId]/[eventId]/matches/CreateBout';
 
 import {
   Card,
@@ -34,16 +36,20 @@ interface RosterTableProps {
   eventId: string;
   promoterId: string;
   isAdmin?: boolean;
+  eventData: EventType;
 }
 
 const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
 
-export default function RosterTable({ roster, eventId, promoterId }: RosterTableProps) {
+export default function RosterTable({ roster, eventId, promoterId, isAdmin, eventData }: RosterTableProps) {
   const router = useRouter();
   const [openPotentialMatchesModal, setOpenPotentialMatchesModal] = React.useState(false);
-  const [selectedFighter, setSelectedFighter] = React.useState<RosterFighter | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<{ [key: string]: boolean }>({});
   const [openAddFighterModal, setOpenAddFighterModal] = useState(false);
+  const [openCreateBoutModal, setOpenCreateBoutModal] = useState(false);
+  const [selectedCorner, setSelectedCorner] = useState<'red' | 'blue' | null>(null);
+  const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
+
   const [openSections, setOpenSections] = useState({
     roster: false,
   });
@@ -54,6 +60,18 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
       [section]: !prev[section]
     }));
   };
+
+
+  const handleFighterClick = (fighter: RosterFighter, corner: 'red' | 'blue') => {
+    if (isAdmin) {
+      setSelectedCorner(corner);
+      setSelectedFighter(fighter);
+      setOpenCreateBoutModal(true);
+    } else {
+      navigateToFighterDetail(fighter);
+    }
+  };
+
 
   // Determine if a URL is valid
   const isValidUrl = (url: string | undefined): boolean => {
@@ -94,7 +112,7 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
       // Fetch the latest fighter data from techbouts_fighters collection
       const fighterDocRef = doc(db, 'techbouts_fighters', fighterId);
       const fighterDoc = await getDoc(fighterDocRef);
-      
+
       if (!fighterDoc.exists()) {
         toast.error("Fighter not found", {
           description: "The fighter data could not be found in the database"
@@ -128,11 +146,11 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
       // Get the current roster_json document
       const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
       const rosterDoc = await getDoc(rosterJsonRef);
-      
+
       if (rosterDoc.exists()) {
         const rosterData = rosterDoc.data();
         const currentFighters = rosterData.fighters || [];
-        
+
         // Find and replace the fighter in the roster array
         const updatedRoster = currentFighters.map((f: RosterFighter) => {
           const currentFighterId = f.fighter_id;
@@ -141,15 +159,15 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
           }
           return f;
         });
-        
+
         // Update the roster_json document
         await setDoc(rosterJsonRef, { fighters: updatedRoster });
-        
+
         // Show success message
         toast.success("Fighter updated", {
           description: `${updatedFighter.first} ${updatedFighter.last}'s data has been refreshed`
         });
-        
+
         // Refresh the page to show updated data
         router.refresh();
       } else {
@@ -173,27 +191,27 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Event Roster</CardTitle>
-          
-          <div className="flex justify-start mb-4">
-          <Button 
-            onClick={() => setOpenAddFighterModal(true)}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" /> Add Fighter
-          </Button>
-        </div>
 
-        {openAddFighterModal && eventId && (
-          <AddFighterModal 
-            eventId={eventId}
-            promoterId={promoterId}
-            savesTo="roster"
-            isOpen={openAddFighterModal}
-            onClose={() => setOpenAddFighterModal(false)}
-          />
-        )}
+          <div className="flex justify-start mb-4">
+            <Button
+              onClick={() => setOpenAddFighterModal(true)}
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" /> Add Fighter
+            </Button>
+          </div>
+
+          {openAddFighterModal && eventId && (
+            <AddFighterModal
+              eventId={eventId}
+              promoterId={promoterId}
+              savesTo="roster"
+              isOpen={openAddFighterModal}
+              onClose={() => setOpenAddFighterModal(false)}
+            />
+          )}
         </CardHeader>
-     
+
         <CardContent>
           <p className="text-muted-foreground">No roster data available</p>
         </CardContent>
@@ -203,18 +221,20 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
 
   return (
     <Collapsible
-    open={openSections.roster}
-    onOpenChange={() => toggleSection('roster')}
-    className="w-full border rounded-lg overflow-hidden"
-  >
-    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
-      <h2 className="text-xl font-semibold">Roster</h2>
-      {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-    </CollapsibleTrigger>
-    <CollapsibleContent className="p-4 bg-white">
+      open={openSections.roster}
+      onOpenChange={() => toggleSection('roster')}
+      className="w-full border rounded-lg overflow-hidden"
+    >
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
+        <h2 className="text-xl font-semibold">Roster</h2>
+        {isAdmin && (
+         <div>Admin Roster Enabled</div> )}
+        {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="p-4 bg-white">
 
-    <div className="flex justify-end mb-4">
-          <Button 
+        <div className="flex justify-end mb-4">
+          <Button
             onClick={() => setOpenAddFighterModal(true)}
             className="flex items-center gap-1"
           >
@@ -222,92 +242,94 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
           </Button>
         </div>
 
- <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Event Roster</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Photo</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Gym</TableHead>
-                <TableHead>Weight</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>MT-MMA</TableHead>
-                <TableHead>Refresh</TableHead>
-                <TableHead>Search</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roster.map((fighter, index) => {
-                const fighterId = fighter.fighter_id || '';
-                return (
-                <TableRow key={index}>
-                  <TableCell>
-                    <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                      <Image
-                        src={getPhotoUrl(fighter)}
-                        alt={`${fighter.first || ''} ${fighter.last || ''}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell
-                    onClick={() => navigateToFighterDetail(fighter)}
-                    className="cursor-pointer hover:text-blue-600 hover:underline">
-                    {`${fighter.first || ''} ${fighter.last || ''}`}
-                  </TableCell>
-                  <TableCell>{fighter.gym || '-'}</TableCell>
-                  <TableCell>{fighter.weightclass || '-'}</TableCell>
-                  <TableCell>{fighter.age || '-'}</TableCell>
-                  <TableCell>{fighter.gender || '-'}</TableCell>
-                  <TableCell>{`${fighter.mt_win || 0}-${fighter.mt_loss || 0}`}</TableCell>
-                  <TableCell>
-                    <span 
-                      className={`
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Event Roster</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Photo</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Gym</TableHead>
+                    <TableHead>Weight</TableHead>
+                    <TableHead>Age</TableHead>
+                    <TableHead>Gender</TableHead>
+                    <TableHead>MT-MMA</TableHead>
+                    <TableHead>Refresh</TableHead>
+                    <TableHead>Search</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roster.map((fighter, index) => {
+                    const fighterId = fighter.fighter_id || '';
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                            <Image
+                              src={getPhotoUrl(fighter)}
+                              alt={`${fighter.first || ''} ${fighter.last || ''}`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell
+                          onClick={() => handleFighterClick(fighter, 'red')}
+                          className="cursor-pointer hover:text-blue-600 hover:underline"
+                        >
+                          {`${fighter.first || ''} ${fighter.last || ''}`}
+                        </TableCell>
+                        <TableCell>{fighter.gym || '-'}</TableCell>
+                        <TableCell>{fighter.weightclass || '-'}</TableCell>
+                        <TableCell>{fighter.age || '-'}</TableCell>
+                        <TableCell>{fighter.gender || '-'}</TableCell>
+                        <TableCell>{`${fighter.mt_win || 0}-${fighter.mt_loss || 0}`}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`
                         cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium leading-4 
                         ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
                       `}
-                      onClick={() => refreshFighterData(fighter)}
-                    >
-                      <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''}`} />
-                      {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
-                    </span>
-                  </TableCell>
+                            onClick={() => refreshFighterData(fighter)}
+                          >
+                            <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''}`} />
+                            {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
+                          </span>
+                        </TableCell>
 
-                  <TableCell>
-                    <span 
-                    className={
-                      `cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium leading-4 bg-gray-100 text-gray-800`
-                    }
-                    
-                    onClick={() => {
-                      setSelectedFighter(fighter);
-                      setOpenPotentialMatchesModal(true);
-                    }}                    >
-                     Search
-                    </span>
-                  </TableCell>
-                
-                <TableCell>
-                  
-                </TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              `cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium leading-4 bg-gray-100 text-gray-800`
+                            }
 
-                </TableRow>
-              )})}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+                            onClick={() => {
+                              setSelectedFighter(fighter);
+                              setOpenPotentialMatchesModal(true);
+                            }}                    >
+                            Search
+                          </span>
+                        </TableCell>
 
-    {openAddFighterModal && eventId && (
-          <AddFighterModal 
+                        <TableCell>
+
+                        </TableCell>
+
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {openAddFighterModal && eventId && (
+          <AddFighterModal
             eventId={eventId}
             savesTo="roster"
             promoterId={promoterId}
@@ -316,14 +338,50 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
           />
         )}
 
-    {openPotentialMatchesModal && (
-      <FindPotentialMatchesModal 
-        fighter={selectedFighter as RosterFighter} 
-        onClose={() => setOpenPotentialMatchesModal(false)} 
-      />
-    )}
+        {openPotentialMatchesModal && (
+          <FindPotentialMatchesModal
+            fighter={selectedFighter as RosterFighter}
+            onClose={() => setOpenPotentialMatchesModal(false)}
+          />
+        )}
 
-    </CollapsibleContent>
-  </Collapsible>
+
+<Dialog open={openCreateBoutModal} onOpenChange={setOpenCreateBoutModal}>
+  <DialogContent className="max-w-3xl">
+    <DialogHeader>
+      <DialogTitle>Create Bout</DialogTitle>
+    </DialogHeader>
+    {selectedFighter && (
+      <CreateBout
+                red={selectedCorner === 'red' ? selectedFighter : null}
+                blue={selectedCorner === 'blue' ? selectedFighter : null}
+                boutNum={1}
+                setBoutNum={() => { } }
+                weightclass={selectedFighter.weightclass || 0}
+                setWeightclass={() => { } }
+                ringNum={1}
+                setRingNum={() => { } }
+                dayNum={1}
+                setDayNum={() => { } }
+                bout_type="MT"
+                setBoutType={() => { } }
+                boutConfirmed={true}
+                setBoutConfirmed={() => { } }
+                isCreatingMatch={false}
+                setRed={() => { } }
+                setBlue={() => { } } 
+                setIsCreatingMatch={function (): void {
+                  throw new Error('Function not implemented.');
+                } } 
+                promoterId={''} 
+                eventId={''} 
+                rosterPath={null} 
+                eventData={eventData}      />
+    )}
+  </DialogContent>
+</Dialog>
+
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

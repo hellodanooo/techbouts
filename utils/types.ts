@@ -155,8 +155,6 @@ export interface EventType {
   bout_type?: string;
 }
 
-
-
 export type GymRecord = {
   boysWin: number;
   boysLoss: number;
@@ -357,7 +355,6 @@ export interface PmtFighterRecord {
   }>;
 }
 
-// Existing FightRecord interface
 export interface FightRecord {
   date: string;
   eventName: string;

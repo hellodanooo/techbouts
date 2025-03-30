@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button";
 
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import MatchesDisplay from './MatchesDisplay';
-import { createMatch as createMatchUtil } from '@/utils/events/matches';
 import { useAuth } from '@/context/AuthContext';
-import CreateBout from './CreateBout';
+
 import RosterTable from '@/app/events/[promoterId]/[eventId]/admin/RosterTable';
 
 interface PageClientProps {
@@ -22,8 +21,6 @@ interface PageClientProps {
   eventData: EventType;
   roster: RosterFighter[];
 }
-
-
 
 
 export default function PageClient({
@@ -40,20 +37,8 @@ export default function PageClient({
 
   const router = useRouter();
 
-  // Only keep necessary UI state variables, not roster state
-  const [red, setRed] = useState<RosterFighter | null>(null);
-  const [blue, setBlue] = useState<RosterFighter | null>(null);
-  const [isCreatingMatch, setIsCreatingMatch] = useState(false);
+
   const [rosterData, ] = useState<RosterFighter[]>(initialRoster);
-  const [rosterPath, ] = useState<string | null>(null);
-  const [boutNum, setBoutNum] = useState<number>(1);
-  const [ringNum, setRingNum] = useState<number>(1);
-  const [dayNum, setDayNum] = useState<number>(1);
-  const [bout_type, setBoutType] = useState<string>('MT');
-  const [weightclass, setWeightclass] = useState<number>(0);
-  const [boutConfirmed, setBoutConfirmed] = useState<boolean>(true);
-
-
 
 
 
@@ -79,53 +64,12 @@ export default function PageClient({
   return (
     <div className="space-y-6">
 
-      <CreateBout
-        red={red}
-        blue={blue}
-        boutNum={boutNum}
-        setBoutNum={setBoutNum}
-        weightclass={weightclass}
-        setWeightclass={setWeightclass}
-        ringNum={ringNum}
-        setRingNum={setRingNum}
-        dayNum={dayNum}
-        setDayNum={setDayNum}
-        bout_type={bout_type}
-        setBoutType={setBoutType}
-        boutConfirmed={boutConfirmed}
-        setBoutConfirmed={setBoutConfirmed}
-        isCreatingMatch={isCreatingMatch}
-        setRed={setRed}
-        setBlue={setBlue}
-        createMatch={() =>
-          createMatchUtil({
-            red,
-            blue,
-            weightclass,
-            boutNum,
-            ringNum,
-            eventId,
-            promoterId,
-            setIsCreatingMatch,
-            setRed,
-            setBlue,
-            date: eventData.date,
-            sanctioning: eventData.sanctioning,
-            eventName: eventData.event_name,
-            promotionName: eventData.promoterId,
-            bout_type: bout_type,
-            dayNum: dayNum,
-          })
-        }
-        disableCreate={!red || !blue || isCreatingMatch || !rosterPath}
-      />
-
-
       <RosterTable
         roster={roster}
         eventId={eventId}
         promoterId={promoterId}
         isAdmin={isAdmin}
+        eventData={eventData}
       />
 
       <MatchesDisplay bouts={bouts} promoterId={promoterId} eventId={eventId} />
