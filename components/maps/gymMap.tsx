@@ -3,13 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { Map, Marker, NavigationControl, Source, Layer } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { ResultsFighter } from '@/utils/types';
+import { FullContactFighter } from '@/utils/types';
 import { GeocodeResult, getGeocode } from '../../utils/geocode';
 import { FeatureCollection, LineString, GeoJsonProperties, Feature } from 'geojson';
 
 
 interface GymMapProps {
-  fightCardData: ResultsFighter[];
+  fightCardData: FullContactFighter[];
   venueAddress: string;
 }
 
@@ -37,15 +37,8 @@ const GymMap: React.FC<GymMapProps> = ({ fightCardData, venueAddress }) => {
     const fetchLocations = async () => {
       console.log("Map Component: Fetching gym locations");
       console.log("HERE CAN THE Addresses to Map");
-      const uniqueGyms = fightCardData.reduce((acc, fighter) => {
-        if (fighter.gym_id && fighter.address && fighter.website && !acc.some(gym => gym.gymAddress === fighter.address)) {
-          acc.push({
-            gymName: fighter.gym,
-            gymAddress: fighter.address,
-            gymId: fighter.gym_id,
-            website: fighter.website
-          });
-        }
+      const uniqueGyms = fightCardData.reduce((acc) => {
+    
         return acc;
       }, [] as { gymName: string, gymAddress: string, gymId: string, website: string }[]);
 

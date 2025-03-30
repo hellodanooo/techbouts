@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
-import { GymProfile } from '@/utils/types';
+import { GymRecord } from '@/utils/types';
 import _ from 'lodash';
 
 interface FighterFormData {
@@ -58,7 +58,7 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
   const mergedInitialData = { ...defaultFormData, ...initialData };
   const [formData, setFormData] = useState<FighterFormData>(mergedInitialData);
   const [gymSearchTerm, setGymSearchTerm] = useState<string>(mergedInitialData.gym || '');
-  const [gymSearchResults, setGymSearchResults] = useState<GymProfile[]>([]);
+  const [gymSearchResults, setGymSearchResults] = useState<GymRecord[]>([]);
   const [dobError, setDobError] = useState<string | null>(null);
   const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
 
@@ -86,7 +86,7 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
             snapshot.docs.map(doc => ({ 
               id: doc.id, 
               ...doc.data() 
-            } as GymProfile))
+            } as GymRecord))
           );
           setGymSearchResults(gyms);
         } catch (error) {
@@ -105,13 +105,12 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
     debouncedFetchGyms(searchTerm);
   }, [debouncedFetchGyms]);
 
-  const handleGymSelect = (gym: GymProfile) => {
-    setGymSearchTerm(gym.gym.toUpperCase());
+  const handleGymSelect = (gym: GymRecord) => {
+    setGymSearchTerm(gym.name.toUpperCase());
     const updatedFormData = {
       ...formData,
-      gym: gym.gym,
-      coach_name: gym.coach_name ? gym.coach_name.toUpperCase() : '',
-      coach_phone: gym.coach_phone || '',
+      gym: gym.name.toUpperCase(),
+
     };
     setFormData(updatedFormData);
     onFormDataChange(updatedFormData);
@@ -213,7 +212,7 @@ const EditFighterForm: React.FC<FighterFormProps> = ({ initialData, onFormDataCh
           <ul style={{ listStyleType: 'none', padding: 0, textAlign:'center' }}>
             {gymSearchResults.map((gym, index) => (
               <li key={index} style={{ cursor: 'pointer', border: '2px solid green', marginTop: '5px', padding: '2px', borderRadius: '3px' }} onClick={() => handleGymSelect(gym)}>
-                {gym.gym}
+                {gym.name}
               </li>
             ))}
           </ul>

@@ -2,10 +2,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { QRCodeSVG } from 'qrcode.react';
-import { GymProfile, ResultsFighter } from '../../utils/types';
+import { FullContactFighter, GymRecord } from '../../utils/types';
 
 interface GymProfileCardProps {
-  gymProfile: GymProfile;
+  gymProfile: GymRecord;
   logoUrl: string | null;
 }
 
@@ -57,7 +57,7 @@ const GymProfileCard: React.FC<GymProfileCardProps> = ({ gymProfile, logoUrl }) 
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
         link.href = image;
-        link.download = `${gymProfile.gym || ''}-profile.png`;
+        link.download = `${gymProfile.name || ''}-profile.png`;
         link.click();
       } catch (err) {
         console.error('Error generating image:', err);
@@ -67,8 +67,8 @@ const GymProfileCard: React.FC<GymProfileCardProps> = ({ gymProfile, logoUrl }) 
 
 
 
-  const sortedAthletes = [...(gymProfile.athletes || [])].sort((a, b) => 
-    (b.win || 0) - (a.win || 0)
+  const sortedAthletes = [...(gymProfile.fighters || [])].sort((a, b) => 
+    (b.mt_win || 0) - (a.mt_loss || 0)
   );
 
 
@@ -141,7 +141,7 @@ const GymProfileCard: React.FC<GymProfileCardProps> = ({ gymProfile, logoUrl }) 
           {logoDataUrl && (
             <img 
               src={logoDataUrl}
-              alt={`${gymProfile.gym || ''} logo`}
+              alt={`${gymProfile.name || ''} logo`}
               style={{
                 width: '100px',
                 height: '100px',
@@ -159,7 +159,7 @@ const GymProfileCard: React.FC<GymProfileCardProps> = ({ gymProfile, logoUrl }) 
               margin: '0 0 8px 0',
               color: '#111827'
             }}>
-              {gymProfile.gym || 'Gym Name'}
+              {gymProfile.name || 'Gym Name'}
             </h2>
             <p style={{
               fontSize: '16px',
@@ -234,7 +234,7 @@ const GymProfileCard: React.FC<GymProfileCardProps> = ({ gymProfile, logoUrl }) 
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '12px'
           }}>
-            {sortedAthletes.slice(0, 6).map((athlete: ResultsFighter, index: number) => (
+            {sortedAthletes.slice(0, 6).map((athlete: FullContactFighter, index: number) => (
               <div
                 key={index}
                 style={{
@@ -254,7 +254,7 @@ const GymProfileCard: React.FC<GymProfileCardProps> = ({ gymProfile, logoUrl }) 
                   fontSize: '14px',
                   color: '#6b7280'
                 }}>
-                  {athlete.weightclass} lbs  • {athlete.win} Win
+                  {athlete.weightclass} lbs  • {athlete.mt_win} Win
                 </div>
               </div>
             ))}

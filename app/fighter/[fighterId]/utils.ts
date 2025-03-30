@@ -1,7 +1,7 @@
 // app/fighter/[fighterId]/utils.ts
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
-import { FullContactFighter, FullContactBoutData, PMTFight } from '@/utils/types';
+import { FullContactFighter, Bout, PMTFight } from '@/utils/types';
 
 
 export async function getFighterData(fighterId: string): Promise<FullContactFighter | null> {
@@ -18,7 +18,6 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
     
     // Create base fighter object with all the required fields from interface
     const fighterData: FullContactFighter = {
-      id: data.fighter_id || fighterSnap.id,
       fighter_id: data.fighter_id || fighterSnap.id,
       first: data.first || '',
       last: data.last || '',
@@ -34,16 +33,16 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
       coach_email: data.coach_email || '',
       coach_name: data.coach_name || '',
       coach_phone: data.coach_phone || '',
+      gym_website: data.gym_website || '',
+      gym_address: data.gym_address || '',
       
       // Location Information
       state: data.state || '',
       city: data.city || '',
-      address: data.address || '',
+  
       
       // Physical Information
-      weighin: data.weighin || 0,
       weightclass: Number(data.weightclass) || 0,
-      height: Number(data.height) || 0,
       
       // Record
       mt_win: data.mt_win || 0,
@@ -56,14 +55,13 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
       pmt_loss: data.pmt_loss || 0,
       nc: data.nc || 0,
       dq: data.dq || 0,
-      
       // Experience & Classification
       years_exp: data.years_exp || 0,
+      other_exp: data.other_exp || '',
       age_gender: (data.age_gender as 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS') || 'MEN',
       
       // Media & Documentation
       photo: data.photo || '',
-      photo_package: data.photo_package || false,
       docId: fighterSnap.id,
       
       // Additional required fields
@@ -77,15 +75,6 @@ export async function getFighterData(fighterId: string): Promise<FullContactFigh
       // Include legacy bouts data if available
       fullContactbouts: data.fullContactbouts || [],
       
-      // Add references to bouts in the separate collection
-      boutRefs: data.boutRefs || [],
-      
-      // Payment information with defaults
-      payment_info: {
-        paymentIntentId: '',
-        paymentAmount: 0,
-        paymentCurrency: ''
-      }
     };
 
     // Calculate total wins/losses
@@ -145,7 +134,7 @@ function processAndSortPMTFights(data: FullContactFighter): PMTFight[] {
 
 
 // New helper function to fetch verified bouts for a fighter from the separate collection
-export async function getVerifiedBoutsForFighter(fighterId: string): Promise<FullContactBoutData[]> {
+export async function getVerifiedBoutsForFighter(fighterId: string): Promise<Bout[]> {
   try {
     // Query the verified bouts collection for this fighter
     const boutsRef = collection(db, 'techbouts_verified_bouts');
@@ -153,12 +142,41 @@ export async function getVerifiedBoutsForFighter(fighterId: string): Promise<Ful
     const querySnapshot = await getDocs(q);
     
     // Process and return the bouts
-    const bouts: FullContactBoutData[] = [];
+    const bouts: Bout[] = [];
     querySnapshot.forEach((doc) => {
+      const boutData = doc.data();
       bouts.push({
         id: doc.id,
-        ...doc.data()
-      } as FullContactBoutData);
+        boutId: boutData.boutId || '',
+        weightclass: boutData.weightclass || 0,
+        ringNum: boutData.ringNum || 0,
+        boutNum: boutData.boutNum || 0,
+        date: boutData.date || '',
+        fighter_id: boutData.fighter_id || '',
+        opponent_id: boutData.opponent_id || '',
+        result: boutData.result || '',
+        eventId: boutData.eventId || '',
+        eventName: boutData.eventName || '',
+        referee: boutData.referee || '',
+        judges: boutData.judges || [],
+        duration: boutData.duration || '',
+        method: boutData.method || '',
+        round: boutData.round || 0,
+        notes: boutData.notes || '',
+        red: boutData.red || '',
+        blue: boutData.blue || '',
+        methodOfVictory: boutData.methodOfVictory || '',
+        url: boutData.url || '',
+        location: boutData.location || '',
+        time: boutData.time || '',
+        promotionId: boutData.promotionId || '',
+        promotionName: boutData.promotionName || '',
+        sanctioning: boutData.sanctioning || '',
+        bout_type: boutData.bout_type || '',
+        weightclassName: boutData.weightclassName || '',
+        dayNum: boutData.dayNum || 0, // Add default value for dayNum
+        class: boutData.class || '', // Add default value for class
+      } as Bout);
     });
     
     // Sort by date (most recent first)

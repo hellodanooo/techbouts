@@ -3,32 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
+import { Bout } from '@/utils/types';
 
-// Define the BoutData interface for type safety
-interface BoutData {
-  id?: string;
-  fighter_id: string;
-  fighterName: string;
-  opponentName: string;
-  url: string;
-  date: string;
-  result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
-  promotionName: string;
-  sanctioningBody: string;
-  promotionId?: string;
-  sanctioningId?: string;
-  opponentId?: string;
-  namePresent: boolean;
-  datePresent: boolean;
-  promotionPresent: boolean;
-  sanctioningPresent: boolean;
-  opponentPresent: boolean;
-  resultVerified: boolean;
-  timestamp: string;
-  inputDate: string;
-  inputOpponentFirst: string;
-  inputOpponentLast: string;
-}
 
 interface VerifiedBoutsDisplayProps {
   fighterId: string;
@@ -41,7 +17,7 @@ const VerifiedBoutsDisplay: React.FC<VerifiedBoutsDisplayProps> = ({
   fighterId,
   refreshTrigger = 0
 }) => {
-  const [fighterBouts, setFighterBouts] = useState<BoutData[]>([]);
+  const [fighterBouts, setFighterBouts] = useState<Bout[]>([]);
   const [isLoadingBouts, setIsLoadingBouts] = useState(false);
   const [boutsError, setBoutsError] = useState<string | null>(null);
 
@@ -57,15 +33,15 @@ const VerifiedBoutsDisplay: React.FC<VerifiedBoutsDisplayProps> = ({
       const fighterQuery = query(boutsRef, where('fighter_id', '==', fighterId));
       
       const querySnapshot = await getDocs(fighterQuery);
-      const bouts: BoutData[] = [];
+      const bouts: Bout[] = [];
       
       querySnapshot.forEach((doc) => {
         // Get the data from each document
-        const boutData = doc.data() as BoutData;
+        const boutData = doc.data() as Bout;
         // Add an id field to identify the document later if needed
         bouts.push({
           ...boutData,
-          id: doc.id
+          boutId: doc.id
         });
       });
       
@@ -90,19 +66,6 @@ const VerifiedBoutsDisplay: React.FC<VerifiedBoutsDisplayProps> = ({
     fetchFighterBouts();
   }, [fighterId, refreshTrigger]);
 
-  // Get the fighter's record (W-L-D)
-  const getRecord = () => {
-    const wins = fighterBouts.filter(bout => bout.result === 'W').length;
-    const losses = fighterBouts.filter(bout => bout.result === 'L').length;
-    const draws = fighterBouts.filter(bout => bout.result === 'DRAW').length;
-    const nc = fighterBouts.filter(bout => bout.result === 'NC').length;
-    const dq = fighterBouts.filter(bout => bout.result === 'DQ').length;
-    
-    if (nc > 0 || dq > 0) {
-      return `${wins}-${losses}-${draws} (${nc} NC, ${dq} DQ)`;
-    }
-    return `${wins}-${losses}-${draws}`;
-  };
 
   return (
     <div className="mt-8 p-4 bg-white rounded-lg shadow">
@@ -110,7 +73,7 @@ const VerifiedBoutsDisplay: React.FC<VerifiedBoutsDisplayProps> = ({
         <h2 className="text-xl font-semibold">Fighters Bout History</h2>
         {fighterBouts.length > 0 && (
           <div className="text-sm font-medium bg-gray-100 px-3 py-1 rounded">
-            Record: {getRecord()}
+            Record: Need to Make
           </div>
         )}
       </div>
@@ -141,36 +104,7 @@ const VerifiedBoutsDisplay: React.FC<VerifiedBoutsDisplayProps> = ({
               </tr>
             </thead>
             <tbody>
-              {fighterBouts.map((bout, index) => (
-                <tr key={bout.id || index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                  <td className="px-4 py-2 text-sm text-gray-700">
-                    {new Date(bout.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-700">
-                    {bout.opponentName}
-                  </td>
-                  <td className={`px-4 py-2 text-sm font-semibold ${
-                    bout.result === 'W' ? 'text-green-700' : 
-                    bout.result === 'L' ? 'text-red-700' : 
-                    'text-gray-700'
-                  }`}>
-                    {bout.result}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-700">
-                    {bout.promotionName}
-                  </td>
-                  <td className="px-4 py-2 text-sm">
-                    <a 
-                      href={bout.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      View Source
-                    </a>
-                  </td>
-                </tr>
-              ))}
+        
             </tbody>
           </table>
         </div>

@@ -14,37 +14,25 @@ import EmbedMatchesGenerator from '@/components/EmbedMatchesGenerator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import EmailTable from './EmailClient'; // adjust path as needed
+import { RosterFighter, Bout } from '@/utils/types';
 
 
 
-interface Fighter {
-    first?: string;
-    last?: string;
-    gym?: string;
-    weightclass?: string | number;
-    age?: string | number;
-    experience?: string | number;
-    status?: string;
-    gender: string;
-    [key: string]: string | number | undefined;
-}
+
 
 interface PageDashboardProps {
     eventId: string;
     eventData: EventType;
     promoterId: string;
-    roster: Fighter[];
+    roster: RosterFighter[];
+    bouts: Bout[];
 }
 
-export default function PageDashboard({ eventData, eventId, promoterId, roster }: PageDashboardProps) {
+export default function PageDashboard({ eventData, eventId, promoterId, roster, bouts }: PageDashboardProps) {
     const { user, isAdmin } = useAuth();
-
     const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
-
     const isPromoter = user?.email === eventData.promoterEmail;
     const [showEmbed, setShowEmbed] = useState(false);
-
-
     const [openSections, setOpenSections] = useState({
         matches: false,
         emails: false,
@@ -148,6 +136,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
                     roster={roster}
                     eventId={eventId}
                     promoterId={promoterId}
+                    isAdmin={isAdmin}
                 />
             </div>
 
@@ -164,10 +153,15 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster }
                         {openSections.matches ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                     </CollapsibleTrigger>
                     <CollapsibleContent className="p-4 bg-white">
+                       
+                       
                         <Matches
                             initialRoster={roster}
                             eventId={eventId}
                             promoterId={promoterId}
+                            eventData={eventData}
+                            bouts={bouts || []} // Ensure bouts is passed
+                            roster={roster} // Pass roster as required
                         />
 
 

@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, query, limit, startAfter, orderBy, getCountFromServer, getDoc, doc } from 'firebase/firestore';
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
-import { FullContactFighter } from '@/utils/types';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -96,7 +95,20 @@ export async function GET(request: NextRequest) {
         pb_win: data.pb_win || 0,
         pb_loss: data.pb_loss || 0,
         age_gender: data.age_gender || '',
-      } as FullContactFighter;
+        city: data.city || '',
+        other_exp: data.other_exp || '',
+        pmt_fights: data.pmt_fights || 0,
+        gym_website: data.gym_website || '',
+        gym_address: data.gym_address || '',
+      };
+      // Ensure all required properties of FullContactFighter are included
+      return {
+        city: data.city || '',
+        other_exp: data.other_exp || '',
+        pmt_fights: data.pmt_fights || 0,
+        gym_website: data.gym_website || '',
+        gym_address: data.gym_address || '',
+      };
     });
     
     return NextResponse.json({
@@ -171,7 +183,12 @@ export async function POST(request: NextRequest) {
         pb_win: data.pb_win || 0,
         pb_loss: data.pb_loss || 0,
         age_gender: data.age_gender || '',
-      } as FullContactFighter;
+        city: data.city || '',
+        other_exp: data.other_exp || '',
+        pmt_fights: data.pmt_fights || 0,
+        gym_website: data.gym_website || '',
+        gym_address: data.gym_address || '',
+      };
     });
     
     // Filter fighters based on search terms

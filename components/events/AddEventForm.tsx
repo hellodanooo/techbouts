@@ -2,20 +2,21 @@
 
 import React, { useState } from 'react';
 import { EventType, Promoter } from '@/utils/types';
-import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
-import { addEvent } from '@/utils/events/eventManagement';
-
-import { addPmtEvent } from '@/utils/apiFunctions/addPmtEvent';
-import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCollection';
-
-import { getGeocode } from "use-places-autocomplete";
-import { generateDocId } from '@/utils/events/eventManagement';
 import Image from 'next/image';
 import { Label } from "@/components/ui/label";
-import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
 import { FaRegFileImage } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa"; // Icons for dropdown
-import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider"; // Import our provider
+// Function Imports
+import { addEvent } from '@/utils/events/eventManagement';
+import { addPmtEvent } from '@/utils/apiFunctions/addPmtEvent';
+import { createPmtEventCollection } from '@/utils/apiFunctions/createPmtEventCollection';
+import { getGeocode } from "use-places-autocomplete";
+import { generateDocId } from '@/utils/events/eventManagement';
+// component imports
+import GoogleAutocomplete from '@/components/ui/GoogleAutocomplete';
+import GoogleMapsProvider from "@/components/ui/GoogleMapsProvider";
+import { uploadEventFlyer } from '@/utils/images/uploadEventFlyer';
+
 
 
 interface AddEventFormProps {

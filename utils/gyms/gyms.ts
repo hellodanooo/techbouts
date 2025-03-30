@@ -2,7 +2,7 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
 import { populateGymLogos } from "@/utils/gyms/logos";
-import { GymProfile } from '@/utils/types';
+import { GymRecord } from '@/utils/types';
 
 type MetadataType = {
   [key: string]: unknown;
@@ -24,9 +24,9 @@ type GymGroupType = {
 };
 
 const fetchGyms = async (): Promise<{
-  gyms: Record<string, GymProfile>;
+  gyms: Record<string, GymRecord>;
   metadata?: MetadataType | null;
-  topGyms: GymProfile[]; // Updated type for topGyms
+  topGyms: GymRecord[]; // Updated type for topGyms
   success: boolean;
   error?: string;
 }> => {
@@ -46,21 +46,21 @@ const fetchGyms = async (): Promise<{
       "11_20_win",
       "21_more_win",
     ];
-    const allGyms: Record<string, GymProfile> = {};
+    const allGyms: Record<string, GymRecord> = {};
 
     for (const group of winGroups) {
       const docRef = doc(db, collectionName, group);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const data = docSnap.data() as { gyms: Record<string, GymProfile> };
+        const data = docSnap.data() as { gyms: Record<string, GymRecord> };
         if (data.gyms) {
           Object.assign(allGyms, data.gyms);
         }
       }
     }
 
-    const gymsArray: GymProfile[] = Object.values(allGyms);
+    const gymsArray: GymRecord[] = Object.values(allGyms);
 
     // Populate logos for all gyms
     const allGymsWithLogos = await populateGymLogos(gymsArray);
@@ -80,7 +80,7 @@ const fetchGyms = async (): Promise<{
       gyms: allGymsWithLogos.reduce((acc, gym) => {
         acc[gym.id] = gym; // Use gym ID as the key instead of gym name
         return acc;
-      }, {} as Record<string, GymProfile>),
+      }, {} as Record<string, GymRecord>),
       metadata,
       topGyms,
       success: true,

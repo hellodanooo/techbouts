@@ -4,7 +4,7 @@ import axios from 'axios';
 import { doc, setDoc } from 'firebase/firestore';
 import FighterForm from '@/components/ui/FighterForm';
 import { format } from 'date-fns';
-import { FighterFormData } from '@/utils/types';
+import { FullContactFighter } from '@/utils/types';
 import { db } from '@/lib/firebase_techbouts/config';
 
 interface CheckoutFormProps {
@@ -40,12 +40,12 @@ const CARD_ELEMENT_OPTIONS = {
 const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModal, registrationFee, eventName }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [fighterData, setFighterData] = useState<FighterFormData | null>(null);
+  const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
 
 
-  const initialFighterData: FighterFormData = {
+  const initialFighterData: FullContactFighter = {
     first: '',
     last: '',
     email: '',
@@ -53,21 +53,38 @@ const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModa
     gym: '',
     age: 0,
     weightclass: 0,
-    mtp_id: '',
-    win: 0,
-    loss: 0,
-    mmaWin: 0,
-    mmaLoss: 0,
-    gender: '',
+    fighter_id: '',
+    mt_win: 0,
+    mt_loss: 0,
+    mma_win: 0,
+    mma_loss: 0,
+    gender: 'MALE',
     years_exp: 0,
-    other: '',
-    height: 0,
+    other_exp: '',
     heightFoot: 0,
     heightInch: 0,
     phone: '',
     coach_phone: '',
     coach_name: '',
     gym_id: '',
+    photo: '',
+    coach: '',
+    coach_email: '',
+    state: '',
+    city: '',
+    age_gender: 'MEN',
+    docId: '',
+    boxing_win: 0,
+    boxing_loss: 0,
+    pmt_win: 0,
+    pmt_loss: 0,
+    pb_win: 0,
+    pb_loss: 0,
+    nc: 0,
+    dq: 0,
+    pmt_fights: [],
+    gym_website: '',
+    gym_address: ''
   };
 
 
@@ -167,7 +184,7 @@ const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModa
     if (registrationFee === 0) {
       try {
         // Store registration data in Firestore
-        await setDoc(doc(db, 'purist_events', eventId, 'roster', fighterData.mtp_id), {
+        await setDoc(doc(db, 'purist_events', eventId, 'roster', fighterData.fighter_id), {
           ...formDataWithDate,
           registrationFee: 0,
         });
@@ -234,7 +251,7 @@ const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModa
       return;
     }
 
-    const mtp_id = fighterData.mtp_id;
+    const mtp_id = fighterData.fighter_id;
     const idempotencyKey = `reg-charge-${mtp_id}-${Date.now()}`;
 
     try {
@@ -243,7 +260,7 @@ const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModa
         eventId: eventId,
         amount: registrationFee,
         idempotencyKey,
-        mtp_id: formDataWithDate.mtp_id,
+        mtp_id: formDataWithDate.fighter_id,
       });
 
       if (response.data.success && response.data.paymentIntentId) {
@@ -254,7 +271,7 @@ const RegistrationComponent: React.FC<CheckoutFormProps> = ({ eventId, closeModa
         };
 
         try {
-          await setDoc(doc(db, 'purist_events', eventId, 'roster', fighterData.mtp_id), formDataWithDateAndPayment);
+          await setDoc(doc(db, 'purist_events', eventId, 'roster', fighterData.fighter_id), formDataWithDateAndPayment);
           console.log('Registration data stored in Firestore successfully.');
         } catch (error) {
           console.error('Error storing registration data in Firestore:', error);

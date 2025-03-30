@@ -42,7 +42,8 @@ export async function editTechBoutsEvent(promoterId: string, eventId: string, up
       photos_enabled: updatedEventData.photoPackageEnabled,
       photos_price: updatedEventData.photoPackagePrice,
       coach_enabled: updatedEventData.coach_enabled,
-      coach_price: updatedEventData.coachRegPrice
+      coach_price: updatedEventData.coachRegPrice,
+      payLaterEnabled: updatedEventData.payLaterEnabled ?? false,
     };
     
     console.log('editTechBoutsEvent - Transformed data:', transformedData);

@@ -1,10 +1,12 @@
+// components/database/AddFighterModal.tsx
+
 'use client';
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { db } from '@/lib/firebase_techbouts/config';
 import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
-import FighterForm from '../../../../../components/events/FighterForm';
+import FighterForm from '../events/FighterForm';
 import {
   Dialog,
   DialogContent,
@@ -19,10 +21,10 @@ import { FullContactFighter } from '@/utils/types';
 
 
 interface AddFighterModalProps {
-  eventId: string;
+  eventId?: string;
   savesTo: 'roster' | 'database';
   isOpen: boolean;
-  promoterId: string;
+  promoterId?: string;
   onClose: () => void;
   onFighterAdded?: (fighter: FullContactFighter) => void;
 }
@@ -57,6 +59,9 @@ export default function AddFighterModal({
 
       // Then save to roster or elsewhere based on savesTo prop
       if (savesTo === 'roster') {
+        if (!eventId) {
+          throw new Error('Missing eventId for roster save');
+        }
         await saveToRoster(fighterData);
       }
 
@@ -86,7 +91,9 @@ export default function AddFighterModal({
   };
 
   const saveToRoster = async (fighter: FullContactFighter) => {
-    try {
+    if (!eventId) throw new Error("eventId is required for saving to roster");
+    if (!promoterId) throw new Error("promoterId is required for saving to roster");
+       try {
       // Get current date
       const currentDate = new Date().toISOString();
       

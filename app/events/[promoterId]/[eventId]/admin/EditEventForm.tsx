@@ -118,7 +118,7 @@ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     photoPackageEnabled: eventData.photoPackageEnabled || false,
     coach_enabled: eventData.coach_enabled || false,
     disableRegistration: eventData.disableRegistration || false,
-    payLaterEnabled: eventData.payLaterEnabled || false,
+    payLaterEnabled: eventData.payLaterEnabled,
   });
 
 

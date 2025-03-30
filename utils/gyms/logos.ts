@@ -1,7 +1,7 @@
 // utils/gyms/logos.ts
 import { getStorage, ref, listAll, getDownloadURL } from "firebase/storage";
 import { app } from "@/lib/firebase_techbouts/config";
-import { GymProfile } from "../types";
+import { GymRecord } from "../types";
 
 /**
  * Fetch all existing gym logos from Firebase Storage.
@@ -38,7 +38,7 @@ export const fetchAllLogos = async (): Promise<Record<string, string>> => {
  * @param gyms List of gym profiles.
  * @returns Gym profiles with logos added where available.
  */
-export const populateGymLogos = async (gyms: GymProfile[]): Promise<GymProfile[]> => {
+export const populateGymLogos = async (gyms: GymRecord[]): Promise<GymRecord[]> => {
     const logoMap = await fetchAllLogos(); // Fetch map of all gym logos
   
     return gyms.map((gym) => ({
@@ -52,7 +52,7 @@ export const populateGymLogos = async (gyms: GymProfile[]): Promise<GymProfile[]
  * @param gym Single gym profile.
  * @returns Gym profile with logo added if available.
  */
-export const populateSingleGymLogo = async (gym: GymProfile): Promise<GymProfile> => {
+export const populateSingleGymLogo = async (gym: GymRecord): Promise<GymRecord> => {
   const logoMap = await fetchAllLogos();
   return {
     ...gym,

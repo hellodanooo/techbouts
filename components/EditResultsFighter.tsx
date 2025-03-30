@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase_pmt/config';
-import { ResultsFighter } from '../utils/types';
-import EditFighterForm from '@/components/EditFighterForm';
+import { RosterFighter } from '../utils/types';
 
 interface EditResultsFighterModalProps {
-  fighter: ResultsFighter;
+  fighter: RosterFighter;
   eventId: string;
   onClose: () => void;
   onUpdate: () => void;
@@ -18,11 +17,9 @@ const EditResultsFighterModal: React.FC<EditResultsFighterModalProps> = ({
   onUpdate
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [formData, setFormData] = useState<Partial<ResultsFighter>>({});
+  const [formData] = useState<Partial<RosterFighter>>({});
 
-  const handleFormDataChange = (updatedData: Partial<ResultsFighter>) => {
-    setFormData(updatedData);
-  };
+
 
   const handleSubmit = async () => {
     try {
@@ -41,8 +38,8 @@ const EditResultsFighterModal: React.FC<EditResultsFighterModalProps> = ({
 
       // Update the specific fighter in the fighters array
       const resultsData = resultsJsonDoc.data();
-      const updatedFighters = resultsData.fighters.map((f: ResultsFighter) => {
-        if (f.id === fighter.id) {
+      const updatedFighters = resultsData.fighters.map((f: RosterFighter) => {
+        if (f.fighter_id === fighter.fighter_id) {
           const updatedEmail = formData.email?.trim() || f.email || defaultEmail;
           const updatedPhone = formData.phone?.trim() || f.phone || defaultPhone;
           return {
@@ -55,12 +52,10 @@ const EditResultsFighterModal: React.FC<EditResultsFighterModalProps> = ({
             weightclass: Number(formData.weightclass) || f.weightclass,
             age: Number(formData.age) || f.age,
             // Preserve critical bout information
-            bout: f.bout,
-            mat: f.mat,
+     
             result: f.result,
-            boutmat: f.boutmat,
-            fighternum: f.fighternum,
-            opponent_id: f.opponent_id,
+     
+   
             email: updatedEmail,
             phone: updatedPhone,
           };
@@ -116,14 +111,10 @@ const EditResultsFighterModal: React.FC<EditResultsFighterModalProps> = ({
           </h2>
 
           <div style={{ marginBottom: '10px', textAlign: 'center' }}>
-            <strong>Bout:</strong> {fighter.bout} | <strong>Mat:</strong> {fighter.mat} | 
             <strong>Result:</strong> {fighter.result}
           </div>
 
-          <EditFighterForm
-            initialData={fighter}
-            onFormDataChange={handleFormDataChange}
-          />
+       
 
           <div style={{
             display: 'flex',

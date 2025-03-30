@@ -11,6 +11,15 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
   const [error, setError] = useState<string | null>(null);
   const [country, setCountry] = useState<'us' | 'mx'>('us'); // Default to US
   const [isLoading, setIsLoading] = useState(false);
+
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualTimeoutReached, setManualTimeoutReached] = useState(false);
+  const [manualAddress, setManualAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+  });
   
   // Check if Google Maps API is available
   const googleAvailable = typeof window !== 'undefined' && 
@@ -38,6 +47,13 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
     console.log("Google Maps available:", googleAvailable);
   }, [ready, googleAvailable]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!ready) setManualTimeoutReached(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [ready]);
+
   const handleSelect = async (description: string) => {
     try {
       setIsLoading(true);
@@ -60,9 +76,15 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
     }
   };
 
+  const handleManualSubmit = () => {
+    const fullAddress = `${manualAddress.street}, ${manualAddress.city}, ${manualAddress.state} ${manualAddress.zip}`;
+    onSelect(fullAddress, { lat: 0, lng: 0 }); // Use dummy coordinates or integrate geocoding here
+  };
+
+
+
   return (
     <div className="relative">
-      {/* Country Selector */}
       <select
         className="w-full p-2 border rounded mb-2"
         value={country}
@@ -73,42 +95,43 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
         <option value="mx">Mexico</option>
       </select>
 
-      {/* Address Input */}
-      <div className="relative">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setError(null);
-          }}
-          disabled={!ready}
-          placeholder={ready 
-            ? `Search address in ${country === 'us' ? 'United States' : 'Mexico'}`
-            : "Loading Google Maps..."}
-          className={`w-full p-2 border rounded ${!ready ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-          aria-label="Address search"
-        />
-        
-        {!ready && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin h-4 w-4 border-2 border-gray-500 rounded-full border-t-transparent"></div>
-          </div>
-        )}
-      </div>
-
-      {/* API Status Indicator */}
-      {!ready && (
-        <div className="text-yellow-600 text-sm mt-1 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          Waiting for Google Maps to load...
+      {!showManualEntry && (
+        <div className="relative">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setError(null);
+            }}
+            disabled={!ready}
+            placeholder={ready 
+              ? `Search address in ${country === 'us' ? 'United States' : 'Mexico'}`
+              : "Loading Google Maps..."}
+            className={`w-full p-2 border rounded ${!ready ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            aria-label="Address search"
+          />
+          {!ready && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin h-4 w-4 border-2 border-gray-500 rounded-full border-t-transparent"></div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Suggestions Dropdown */}
-      {status === 'OK' && (
+      {manualTimeoutReached && (
+        <label className="block mt-2">
+          <input
+            type="checkbox"
+            className="mr-2"
+            checked={showManualEntry}
+            onChange={(e) => setShowManualEntry(e.target.checked)}
+          />
+          Enter address manually
+        </label>
+      )}
+
+      {status === 'OK' && !showManualEntry && (
         <ul className="absolute z-10 border rounded bg-white w-full max-h-60 overflow-y-auto shadow-md">
           {data.map(({ place_id, description }) => (
             <li
@@ -122,14 +145,12 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
         </ul>
       )}
 
-      {/* No results message */}
       {status === 'ZERO_RESULTS' && value && (
         <div className="text-gray-500 text-sm mt-1">
           No matching addresses found
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="text-red-500 text-sm mt-1 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,12 +159,50 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
           {error}
         </div>
       )}
-      
-      {/* Loading indicator */}
+
       {isLoading && (
         <div className="text-blue-500 text-sm mt-1 flex items-center">
           <div className="animate-spin h-3 w-3 border-2 border-blue-500 rounded-full border-t-transparent mr-2"></div>
           Processing address...
+        </div>
+      )}
+
+      {showManualEntry && (
+        <div className="mt-4 space-y-2">
+          <input
+            type="text"
+            placeholder="Street"
+            className="w-full p-2 border rounded"
+            value={manualAddress.street}
+            onChange={(e) => setManualAddress({ ...manualAddress, street: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="City"
+            className="w-full p-2 border rounded"
+            value={manualAddress.city}
+            onChange={(e) => setManualAddress({ ...manualAddress, city: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="State"
+            className="w-full p-2 border rounded"
+            value={manualAddress.state}
+            onChange={(e) => setManualAddress({ ...manualAddress, state: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="ZIP Code"
+            className="w-full p-2 border rounded"
+            value={manualAddress.zip}
+            onChange={(e) => setManualAddress({ ...manualAddress, zip: e.target.value })}
+          />
+          <button
+            className="w-full bg-blue-600 text-white py-2 rounded"
+            onClick={handleManualSubmit}
+          >
+            Submit Manual Address
+          </button>
         </div>
       )}
     </div>

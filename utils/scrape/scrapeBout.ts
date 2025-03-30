@@ -3,8 +3,8 @@
 
 interface SearchParams {
   url: string;
-  firstName: string;
-  lastName: string;
+  first: string;
+  last: string;
   opponentFirstName: string;
   opponentLastName: string;
   date: string;
@@ -13,13 +13,15 @@ interface SearchParams {
   result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
 }
 interface FightVerification extends SearchResults {
-    resultVerified: boolean;
-    verificationReason?: string;
-    detectedResult?: {
-      winner?: string;
-      method?: string;
-    };
-  }
+  resultVerified: boolean;
+  verificationReason?: string;
+  detectedResult?: {
+    winner?: string;
+    method?: string;
+  };
+  score: number;
+  scrapeVerificationScore: number;
+}
   interface SearchResults {
     fighterName: boolean;
     opponentName: boolean;
@@ -219,8 +221,8 @@ export const handleSearch = async (
 ) => {
   const { 
     url, 
-    firstName, 
-    lastName, 
+    first, 
+    last, 
     opponentFirstName, 
     opponentLastName, 
     date, 
@@ -260,8 +262,8 @@ export const handleSearch = async (
     addScrapeStatus(`Retrieved ${data.contexts.length} content blocks from page`);
 
     // Check fighter name
-    addScrapeStatus(`Checking fighter name: "${firstName} ${lastName}"`);
-    const fullName = `${firstName} ${lastName}`.toLowerCase();
+    addScrapeStatus(`Checking fighter name: "${first} ${last}"`);
+    const fullName = `${first} ${last}`.toLowerCase();
     
     const fighterContexts = data.contexts.filter((ctx: ScrapeContext) => 
       ctx.content.toLowerCase().includes(fullName)
@@ -467,7 +469,7 @@ export const handleSearch = async (
     addScrapeStatus(`Verifying fight result: "${result}"`);
     const { verified, reason } = verifyFightResult(
       data.contexts,
-      `${firstName} ${lastName}`,
+      `${first} ${last}`,
       `${opponentFirstName} ${opponentLastName}`,
       result
     );
@@ -485,11 +487,18 @@ export const handleSearch = async (
       sanctioningBody: sanctioningFound
     };
     
-    const finalResults: FightVerification = {
+
+    const score = Object.values(initialResults).filter(Boolean).length;
+    addScrapeStatus(`📊 Data match score: ${score}/6`);
+
+    const finalResults: FightVerification & { score: number } = {
       ...initialResults,
       resultVerified: verified,
-      verificationReason: reason
+      verificationReason: reason,
+      scrapeVerificationScore: score,
+      score: score
     };
+
 
     setSearchResults(finalResults);
     addScrapeStatus("Scrape completed! See detailed results below.");

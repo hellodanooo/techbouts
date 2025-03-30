@@ -81,6 +81,12 @@ async function getInitialData() {
         pb_win: data.pb_win || 0,
         pb_loss: data.pb_loss || 0,
         age_gender: data.age_gender || '',
+        city: data.city || '',
+        other_exp: data.other_exp || '',
+        pmt_fights: data.pmt_fights || [],
+        gym_website: data.gym_website || '',
+        gym_address: data.gym_address || '',
+
       } as FullContactFighter;
     });
     

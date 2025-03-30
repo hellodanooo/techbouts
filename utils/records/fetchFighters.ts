@@ -44,9 +44,8 @@ export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> =>
         nc: data.nc || 0,
         dq: data.dq || 0,
         years_exp: data.years_exp || 0,
-  
+
         // additional fields
-        address: data.address || '',
         age: Number(data.age) || 0,
         city: data.city || '',
         coach: data.coach_name || '',
@@ -57,17 +56,16 @@ export const fetchTechBoutsFighters = async (): Promise<FullContactFighter[]> =>
         docId: data.docId || doc.id,
         gender: data.gender || '',
         gym_id: data.gym_id || '',
-        height: Number(data.height) || 0,
-  
+
         photo: data.photo || '',
         state: data.state || '',
-        website: data.website || '',
-        id: data.id || '',
         phone: data.phone || '',
         pb_win: data.pb_win || 0,
         pb_loss: data.pb_loss || 0,
-    
-     
+        other_exp: '',
+        pmt_fights: [],
+        gym_website: '',
+        gym_address: ''
       };
       
       fighters.push(fighter);

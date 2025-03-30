@@ -102,7 +102,6 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
         gym: formData.gym,
         email: formData.email,
         weightclass: formData.weightclass,
-        height: formData.height,
         years_exp: formData.years_exp,
         state: formData.state,
         city: formData.city,
@@ -333,20 +332,7 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
                       )}
                       <Separator />
                       
-                      <div className="flex justify-between items-center">
-                        <Label className="text-muted-foreground">Height:</Label>
-                        {editMode ? (
-                          <Input
-                            type="number"
-                            name="height"
-                            value={formData.height || ""}
-                            onChange={handleInputChange}
-                            className="w-24 text-right"
-                          />
-                        ) : (
-                          <span className="font-medium">{fighter.height || "Not specified"}</span>
-                        )}
-                      </div>
+                      
                       <Separator />
                       
                       <div className="flex justify-between items-center">
@@ -540,10 +526,7 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
   {!isCollapsed && (
     <CardContent>
       <BoutSearch
-        firstName={fighter.first}
-        lastName={fighter.last}
-        fighterId={fighter.fighter_id}
-        gym={fighter.gym}
+      fighter={fighter}
       />
     </CardContent>
   )}

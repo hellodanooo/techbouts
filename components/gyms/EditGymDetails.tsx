@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import { app } from '@/lib/firebase_techbouts/config';
 import LogoUpload from '../../app/gyms/[gymId]/LogoUpload';
-import { GymProfile } from '../../utils/types';
+import { GymRecord } from '../../utils/types';
 import axios from 'axios';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import Image from 'next/image';
@@ -47,7 +47,7 @@ interface EditGymDetailsProps {
   onClose: () => void;
   onSuccess: () => void;
   gymId: string;
-  initialData?: Partial<GymProfile>;
+  initialData?: Partial<GymRecord>;
 }
 
 const EditGymDetails: React.FC<EditGymDetailsProps> = ({
@@ -123,7 +123,7 @@ const EditGymDetails: React.FC<EditGymDetailsProps> = ({
         currency: 'USD',
         idempotencyKey: `donation-${gymId}-${Date.now()}`,
         gymId: gymId,
-        gymName: initialData?.gym
+        gymName: initialData?.name
       });
   
       if (paymentResponse.data.success) {

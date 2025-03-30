@@ -6,10 +6,11 @@ import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
-import AddFighterModal from './AddFighterModal';
+import AddFighterModal from '../../../../../components/database/AddFighterModal';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
 import { toast } from 'sonner';
+import { RosterFighter } from '@/utils/types';
 
 import {
   Card,
@@ -28,40 +29,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
-interface Fighter {
-  first?: string;
-  last?: string;
-  gym?: string;
-  weightclass?: string | number;
-  age?: string | number;
-  experience?: string | number;
-  status?: string;
-  photo?: string;
-  fighter_id?: string;
-  id?: string;
-  mt_win?: number;
-  mt_loss?: number;
-  [key: string]: string | number | undefined;
-  gender: string;
-}
-
 interface RosterTableProps {
-  roster: Fighter[];
+  roster: RosterFighter[];
   eventId: string;
   promoterId: string;
+  isAdmin?: boolean;
 }
 
 const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
 
 export default function RosterTable({ roster, eventId, promoterId }: RosterTableProps) {
   const router = useRouter();
-
   const [openPotentialMatchesModal, setOpenPotentialMatchesModal] = React.useState(false);
-  const [selectedFighter, setSelectedFighter] = React.useState<Fighter | null>(null);
+  const [selectedFighter, setSelectedFighter] = React.useState<RosterFighter | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<{ [key: string]: boolean }>({});
-
   const [openAddFighterModal, setOpenAddFighterModal] = useState(false);
-  
   const [openSections, setOpenSections] = useState({
     roster: false,
   });
@@ -84,12 +66,12 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
     }
   };
 
-  const getPhotoUrl = (fighter: Fighter): string => {
+  const getPhotoUrl = (fighter: RosterFighter): string => {
     return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
   };
 
-  const navigateToFighterDetail = (fighter: Fighter) => {
-    const fighterId = fighter.fighter_id || fighter.id;
+  const navigateToFighterDetail = (fighter: RosterFighter) => {
+    const fighterId = fighter.fighter_id;
     if (fighterId) {
       router.push(`/fighter/${fighterId}`);
     } else {
@@ -98,8 +80,8 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
   };
 
   // Refresh fighter data from techbouts_fighters database
-  const refreshFighterData = async (fighter: Fighter) => {
-    const fighterId = fighter.fighter_id || fighter.id;
+  const refreshFighterData = async (fighter: RosterFighter) => {
+    const fighterId = fighter.fighter_id;
     if (!fighterId) {
       toast.error("Fighter ID not available");
       return;
@@ -122,7 +104,6 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
 
       // Get the updated fighter data
       const updatedFighterData = fighterDoc.data();
-      
       // Map the data to match the Fighter interface
       const updatedFighter = {
         fighter_id: updatedFighterData.fighter_id || fighterId,
@@ -153,8 +134,8 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
         const currentFighters = rosterData.fighters || [];
         
         // Find and replace the fighter in the roster array
-        const updatedRoster = currentFighters.map((f: Fighter) => {
-          const currentFighterId = f.fighter_id || f.id;
+        const updatedRoster = currentFighters.map((f: RosterFighter) => {
+          const currentFighterId = f.fighter_id;
           if (currentFighterId === fighterId) {
             return { ...f, ...updatedFighter };
           }
@@ -232,8 +213,6 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
     </CollapsibleTrigger>
     <CollapsibleContent className="p-4 bg-white">
 
-    
- 
     <div className="flex justify-end mb-4">
           <Button 
             onClick={() => setOpenAddFighterModal(true)}
@@ -265,7 +244,7 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
             </TableHeader>
             <TableBody>
               {roster.map((fighter, index) => {
-                const fighterId = fighter.fighter_id || fighter.id || '';
+                const fighterId = fighter.fighter_id || '';
                 return (
                 <TableRow key={index}>
                   <TableCell>
@@ -280,8 +259,7 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
                   </TableCell>
                   <TableCell
                     onClick={() => navigateToFighterDetail(fighter)}
-                    className="cursor-pointer hover:text-blue-600 hover:underline"
-                  >
+                    className="cursor-pointer hover:text-blue-600 hover:underline">
                     {`${fighter.first || ''} ${fighter.last || ''}`}
                   </TableCell>
                   <TableCell>{fighter.gym || '-'}</TableCell>
@@ -289,7 +267,6 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
                   <TableCell>{fighter.age || '-'}</TableCell>
                   <TableCell>{fighter.gender || '-'}</TableCell>
                   <TableCell>{`${fighter.mt_win || 0}-${fighter.mt_loss || 0}`}</TableCell>
-                 
                   <TableCell>
                     <span 
                       className={`
@@ -316,6 +293,11 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
                      Search
                     </span>
                   </TableCell>
+                
+                <TableCell>
+                  
+                </TableCell>
+
                 </TableRow>
               )})}
             </TableBody>
@@ -336,7 +318,7 @@ export default function RosterTable({ roster, eventId, promoterId }: RosterTable
 
     {openPotentialMatchesModal && (
       <FindPotentialMatchesModal 
-        fighter={selectedFighter as Fighter} 
+        fighter={selectedFighter as RosterFighter} 
         onClose={() => setOpenPotentialMatchesModal(false)} 
       />
     )}

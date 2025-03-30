@@ -9,6 +9,7 @@ import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
 
 import PageDashboard from './PageDashboard';
+import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts'; 
 
 
 //import { fetchPuristRoster } from '@/utils/apiFunctions/fetchPuristRoster';
@@ -37,7 +38,6 @@ if (eventData) {
   if (!eventData) {
     eventData = await fetchTechBoutsEvent(promoterId, eventId);
     roster = await fetchTechBoutsRoster(promoterId, eventId);
-  
   }
 
   if (!eventData) {
@@ -45,16 +45,18 @@ if (eventData) {
   }
 
 
+  const matchesData = await fetchTechboutsBouts(promoterId, eventId);
 
 
   return (
     <div>
       
       <PageDashboard
-      eventData={eventData}
       eventId={eventId}
-      promoterId={promoterId}
+      eventData={eventData}
       roster={roster}
+      bouts={matchesData}
+      promoterId={promoterId}
     />
     </div>
   );

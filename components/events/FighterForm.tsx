@@ -104,11 +104,11 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       fouryears: '4 Years',
       fivePlusyears: '5+ Years',
       semiContactFights: 'Number of Semi Contact Fights',
-      
+
 
 
     };
-  
+
     const es = {
       returningAthletes: 'ATLETAS REGISTRADOS',
       doubleCheckInfo: '(verifica tu información)',
@@ -174,19 +174,14 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       fivePlusyears: '5+ Años',
       semiContactFights: 'Número de Peleas de Semi Contacto',
     };
-  
+
     return locale === 'es' ? es : en;
   });
-  
-
-
 
   const lbsToKg = (lbs: number): string => {
     const kg = lbs * 0.453592;
     return kg.toFixed(1);
   };
-
-
 
   const weightClasses = [
     { lbs: 60, kg: lbsToKg(60) },
@@ -251,9 +246,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   };
 
-
-
-
   const handleDateChange = (date: dayjs.Dayjs | null) => {
     if (date) {
       const formattedDate = date.format('MM/DD/YYYY');
@@ -270,18 +262,16 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     }
   };
 
-
   const [formData, setFormData] = useState<FullContactFighter>({
     // Basic Information
-    id: '',
     first: '',
     last: '',
     dob: '',
     age: 0,
-    gender: '',
+    gender: 'MALE',
     email: user || '',
     phone: '',
-  
+
     // Gym Information
     gym: '',
     gym_id: '',
@@ -289,22 +279,17 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     coach_email: '',
     coach_name: '',
     coach_phone: '',
-  
+
     // Location Information
     state: '',
     city: '',
-    address: '',
-    comp_city: '',
-    comp_state: '',
-  
+
     // Physical Information
-    weighin: 0,
     weightclass: 0,
-    height: 0,
     heightFoot: 0,
     heightInch: 0,
     heightCm: 0,
-  
+
     // Record
     mt_win: 0,
     mt_loss: 0,
@@ -319,46 +304,26 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
     other_exp: '',
     nc: 0,
     dq: 0,
-  
+
     // Event Info
-    event: '',
-    eventDocId: '',
-    bout: 0,
-    bout_type: '',
-    boutid: '',
-    boutmat: '',
-    mat: 0,
-    bracket: 0,
-    day: 0,
-    fighternum: '',
-    opponent_id: '',
-    result: '',
-    championship_result: '',
-  
+
     // Experience
     years_exp: 0,
-  
+
     age_gender: 'MEN', // or WOMEN, BOYS, GIRLS depending on logic
-   
-  
+
+
     // Media & Docs
     photo: '',
-    photo_package: false,
     docId: '',
     fighter_id: '',
-    website: '',
-    date_registered: '',
-    payment_info: {
-      paymentIntentId: '',
-      paymentAmount: 0,
-      paymentCurrency: '',
-    },
-    eventIds: [],
+
     pmt_fights: [],
     fullContactbouts: [],
-    boutRefs: [],
+    gym_address: '',
+    gym_website: '',
   });
-  
+
 
 
   const [dobError, setDobError] = useState<string | null>(null);
@@ -367,21 +332,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   //////////////////////////////////////////////////////////////////
   /////////////////// GYM SEARCH ///////////////////////////////////////////////
   //const [gymSearchTerm, setGymSearchTerm] = useState<string>('');
-
-
-
-  // Update the gym search effect in FighterForm.tsx
-
-
-
-
-
-
-
-
-  //////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////
-
 
 
   //////////////////////////////////////////////////////////////////
@@ -441,15 +391,15 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               email: data.email || '',
               dob: data.dob || '',
               gym: data.gym || '',
+              gym_id: data.gym_id || '',
               age: data.age || 0,
               weightclass: data.weightclass || 0,
               fighter_id: data.fighter_id || '',
-            id: data.id || '',
-            docId: data.docId || '',
-            coach: data.coach || '',
-            nc: data.nc || 0,
-            dq: data.dq || 0,
-age_gender: data.age_gender || '',
+              docId: data.docId || '',
+              coach: data.coach || '',
+              nc: data.nc || 0,
+              dq: data.dq || 0,
+              age_gender: data.age_gender || '',
 
               mt_win: data.mt_win || 0,
               mt_loss: data.mt_loss || 0,
@@ -463,10 +413,9 @@ age_gender: data.age_gender || '',
               pb_loss: data.pb_loss || 0,
 
               gender: data.gender || '',
-             
+
               years_exp: data.years_exp || 0,
-          
-              height: data.height || 0,
+
               heightFoot: data.heightFoot || 0,
               heightInch: data.heightInch || 0,
               phone: data.phone || '',
@@ -475,8 +424,13 @@ age_gender: data.age_gender || '',
               coach_email: data.coach_email || '',
               state: data.state || '',
               city: data.city || '',
-              gym_id: data.gym_id || '',
               other_exp: data.other_exp || '',
+
+              // Adding missing properties with default values
+              photo: data.photo || '',
+              pmt_fights: data.pmt_fights || [],
+              gym_website: data.gym_website || '',
+              gym_address: data.gym_address || '',
             };
           };
 
@@ -519,11 +473,11 @@ age_gender: data.age_gender || '',
 
   const handleFighterSelect = (selectedFighter: FullContactFighter) => {
     console.log('Selected fighter raw data:', selectedFighter);
-  
+
     // Format the date string properly if it exists
     let formattedDob = '';
     let calculatedAge = 0;
-    
+
     if (selectedFighter.dob) {
       // Try to parse the date and format it consistently
       try {
@@ -541,7 +495,7 @@ age_gender: data.age_gender || '',
         formattedDob = '';
       }
     }
-  
+
     // Create a complete fighter object with proper data conversions and defaults
     const updatedFighter: FullContactFighter = {
       // Basic Information with defaults for every field
@@ -549,41 +503,35 @@ age_gender: data.age_gender || '',
       last: (selectedFighter.last || '').toUpperCase(),
       email: selectedFighter.email || '',
       dob: formattedDob,
-      age: calculatedAge, 
+      age: calculatedAge,
       gender: selectedFighter.gender || '',
       fighter_id: selectedFighter.fighter_id || '',
-      id: selectedFighter.id || '',
       docId: selectedFighter.docId || '',
       coach: selectedFighter.coach || '',
       nc: selectedFighter.nc || 0,
       dq: selectedFighter.dq || 0,
       age_gender: selectedFighter.age_gender || '',
-
-
-
-
-  
+      photo: selectedFighter.photo || '',
+      pmt_fights: selectedFighter.pmt_fights || [],
+      gym_website: selectedFighter.gym_website || '',
+      gym_address: selectedFighter.gym_address || '',
       // Gym Information
       gym: selectedFighter.gym || '',
       gym_id: selectedFighter.gym_id || '',
       coach_name: selectedFighter.coach_name || '',
       coach_email: selectedFighter.coach_email || '',
       coach_phone: selectedFighter.coach_phone || '',
-  
       // Location Information
       state: selectedFighter.state || '',
       city: selectedFighter.city || '',
-  
       // Physical Information
       weightclass: typeof selectedFighter.weightclass === 'number' ? selectedFighter.weightclass :
         (parseInt(selectedFighter.weightclass as unknown as string) || 0),
-      height: typeof selectedFighter.height === 'number' ? selectedFighter.height :
-        (parseInt(selectedFighter.height as unknown as string) || 0),
       heightFoot: typeof selectedFighter.heightFoot === 'number' ? selectedFighter.heightFoot :
         (parseInt(selectedFighter.heightFoot as unknown as string) || 0),
       heightInch: typeof selectedFighter.heightInch === 'number' ? selectedFighter.heightInch :
         (parseInt(selectedFighter.heightInch as unknown as string) || 0),
-  
+
       // Record fields with numeric conversion
       mt_win: typeof selectedFighter.mt_win === 'number' ? selectedFighter.mt_win :
         (parseInt(selectedFighter.mt_win as unknown as string) || 0),
@@ -605,26 +553,26 @@ age_gender: data.age_gender || '',
         (parseInt(selectedFighter.pb_win as unknown as string) || 0),
       pb_loss: typeof selectedFighter.pb_loss === 'number' ? selectedFighter.pb_loss :
         (parseInt(selectedFighter.pb_loss as unknown as string) || 0),
-  
-   
-  
+
+
+
       // Experience & Classification
       years_exp: typeof selectedFighter.years_exp === 'number' ? selectedFighter.years_exp :
         (parseInt(selectedFighter.years_exp as unknown as string) || 0),
-  
+
       other_exp: selectedFighter.other_exp || '',
-  
+
       // Contact Information
       phone: selectedFighter.phone || '',
-  
-  
+
+
 
     };
-  
- 
-  
+
+
+
     console.log('Processed fighter data:', updatedFighter);
-  
+
     // Parse the date for DatePicker - only if dob exists and is valid
     if (updatedFighter.dob) {
       try {
@@ -641,14 +589,14 @@ age_gender: data.age_gender || '',
         setSelectedDate(null);
       }
     }
-  
+
     // Update form data - IMPORTANT: do this synchronously before the next step
     setFormData(updatedFighter);
-  
+
     // Notify parent component about the updated data
     console.log('Calling onFormDataChange with:', updatedFighter);
     onFormDataChange(updatedFighter);
-  
+
     // Clear search results
     setFighterSearchResults([]);
     setFighterSearchTerm('');
@@ -745,19 +693,19 @@ age_gender: data.age_gender || '',
 
           <Card>
             <CardHeader>
-            <CardTitle>{formLabels.waiverTitle}</CardTitle>
+              <CardTitle>{formLabels.waiverTitle}</CardTitle>
             </CardHeader>
             <CardContent>
 
 
 
-            {source !== 'add-fighter-modal' && (
+              {source !== 'add-fighter-modal' && (
 
-              <ScrollArea className="h-[200px] rounded-md border p-4">
-              {currentWaiver.content}
-              </ScrollArea>
-              
-            )}
+                <ScrollArea className="h-[200px] rounded-md border p-4">
+                  {currentWaiver.content}
+                </ScrollArea>
+
+              )}
 
 
 
@@ -769,10 +717,10 @@ age_gender: data.age_gender || '',
                   onCheckedChange={(checked) => setIsWaiverChecked(checked as boolean)}
                 />
                 <Label htmlFor="waiver" className="text-sm">
-                {formLabels.waiverAgree}
+                  {formLabels.waiverAgree}
                   <br />
                   <span className="text-xs text-muted-foreground">
-                  {formLabels.waiverMinorNote}
+                    {formLabels.waiverMinorNote}
                   </span>
                 </Label>
               </div>
@@ -796,11 +744,11 @@ age_gender: data.age_gender || '',
               <div className="space-y-4">
                 <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
                   <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="email">{formLabels.searchByEmail}</TabsTrigger>
-                  <TabsTrigger value="last">{formLabels.searchByLastName}</TabsTrigger>
+                    <TabsTrigger value="email">{formLabels.searchByEmail}</TabsTrigger>
+                    <TabsTrigger value="last">{formLabels.searchByLastName}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="email" className="space-y-2">
-                  <Label htmlFor="emailSearch">{formLabels.searchByEmail}</Label>
+                    <Label htmlFor="emailSearch">{formLabels.searchByEmail}</Label>
                     <Input
                       id="emailSearch"
                       value={searchType === 'email' ? fighterSearchTerm : ''}
@@ -813,7 +761,7 @@ age_gender: data.age_gender || '',
                     />
                   </TabsContent>
                   <TabsContent value="last" className="space-y-2">
-                  <Label htmlFor="lastNameSearch">{formLabels.searchByLastName}</Label>
+                    <Label htmlFor="lastNameSearch">{formLabels.searchByLastName}</Label>
                     <Input
                       id="lastNameSearch"
                       value={searchType === 'last' ? fighterSearchTerm : ''}
@@ -860,7 +808,7 @@ age_gender: data.age_gender || '',
           {/* New Fighter Form */}
           <Card>
             <CardHeader>
-            <CardTitle>{formLabels.newFighterTitle}</CardTitle>
+              <CardTitle>{formLabels.newFighterTitle}</CardTitle>
               <CardDescription>{formLabels.newAthletes}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -927,113 +875,107 @@ age_gender: data.age_gender || '',
 
                   {/* Height Selection */}
                   <div className="space-y-2">
-  <Label>{formLabels.height}</Label>
-  <div className="flex space-x-2">
-    {locale === 'es' ? (
-      <Select
-        name="heightCm"
-        value={formData.heightCm?.toString() || ''}
-        onValueChange={(value) => {
-          const cm = parseInt(value, 10);
-          const { feet, inches } = cmToFeetAndInches(cm);
-          setFormData({
-            ...formData,
-            heightCm: cm,
-            heightFoot: feet,
-            heightInch: inches,
-            height: Math.round(cm / 2.54),
-          });
-          onFormDataChange({
-            ...formData,
-            heightCm: cm,
-            heightFoot: feet,
-            heightInch: inches,
-            height: Math.round(cm / 2.54),
-          });
-        }}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select height (cm)" />
-        </SelectTrigger>
-        <SelectContent>
-          {heightOptions.centimeters.map(({ value, label }) => (
-            <SelectItem key={value} value={value.toString()}>
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ) : (
-      <>
-        <Select
-          name="heightFoot"
-          value={formData.heightFoot?.toString() || '0'}
-          onValueChange={(value) => {
-            const foot = parseInt(value, 10);
-            const heightInches = foot * 12 + (formData.heightInch || 0);
-            const heightCm = Math.round(heightInches * 2.54);
-            setFormData({
-              ...formData,
-              heightFoot: foot,
-              height: heightInches,
-              heightCm,
-            });
-            onFormDataChange({
-              ...formData,
-              heightFoot: foot,
-              height: heightInches,
-              heightCm,
-            });
-          }}
-        >
-          <SelectTrigger className="w-[110px]">
-            <SelectValue placeholder="Feet" />
-          </SelectTrigger>
-          <SelectContent>
-            {heightOptions.feet.map(({ value, label }) => (
-              <SelectItem key={value} value={value.toString()}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+                    <Label>{formLabels.height}</Label>
+                    <div className="flex space-x-2">
+                      {locale === 'es' ? (
+                        <Select
+                          name="heightCm"
+                          value={formData.heightCm?.toString() || ''}
+                          onValueChange={(value) => {
+                            const cm = parseInt(value, 10);
+                            const { feet, inches } = cmToFeetAndInches(cm);
+                            setFormData({
+                              ...formData,
+                              heightCm: cm,
+                              heightFoot: feet,
+                              heightInch: inches,
+                            });
+                            onFormDataChange({
+                              ...formData,
+                              heightCm: cm,
+                              heightFoot: feet,
+                              heightInch: inches,
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select height (cm)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {heightOptions.centimeters.map(({ value, label }) => (
+                              <SelectItem key={value} value={value.toString()}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <Select
+                            name="heightFoot"
+                            value={formData.heightFoot?.toString() || '0'}
+                            onValueChange={(value) => {
+                              const foot = parseInt(value, 10);
+                              const heightInches = foot * 12 + (formData.heightInch || 0);
+                              const heightCm = Math.round(heightInches * 2.54);
+                              setFormData({
+                                ...formData,
+                                heightFoot: foot,
+                                heightCm,
+                              });
+                              onFormDataChange({
+                                ...formData,
+                                heightFoot: foot,
+                                heightCm,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-[110px]">
+                              <SelectValue placeholder="Feet" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {heightOptions.feet.map(({ value, label }) => (
+                                <SelectItem key={value} value={value.toString()}>
+                                  {label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
 
-        <Select
-          name="heightInch"
-          value={formData.heightInch?.toString() || '0'}
-          onValueChange={(value) => {
-            const inch = parseInt(value, 10);
-            const heightInches = (formData.heightFoot || 0) * 12 + inch;
-            const heightCm = Math.round(heightInches * 2.54);
-            setFormData({
-              ...formData,
-              heightInch: inch,
-              height: heightInches,
-              heightCm,
-            });
-            onFormDataChange({
-              ...formData,
-              heightInch: inch,
-              height: heightInches,
-              heightCm,
-            });
-          }}
-        >
-          <SelectTrigger className="w-[110px]">
-            <SelectValue placeholder="Inches" />
-          </SelectTrigger>
-          <SelectContent>
-            {heightOptions.inches.map(({ value }) => (
-              <SelectItem key={value} value={value.toString()}>
-                {value}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </>
-    )}
-  </div>
-</div>
+                          <Select
+                            name="heightInch"
+                            value={formData.heightInch?.toString() || '0'}
+                            onValueChange={(value) => {
+                              const inch = parseInt(value, 10);
+                              const heightInches = (formData.heightFoot || 0) * 12 + inch;
+                              const heightCm = Math.round(heightInches * 2.54);
+                              setFormData({
+                                ...formData,
+                                heightInch: inch,
+                                heightCm,
+                              });
+                              onFormDataChange({
+                                ...formData,
+                                heightInch: inch,
+                                heightCm,
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-[110px]">
+                              <SelectValue placeholder="Inches" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {heightOptions.inches.map(({ value }) => (
+                                <SelectItem key={value} value={value.toString()}>
+                                  {value}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </>
+                      )}
+                    </div>
+                  </div>
 
 
                 </div>
@@ -1257,96 +1199,96 @@ age_gender: data.age_gender || '',
 
 
                   <div className='border rounded border-black-500 p-5'>
-<div>
-  {locale === 'es' ? 'Sección de Contacto Completo' : 'Full Contact Section'}
-</div>
+                    <div>
+                      {locale === 'es' ? 'Sección de Contacto Completo' : 'Full Contact Section'}
+                    </div>
 
-                  {/* Muay Thai Record */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium">{formLabels.muayThaiRecord}</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label htmlFor="mt_win">{formLabels.win}</Label>
-                        <Input
-                          id="mt_win"
-                          name="mt_win"
-                          type="number"
-                          min="0"
-                          value={formData.mt_win}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="mt_loss">{formLabels.loss}</Label>
-                        <Input
-                          id="mt_loss"
-                          name="mt_loss"
-                          type="number"
-                          min="0"
-                          value={formData.mt_loss}
-                          onChange={handleInputChange}
-                        />
+                    {/* Muay Thai Record */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">{formLabels.muayThaiRecord}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="mt_win">{formLabels.win}</Label>
+                          <Input
+                            id="mt_win"
+                            name="mt_win"
+                            type="number"
+                            min="0"
+                            value={formData.mt_win}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="mt_loss">{formLabels.loss}</Label>
+                          <Input
+                            id="mt_loss"
+                            name="mt_loss"
+                            type="number"
+                            min="0"
+                            value={formData.mt_loss}
+                            onChange={handleInputChange}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Boxing Record */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium">{formLabels.boxingRecord}</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label htmlFor="boxing_win">Wins</Label>
-                        <Input
-                          id="boxing_win"
-                          name="boxing_win"
-                          type="number"
-                          min="0"
-                          value={formData.boxing_win}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="boxing_loss">{formLabels.loss}</Label>
-                        <Input
-                          id="boxing_loss"
-                          name="boxing_loss"
-                          type="number"
-                          min="0"
-                          value={formData.boxing_loss}
-                          onChange={handleInputChange}
-                        />
+                    {/* Boxing Record */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">{formLabels.boxingRecord}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="boxing_win">Wins</Label>
+                          <Input
+                            id="boxing_win"
+                            name="boxing_win"
+                            type="number"
+                            min="0"
+                            value={formData.boxing_win}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="boxing_loss">{formLabels.loss}</Label>
+                          <Input
+                            id="boxing_loss"
+                            name="boxing_loss"
+                            type="number"
+                            min="0"
+                            value={formData.boxing_loss}
+                            onChange={handleInputChange}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* MMA Record */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium">{formLabels.mmaRecord}</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label htmlFor="mma_win">{formLabels.win}</Label>
-                        <Input
-                          id="mma_win"
-                          name="mma_win"
-                          type="number"
-                          min="0"
-                          value={formData.mma_win}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="mma_loss">{formLabels.loss}</Label>
-                        <Input
-                          id="mma_loss"
-                          name="mma_loss"
-                          type="number"
-                          min="0"
-                          value={formData.mma_loss}
-                          onChange={handleInputChange}
-                        />
+                    {/* MMA Record */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">{formLabels.mmaRecord}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="mma_win">{formLabels.win}</Label>
+                          <Input
+                            id="mma_win"
+                            name="mma_win"
+                            type="number"
+                            min="0"
+                            value={formData.mma_win}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="mma_loss">{formLabels.loss}</Label>
+                          <Input
+                            id="mma_loss"
+                            name="mma_loss"
+                            type="number"
+                            min="0"
+                            value={formData.mma_loss}
+                            onChange={handleInputChange}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
 
                   </div>
@@ -1453,7 +1395,7 @@ age_gender: data.age_gender || '',
                     </div>
                   </div>
 
-<div className="space-y-2">
+                  <div className="space-y-2">
                     <Label htmlFor="other_exp">{formLabels.other}</Label>
                     <Input
                       id="other_exp"

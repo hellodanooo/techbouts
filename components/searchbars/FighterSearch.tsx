@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import AddFighterModal from '@/components/database/AddFighterModal';
 
 interface FighterSearchProps {
   onFighterSelect: (fighter: FullContactFighter) => void;
@@ -31,6 +32,7 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
   const [fighterSearchResults, setFighterSearchResults] = useState<FullContactFighter[]>([]);
   const [searchType, setSearchType] = useState<'email' | 'last'>('email');
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isAddFighterModalOpen, setIsAddFighterModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchFighters = async () => {
@@ -73,7 +75,6 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
           const mapDocToFighterData = (doc: QueryDocumentSnapshot<DocumentData>): FullContactFighter => {
             const data = doc.data();
             return {
-              id: data.fighter_id || doc.id,
               fighter_id: data.fighter_id || doc.id,
               first: data.first || '',
               last: data.last || '',
@@ -89,10 +90,7 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
               coach_phone: data.coach_phone || '',
               state: data.state || '',
               city: data.city || '',
-              address: data.address || '',
-              weighin: data.weighin || 0,
               weightclass: Number(data.weightclass) || 0,
-              height: Number(data.height) || 0,
               mt_win: data.mt_win || data.win || 0,
               mt_loss: data.mt_loss || data.loss || 0,
               boxing_win: data.boxing_win || 0,
@@ -106,17 +104,14 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
               years_exp: data.years_exp || 0,
               age_gender: (data.age_gender as 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS') || 'MEN',
               photo: data.photo || '',
-              photo_package: data.photo_package || false,
               docId: doc.id,
               pmt_fights: data.pmt_fights || data.fights || [],
               phone: data.phone || '',
               pb_win: data.pb_win || 0,
               pb_loss: data.pb_loss || 0,
-              payment_info: {
-                paymentIntentId: '',
-                paymentAmount: 0,
-                paymentCurrency: ''
-              }
+              other_exp: data.other_exp || '',
+              gym_website: data.gym_website || '',
+              gym_address: data.gym_address || '',
             };
           };
 
@@ -225,9 +220,28 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
 
       {fighterSearchTerm.length >= 3 && fighterSearchResults.length === 0 && !isSearching && (
         <div className="text-center p-4 text-muted-foreground">
-          No fighters found. Try a different search term.
-        </div>
+No fighters found. Try a different search term or add fighter to database
+    <button
+      className="ml-2 text-blue-600 underline"
+      onClick={() => setIsAddFighterModalOpen(true)}
+    >
+      Add Fighter
+    </button>        </div>
       )}
+
+
+
+<AddFighterModal
+  savesTo="database"
+  isOpen={isAddFighterModalOpen}
+  onClose={() => setIsAddFighterModalOpen(false)}
+  onFighterAdded={(fighter) => {
+    setIsAddFighterModalOpen(false);
+    handleFighterSelect(fighter);
+  }}
+/>
+
+
     </div>
   );
 

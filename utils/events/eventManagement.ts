@@ -5,70 +5,6 @@ import { db } from '@/lib/firebase_techbouts/config';
 import { EventType } from '@/utils/types';
 
 
-const getEventsJson = async (): Promise<EventType[]> => {
-  const docRef = doc(db, 'events', 'events_json');
-  const snapshot = await getDoc(docRef);
-
-  if (!snapshot.exists()) {
-    try {
-      await setDoc(docRef, { events: [] });
-    } catch (error) {
-      console.error('Error initializing Firestore events document:', error);
-      throw new Error('Failed to initialize events document.');
-    }
-    return [];
-  }
-
-  const data = snapshot.data();
-  return data?.events || [];
-};
-
-const saveFirestoreEvents = async (events: EventType[]) => {
-  const docRef = doc(db, 'events', 'events_json');
-  await updateDoc(docRef, { events });
-};
-
-export const saveToFirestore = async (event: EventType | { eventId: string }, action: 'add' | 'update' | 'delete') => {
-  if (!event || typeof event !== 'object' || !('eventId' in event)) {
-    throw new Error('Invalid event data provided.');
-  }
-
-  const events = await getEventsJson();
-  let updatedEvents = events;
-
-  switch (action) {
-    case 'add':
-      if (events.some((e) => e.eventId === event.eventId)) {
-        throw new Error('Event with the same ID already exists.');
-      }
-      updatedEvents = [...events, event as EventType];
-      break;
-
-    case 'update':
-      if (!events.some((e) => e.eventId === event.eventId)) {
-        throw new Error('Event not found for update.');
-      }
-      updatedEvents = events.map((e) => (e.eventId === event.eventId ? { ...e, ...event } : e));
-      break;
-
-    case 'delete':
-      updatedEvents = events.filter((e) => e.eventId !== event.eventId);
-      break;
-
-    default:
-      throw new Error('Invalid action specified.');
-  }
-
-  await saveFirestoreEvents(updatedEvents);
-};
-
-const sanitizeString = (str: string): string => {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-    .replace(/\s+/g, '_')        // Replace spaces with underscores
-    .trim();                     // Remove leading/trailing spaces
-};
 
 export const generateDocId = (sanctioning: string, eventName: string, city: string, state: string, date: string): string => {
   // Validate and parse the date
@@ -134,6 +70,74 @@ export const addEvent = async (eventData: EventType): Promise<{ success: boolean
     };
   }
 };
+
+
+
+const getEventsJson = async (): Promise<EventType[]> => {
+  const docRef = doc(db, 'events', 'events_json');
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) {
+    try {
+      await setDoc(docRef, { events: [] });
+    } catch (error) {
+      console.error('Error initializing Firestore events document:', error);
+      throw new Error('Failed to initialize events document.');
+    }
+    return [];
+  }
+
+  const data = snapshot.data();
+  return data?.events || [];
+};
+
+const saveFirestoreEvents = async (events: EventType[]) => {
+  const docRef = doc(db, 'events', 'events_json');
+  await updateDoc(docRef, { events });
+};
+
+export const saveToFirestore = async (event: EventType | { eventId: string }, action: 'add' | 'update' | 'delete') => {
+  if (!event || typeof event !== 'object' || !('eventId' in event)) {
+    throw new Error('Invalid event data provided.');
+  }
+
+  const events = await getEventsJson();
+  let updatedEvents = events;
+
+  switch (action) {
+    case 'add':
+      if (events.some((e) => e.eventId === event.eventId)) {
+        throw new Error('Event with the same ID already exists.');
+      }
+      updatedEvents = [...events, event as EventType];
+      break;
+
+    case 'update':
+      if (!events.some((e) => e.eventId === event.eventId)) {
+        throw new Error('Event not found for update.');
+      }
+      updatedEvents = events.map((e) => (e.eventId === event.eventId ? { ...e, ...event } : e));
+      break;
+
+    case 'delete':
+      updatedEvents = events.filter((e) => e.eventId !== event.eventId);
+      break;
+
+    default:
+      throw new Error('Invalid action specified.');
+  }
+
+  await saveFirestoreEvents(updatedEvents);
+};
+
+const sanitizeString = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+    .replace(/\s+/g, '_')        // Replace spaces with underscores
+    .trim();                     // Remove leading/trailing spaces
+};
+
 
 
 

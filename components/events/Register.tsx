@@ -6,7 +6,7 @@ import axios from 'axios';
 import { db } from '@/lib/firebase_techbouts/config';
 import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { FullContactFighter } from '@/utils/types';
+import { FullContactFighter, RosterFighter } from '@/utils/types';
 // Shadcn UI Components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ interface RegisterProps {
   promotionLogoUrl?: string;
   sanctioning: string;
   customWaiver?: string;
+  payLaterEnabled: boolean;
 }
 
 
@@ -70,7 +71,7 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning, customWaiver }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning, customWaiver, payLaterEnabled }) => {
 
   const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -84,6 +85,11 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   const stripe = useStripe();
   const elements = useElements();
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [isPayLater, setIsPayLater] = useState(false);
+
+  const handlePayLaterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsPayLater(e.target.checked);
+  };
 
   useEffect(() => {
     // For Mexican events (locale === 'es'), always use base fee
@@ -127,7 +133,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       gymSuspendedMessage: 'This Team is suspended for {days} more days.',
       freeRegistrationTitle: 'Free Registration',
       freeRegistrationText: 'Your registration is free of charge.',
-      statusTitle: 'Status Update'
+      statusTitle: 'Status Update',
+      payLaterLabel: 'Pay at Weigh-ins',
     };
   
     const es = {
@@ -146,7 +153,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       gymSuspendedMessage: 'Este equipo está suspendido por {days} días más.',
       freeRegistrationTitle: 'Registro gratuito',
       freeRegistrationText: 'Tu inscripción no tiene costo.',
-      statusTitle: 'Actualización de estado'
+      statusTitle: 'Actualización de estado',
+      payLaterLabel: 'Pagar en el pesaje',
     };
   
     return locale === 'es' ? es : en;
@@ -431,7 +439,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   ): Promise<boolean> {
     try {
       // Create payment info object, ensuring no undefined values
-      const paymentInfo = {
+      const payment_info = {
         paymentIntentId: fighterData.paymentIntentId || "",
         paymentAmount: fighterData.paymentAmount || 0,
         paymentCurrency: fighterData.paymentCurrency || 'USD'
@@ -444,10 +452,9 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
       
       // Prepare fighter data to match FullContactFighter interface
-      const fullContactFighterData: Partial<FullContactFighter> = {
+      const fullContactFighterData: Partial<RosterFighter> = {
         // Basic Information
         fighter_id: fighterData.fighter_id,
-        id: fighterData.fighter_id,
         first: fighterData.first,
         last: fighterData.last,
         dob: fighterData.dob,
@@ -457,7 +464,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         
         // Gym Information
         gym: fighterData.gym,
-        gym_id: fighterData.gym_id || '',
         coach: fighterData.coach_name,
         coach_email: fighterData.coach_email || '',
         coach_name: fighterData.coach_name,
@@ -487,10 +493,9 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       
         // Documentation
         docId: fighterData.fighter_id,
+        payment_info,
         
         // Additional data for tracking
-        date_registered: currentDate,
-        payment_info: paymentInfo
       };
       
       // Reference to the roster_json document
@@ -728,100 +733,139 @@ return (
           customWaiver={customWaiver}
         />
         
-        <div className="space-y-2">
-          <div className="flex items-end gap-2">
-            <div className="w-full space-y-1">
-              <Label htmlFor="creditCode">{formContent.creditCodeLabel}</Label>
-              <Input
-                id="creditCode"
-                value={creditCode}
-                onChange={handleCreditCodeChange}
-                placeholder="Enter credit code if you have one"
-              />
-            </div>
-            {showVerifyButton && (
-              <Button 
-                onClick={validateCreditCode} 
-                variant="outline"
-                size="default"
-              >
-                {formContent.verifyButton}
-              </Button>
-            )}
-          </div>
-          
-          {isCreditCodeValid !== null && (
-            <div className="mt-2">
-              {isCreditCodeValid ? (
-                <Alert variant="default" className="bg-green-50 border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertTitle className="text-green-600">Valid Code</AlertTitle>
-                  <AlertDescription className="text-green-600">
-                    {formContent.validCodeMessage}
-                  </AlertDescription>
-                </Alert>
-              ) : creditCodeRedeemed ? (
-                <Alert variant="default" className="bg-amber-50 border-amber-200">
-                  <AlertCircle className="h-4 w-4 text-amber-600" />
-                  <AlertTitle className="text-amber-600">Already Redeemed</AlertTitle>
-                  <AlertDescription className="text-amber-600">
-                    {formContent.redeemedCodeMessage}
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <Alert variant="default" className="bg-red-50 border-red-200">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertTitle className="text-red-600">Invalid Code</AlertTitle>
-                  <AlertDescription className="text-red-600">
-                    {formContent.invalidCodeMessage}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
+
+
+      <div className="space-y-2">
+  {payLaterEnabled && (
+    <div className="border border-gray-300 rounded p-4 space-y-2 mt-4">
+      <p className="font-medium">
+        {locale === 'es'
+          ? 'El Promotor ha habilitado a los Atletas para Pagar la Tarifa de Inscripción en el Pesaje'
+          : 'The Promoter Has Enabled the Option for Athletes to Pay Registration Fee at Weigh-ins'}
+      </p>
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="payLater"
+          checked={isPayLater}
+          onChange={handlePayLaterChange}
+        />
+        <span>
+          {formContent.payLaterLabel ?? (locale === 'es' ? 'Pagar en el pesaje' : 'Pay at Weigh-ins')}
+        </span>
+      </label>
+      <p className="text-sm text-gray-600">
+      
+      </p>
+    </div>
+  )}
+
+  {!isPayLater && (
+    <>
+      <div className="flex items-end gap-2">
+        <div className="w-full space-y-1">
+          <Label htmlFor="creditCode">{formContent.creditCodeLabel}</Label>
+          <Input
+            id="creditCode"
+            value={creditCode}
+            onChange={handleCreditCodeChange}
+            placeholder="Enter credit code if you have one"
+          />
+        </div>
+        {showVerifyButton && (
+          <Button
+            onClick={validateCreditCode}
+            variant="outline"
+            size="default"
+          >
+            {formContent.verifyButton}
+          </Button>
+        )}
+      </div>
+
+      {isCreditCodeValid !== null && (
+        <div className="mt-2">
+          {isCreditCodeValid ? (
+            <Alert variant="default" className="bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-600">Valid Code</AlertTitle>
+              <AlertDescription className="text-green-600">
+                {formContent.validCodeMessage}
+              </AlertDescription>
+            </Alert>
+          ) : creditCodeRedeemed ? (
+            <Alert variant="default" className="bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-600">Already Redeemed</AlertTitle>
+              <AlertDescription className="text-amber-600">
+                {formContent.redeemedCodeMessage}
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert variant="default" className="bg-red-50 border-red-200">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertTitle className="text-red-600">Invalid Code</AlertTitle>
+              <AlertDescription className="text-red-600">
+                {formContent.invalidCodeMessage}
+              </AlertDescription>
+            </Alert>
           )}
         </div>
-        
-        <Separator />
-        
-        {(isCreditCodeValid || currentRegistrationFee === 0) ? (
-          <Alert variant="default" className="bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-600">Free Registration</AlertTitle>
-            <AlertDescription className="text-green-600">
-              Your registration is free of charge.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="card-element">{formContent.registrationFeeLabel}</Label>
-              <div className="border rounded-md p-3 bg-gray-50">
-                <CardElement id="card-element" options={CARD_ELEMENT_OPTIONS} />
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                Sanctioning: <Badge variant="outline" className="font-normal">{sanctioning}</Badge>
-              </div>
-              <div className="text-sm font-medium">
-                Fee: {convertedFee.currency === 'MXN'
-                  ? `${convertedFee.amount} MXN`
-                  : `$${currentRegistrationFee} USD`
-                }
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {statusMessage && (
-          <Alert className="bg-blue-50 border-blue-200">
-            <AlertTitle className="text-blue-700">Status Update</AlertTitle>
-            <AlertDescription className="text-blue-600">
-              {statusMessage}
-            </AlertDescription>
-          </Alert>
-        )}
+      )}
+    </>
+  )}
+</div>
+
+<Separator />
+
+{(isCreditCodeValid || currentRegistrationFee === 0) && !isPayLater ? (
+  <Alert variant="default" className="bg-green-50 border-green-200">
+    <CheckCircle className="h-4 w-4 text-green-600" />
+    <AlertTitle className="text-green-600">Free Registration</AlertTitle>
+    <AlertDescription className="text-green-600">
+      Your registration is free of charge.
+    </AlertDescription>
+  </Alert>
+) : isPayLater ? (
+  <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+    <AlertTitle className="text-yellow-700">Pay at Weigh-ins</AlertTitle>
+    <AlertDescription className="text-yellow-700">
+      {formContent.registrationFeeLabel}{" "}
+      {convertedFee.currency === 'MXN'
+        ? `${convertedFee.amount} MXN`
+        : `$${currentRegistrationFee} USD`} + 10% surcharge
+    </AlertDescription>
+  </Alert>
+) : (
+  <div className="space-y-4">
+    <div className="space-y-2">
+      <Label htmlFor="card-element">{formContent.registrationFeeLabel}</Label>
+      <div className="border rounded-md p-3 bg-gray-50">
+        <CardElement id="card-element" options={CARD_ELEMENT_OPTIONS} />
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between">
+      <div className="text-sm text-gray-600">
+        Sanctioning: <Badge variant="outline" className="font-normal">{sanctioning}</Badge>
+      </div>
+      <div className="text-sm font-medium">
+        Fee: {convertedFee.currency === 'MXN'
+          ? `${convertedFee.amount} MXN`
+          : `$${currentRegistrationFee} USD`}
+      </div>
+    </div>
+  </div>
+)}
+
+{statusMessage && (
+  <Alert className="bg-blue-50 border-blue-200">
+    <AlertTitle className="text-blue-700">Status Update</AlertTitle>
+    <AlertDescription className="text-blue-600">
+      {statusMessage}
+    </AlertDescription>
+  </Alert>
+)}
       </CardContent>
       
       <CardFooter className="flex justify-end">

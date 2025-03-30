@@ -9,12 +9,12 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
-import { FighterFormData, GymProfile } from '@/utils/types';
+import { FullContactFighter, GymRecord } from '@/utils/types';
 
 
 
 interface FighterFormProps {
-  onFormDataChange: (data: FighterFormData) => void;
+  onFormDataChange: (data: FullContactFighter) => void;
 }
 
 const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
@@ -28,7 +28,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
         ...formData,
         dob: formattedDate,
         age: calculateAge(formattedDate),
-        mtp_id: formData.first && formData.last ? generatePmtId(formData.first, formData.last, formattedDate) : formData.mtp_id,
+        fighter_id: formData.first && formData.last ? generatePmtId(formData.first, formData.last, formattedDate) : formData.fighter_id,
       });
       setSelectedDate(date);
       setDobError(null);
@@ -38,38 +38,54 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
   };
 
 
-  const [formData, setFormData] = useState<FighterFormData>({
-    first: '',
-    last: '',
-    email: '',
-    dob: '',
-    gym: '',
-    age: 0,
-    weightclass: 0,
-    mtp_id: '',
-    win: 0,
-    loss: 0,
-    mmaWin: 0,
-    mmaLoss: 0,
-    gender: '',
-    other: '',
-    years_exp: 0,
-    height: 0,
-    heightFoot: 0,
-    heightInch: 0,
-    phone: '',
-    coach_phone: '',
-    coach_name: '',
-    gym_id: '',
-    coach_email: '',
-  });
+  const [formData, setFormData] = useState<FullContactFighter>({
+        fighter_id: '',
+        photo: '',
+        coach: '',
+        state: '',
+        city: '',
+        first: '',
+        last: '',
+        email: '',
+        dob: '',
+        gym: '',
+        age: 0,
+        weightclass: 0,
+        mt_win: 0,
+        mt_loss: 0,
+        mma_win: 0,
+        mma_loss: 0,
+        gender: 'MALE',
+        years_exp: 0,
+        heightFoot: 0,
+        heightInch: 0,
+        phone: '',
+        coach_phone: '',
+        coach_name: '',
+        gym_id: '',
+        coach_email: '',
+        age_gender: 'MEN',
+        docId: '',
+        boxing_win: 0,
+        boxing_loss: 0,
+        pmt_win: 0,
+        pmt_loss: 0,
+        pb_win: 0,
+        pb_loss: 0,
+        other_exp: '',
+        nc: 0,
+        dq: 0,
+        pmt_fights: [],
+        gym_website: '',
+        gym_address: '',
+      });
   const [dobError, setDobError] = useState<string | null>(null);
   const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
 
   //////////////////////////////////////////////////////////////////
   /////////////////// GYM SEARCH ///////////////////////////////////////////////
   const [gymSearchTerm, setGymSearchTerm] = useState<string>('');
-  const [gymSearchResults, setGymSearchResults] = useState<GymProfile[]>([]);
+  const [gymSearchResults, setGymSearchResults] = useState<GymRecord[]>([]);
 
 
 
@@ -112,14 +128,12 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
     }));
   };
 
-  const handleGymSelect = (gym: GymProfile) => {
-    setGymSearchTerm(gym.gym.toUpperCase());
+  const handleGymSelect = (gym: GymRecord) => {
+    setGymSearchTerm(gym.name.toUpperCase());
     setFormData({
       ...formData,
-      gym: gym.gym,
-      coach_name: gym.coach_name ? gym.coach_name.toUpperCase() : '',
-      coach_phone: gym.coach_phone || '',
-      coach_email: gym.coach_email || '',
+      gym: gym.name,
+   
     });
     setGymSearchResults([]);
   };
@@ -169,20 +183,20 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
     const upperCaseValue = value.toUpperCase();
   
     setFormData((currentFormData) => {
-      const updatedFormData: FighterFormData = { ...currentFormData };
+      const updatedFormData: FullContactFighter = { ...currentFormData };
   
       if (name in updatedFormData) {
-        const fieldName = name as keyof FighterFormData;
+        const fieldName = name as keyof FullContactFighter;
   
         // Handle numeric fields
         if (
           fieldName === 'weightclass' ||
           fieldName === 'age' ||
           fieldName === 'years_exp' ||
-          fieldName === 'win' ||
-          fieldName === 'loss' ||
-          fieldName === 'mmaWin' ||
-          fieldName === 'mmaLoss' ||
+          fieldName === 'mt_win' ||
+          fieldName === 'mt_loss' ||
+          fieldName === 'mma_win' ||
+          fieldName === 'mma_loss' ||
           fieldName === 'heightFoot' ||
           fieldName === 'heightInch'
         ) {
@@ -193,13 +207,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
           updatedFormData.dob = value;
           if (dateRegex.test(value)) {
             updatedFormData.age = calculateAge(value);
-            if (updatedFormData.first && updatedFormData.last) {
-              updatedFormData.mtp_id = generatePmtId(
-                updatedFormData.first.trim().replace(/\s/g, '').toUpperCase(),
-                updatedFormData.last.trim().replace(/\s/g, '').toUpperCase(),
-                value
-              );
-            }
+          
           } else {
             setDobError('Date must be in MM/DD/YYYY format');
           }
@@ -209,16 +217,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
           (updatedFormData[fieldName] as string) = upperCaseValue;
         }
   
-        // Update `mtp_id` dynamically based on name and DOB
-        if (fieldName === 'first' || fieldName === 'last') {
-          if (updatedFormData.first && updatedFormData.last && updatedFormData.dob) {
-            updatedFormData.mtp_id = generatePmtId(
-              updatedFormData.first.trim().replace(/\s/g, '').toUpperCase(),
-              updatedFormData.last.trim().replace(/\s/g, '').toUpperCase(),
-              updatedFormData.dob
-            );
-          }
-        }
+       
       }
   
       onFormDataChange(updatedFormData);
@@ -272,7 +271,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
           <ul style={{ listStyleType: 'none', padding: 0, textAlign: 'center' }}>
             {gymSearchResults.map((gym, index) => (
               <li key={index} style={{ cursor: 'pointer', border: '1px solid black', marginTop: '5px', padding: '1px', borderRadius: '3px' }} onClick={() => handleGymSelect(gym)}>
-                {gym.gym}
+                {gym.name}
               </li>
             ))}
           </ul>
@@ -328,7 +327,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
         <div style={{ display: 'flex', justifyContent: 'space-around' }}>
           <select
             name="heightFoot"
-            value={formData.heightFoot.toString()}
+            value={(formData.heightFoot ?? 0).toString()}
             onChange={handleInputChange}
             className="weightclass-selector"
             required
@@ -342,7 +341,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange }) => {
 
           <select
             name="heightInch"
-            value={formData.heightInch.toString()}
+            value={(formData.heightInch ?? 0).toString()}
             onChange={handleInputChange}
             className="weightclass-selector"
             required
@@ -420,7 +419,7 @@ Birthday
 
             <select
               name="win"
-              value={formData.win.toString()}
+              value={formData.mt_win.toString()}
               onChange={handleInputChange}
               className="weightclass-selector"
               required
@@ -451,7 +450,7 @@ Birthday
             Muay Thai
             <select
               name="loss"
-              value={formData.loss.toString()}
+              value={formData.mt_loss.toString()}
               onChange={handleInputChange}
               className="weightclass-selector"
               required
@@ -481,7 +480,7 @@ Birthday
 
             <select
               name="mmaWin"
-              value={formData.mmaWin.toString()}
+              value={formData.mma_win.toString()}
               onChange={handleInputChange}
               className="weightclass-selector"
               required
@@ -512,7 +511,7 @@ Birthday
             MMA
             <select
               name="mmaLoss"
-              value={formData.mmaLoss.toString()}
+              value={formData.mma_loss.toString()}
               onChange={handleInputChange}
               className="weightclass-selector"
               required
@@ -538,9 +537,9 @@ Birthday
 
         <input
           type='string'
-          value={formData.other}
+          value={formData.other_exp}
           placeholder='OTHER'
-          name='other'
+          name='other_exp'
           onChange={handleInputChange}
         />
 
@@ -605,10 +604,10 @@ Birthday
         <input
           style={{ display: 'none' }}
           type="text"
-          name="mtp_id"
-          value={formData.mtp_id}
+          name="fighter_id"
+          value={formData.fighter_id}
           readOnly
-          placeholder="MTP ID"
+          placeholder="Fighter ID"
         />
 
         <p>Any questions? submit registration and reply to email</p>

@@ -293,6 +293,7 @@ const stripeInstance = useMemo(() => {
                       promotionLogoUrl={eventData.promotionLogoUrl}
                       sanctioning={eventData.sanctioning}
                       customWaiver={eventData.customWaiver}
+                      payLaterEnabled={eventData.payLaterEnabled || false}
                     />
                   )}
                 </CardContent>

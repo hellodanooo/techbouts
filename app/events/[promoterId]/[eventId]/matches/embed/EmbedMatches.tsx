@@ -4,19 +4,19 @@ import { useEffect } from 'react';
 import Matches from '../MatchesDisplay';
 import { EventType } from '@/utils/types';
 
-import type { Fighter } from '../MatchesDisplay';
+import { Bout } from '@/utils/types';
 
 type Props = {
     eventId: string;
     promoterId: string;
-    initialRoster: Fighter[];
     eventData: EventType | null;
+    bouts: Bout[];
   };
   
 
 
 
-export default function EmbedMatchesPage({ eventId, promoterId, initialRoster, eventData }: Props) {
+export default function EmbedMatchesPage({ eventId, promoterId, bouts, eventData }: Props) {
 
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function EmbedMatchesPage({ eventId, promoterId, initialRoster, e
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <h2 className="text-xl font-semibold mb-4">{eventData.name} Matches</h2>
-      <Matches roster={initialRoster} promoterId={promoterId} eventId={eventId} />
+      <Matches promoterId={promoterId} eventId={eventId} bouts={bouts} />
       </div>
   );
 }
