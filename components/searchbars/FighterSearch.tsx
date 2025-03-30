@@ -168,67 +168,76 @@ const FighterSearch: React.FC<FighterSearchProps> = ({
 
   const searchContent = (
     <div className="space-y-4">
-      <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
-      <TabsList className="grid sm:grid-cols-3 gap-2">
-  <TabsTrigger
-    value="email"
-    className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2"
-  >
-    Email
-  </TabsTrigger>
-  <TabsTrigger
-    value="last"
-    className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2"
-  >
-    Last Name
-  </TabsTrigger>
-  <TabsTrigger
-    value="weight"
-    className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2"
-  >
-    Weight
-  </TabsTrigger>
-</TabsList>
-        <TabsContent value="email" className="space-y-2">
-          <Label htmlFor="emailSearch">Search by Email</Label>
-          <Input
-            id="emailSearch"
-            value={searchType === 'email' ? fighterSearchTerm : ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFighterSearchTerm(value);
-              if (value.length < 3) setFighterSearchResults([]);
-            }}
-            placeholder="Enter email address..."
-          />
-        </TabsContent>
-        <TabsContent value="last" className="space-y-2">
-          <Label htmlFor="lastNameSearch">Search by Last Name</Label>
-          <Input
-            id="lastNameSearch"
-            value={searchType === 'last' ? fighterSearchTerm : ''}
-            onChange={(e) => {
-              const value = e.target.value.toUpperCase();
-              setFighterSearchTerm(value);
-              if (value.length < 3) setFighterSearchResults([]);
-            }}
-            placeholder="Enter last name..."
-          />
-        </TabsContent>
-        <TabsContent value="weight" className="space-y-2">
-  <Label htmlFor="weightSearch">Search by Weight (±6 lbs)</Label>
-  <Input
-    id="weightSearch"
-    type="number"
-    value={searchType === 'weight' ? fighterSearchTerm : ''}
-    onChange={(e) => {
-      setFighterSearchTerm(e.target.value);
-      if (e.target.value.length === 0) setFighterSearchResults([]);
-    }}
-    placeholder="Enter weight..."
-  />
-</TabsContent>
-      </Tabs>
+     <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last' | 'weight')}>
+  <div className="flex flex-col w-full space-y-4">
+    {/* TabsList container */}
+    <TabsList className="flex flex-wrap gap-2">
+      <TabsTrigger
+        value="email"
+        className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2 whitespace-nowrap"
+      >
+        Email
+      </TabsTrigger>
+      <TabsTrigger
+        value="last"
+        className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2 whitespace-nowrap"
+      >
+        Last Name
+      </TabsTrigger>
+      <TabsTrigger
+        value="weight"
+        className="border border-gray-300 data-[state=active]:border-black data-[state=active]:bg-muted rounded-md px-3 py-2 whitespace-nowrap"
+      >
+        Weight
+      </TabsTrigger>
+    </TabsList>
+
+    {/* TabsContent section with spacing */}
+    <div className="space-y-2">
+      <TabsContent value="email">
+        <Label htmlFor="emailSearch">Search by Email</Label>
+        <Input
+          id="emailSearch"
+          value={searchType === 'email' ? fighterSearchTerm : ''}
+          onChange={(e) => {
+            const value = e.target.value;
+            setFighterSearchTerm(value);
+            if (value.length < 3) setFighterSearchResults([]);
+          }}
+          placeholder="Enter email address..."
+        />
+      </TabsContent>
+
+      <TabsContent value="last">
+        <Label htmlFor="lastNameSearch">Search by Last Name</Label>
+        <Input
+          id="lastNameSearch"
+          value={searchType === 'last' ? fighterSearchTerm : ''}
+          onChange={(e) => {
+            const value = e.target.value.toUpperCase();
+            setFighterSearchTerm(value);
+            if (value.length < 3) setFighterSearchResults([]);
+          }}
+          placeholder="Enter last name..."
+        />
+      </TabsContent>
+
+      <TabsContent value="weight">
+        <Label htmlFor="weightSearch">Search by Weight (±6 lbs)</Label>
+        <Input
+          id="weightSearch"
+          type="number"
+          value={searchType === 'weight' ? fighterSearchTerm : ''}
+          onChange={(e) => {
+            setFighterSearchTerm(e.target.value);
+            if (e.target.value.length === 0) setFighterSearchResults([]);
+          }}
+          placeholder="Enter weight..."
+        />
+      </TabsContent>
+    </div>
+  </div>
+</Tabs>
 
       {isSearching && (
         <div className="flex justify-center p-4">
