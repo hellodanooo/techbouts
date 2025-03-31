@@ -62,6 +62,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
   });
 
 
+
   const handleDeleteEvent = async () => {
     setIsDeleting(true);
     try {
@@ -132,9 +133,10 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     const numericFields = ['numMats', 'registration_fee', 'ticket_price', 'photoPackagePrice', 'coachRegPrice'];
 
     if (numericFields.includes(name)) {
+      const sanitizedValue = value.replace(/^0+(?=\d)/, ''); 
       setFormData(prev => ({
         ...prev,
-        [name]: value === '' ? '' : Number(value)
+        [name]: sanitizedValue === '' ? '' : Number(sanitizedValue)
       }));
     } else {
       setFormData(prev => ({
@@ -454,6 +456,8 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                     name="registration_fee"
                     value={formData.registration_fee}
                     onChange={handleInputChange}
+                    onFocus={(e) => e.target.select()}
+
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                   />
                 </div>
@@ -540,23 +544,13 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                     name="numMats"
                     value={formData.numMats}
                     onChange={handleInputChange}
+                    onFocus={(e) => e.target.select()}
+
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                   />
                 </div>
 
-                {eventData.ticket_enabled && (
-                  <div>
-                    <Label>Ticket Price</Label>
-                    <input
-                      type="number"
-                      name="ticket_price"
-                      value={formData.ticket_price}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    />
-                  </div>
-
-                )}
+            
 
 
                 <div className="flex items-center space-x-4">
@@ -567,7 +561,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                   />
                   <Label htmlFor="ticket-enabled">Enable Tickets</Label>
                 </div>
-
+             
                 {formData.ticket_enabled && (
                   <>
                     <div>
@@ -591,7 +585,20 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                         </SelectContent>
                       </Select>
                     </div>
+                    {formData.ticket_enabled && formData.ticket_system_option !== 'thirdParty' && (
+                  <div>
+                    <Label>Ticket Price</Label>
+                    <input
+                      type="number"
+                      name="ticket_price"
+                      value={formData.ticket_price}
+                      onChange={handleInputChange}
+                      onFocus={(e) => e.target.select()}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                  </div>
 
+                )}
                     {formData.ticket_system_option === 'thirdParty' && (
                       <div>
                         <Label>Ticket Link</Label>
@@ -624,6 +631,8 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                       name="photoPackagePrice"
                       value={formData.photoPackagePrice}
                       onChange={handleInputChange}
+                      onFocus={(e) => e.target.select()}
+
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                     />
                   </div>
@@ -647,6 +656,8 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                       name="coachRegPrice"
                       value={formData.coachRegPrice}
                       onChange={handleInputChange}
+                      onFocus={(e) => e.target.select()}
+
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                     />
                   </div>
