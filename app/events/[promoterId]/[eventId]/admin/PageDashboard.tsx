@@ -34,6 +34,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
     const isPromoter = user?.email === eventData.promoterEmail;
     const [showEmbed, setShowEmbed] = useState(false);
     const [openSections, setOpenSections] = useState({
+        roster: false,
         matches: false,
         emails: false,
     });
@@ -131,6 +132,20 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                 />
             </div>
 
+
+            <Collapsible
+      open={openSections.roster}
+      onOpenChange={() => toggleSection('roster')}
+      className="w-full border rounded-lg overflow-hidden"
+    >
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
+        <h2 className="text-xl font-semibold">Roster</h2>
+        {isAdmin && (
+          <div>Admin Roster Enabled</div>)}
+        {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="p-4 bg-white">
+
             <div className='mb-6'>
                 <RosterTable
                     roster={roster}
@@ -140,6 +155,8 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                     eventData={eventData}
                 />
             </div>
+        </CollapsibleContent>
+    </Collapsible>
 
 
             <div className='mb-6'>
@@ -154,8 +171,8 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                         {openSections.matches ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                     </CollapsibleTrigger>
                     <CollapsibleContent className="p-4 bg-white">
-                       
-                       
+
+
                         <Matches
                             initialRoster={roster}
                             eventId={eventId}
@@ -167,34 +184,34 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
 
 
-<div className="mt-8">
-                <button
-                    onClick={() => setShowEmbed(prev => !prev)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                    {showEmbed ? 'Hide Embed Code' : 'Embed Matches'}
-                </button>
+                        <div className="mt-8">
+                            <button
+                                onClick={() => setShowEmbed(prev => !prev)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            >
+                                {showEmbed ? 'Hide Embed Code' : 'Embed Matches'}
+                            </button>
 
-                {showEmbed && (
-                    <div className="mt-4">
-                        <EmbedMatchesGenerator
-                            eventId={eventId}
-                            eventName={eventData.name || eventData.event_name || 'Event'}
-                            promoterId={promoterId}
-                        />
-                    </div>
-                )}
-            </div>
+                            {showEmbed && (
+                                <div className="mt-4">
+                                    <EmbedMatchesGenerator
+                                        eventId={eventId}
+                                        eventName={eventData.name || eventData.event_name || 'Event'}
+                                        promoterId={promoterId}
+                                    />
+                                </div>
+                            )}
+                        </div>
 
                     </CollapsibleContent>
                 </Collapsible>
 
 
-           
+
 
             </div>
 
-         
+
 
 
             <div className="mt-8 border-t border-gray-200 pt-5">
@@ -212,21 +229,21 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
 
             <Collapsible
-                    open={openSections.emails}
-                    onOpenChange={() => toggleSection('emails')}
-                    className="w-full border rounded-lg overflow-hidden mb-10 mt-10"
-                >
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
-                        <h2 className="text-xl font-semibold">Emails</h2>
-                        {openSections.emails ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="p-4 bg-white">
+                open={openSections.emails}
+                onOpenChange={() => toggleSection('emails')}
+                className="w-full border rounded-lg overflow-hidden mb-10 mt-10"
+            >
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
+                    <h2 className="text-xl font-semibold">Emails</h2>
+                    {openSections.emails ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="p-4 bg-white">
 
-            <div className="mt-8">
-                <EmailTable data={roster} />
-            </div>
-            </CollapsibleContent>
-                </Collapsible>
+                    <div className="mt-8">
+                        <EmailTable data={roster} />
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
 
         </div>
     );

@@ -107,3 +107,83 @@ console.log('bout', bout)
     setIsCreatingMatch(false);
   }
 };
+
+
+export const editBout = async ({
+  bout,
+  promoterId,
+  eventId,
+}: {
+  bout: Bout; // the updated bout object
+  promoterId: string;
+  eventId: string;
+}) => {
+  try {
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts found to edit.");
+      return;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+
+    // Find index of the existing bout in the array
+    const index = existingBouts.findIndex((b) => b.boutId === bout.boutId);
+    if (index === -1) {
+      toast.error(`Bout ID ${bout.boutId} not found`);
+      return;
+    }
+
+    // Overwrite fields at that index
+    existingBouts[index] = bout;
+
+    // Now re-save
+    await setDoc(boutsRef, { bouts: existingBouts });
+    toast.success("Bout updated successfully");
+  } catch (error) {
+    console.error("Error editing bout:", error);
+    toast.error("Failed to edit bout");
+  }
+};
+
+// 2) DELETE a bout from the array
+export const deleteBout = async ({
+  boutId,
+  promoterId,
+  eventId,
+}: {
+  boutId: string;
+  promoterId: string;
+  eventId: string;
+}) => {
+  try {
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts found to delete.");
+      return;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+
+    // Filter out the bout to delete
+    const updatedBouts = existingBouts.filter((b) => b.boutId !== boutId);
+
+    await setDoc(boutsRef, { bouts: updatedBouts });
+    toast.success(`Bout ${boutId} deleted successfully`);
+  } catch (error) {
+    console.error("Error deleting bout:", error);
+    toast.error("Failed to delete bout");
+  }
+};

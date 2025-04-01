@@ -64,16 +64,8 @@ export interface Bout {
   weightclass: number;
   ringNum: number;
   boutNum: number;
-  red: FullContactFighter;
-  blue: FullContactFighter;
-  red2?: FullContactFighter;
-  blue2?: FullContactFighter;
-  red3?: FullContactFighter;
-  blue3?: FullContactFighter;
-  red4?: FullContactFighter;
-  blue4?: FullContactFighter;
-  unmatched?: FullContactFighter;
-  bye?: FullContactFighter;
+  red: RosterFighter;
+  blue: RosterFighter;
   scrapeVerificationScore?: number;
 methodOfVictory: string;
 confirmed?: boolean;
@@ -88,6 +80,12 @@ eventId: string;
   dayNum: number;
   class: 'A' | 'B' | 'C' | '';
 }
+
+export interface Bracket {
+bouts: Bout[];
+bye?: RosterFighter;
+}
+
 
 export interface EventType {
   event_name: string;

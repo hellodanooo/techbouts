@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import Matches from '../MatchesDisplay';
+import MatchesDisplay from '../MatchesDisplay';
 import { EventType } from '@/utils/types';
 
 import { Bout } from '@/utils/types';
@@ -11,12 +11,13 @@ type Props = {
     promoterId: string;
     eventData: EventType | null;
     bouts: Bout[];
+    isAdmin: boolean;
   };
   
 
 
 
-export default function EmbedMatchesPage({ eventId, promoterId, bouts, eventData }: Props) {
+export default function EmbedMatchesPage({ eventId, promoterId, bouts, eventData, isAdmin=false }: Props) {
 
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export default function EmbedMatchesPage({ eventId, promoterId, bouts, eventData
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <h2 className="text-xl font-semibold mb-4">{eventData.name} Matches</h2>
-      <Matches promoterId={promoterId} eventId={eventId} bouts={bouts} />
+      <MatchesDisplay promoterId={promoterId} eventId={eventId} bouts={bouts} isAdmin={isAdmin} eventData={eventData} />
       </div>
   );
 }

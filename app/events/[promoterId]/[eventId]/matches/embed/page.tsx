@@ -46,6 +46,7 @@ export default async function Page({ params }: PageProps) {
       promoterId={promoterId}
       bouts={matchesData}
       eventData={eventData}
+      isAdmin={false}
     />
   );
 }

@@ -27,6 +27,7 @@ interface AddFighterModalProps {
   promoterId?: string;
   onClose: () => void;
   onFighterAdded?: (fighter: FullContactFighter) => void;
+  onRosterUpdated?: () => void;
 }
 
 export default function AddFighterModal({ 
@@ -35,7 +36,8 @@ export default function AddFighterModal({
   isOpen, 
   promoterId,
   onClose,
-  onFighterAdded 
+  onFighterAdded,
+  onRosterUpdated,
 }: AddFighterModalProps) {
     const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +83,9 @@ export default function AddFighterModal({
       });
     } finally {
       setIsSubmitting(false);
+      if (onRosterUpdated) {
+        onRosterUpdated(); 
+      }
     }
   };
 

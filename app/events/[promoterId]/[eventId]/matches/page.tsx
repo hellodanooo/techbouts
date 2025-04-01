@@ -1,7 +1,6 @@
 // app/events/[promoterId]/[eventId]/matches/page.tsx
 import { Suspense } from 'react';
 import PageClient from './PageClient';
-import { Toaster } from 'sonner';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts'; 
@@ -52,9 +51,6 @@ export default async function MatchesPage({ params }: PageProps) {
   console.log("Bouts data:", matchesData);
 
   return (
-    <div className="container mx-auto py-6">
-      <Toaster position="top-right" />
-      <h1 className="text-2xl font-bold mb-6">Create Matches</h1>
 
       <Suspense fallback={<div>Loading fighters roster...</div>}>
        
@@ -69,6 +65,5 @@ export default async function MatchesPage({ params }: PageProps) {
 
       </Suspense>
       
-    </div>
   );
 }
