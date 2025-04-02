@@ -74,7 +74,7 @@ export const createMatch = async ({
       bout_type,
       dayNum,
       class: '',
-      boutId: `${sanctioning}${promoterId}${eventId}${ringNum}${boutNum}`,
+      boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
     };
 
 
@@ -152,7 +152,7 @@ export const editBout = async ({
   }
 };
 
-// 2) DELETE a bout from the array
+
 export const deleteBout = async ({
   boutId,
   promoterId,
@@ -177,13 +177,20 @@ export const deleteBout = async ({
     const data = boutsDoc.data();
     const existingBouts: Bout[] = data.bouts || [];
 
+    console.log("📦 Existing bouts:", existingBouts);
+    const boutToDelete = existingBouts.find((b) => b.boutId === boutId);
+    console.log("🗑️ Deleting bout:", boutToDelete);
+
     // Filter out the bout to delete
     const updatedBouts = existingBouts.filter((b) => b.boutId !== boutId);
+    console.log("✅ Updated bouts after deletion:", updatedBouts);
 
-    await setDoc(boutsRef, { bouts: updatedBouts });
+    // Only update the bouts field
+    await setDoc(boutsRef, { bouts: updatedBouts }, { merge: true });
     toast.success(`Bout ${boutId} deleted successfully`);
   } catch (error) {
     console.error("Error deleting bout:", error);
     toast.error("Failed to delete bout");
   }
 };
+

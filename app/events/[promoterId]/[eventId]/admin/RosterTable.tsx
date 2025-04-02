@@ -7,8 +7,8 @@ import FindPotentialMatchesModal from './PotentialMatchesModal';
 import { RefreshCw } from "lucide-react";
 import AddFighterModal from '../../../../../components/database/AddFighterModal';
 import { toast } from 'sonner';
-import { RosterFighter, EventType } from '@/utils/types';
-import CreateBout from '@/app/events/[promoterId]/[eventId]/matches/CreateBout';
+import { RosterFighter, EventType, Bout } from '@/utils/types';
+import CreateEditBout from '@/app/events/[promoterId]/[eventId]/matches/CreateEditBout';
 import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
 
 
@@ -35,12 +35,13 @@ interface RosterTableProps {
   promoterId: string;
   isAdmin?: boolean;
   eventData: EventType;
+  bouts: Bout[];
   onFighterSelect?: (fighter: RosterFighter) => void;
 }
 
 const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
 
-export default function RosterTable({ roster, eventId, promoterId, isAdmin, eventData, onFighterSelect }: RosterTableProps) {
+export default function RosterTable({ roster, eventId, promoterId, isAdmin, eventData, onFighterSelect, bouts }: RosterTableProps) {
   const router = useRouter();
   const [openPotentialMatchesModal, setOpenPotentialMatchesModal] = React.useState(false);
   const [isRefreshing] = useState<{ [key: string]: boolean }>({});
@@ -107,7 +108,7 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
     if (!isAdmin) {
       return navigateToFighterDetail(fighter);
     }
-  
+  console.log('ROSTER EXISTING BOUTS', bouts)
     // If no fighter is selected yet, or if red & blue are both set, pick fighter for red.
     if (!red || (red && blue)) {
       setRed(fighter);
@@ -369,18 +370,14 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
 
 
     {selectedFighter && (
-    <CreateBout
+    <CreateEditBout
       roster={rosterData}
       red={red}
       blue={blue}
-      boutNum={1}
-      setBoutNum={() => {}}
+     
       weightclass={selectedFighter?.weightclass || 0}
       setWeightclass={() => {}}
-      ringNum={1}
-      setRingNum={() => {}}
-      dayNum={1}
-      setDayNum={() => {}}
+    
       bout_type="MT"
       setBoutType={() => {}}
       boutConfirmed={true}
@@ -394,6 +391,9 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
       eventData={eventData}
       isAdmin={isAdmin ?? false}
       action='create'
+      existingBouts={bouts}
+
+
       onClose={() => {
         setSelectedFighter(null);
         setRed(null);

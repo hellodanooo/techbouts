@@ -1,6 +1,6 @@
 // components/CreateBout.tsx
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,17 +15,12 @@ import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 // import RosterTable from '../admin/RosterTable';
 
 interface SaveBoutProps {
+  action: 'create' | 'edit';
   roster: RosterFighter[];
   red: RosterFighter | null;
   blue: RosterFighter | null;
-  boutNum: number;
-  setBoutNum: (value: number) => void;
   weightclass: number;
   setWeightclass: (value: number) => void;
-  ringNum: number;
-  setRingNum: (value: number) => void;
-  dayNum: number;
-  setDayNum: (value: number) => void;
   bout_type: string;
   setBoutType: (value: string) => void;
   boutConfirmed: boolean;
@@ -38,8 +33,8 @@ interface SaveBoutProps {
   eventId: string;
   eventData: EventType;
   isAdmin: boolean;
-  action: 'create' | 'edit';
   existingBoutId?: string;
+  existingBouts: Bout[];
   onClose: () => void;
 }
 
@@ -47,14 +42,8 @@ interface SaveBoutProps {
 export default function CreateBout({
   red,
   blue,
-  boutNum,
-  setBoutNum,
   weightclass,
   setWeightclass,
-  ringNum,
-  setRingNum,
-  dayNum,
-  setDayNum,
   bout_type,
   setBoutType,
   boutConfirmed,
@@ -68,10 +57,13 @@ export default function CreateBout({
   eventData,
   action,
   existingBoutId,
+  existingBouts,
   onClose,
-  
-
 }: SaveBoutProps) {
+  const [boutNum, setBoutNum] = useState(1);
+  const [ringNum, setRingNum] = useState(1);
+  const [dayNum, setDayNum] = useState(1);
+
 
   const [openSections, setOpenSections] = useState({
     boutSettings: false,
@@ -82,6 +74,17 @@ export default function CreateBout({
       [section]: !prev[section]
     }));
   };
+
+
+  useEffect(() => {
+    if (action !== 'create') return;
+  
+    const maxExistingBout = existingBouts
+      .filter(b => b.ringNum === ringNum && b.dayNum === dayNum)
+      .reduce((max, b) => Math.max(max, b.boutNum), 0);
+  
+    setBoutNum(maxExistingBout + 1);
+  }, [action, existingBouts, ringNum, dayNum]);
 
 
   const handleSwapCorners = () => {
@@ -99,11 +102,15 @@ export default function CreateBout({
       toast.error("Missing required fighters");
       return;
     }
-
+  
     setIsCreatingMatch(true);
     try {
       if (action === 'create') {
-        // CREATE brand-new record
+
+
+
+
+
         await createMatch({
           red,
           blue,
@@ -122,13 +129,14 @@ export default function CreateBout({
           bout_type,
           dayNum,
         });
-        toast.success("Bout created successfully.");
+  
+        toast.success(`Bout ${boutNum} created successfully.`);
       } else {
-        // EDIT existing record
         if (!existingBoutId) {
           toast.error("No existing boutId found for editing");
           return;
         }
+  
         const updatedBout: Bout = {
           boutId: existingBoutId,
           weightclass,
@@ -149,26 +157,36 @@ export default function CreateBout({
           dayNum,
           class: '',
         };
+  
         await editBout({
           bout: updatedBout,
           promoterId,
           eventId,
         });
-        toast.success("Bout saved successfully.");
+  
+        toast.success("Bout updated successfully.");
       }
     } catch (error) {
       console.error(error);
       toast.error("Failed to save bout");
     } finally {
       setIsCreatingMatch(false);
+      onClose();
     }
   };
+  
+  
+  
 
   const handleDeleteBout = async () => {
     if (!existingBoutId) {
       toast.error("No boutId to delete");
       return;
     }
+  
+    const confirm = window.confirm(`This will delete boutId: ${existingBoutId}. Continue?`);
+    if (!confirm) return;
+  
     try {
       await deleteBout({
         boutId: existingBoutId,
@@ -176,7 +194,7 @@ export default function CreateBout({
         eventId
       });
       toast.success("Bout deleted.");
-      // Optionally clear out local states or close a modal
+      onClose(); // close the modal/form if needed
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete bout");
@@ -228,7 +246,7 @@ export default function CreateBout({
           className="w-full border rounded-lg overflow-hidden"
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-gray-50 hover:bg-gray-100">
-            <p className="text-xl font-semibold">Bout Settings</p>
+            <p className="text-xl font-semibold">Bout Settings</p> <p>bout: {boutNum} Ring: {ringNum} Day: {dayNum} Weight: {weightclass}</p>
             {openSections.boutSettings ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 bg-white">

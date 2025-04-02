@@ -1,14 +1,11 @@
 // app/events/[promoterId]/[eventId]/edit/page.tsx
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
-
 import {fetchPmtRoster} from '@/utils/apiFunctions/fetchPmtRoster';
-
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
-
 import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
-
 import PageDashboard from './PageDashboard';
+
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts'; 
 
 

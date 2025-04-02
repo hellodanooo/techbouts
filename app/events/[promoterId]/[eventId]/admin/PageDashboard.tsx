@@ -54,6 +54,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             setSanctioningEmail('borntowincsc@gmail.com');
         } else {
             setSanctioningEmail('');
+
         }
     }, [eventData.sanctioning]);  // ✅ Runs only when eventData.sanctioning changes
 
@@ -115,6 +116,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
     // Original content for authorized users
     return (
+
         <div>
             <Header />
             <AuthDisplay
@@ -134,29 +136,30 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
 
             <Collapsible
-      open={openSections.roster}
-      onOpenChange={() => toggleSection('roster')}
-      className="w-full border rounded-lg overflow-hidden"
-    >
-      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
-        <h2 className="text-xl font-semibold">Roster</h2>
-        {isAdmin && (
-          <div>Admin Roster Enabled</div>)}
-        {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-      </CollapsibleTrigger>
-      <CollapsibleContent className="p-4 bg-white">
+                open={openSections.roster}
+                onOpenChange={() => toggleSection('roster')}
+                className="w-full border rounded-lg overflow-hidden"
+            >
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
+                    <h2 className="text-xl font-semibold">Roster</h2>
+                    {isAdmin && (
+                        <div>Admin Roster Enabled</div>)}
+                    {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="p-4 bg-white">
 
-            <div className='mb-6'>
-                <RosterTable
-                    roster={roster}
-                    eventId={eventId}
-                    promoterId={promoterId}
-                    isAdmin={isAdmin}
-                    eventData={eventData}
-                />
-            </div>
-        </CollapsibleContent>
-    </Collapsible>
+                    <div className='mb-6'>
+                        <RosterTable
+                            roster={roster}
+                            eventId={eventId}
+                            promoterId={promoterId}
+                            isAdmin={isAdmin}
+                            eventData={eventData}
+                            bouts={bouts || []}
+                        />
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
 
 
             <div className='mb-6'>
@@ -178,7 +181,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                             eventId={eventId}
                             promoterId={promoterId}
                             eventData={eventData}
-                            bouts={bouts || []} // Ensure bouts is passed
+                            bouts={bouts}
                             roster={roster} // Pass roster as required
                         />
 

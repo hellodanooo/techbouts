@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import Image from 'next/image';
 import { RosterFighter, Bout, EventType } from '@/utils/types';
-import CreateBout from './CreateBout';
+import CreateEditBout from './CreateEditBout';
 
 interface MatchesDisplayProps {
   bouts: Bout[] ;
@@ -123,7 +123,7 @@ export default function MatchesDisplay({
                 Pass the selected bout data in to CreateBout. 
                 If your CreateBout has separate "red" and "blue" props, you can do something like:
             */}
-            <CreateBout
+            <CreateEditBout
               // Provide full roster if needed or however you fetch it
               roster={[]}
               promoterId={promoterId}
@@ -133,14 +133,10 @@ export default function MatchesDisplay({
               // Pre-populate from the selected bout
               red={selectedBout.red || null}
               blue={selectedBout.blue || null}
-              boutNum={selectedBout.boutNum ?? 1}
-              setBoutNum={() => { } }
+         
               weightclass={selectedBout.weightclass ?? 0}
               setWeightclass={() => { } }
-              ringNum={selectedBout.ringNum ?? 1}
-              setRingNum={() => { } }
-              dayNum={selectedBout.dayNum ?? 1}
-              setDayNum={() => { } }
+          
               bout_type={selectedBout.bout_type ?? "MT"}
               setBoutType={() => { } }
               boutConfirmed={false}
@@ -151,9 +147,11 @@ export default function MatchesDisplay({
               setBlue={() => { } }
               eventData={eventData}
               action="edit"
-              existingBoutId={selectedBout.boutId} onClose={function (): void {
-                throw new Error('Function not implemented.');
-              } }
+              existingBoutId={selectedBout.boutId} 
+              existingBouts={bouts}
+              onClose={() => {
+               setSelectedBout(null);
+              }}
             
             />
           </div>

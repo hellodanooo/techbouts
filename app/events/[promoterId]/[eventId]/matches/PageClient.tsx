@@ -37,7 +37,7 @@ export default function PageClient({
     <div className="">
       <Header />
       <MatchesDisplay bouts={bouts} promoterId={promoterId} eventId={eventId} isAdmin={isAdmin} eventData={eventData} />
-      <RosterTable promoterId={promoterId} eventId={eventId} roster={roster} eventData={eventData} isAdmin={isAdmin} />
+      <RosterTable promoterId={promoterId} eventId={eventId} roster={roster} eventData={eventData} isAdmin={isAdmin} bouts={bouts} />
     </div>
   );
 }
