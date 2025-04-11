@@ -138,7 +138,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       submittingOverlayMessage: 'Submitting...',
 
     };
-  
+
     const es = {
       creditCodeLabel: 'Código de crédito:',
       verifyButton: 'Verificar',
@@ -160,7 +160,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       submittingOverlayMessage: 'Enviando...',
 
     };
-  
+
     return locale === 'es' ? es : en;
   });
 
@@ -175,7 +175,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         // Get a reference to the single roster_json document that contains all fighters
         const rosterJsonRef = doc(db, 'events', eventId, 'roster_json', 'fighters');
         const rosterDoc = await getDoc(rosterJsonRef);
-        
+
         if (rosterDoc.exists()) {
           const data = rosterDoc.data();
           const fighters = data.fighters || [];
@@ -188,12 +188,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         setRosterCount(0);
       }
     };
-  
+
     fetchRosterCount();
   }, [eventId]);
 
 
-  
+
   useEffect(() => {
     const fetchExchangeRate = async () => {
       if (locale === 'es') {
@@ -335,7 +335,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   };
 
   const sendConfirmationEmail = async (sanctioning: string, fighterData: FullContactFighter, eventName: string, eventId: string) => {
-    
+
     if (sanctioning === 'PBSC') {
       try {
         const emailResponse = await axios.post('/api/emails/sendConfirmationEmailPBSC', {
@@ -363,68 +363,68 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         console.error('Error sending confirmation email:', error);
         alert(formContent.emailErrorMessage);
       }
-        
-        } else if (sanctioning === 'PMT') {
 
-          try {
-            const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
-              email: fighterData.email.toLowerCase(),
-              firstName: fighterData.first,
-              lastName: fighterData.last,
-              weightClass: fighterData.weightclass,
-              gym: fighterData.gym,
-              gender: fighterData.gender,
-              dob: fighterData.dob,
-              age: fighterData.age,
-              eventName,
-              eventId,
-              heightFoot: fighterData.heightFoot,
-              heightInch: fighterData.heightInch,
-              phone: fighterData.phone,
-              coach: fighterData.coach_name,
-              coach_phone: fighterData.coach_phone,
-              locale
-            });
-      
-            if (emailResponse.status === 200) {
-              alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
-            }
-          } catch (error) {
-            console.error('Error sending confirmation email:', error);
-            alert(formContent.emailErrorMessage);
-          }
+    } else if (sanctioning === 'PMT') {
 
-        } else if (sanctioning === 'IKF') {
+      try {
+        const emailResponse = await axios.post('/api/emails/sendConfirmationEmail', {
+          email: fighterData.email.toLowerCase(),
+          firstName: fighterData.first,
+          lastName: fighterData.last,
+          weightClass: fighterData.weightclass,
+          gym: fighterData.gym,
+          gender: fighterData.gender,
+          dob: fighterData.dob,
+          age: fighterData.age,
+          eventName,
+          eventId,
+          heightFoot: fighterData.heightFoot,
+          heightInch: fighterData.heightInch,
+          phone: fighterData.phone,
+          coach: fighterData.coach_name,
+          coach_phone: fighterData.coach_phone,
+          locale
+        });
 
-          try {
-            const emailResponse = await axios.post('/api/emails/sendConfirmationEmailIKF', {
-              email: fighterData.email.toLowerCase(),
-              firstName: fighterData.first,
-              lastName: fighterData.last,
-              weightClass: fighterData.weightclass,
-              gym: fighterData.gym,
-              gender: fighterData.gender,
-              dob: fighterData.dob,
-              age: fighterData.age,
-              eventName,
-              eventId,
-             
-              heightFoot: fighterData.heightFoot,
-              heightInch: fighterData.heightInch,
-              phone: fighterData.phone,
-              coach: fighterData.coach_name,
-              coach_phone: fighterData.coach_phone
-            });
-      
-            if (emailResponse.status === 200) {
-              alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
-            }
-          } catch (error) {
-            console.error('Error sending confirmation email:', error);
-            alert(formContent.emailErrorMessage);
-          }
-
+        if (emailResponse.status === 200) {
+          alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
         }
+      } catch (error) {
+        console.error('Error sending confirmation email:', error);
+        alert(formContent.emailErrorMessage);
+      }
+
+    } else if (sanctioning === 'IKF') {
+
+      try {
+        const emailResponse = await axios.post('/api/emails/sendConfirmationEmailIKF', {
+          email: fighterData.email.toLowerCase(),
+          firstName: fighterData.first,
+          lastName: fighterData.last,
+          weightClass: fighterData.weightclass,
+          gym: fighterData.gym,
+          gender: fighterData.gender,
+          dob: fighterData.dob,
+          age: fighterData.age,
+          eventName,
+          eventId,
+
+          heightFoot: fighterData.heightFoot,
+          heightInch: fighterData.heightInch,
+          phone: fighterData.phone,
+          coach: fighterData.coach_name,
+          coach_phone: fighterData.coach_phone
+        });
+
+        if (emailResponse.status === 200) {
+          alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
+        }
+      } catch (error) {
+        console.error('Error sending confirmation email:', error);
+        alert(formContent.emailErrorMessage);
+      }
+
+    }
 
 
   };
@@ -448,13 +448,13 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         paymentAmount: fighterData.paymentAmount || 0,
         paymentCurrency: fighterData.paymentCurrency || 'USD'
       };
-      
+
       // Determine class based on experience and amateur status
 
-      
+
       // Determine age_gender classification
       const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
-      
+
       // Prepare fighter data to match FullContactFighter interface
       const fullContactFighterData: Partial<RosterFighter> = {
         // Basic Information
@@ -465,22 +465,22 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         age: fighterData.age,
         gender: fighterData.gender,
         email: fighterData.email.toLowerCase(),
-        
+
         // Gym Information
         gym: fighterData.gym,
         coach: fighterData.coach_name,
         coach_email: fighterData.coach_email || '',
         coach_name: fighterData.coach_name,
         coach_phone: fighterData.coach_phone,
-        
+
         // Location Information
         state: fighterData.state || '',
         city: fighterData.city || '',
-        
+
         // Physical Information
         weightclass: fighterData.weightclass,
-    
-        
+
+
         // Record
         mt_win: fighterData.mt_win || 0,
         mt_loss: fighterData.mt_loss || 0,
@@ -490,53 +490,53 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         mma_loss: fighterData.mma_loss || 0,
         pmt_win: fighterData.pmt_win || 0,
         pmt_loss: fighterData.pmt_loss || 0,
-        
+
         // Experience & Classification
         years_exp: fighterData.years_exp || 0,
         age_gender: ageGenderClassification,
-      
+
         // Documentation
         docId: fighterData.fighter_id,
         payment_info,
-        
+
         // Additional data for tracking
       };
-      
+
       // Reference to the roster_json document
-      const rosterJsonRef = doc(db, 'events', 'promotions', promoterId,  eventId, 'roster_json', 'fighters');
-      
+      const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
+
       // Check if the document exists
       const rosterJsonDoc = await getDoc(rosterJsonRef);
       const batch = writeBatch(db);
-      
+
       if (rosterJsonDoc.exists()) {
         // Document exists, get the current fighters array
         const data = rosterJsonDoc.data();
         const fighters = data.fighters || [];
-        
+
         // Add the new fighter to the array
         fighters.push(fullContactFighterData);
-        
+
         // Update the document with the new array
         batch.update(rosterJsonRef, { fighters: fighters });
       } else {
         // Document doesn't exist, create it with the fighter as the first item in the array
         batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
       }
-      
- 
+
+
       // Commit the batch
       await batch.commit();
-      
+
       return true;
     } catch (error) {
       console.error('Error saving fighter data to Firestore:', error);
       throw new Error('Failed to save fighter data');
     }
   }
-  
- 
-  
+
+
+
   // Helper function to determine age_gender classification
   function determineAgeGender(age: number, gender: string): 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS' {
     if (age >= 18) {
@@ -566,357 +566,372 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     };
   }
 
-const handleRegistrationSubmit = async () => {
-  if (isSubmitting) return;
-  setIsSubmitting(true);
-  setStatusMessage('');
+  const handleRegistrationSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setStatusMessage('');
 
-  const formError = validateForm();
-  if (formError) {
-    alert(formError);
-    setIsSubmitting(false);
-    return;
-  }
+    const formError = validateForm();
+    if (formError) {
+      alert(formError);
+      setIsSubmitting(false);
+      return;
+    }
 
-  if (!fighterData) {
-    console.log('Fighter data is missing.');
-    setIsSubmitting(false);
-    return;
-  }
+    if (!fighterData) {
+      console.log('Fighter data is missing.');
+      setIsSubmitting(false);
+      return;
+    }
 
-  const currentDate = format(new Date(), 'yyyy-MM-dd');
+    const currentDate = format(new Date(), 'yyyy-MM-dd');
 
-  try {
-    // Check if registration is free (valid credit code or registration fee is 0)
-    const isFreeRegistration = isCreditCodeValid || currentRegistrationFee === 0;
+    try {
+      // Check if registration is free (valid credit code or registration fee is 0)
+      const isFreeRegistration = isCreditCodeValid || currentRegistrationFee === 0;
 
-    if (isFreeRegistration) {
-      setStatusMessage('Submitting free registration data...');
+      if (isFreeRegistration) {
+        setStatusMessage('Submitting free registration data...');
 
-      await saveFighterToFirestore(db, eventId, fighterData, currentDate, promoterId);
-      setStatusMessage('Submitted Successfully.');
-
-      // Update credit code as redeemed if using a credit code
-      if (isCreditCodeValid && creditCode) {
-        setStatusMessage('Marking Credit Code as redeemed...');
-
-        await setDoc(doc(db, 'couponCodes', creditCode), {
-          redeemed: true,
-          redeemedBy: fighterData.email,
-          redeemedAt: currentDate,
-          eventId: eventId
-        }, { merge: true });
-
-        setStatusMessage('Code Marked Redeemed');
-      }
-
-      setStatusMessage('Sending confirmation email...');
-
-      await sendConfirmationEmail(sanctioning,fighterData, eventName, eventId);
-
-      setStatusMessage('Email Sent');
-      closeModal();
-    } else {
-      // Handle paid registration
-      setStatusMessage('Posting Payment...');
-
-      if (!stripe || !elements) {
-        throw new Error('Stripe.js not loaded');
-      }
-
-      let token;
-if (!isPayLater) {
-  const cardElement = elements.getElement(CardElement);
-  if (!cardElement) {
-    throw new Error('CardElement not found');
-  }
-
-  const { token: createdToken, error: stripeError } = await stripe.createToken(cardElement);
-  if (stripeError) {
-    console.error('Stripe error:', stripeError); // Debug log
-    throw new Error(stripeError.message);
-  }
-
-  token = createdToken;
-}
-
-      const paymentResponse = await axios.post('/api/stripe', {
-        token: token?.id,
-        eventId,
-        amount: convertedFee.amount,
-        currency: convertedFee.currency,
-        idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
-        fighter_id: fighterData.fighter_id,
-        locale,
-        sanctioning
-      });
-
-      if (paymentResponse.data.success && paymentResponse.data.paymentIntentId) {
-        setStatusMessage('Payment Successful. Submitting registration data...');
-
-        // Save fighter data with payment information
-        const fighterDataWithPayment = {
-          ...fighterData,
-          paymentIntentId: paymentResponse.data.paymentIntentId,
-          paymentAmount: convertedFee.amount,
-          paymentCurrency: convertedFee.currency
-        };
-
-        await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate, promoterId);
-
+        await saveFighterToFirestore(db, eventId, fighterData, currentDate, promoterId);
         setStatusMessage('Submitted Successfully.');
+
+        // Update credit code as redeemed if using a credit code
+        if (isCreditCodeValid && creditCode) {
+          setStatusMessage('Marking Credit Code as redeemed...');
+
+          await setDoc(doc(db, 'couponCodes', creditCode), {
+            redeemed: true,
+            redeemedBy: fighterData.email,
+            redeemedAt: currentDate,
+            eventId: eventId
+          }, { merge: true });
+
+          setStatusMessage('Code Marked Redeemed');
+        }
+
         setStatusMessage('Sending confirmation email...');
 
         await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
-        
+
         setStatusMessage('Email Sent');
-        setStatusMessage('Registration Successful');
-setTimeout(() => {
-  setFighterData(null);
-  setCreditCode('');
-  setIsCreditCodeValid(null);
-  setCreditCodeRedeemed(null);
-  setIsPayLater(false);
-  setStatusMessage('');
-  closeModal();
-}, 2000);
-
+        closeModal();
       } else {
-        setStatusMessage(formContent.paymentFailedMessage);
-        throw new Error('Payment failed: Unable to process payment');
+        // Handle paid registration
+        setStatusMessage('Posting Payment...');
+
+        if (!stripe || !elements) {
+          throw new Error('Stripe.js not loaded');
+        }
+
+        let token;
+        if (!isPayLater) {
+          const cardElement = elements.getElement(CardElement);
+          if (!cardElement) {
+            throw new Error('CardElement not found');
+          }
+
+          const { token: createdToken, error: stripeError } = await stripe.createToken(cardElement);
+          if (stripeError) {
+            console.error('Stripe error:', stripeError); // Debug log
+            throw new Error(stripeError.message);
+          }
+
+          token = createdToken;
+        }
+
+
+
+
+        let fighterDataWithPayment = fighterData;
+
+        if (!isPayLater) {
+          const paymentResponse = await axios.post('/api/stripe', {
+            token: token?.id,
+            eventId,
+            amount: convertedFee.amount,
+            currency: convertedFee.currency,
+            idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
+            fighter_id: fighterData.fighter_id,
+            locale,
+            sanctioning
+          });
+
+
+        
+
+          if (!paymentResponse.data.success || !paymentResponse.data.paymentIntentId) {
+            setStatusMessage(formContent.paymentFailedMessage);
+            throw new Error('Payment failed: Unable to process payment');
+          }
+        
+          fighterDataWithPayment = {
+            ...fighterData,
+            paymentIntentId: paymentResponse.data.paymentIntentId,
+            paymentAmount: convertedFee.amount,
+            paymentCurrency: convertedFee.currency
+          } as FullContactFighter & {
+            paymentIntentId: string;
+            paymentAmount: number;
+            paymentCurrency: string;
+          };
+        
+
+          await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate, promoterId);
+
+          setStatusMessage('Submitted Successfully.');
+          setStatusMessage('Sending confirmation email...');
+
+          await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
+
+          setStatusMessage('Email Sent');
+          setStatusMessage('Registration Successful');
+          setTimeout(() => {
+            setFighterData(null);
+            setCreditCode('');
+            setIsCreditCodeValid(null);
+            setCreditCodeRedeemed(null);
+            setIsPayLater(false);
+            setStatusMessage('');
+            closeModal();
+          }, 2000);
+
+        } else {
+          setStatusMessage(formContent.paymentFailedMessage);
+          throw new Error('Payment failed: Unable to process payment');
+        }
       }
+    } catch (error: unknown) {
+      setStatusMessage('An error occurred. Please try again.');
+      const handledError = handleRegistrationError(error);
+      console.error('Error during registration:', handledError);
+      alert(handledError.message || formContent.generalErrorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error: unknown) {
-    setStatusMessage('An error occurred. Please try again.');
-    const handledError = handleRegistrationError(error);
-    console.error('Error during registration:', handledError);
-    alert(handledError.message || formContent.generalErrorMessage);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
-return (
-  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-      <CardHeader className="space-y-4">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-2xl font-bold">Registration Form</CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={closeModal} 
-            className="rounded-full"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <div className="flex justify-center items-center space-x-4">
-          {sanctioningLogoUrl && (
-            <div className="h-16 w-16 rounded-full border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center">
-              <img 
-                src={sanctioningLogoUrl} 
-                alt="Sanctioning Logo" 
-                className="h-full w-full object-contain" 
-              />
-            </div>
-          )}
-          {promotionLogoUrl && (
-            <div className="h-16 w-16 rounded-full border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center">
-              <img 
-                src={promotionLogoUrl} 
-                alt="Promotion Logo" 
-                className="h-full w-full object-contain" 
-              />
-            </div>
-          )}
-        </div>
-        
-        <CardDescription className="text-center">
-          <Badge variant="outline" className="bg-black text-white py-1 px-4 text-base font-medium">
-            {eventName}
-          </Badge>
-        </CardDescription>
-        
-        <Separator />
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        <FighterForm
-          onFormDataChange={setFighterData}
-          locale={locale}
-          user={user}
-          sanctioning={sanctioning}
-          customWaiver={customWaiver}
-        />
-        
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <CardHeader className="space-y-4">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-bold">Registration Form</CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeModal}
+              className="rounded-full"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
 
+          <div className="flex justify-center items-center space-x-4">
+            {sanctioningLogoUrl && (
+              <div className="h-16 w-16 rounded-full border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center">
+                <img
+                  src={sanctioningLogoUrl}
+                  alt="Sanctioning Logo"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            )}
+            {promotionLogoUrl && (
+              <div className="h-16 w-16 rounded-full border-2 border-gray-200 overflow-hidden bg-white flex items-center justify-center">
+                <img
+                  src={promotionLogoUrl}
+                  alt="Promotion Logo"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            )}
+          </div>
 
-      <div className="space-y-2">
-  {payLaterEnabled && (
-    <div className="border border-gray-300 rounded p-4 space-y-2 mt-4">
-      <p className="font-medium">
-        {locale === 'es'
-          ? 'El Promotor ha habilitado a los Atletas para Pagar la Tarifa de Inscripción en el Pesaje'
-          : 'The Promoter Has Enabled the Option for Athletes to Pay Registration Fee at Weigh-ins'}
-      </p>
-      <label className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="payLater"
-          checked={isPayLater}
-          onChange={handlePayLaterChange}
-        />
-        <span>
-          {formContent.payLaterLabel ?? (locale === 'es' ? 'Pagar en el pesaje' : 'Pay at Weigh-ins')}
-        </span>
-      </label>
-      <p className="text-sm text-gray-600">
-      
-      </p>
-    </div>
-  )}
+          <CardDescription className="text-center">
+            <Badge variant="outline" className="bg-black text-white py-1 px-4 text-base font-medium">
+              {eventName}
+            </Badge>
+          </CardDescription>
 
-  {!isPayLater && (
-    <>
-      <div className="flex items-end gap-2">
-        <div className="w-full space-y-1">
-          <Label htmlFor="creditCode">{formContent.creditCodeLabel}</Label>
-          <Input
-            id="creditCode"
-            value={creditCode}
-            onChange={handleCreditCodeChange}
-            placeholder="Enter credit code if you have one"
+          <Separator />
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <FighterForm
+            onFormDataChange={setFighterData}
+            locale={locale}
+            user={user}
+            sanctioning={sanctioning}
+            customWaiver={customWaiver}
           />
-        </div>
-        {showVerifyButton && (
-          <Button
-            onClick={validateCreditCode}
-            variant="outline"
-            size="default"
-          >
-            {formContent.verifyButton}
-          </Button>
-        )}
-      </div>
 
-      {isCreditCodeValid !== null && (
-        <div className="mt-2">
-          {isCreditCodeValid ? (
+
+
+          <div className="space-y-2">
+            {payLaterEnabled && (
+              <div className="border border-gray-300 rounded p-4 space-y-2 mt-4">
+                <p className="font-medium">
+                  {locale === 'es'
+                    ? 'El Promotor ha habilitado a los Atletas para Pagar la Tarifa de Inscripción en el Pesaje'
+                    : 'The Promoter Has Enabled the Option for Athletes to Pay Registration Fee at Weigh-ins'}
+                </p>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="payLater"
+                    checked={isPayLater}
+                    onChange={handlePayLaterChange}
+                  />
+                  <span>
+                    {formContent.payLaterLabel ?? (locale === 'es' ? 'Pagar en el pesaje' : 'Pay at Weigh-ins')}
+                  </span>
+                </label>
+                <p className="text-sm text-gray-600">
+
+                </p>
+              </div>
+            )}
+
+            {!isPayLater && (
+              <>
+                <div className="flex items-end gap-2">
+                  <div className="w-full space-y-1">
+                    <Label htmlFor="creditCode">{formContent.creditCodeLabel}</Label>
+                    <Input
+                      id="creditCode"
+                      value={creditCode}
+                      onChange={handleCreditCodeChange}
+                      placeholder="Enter credit code if you have one"
+                    />
+                  </div>
+                  {showVerifyButton && (
+                    <Button
+                      onClick={validateCreditCode}
+                      variant="outline"
+                      size="default"
+                    >
+                      {formContent.verifyButton}
+                    </Button>
+                  )}
+                </div>
+
+                {isCreditCodeValid !== null && (
+                  <div className="mt-2">
+                    {isCreditCodeValid ? (
+                      <Alert variant="default" className="bg-green-50 border-green-200">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <AlertTitle className="text-green-600">Valid Code</AlertTitle>
+                        <AlertDescription className="text-green-600">
+                          {formContent.validCodeMessage}
+                        </AlertDescription>
+                      </Alert>
+                    ) : creditCodeRedeemed ? (
+                      <Alert variant="default" className="bg-amber-50 border-amber-200">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <AlertTitle className="text-amber-600">Already Redeemed</AlertTitle>
+                        <AlertDescription className="text-amber-600">
+                          {formContent.redeemedCodeMessage}
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <Alert variant="default" className="bg-red-50 border-red-200">
+                        <AlertCircle className="h-4 w-4 text-red-600" />
+                        <AlertTitle className="text-red-600">Invalid Code</AlertTitle>
+                        <AlertDescription className="text-red-600">
+                          {formContent.invalidCodeMessage}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <Separator />
+
+          {(isCreditCodeValid || currentRegistrationFee === 0) && !isPayLater ? (
             <Alert variant="default" className="bg-green-50 border-green-200">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-600">Valid Code</AlertTitle>
+              <AlertTitle className="text-green-600">Free Registration</AlertTitle>
               <AlertDescription className="text-green-600">
-                {formContent.validCodeMessage}
+                Your registration is free of charge.
               </AlertDescription>
             </Alert>
-          ) : creditCodeRedeemed ? (
-            <Alert variant="default" className="bg-amber-50 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-600">Already Redeemed</AlertTitle>
-              <AlertDescription className="text-amber-600">
-                {formContent.redeemedCodeMessage}
+          ) : isPayLater ? (
+            <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+              <AlertTitle className="text-yellow-700">Pay at Weigh-ins</AlertTitle>
+              <AlertDescription className="text-yellow-700">
+                {formContent.registrationFeeLabel}{" "}
+                {convertedFee.currency === 'MXN'
+                  ? `${convertedFee.amount} MXN`
+                  : `$${currentRegistrationFee} USD`} + 10% surcharge
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant="default" className="bg-red-50 border-red-200">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertTitle className="text-red-600">Invalid Code</AlertTitle>
-              <AlertDescription className="text-red-600">
-                {formContent.invalidCodeMessage}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="card-element">{formContent.registrationFeeLabel}</Label>
+                <div className="border rounded-md p-3 bg-gray-50">
+                  <CardElement id="card-element" options={CARD_ELEMENT_OPTIONS} />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Sanctioning: <Badge variant="outline" className="font-normal">{sanctioning}</Badge>
+                </div>
+                <div className="text-sm font-medium">
+                  Fee: {convertedFee.currency === 'MXN'
+                    ? `${convertedFee.amount} MXN`
+                    : `$${currentRegistrationFee} USD`}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {statusMessage && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertTitle className="text-blue-700">Status Update</AlertTitle>
+              <AlertDescription className="text-blue-600">
+                {statusMessage}
               </AlertDescription>
             </Alert>
           )}
+        </CardContent>
+
+        <CardFooter className="flex justify-end">
+          <Button
+            onClick={handleRegistrationSubmit}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
+
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {formContent.submittingButton}
+              </>
+            ) : (
+              formContent.submitButton
+            )}
+
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 bg-white/80 flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
+          <p className="text-gray-700">{statusMessage || formContent.submittingOverlayMessage}</p>
         </div>
       )}
-    </>
-  )}
-</div>
 
-<Separator />
-
-{(isCreditCodeValid || currentRegistrationFee === 0) && !isPayLater ? (
-  <Alert variant="default" className="bg-green-50 border-green-200">
-    <CheckCircle className="h-4 w-4 text-green-600" />
-    <AlertTitle className="text-green-600">Free Registration</AlertTitle>
-    <AlertDescription className="text-green-600">
-      Your registration is free of charge.
-    </AlertDescription>
-  </Alert>
-) : isPayLater ? (
-  <Alert variant="default" className="bg-yellow-50 border-yellow-200">
-    <AlertTitle className="text-yellow-700">Pay at Weigh-ins</AlertTitle>
-    <AlertDescription className="text-yellow-700">
-      {formContent.registrationFeeLabel}{" "}
-      {convertedFee.currency === 'MXN'
-        ? `${convertedFee.amount} MXN`
-        : `$${currentRegistrationFee} USD`} + 10% surcharge
-    </AlertDescription>
-  </Alert>
-) : (
-  <div className="space-y-4">
-    <div className="space-y-2">
-      <Label htmlFor="card-element">{formContent.registrationFeeLabel}</Label>
-      <div className="border rounded-md p-3 bg-gray-50">
-        <CardElement id="card-element" options={CARD_ELEMENT_OPTIONS} />
-      </div>
     </div>
-
-    <div className="flex items-center justify-between">
-      <div className="text-sm text-gray-600">
-        Sanctioning: <Badge variant="outline" className="font-normal">{sanctioning}</Badge>
-      </div>
-      <div className="text-sm font-medium">
-        Fee: {convertedFee.currency === 'MXN'
-          ? `${convertedFee.amount} MXN`
-          : `$${currentRegistrationFee} USD`}
-      </div>
-    </div>
-  </div>
-)}
-
-{statusMessage && (
-  <Alert className="bg-blue-50 border-blue-200">
-    <AlertTitle className="text-blue-700">Status Update</AlertTitle>
-    <AlertDescription className="text-blue-600">
-      {statusMessage}
-    </AlertDescription>
-  </Alert>
-)}
-      </CardContent>
-      
-      <CardFooter className="flex justify-end">
-        <Button 
-          onClick={handleRegistrationSubmit} 
-          disabled={isSubmitting}
-          className="w-full sm:w-auto"
-        >
-
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {formContent.submittingButton}              
-            </>
-          ) : (
-            formContent.submitButton
-          )}
-
-        </Button>
-      </CardFooter>
-    </Card>
-
-    {isSubmitting && (
-  <div className="fixed inset-0 z-50 bg-white/80 flex flex-col items-center justify-center space-y-4">
-    <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
-    <p className="text-gray-700">{statusMessage || formContent.submittingOverlayMessage}</p>
-  </div>
-)}
-
-  </div>
-);
+  );
 };
 
 export default RegistrationComponent;
