@@ -91,7 +91,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
 
   const [formData, setFormData] = useState<EventType & TimeFields>({
     ...eventData,
-    name: eventData.event_name || eventData.name || '',
+    event_name: eventData.event_name || '',
     doors_open: eventData.doors_open || '',
     weighin_start_time: eventData.weighin_start_time || '',
     weighin_end_time: eventData.weighin_end_time || '',
@@ -179,9 +179,10 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
           throw new Error('Failed to update event');
         }
 
-        router.push(`/events/${promoterId}/${eventId}`);
+ 
         router.refresh();
 
+        alert('Event Details Updated Successfully');
 
       } catch (error) {
         console.error('Error updating event:', error);
@@ -317,17 +318,6 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
               <div className="bg-white p-6 rounded-lg shadow space-y-4">
                 <h2 className="text-xl font-semibold mb-4">Event Details</h2>
 
-                <div>
-                  <Label>Event Name</Label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                    required
-                  />
-                </div>
 
                 <div>
                   <Image
@@ -350,6 +340,17 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                   {isUploadingFlyer && <p className="text-sm text-gray-500">Uploading flyer...</p>}
                 </div>
 
+                <div>
+                  <Label>Event Name</Label>
+                  <input
+                    type="text"
+                    name="event_name"
+                    value={formData.event_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    required
+                  />
+                </div>
 
                 <div>
                   <Label>Sanctioning</Label>
@@ -757,7 +758,6 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                 </AlertDialog>
               </div>
 
-              {/* Right side - Cancel and Save buttons */}
               <div className="flex space-x-4">
                 <button
                   type="button"

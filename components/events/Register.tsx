@@ -624,17 +624,24 @@ const handleRegistrationSubmit = async () => {
         throw new Error('Stripe.js not loaded');
       }
 
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        throw new Error('CardElement not found');
-      }
+      let token;
+if (!isPayLater) {
+  const cardElement = elements.getElement(CardElement);
+  if (!cardElement) {
+    throw new Error('CardElement not found');
+  }
 
-      // Process payment
-      const { token, error: stripeError } = await stripe.createToken(cardElement);
-      if (stripeError) throw new Error(stripeError.message);
+  const { token: createdToken, error: stripeError } = await stripe.createToken(cardElement);
+  if (stripeError) {
+    console.error('Stripe error:', stripeError); // Debug log
+    throw new Error(stripeError.message);
+  }
+
+  token = createdToken;
+}
 
       const paymentResponse = await axios.post('/api/stripe', {
-        token: token.id,
+        token: token?.id,
         eventId,
         amount: convertedFee.amount,
         currency: convertedFee.currency,
