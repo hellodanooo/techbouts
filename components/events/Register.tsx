@@ -349,12 +349,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           age: fighterData.age,
           eventName,
           eventId,
-         
           heightFoot: fighterData.heightFoot,
           heightInch: fighterData.heightInch,
           phone: fighterData.phone,
           coach: fighterData.coach_name,
-          coach_phone: fighterData.coach_phone
+          coach_phone: fighterData.coach_phone,
+          locale
         });
         if (emailResponse.status === 200) {
           alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
@@ -378,12 +378,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
               age: fighterData.age,
               eventName,
               eventId,
-            
               heightFoot: fighterData.heightFoot,
               heightInch: fighterData.heightInch,
               phone: fighterData.phone,
               coach: fighterData.coach_name,
-              coach_phone: fighterData.coach_phone
+              coach_phone: fighterData.coach_phone,
+              locale
             });
       
             if (emailResponse.status === 200) {

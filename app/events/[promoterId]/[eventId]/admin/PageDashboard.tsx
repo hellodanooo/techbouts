@@ -15,6 +15,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight } from "lucide-react";
 import EmailTable from './EmailClient'; // adjust path as needed
 import { RosterFighter, Bout } from '@/utils/types';
+import { FaPerson } from "react-icons/fa6";
+
 
 interface PageDashboardProps {
     eventId: string;
@@ -134,12 +136,15 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             <Collapsible
                 open={openSections.roster}
                 onOpenChange={() => toggleSection('roster')}
-                className="w-full border rounded-lg overflow-hidden"
+                className="w-full border rounded-lg overflow-hidden mb-6"
             >
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100">
-                    <h2 className="text-xl font-semibold">Roster</h2>
+                    <h2 className="text-xl font-semibold">Roster</h2>  <div className='flex justify-center items-center border border-gray-300 rounded-[5px] p-1'>
+                        {roster.length} <FaPerson className='ml-2' />
+                        </div>
                     {isAdmin && (
                         <div>Admin Roster Enabled</div>)}
+                       
                     {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="p-4 bg-white">
