@@ -139,6 +139,127 @@ export default function GymsPageClient() {
   
   const lastDocRef = useRef<QuerySnapshot<DocumentData> | null>(null);
   const observer = useRef<IntersectionObserver | null>(null);
+  
+  const loadMoreGyms = async () => {
+    if (!hasMore || loadingMore || !lastDocRef.current) return;
+    
+    try {
+      setLoadingMore(true);
+      
+      // Build the query with startAfter using the last document
+      const gymsQuery = collection(db, 'Gym_Profiles');
+      const constraints = [];
+      
+      if (debouncedQuery) {
+        const upperQuery = debouncedQuery.toUpperCase();
+        constraints.push(where('name', '>=', upperQuery));
+        constraints.push(where('name', '<=', upperQuery + '\uf8ff'));
+      }
+      
+      // Apply sorting - always use all-time values for sorting
+      let sortField = 'pmt_wins';
+      if (sortBy === 'fighters') {
+        sortField = 'pmt_total_fighters';
+      }
+      
+      // Simple query without year filtering to avoid index errors
+      const finalQuery = query(
+        gymsQuery,
+        ...constraints,
+        orderBy(sortField, 'desc'),
+        startAfter(lastDocRef.current.docs[lastDocRef.current.docs.length - 1]),
+        limit(selectedYear !== 'all' ? GYMS_PER_PAGE * 3 : GYMS_PER_PAGE)
+      );
+      
+      const snapshot = await getDocs(finalQuery);
+      lastDocRef.current = snapshot;
+      
+      let newGyms = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as GymRecord));
+      
+      // For year filtering, filter entirely client-side
+      if (selectedYear !== 'all') {
+        newGyms = newGyms.filter(gym => 
+          gym.pmt_yearly_stats && gym.pmt_yearly_stats[selectedYear]
+        );
+        
+        // Sort by year-specific wins if needed
+        if (sortBy === 'wins') {
+          newGyms.sort((a, b) => {
+            const aWins = a.pmt_yearly_stats?.[selectedYear]?.wins || 0;
+            const bWins = b.pmt_yearly_stats?.[selectedYear]?.wins || 0;
+            return bWins - aWins;
+          });
+        } else if (sortBy === 'fighters') {
+          newGyms.sort((a, b) => {
+            const aFighters = a.pmt_yearly_stats?.[selectedYear]?.total_fighters || 0;
+            const bFighters = b.pmt_yearly_stats?.[selectedYear]?.total_fighters || 0;
+            return bFighters - aFighters;
+          });
+        }
+      }
+      
+      // Handle win rate sorting client-side
+      if (sortBy === 'winRate') {
+        if (selectedYear === 'all') {
+          newGyms.sort((a, b) => {
+            const aWins = a.pmt_wins || 0;
+            const aLosses = a.pmt_losses || 0;
+            const bWins = b.pmt_wins || 0;
+            const bLosses = b.pmt_losses || 0;
+            
+            const aRate = aWins / (aWins + aLosses || 1);
+            const bRate = bWins / (bWins + bLosses || 1);
+            
+            // If win rates are equal, sort by total fights
+            if (Math.abs(aRate - bRate) < 0.001) {
+              return (bWins + bLosses) - (aWins + aLosses);
+            }
+            
+            return bRate - aRate;
+          });
+        } else {
+          newGyms.sort((a, b) => {
+            const aWins = a.pmt_yearly_stats?.[selectedYear]?.wins || 0;
+            const aLosses = a.pmt_yearly_stats?.[selectedYear]?.losses || 0;
+            const bWins = b.pmt_yearly_stats?.[selectedYear]?.wins || 0;
+            const bLosses = b.pmt_yearly_stats?.[selectedYear]?.losses || 0;
+            
+            const aRate = aWins / (aWins + aLosses || 1);
+            const bRate = bWins / (bWins + bLosses || 1);
+            
+            // If win rates are equal, sort by total fights
+            if (Math.abs(aRate - bRate) < 0.001) {
+              return (bWins + bLosses) - (aWins + aLosses);
+            }
+            
+            return bRate - aRate;
+          });
+        }
+      }
+      
+      // Limit to display count after all filtering
+      newGyms = newGyms.slice(0, GYMS_PER_PAGE);
+      
+      setGyms(prev => [...prev, ...newGyms]);
+      
+      // Only set hasMore if we had enough results or if we're in all-time mode
+      setHasMore(
+        selectedYear === 'all' 
+          ? (!snapshot.empty && snapshot.docs.length === GYMS_PER_PAGE)
+          : (newGyms.length === GYMS_PER_PAGE) 
+      );
+      
+    } catch (err) {
+      console.error('Error loading more gyms:', err);
+      setError(err instanceof FirestoreError ? err.message : 'Failed to load more gyms');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+  
   const loadMoreTriggerRef = useCallback((node: HTMLDivElement | null) => {
     if (loadingMore) return;
     
@@ -151,7 +272,7 @@ export default function GymsPageClient() {
     });
     
     if (node) observer.current.observe(node);
-  }, [loadingMore, hasMore, loading]);
+  }, [loadingMore, hasMore, loading, loadMoreGyms]);
 
   // Handle search debounce
   useEffect(() => {
@@ -161,24 +282,6 @@ export default function GymsPageClient() {
 
     return () => clearTimeout(timerId);
   }, [searchQuery]);
-
-  // Reset when filters change
-  useEffect(() => {
-    setGyms([]);
-    setLoading(true);
-    setHasMore(true);
-    lastDocRef.current = null;
-    loadGyms();
-  }, [debouncedQuery, selectedYear, sortBy]);
-
-  // Show a helper toast message if year is selected
-  useEffect(() => {
-    if (selectedYear !== 'all') {
-      toast.info(`Showing data for ${selectedYear}`, {
-        description: 'Data from PMT sanctioning body'
-      });
-    }
-  }, [selectedYear]);
 
   const loadGyms = async () => {
     try {
@@ -302,125 +405,27 @@ export default function GymsPageClient() {
     }
   };
 
-  const loadMoreGyms = async () => {
-    if (!hasMore || loadingMore || !lastDocRef.current) return;
-    
-    try {
-      setLoadingMore(true);
-      
-      // Build the query with startAfter using the last document
-      const gymsQuery = collection(db, 'Gym_Profiles');
-      const constraints = [];
-      
-      if (debouncedQuery) {
-        const upperQuery = debouncedQuery.toUpperCase();
-        constraints.push(where('name', '>=', upperQuery));
-        constraints.push(where('name', '<=', upperQuery + '\uf8ff'));
-      }
-      
-      // Apply sorting - always use all-time values for sorting
-      let sortField = 'pmt_wins';
-      if (sortBy === 'fighters') {
-        sortField = 'pmt_total_fighters';
-      }
-      
-      // Simple query without year filtering to avoid index errors
-      const finalQuery = query(
-        gymsQuery,
-        ...constraints,
-        orderBy(sortField, 'desc'),
-        startAfter(lastDocRef.current.docs[lastDocRef.current.docs.length - 1]),
-        limit(selectedYear !== 'all' ? GYMS_PER_PAGE * 3 : GYMS_PER_PAGE)
-      );
-      
-      const snapshot = await getDocs(finalQuery);
-      lastDocRef.current = snapshot;
-      
-      let newGyms = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as GymRecord));
-      
-      // For year filtering, filter entirely client-side
-      if (selectedYear !== 'all') {
-        newGyms = newGyms.filter(gym => 
-          gym.pmt_yearly_stats && gym.pmt_yearly_stats[selectedYear]
-        );
-        
-        // Sort by year-specific wins if needed
-        if (sortBy === 'wins') {
-          newGyms.sort((a, b) => {
-            const aWins = a.pmt_yearly_stats?.[selectedYear]?.wins || 0;
-            const bWins = b.pmt_yearly_stats?.[selectedYear]?.wins || 0;
-            return bWins - aWins;
-          });
-        } else if (sortBy === 'fighters') {
-          newGyms.sort((a, b) => {
-            const aFighters = a.pmt_yearly_stats?.[selectedYear]?.total_fighters || 0;
-            const bFighters = b.pmt_yearly_stats?.[selectedYear]?.total_fighters || 0;
-            return bFighters - aFighters;
-          });
-        }
-      }
-      
-      // Handle win rate sorting client-side
-      if (sortBy === 'winRate') {
-        if (selectedYear === 'all') {
-          newGyms.sort((a, b) => {
-            const aWins = a.pmt_wins || 0;
-            const aLosses = a.pmt_losses || 0;
-            const bWins = b.pmt_wins || 0;
-            const bLosses = b.pmt_losses || 0;
-            
-            const aRate = aWins / (aWins + aLosses || 1);
-            const bRate = bWins / (bWins + bLosses || 1);
-            
-            // If win rates are equal, sort by total fights
-            if (Math.abs(aRate - bRate) < 0.001) {
-              return (bWins + bLosses) - (aWins + aLosses);
-            }
-            
-            return bRate - aRate;
-          });
-        } else {
-          newGyms.sort((a, b) => {
-            const aWins = a.pmt_yearly_stats?.[selectedYear]?.wins || 0;
-            const aLosses = a.pmt_yearly_stats?.[selectedYear]?.losses || 0;
-            const bWins = b.pmt_yearly_stats?.[selectedYear]?.wins || 0;
-            const bLosses = b.pmt_yearly_stats?.[selectedYear]?.losses || 0;
-            
-            const aRate = aWins / (aWins + aLosses || 1);
-            const bRate = bWins / (bWins + bLosses || 1);
-            
-            // If win rates are equal, sort by total fights
-            if (Math.abs(aRate - bRate) < 0.001) {
-              return (bWins + bLosses) - (aWins + aLosses);
-            }
-            
-            return bRate - aRate;
-          });
-        }
-      }
-      
-      // Limit to display count after all filtering
-      newGyms = newGyms.slice(0, GYMS_PER_PAGE);
-      
-      setGyms(prev => [...prev, ...newGyms]);
-      
-      // Only set hasMore if we had enough results or if we're in all-time mode
-      setHasMore(
-        selectedYear === 'all' 
-          ? (!snapshot.empty && snapshot.docs.length === GYMS_PER_PAGE)
-          : (newGyms.length === GYMS_PER_PAGE) 
-      );
-      
-    } catch (err) {
-      console.error('Error loading more gyms:', err);
-      setError(err instanceof FirestoreError ? err.message : 'Failed to load more gyms');
-    } finally {
-      setLoadingMore(false);
+
+  // Reset when filters change
+  useEffect(() => {
+    setGyms([]);
+    setLoading(true);
+    setHasMore(true);
+    lastDocRef.current = null;
+    loadGyms();
+  }, [debouncedQuery, selectedYear, sortBy, loadGyms]);
+
+  // Show a helper toast message if year is selected
+  useEffect(() => {
+    if (selectedYear !== 'all') {
+      toast.info(`Showing data for ${selectedYear}`, {
+        description: 'Data from PMT sanctioning body'
+      });
     }
-  };
+  }, [selectedYear]);
+
+
+
 
   // Calculate win percentage helper
   const calculateWinPercentage = (wins: number, losses: number) => {

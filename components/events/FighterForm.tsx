@@ -22,6 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FullContactFighter } from '@/utils/types';
 // MAIN COMPONENTS
 import { getWaiver } from '@/components/WaiverContent';
+import { generateFighterId, calculateAge } from '@/utils/apiFunctions/techboutsDatabase';
+import { PiArrowFatLineDownBold } from "react-icons/pi";
 
 interface FighterFormProps {
   onFormDataChange: (data: FullContactFighter) => void;
@@ -38,6 +40,9 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   const [isWaiverChecked, setIsWaiverChecked] = useState(false);
 
   const currentWaiver = getWaiver(sanctioning || 'None', locale || 'en');
+
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+
 
   const [formLabels] = useState(() => {
     const en = {
@@ -104,6 +109,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       fouryears: '4 Years',
       fivePlusyears: '5+ Years',
       semiContactFights: 'Number of Semi Contact Fights',
+      noFighterExists: 'No fighter exists, Fill out form below to add fighter',
 
 
 
@@ -173,6 +179,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       fouryears: '4 Años',
       fivePlusyears: '5+ Años',
       semiContactFights: 'Número de Peleas de Semi Contacto',
+      noFighterExists: 'No existe peleador, llena el formulario abajo para agregar peleador',
     };
 
     return locale === 'es' ? es : en;
@@ -253,7 +260,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         ...formData,
         dob: formattedDate,
         age: calculateAge(formattedDate),
-        fighter_id: formData.first && formData.last ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighter_id,
+        fighter_id: formData.first && formData.last && formData.dob ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighter_id,
       });
       setSelectedDate(date);
       setDobError(null);
@@ -342,8 +349,12 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   useEffect(() => {
 
+    console.log(`Searching for ${searchType} containing:`, fighterSearchTerm);
+
     const fetchFighters = async () => {
       if (fighterSearchTerm.length >= 3) {
+        setIsLoadingSearch(true);
+
         console.log(`Searching for ${searchType} containing:`, fighterSearchTerm);
 
         try {
@@ -411,11 +422,8 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               pmt_loss: data.pmt_loss || 0,
               pb_win: data.pb_win || 0,
               pb_loss: data.pb_loss || 0,
-
               gender: data.gender || '',
-
               years_exp: data.years_exp || 0,
-
               heightFoot: data.heightFoot || 0,
               heightInch: data.heightInch || 0,
               phone: data.phone || '',
@@ -425,7 +433,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
               state: data.state || '',
               city: data.city || '',
               other_exp: data.other_exp || '',
-
               // Adding missing properties with default values
               photo: data.photo || '',
               pmt_fights: data.pmt_fights || [],
@@ -452,11 +459,12 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           // Log for debugging
           console.log('Total combined fighters:', fighters.length);
 
-          // Set the results
           setFighterSearchResults(fighters);
         } catch (error) {
           console.error("Error fetching fighters:", error);
           setFighterSearchResults([]);
+        } finally {
+          setIsLoadingSearch(false); // Done loading
         }
       } else {
         setFighterSearchResults([]);
@@ -465,10 +473,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
     fetchFighters();
   }, [fighterSearchTerm, searchType]);
-
-
-
-
 
 
   const handleFighterSelect = (selectedFighter: FullContactFighter) => {
@@ -604,18 +608,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
-
-  const generateFighterId = (firstName: string, lastName: string, dob: string): string => {
-    const [month, day, year] = dob.split('/');
-    return `${firstName.trim().replace(/\s/g, '').toUpperCase()}${lastName.trim().replace(/\s/g, '').toUpperCase()}${day}${month}${year}`;
-  };
-
-
-  const calculateAge = (dob: string): number => {
-    const birthDate = dayjs(dob);
-    const today = dayjs();
-    return today.diff(birthDate, 'year');
-  };
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -775,37 +767,54 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
                   </TabsContent>
                 </Tabs>
 
-                {fighterSearchResults.length > 0 && (
-                  <ScrollArea className="h-[200px] rounded-md border">
-                    <div className="p-4">
-                      {fighterSearchResults.map((fighter, index) => (
-                        <Button
-                          key={index}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => handleFighterSelect(fighter)}
-                        >
-                          <div className="text-left">
-                            <div className="font-medium">{fighter.first} {fighter.last}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
-                            </div>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
+
+                {isLoadingSearch ? (
+  <div className="flex justify-center items-center py-4 text-muted-foreground">
+    <svg className="animate-spin h-6 w-6 mr-2 text-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+    <span>Searching...</span>
+  </div>
+) : fighterSearchResults.length > 0 ? (
+  <>
+    <ScrollArea className="h-[200px] rounded-md border">
+      <div className="p-4">
+        {fighterSearchResults.map((fighter, index) => (
+          <Button
+            key={index}
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => handleFighterSelect(fighter)}
+          >
+            <div className="text-left">
+              <div className="font-medium">{fighter.first} {fighter.last}</div>
+              <div className="text-sm text-muted-foreground">
+                Email: {fighter.email} | Age: {fighter.age} | Gym: {fighter.gym}
+              </div>
+            </div>
+          </Button>
+        ))}
+      </div>
+    </ScrollArea>
+    <p className="text-sm text-muted-foreground text-center mt-2">
+      {fighterSearchResults.length} result{fighterSearchResults.length > 1 ? 's' : ''} found
+    </p>
+  </>
+) : fighterSearchTerm.length >= 3 ? (
+  <div className="flex flex-col items-center justify-center text-center text-muted-foreground py-6">
+    <p className="text-sm font-medium">{formLabels.noFighterExists}</p>
+    <div className="text-2xl mt-2 animate-bounce"><PiArrowFatLineDownBold /></div>
+  </div>
+) : null}
+
+
+
               </div>
             </CardContent>
           </Card>
 
-
-
-
-
-
-          {/* New Fighter Form */}
+    
           <Card>
             <CardHeader>
               <CardTitle>{formLabels.newFighterTitle}</CardTitle>

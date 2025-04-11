@@ -21,7 +21,6 @@ interface TournamentDashboardProps {
   promoterId: string;
   promoterEmail: string;
   eventData: EventType;
-
 }
 
 export default function PageContentEvent({
@@ -170,7 +169,6 @@ const stripeInstance = useMemo(() => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Badge variant="secondary">{eventData.competition_type}</Badge>
                     {eventData.sanctioning && (
                       <Badge variant="outline" className="ml-2">{eventData.sanctioning}</Badge>
                     )}
@@ -245,7 +243,7 @@ const stripeInstance = useMemo(() => {
                     )}
 
                     {/* Coach Registration Button - Show if coachRegEnabled */}
-                    {eventData.coach_enabled && (
+                    {eventData.coachRegEnabled && (
                       <button
                         onClick={() => setRegisterOpen(true)}
                         className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"

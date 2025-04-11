@@ -12,6 +12,7 @@ import { createMatch, editBout, deleteBout } from '@/utils/events/matches';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { deleteFighterFromRoster } from '@/utils/apiFunctions/techboutsRoster';
 // import RosterTable from '../admin/RosterTable';
 
 interface SaveBoutProps {
@@ -107,10 +108,6 @@ export default function CreateBout({
     try {
       if (action === 'create') {
 
-
-
-
-
         await createMatch({
           red,
           blue,
@@ -203,14 +200,26 @@ export default function CreateBout({
 
   const isEdit = action === 'edit';
 
+
+  const navigateToFighterDetail = (fighter: RosterFighter) => {
+    const fighterId = fighter.fighter_id;
+    if (fighterId) {
+      window.open(`/fighter/${fighterId}`, '_blank');
+    } else {
+      console.error("Fighter ID not available for navigation");
+    }
+  };
+
+
   return (
-    <Card className="fixed -top-10 left-0 w-full bg-white shadow z-50 border-b">
+    <Card className="fixed -top-10 left-0 w-full bg-gray-200 shadow z-50 border-b">
       <CardHeader>
     
       </CardHeader>
       <CardContent>
         {/* TOP BUTTONS */}
         <div className="flex mb-4 space-x-2">
+          
           <Button
             onClick={handleSaveBout}
             disabled={!red || !blue || isCreatingMatch}
@@ -348,48 +357,65 @@ export default function CreateBout({
         {/* SELECTED FIGHTERS */}
         <div className="">
   {/* Red Corner */}
-  <div className="border rounded-md p-2 w-100">
+  <div className="border border-black p-2 w-100 rounded-md">
     <p className="font-medium mb-2">Red Corner</p>
     {red ? (
-      <div className='flex items-center'>
+      <div className="flex items-center justify-between w-full">
         <p className="font-semibold">{`${red.first || ''} ${red.last || ''}`}</p>
-        <p className='ml-1'>{red.gym || 'No gym'}</p>
-        <p className='ml-1'>{red.weightclass || 'No Weight'}</p>
-        <p className='ml-1'>{red.gender || 'No Gender'}</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-1"
-          onClick={() => setRed(null)}
-        >
-          Clear
-        </Button>
+        <p>{red.gym || 'No gym'}</p>
+        <p>{red.weightclass || 'No Weight'}</p>
+        <p>{red.gender || 'No Gender'}</p>
+      
       </div>
     ) : (
       <p className="text-muted-foreground">No fighter selected</p>
     )}
+
+{red && !blue && (
+      <div className="flex items-center justify-end w-full">
+
+<Button
+variant="outline"
+size="sm"
+className='mr-5'
+onClick={() => navigateToFighterDetail(red)}
+>
+Edit
+</Button>
+
+  <Button
+    variant="destructive"
+    size="sm"
+    onClick={() => {
+      deleteFighterFromRoster(red.fighter_id, promoterId, eventId);
+      setRed(null);
+    }}
+  >
+    Delete
+  </Button>
+</div>
+)}
+
   </div>
 
   {/* Blue Corner */}
-  <div className="border p-2 w-100">
-    <p className="mb-1">Blue Corner</p>
+  <div className="border border-black p-2 w-100 rounded-md">
+    
     {blue ? (
-      <div className='flex items-center'>
+    
+    <p className="mb-1">Blue Corner</p>
+        ):( <div></div>  )}
+   
+    {blue ? (
+      <div className="flex items-center justify-between w-full">
         <p className="text-lg font-semibold">{`${blue.first || ''} ${blue.last || ''}`}</p>
         <p className='ml-1'>{blue.gym || 'No gym'}</p>
         <p className='ml-1'>{blue.weightclass || 'No Weight'}</p>
         <p className='ml-1'>{blue.gender || 'Not Gender'}</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-1"
-          onClick={() => setBlue(null)}
-        >
-          Clear
-        </Button>
+     
       </div>
     ) : (
-      <p className="text-muted-foreground">No fighter selected</p>
+      <p className="text-muted-foreground">Select Another Fighter to Create Match</p>
     )}
   </div>
 </div>

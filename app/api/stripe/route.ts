@@ -29,14 +29,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { token, eventId, amount, currency, idempotencyKey, pmt_id, locale, sanctioning } = body;
+    const { token, eventId, amount, currency, idempotencyKey, fighter_id, locale, sanctioning } = body;
     
 console.log('token', token);
 console.log('eventId', eventId);
 console.log('amount', amount);
 console.log('currency', currency);
 console.log('idempotencyKey', idempotencyKey);
-console.log('pmt_id', pmt_id);
+console.log('pmt_id', fighter_id);
 console.log('locale', locale);
 
 
@@ -63,7 +63,7 @@ if (locale === 'es') {
     const paymentIntent = await stripeInstance.paymentIntents.create({
       amount: amountInSmallestUnit,
       currency: currency.toLowerCase(),
-      description: `${eventId} registration ${pmt_id}`,
+      description: `${eventId} registration ${fighter_id}`,
       payment_method: paymentMethod.id,
       confirm: true,
       automatic_payment_methods: {

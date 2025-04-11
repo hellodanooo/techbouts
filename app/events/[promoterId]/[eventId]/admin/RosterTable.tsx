@@ -1,6 +1,6 @@
 // components/RosterTable.tsx
 'use client'
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
@@ -9,7 +9,11 @@ import AddFighterModal from '../../../../../components/database/AddFighterModal'
 import { toast } from 'sonner';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import CreateEditBout from '@/app/events/[promoterId]/[eventId]/matches/CreateEditBout';
-import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
+
+import { refreshOneFighterData } from '@/utils/apiFunctions/techboutsRoster';
+
+import { fetchPmtRoster, saveWeighin } from '@/utils/apiFunctions/pmtRoster';
+
 
 
 import {
@@ -37,14 +41,15 @@ interface RosterTableProps {
   eventData: EventType;
   bouts: Bout[];
   onFighterSelect?: (fighter: RosterFighter) => void;
+  onBoutsRefresh?: () => void;
 }
 
 const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
 
-export default function RosterTable({ roster, eventId, promoterId, isAdmin, eventData, onFighterSelect, bouts }: RosterTableProps) {
+export default function RosterTable({ roster, eventId, promoterId, isAdmin, eventData, onFighterSelect, bouts, onBoutsRefresh }: RosterTableProps) {
   const router = useRouter();
   const [openPotentialMatchesModal, setOpenPotentialMatchesModal] = React.useState(false);
-  const [isRefreshing] = useState<{ [key: string]: boolean }>({});
+  const [isRefreshing, setIsRefreshing] = useState<{ [key: string]: boolean }>({});
   const [openAddFighterModal, setOpenAddFighterModal] = useState(false);
   const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
   const [rosterData, setRosterData] = useState<RosterFighter[]>(roster);
@@ -56,6 +61,26 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
   const [sortKey, setSortKey] = useState<keyof RosterFighter | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+
+  // WEIGHINS
+  const [conductWeighins, setConductWeighins] = useState(false);
+  const [editingFighterId, setEditingFighterId] = useState<string | null>(null);
+  const [currentEditingValue, setCurrentEditingValue] = useState<string>('');
+  const [savingWeights, setSavingWeights] = useState<{ [key: string]: boolean }>({});
+  const editingInputRef = useRef<HTMLInputElement>(null);
+
+  const [showUnmatchedOnly, setShowUnmatchedOnly] = useState(false);
+
+
+  const matchedFighterIds = useMemo(() => {
+    const ids = new Set<string>();
+    bouts.forEach((bout) => {
+      if (bout.red?.fighter_id) ids.add(bout.red.fighter_id);
+      if (bout.blue?.fighter_id) ids.add(bout.blue.fighter_id);
+    });
+    return ids;
+  }, [bouts]);
+
   // Handle sorting when a header is clicked
   const handleSort = (key: keyof RosterFighter) => {
     if (sortKey === key) {
@@ -66,10 +91,9 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
       setSortDirection('asc');
     }
   };
-  
+
   const displayedRoster = useMemo(() => {
-    // 1. Filter
-    const filtered = rosterData.filter((fighter) => {
+    let filtered = rosterData.filter((fighter) => {
       const name = `${fighter.first || ''} ${fighter.last || ''}`.toLowerCase();
       const gym = (fighter.gym || '').toLowerCase();
       return (
@@ -78,29 +102,24 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
       );
     });
 
-    // 2. Sort
+    if (showUnmatchedOnly) {
+      filtered = filtered.filter((fighter) => !matchedFighterIds.has(fighter.fighter_id));
+    }
+
     if (sortKey) {
       filtered.sort((a, b) => {
         let aVal = a[sortKey] ?? '';
         let bVal = b[sortKey] ?? '';
-
-        // Convert to lowerCase string for consistent sorting
-        // If you need numeric sorting, handle that logic based on the field
         if (typeof aVal === 'string') aVal = aVal.toLowerCase();
         if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
-        if (aVal < bVal) {
-          return sortDirection === 'asc' ? -1 : 1;
-        }
-        if (aVal > bVal) {
-          return sortDirection === 'asc' ? 1 : -1;
-        }
-        return 0;
+        return aVal < bVal ? (sortDirection === 'asc' ? -1 : 1)
+          : aVal > bVal ? (sortDirection === 'asc' ? 1 : -1)
+            : 0;
       });
     }
 
     return filtered;
-  }, [rosterData, searchTerm, sortKey, sortDirection]);
+  }, [rosterData, searchTerm, sortKey, sortDirection, showUnmatchedOnly, matchedFighterIds]);
 
 
 
@@ -108,13 +127,16 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
     if (!isAdmin) {
       return navigateToFighterDetail(fighter);
     }
-  console.log('ROSTER EXISTING BOUTS', bouts)
+    console.log('ROSTER EXISTING BOUTS', bouts)
     // If no fighter is selected yet, or if red & blue are both set, pick fighter for red.
+    console.log('Fighter clicked:', fighter);
+
+
     if (!red || (red && blue)) {
       setRed(fighter);
       setBlue(null);
       setSelectedFighter(fighter);
-    } 
+    }
     // else if red is set but blue isn’t, pick this fighter for blue
     else if (!blue) {
       setBlue(fighter);
@@ -150,21 +172,25 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
   };
 
 
-  const refreshFighterData = async () => {
-    try {
-      const updatedRoster = await fetchTechBoutsRoster(promoterId, eventId);
-      if (updatedRoster) {
-        setRosterData(updatedRoster);
-        toast.success("Roster refreshed");
-      } else {
-        toast.error("Failed to refresh roster");
-      }
-    } catch (error) {
-      console.error("Error refreshing roster:", error);
-      toast.error("Error refreshing roster");
+
+
+  const handleWeighinChange = (fighterId: string, value: string) => {
+    if (fighterId === editingFighterId) {
+      setCurrentEditingValue(value);
     }
   };
 
+  const handleFocus = (fighterId: string, initialValue: string) => {
+    setEditingFighterId(fighterId);
+    setCurrentEditingValue(initialValue);
+  };
+
+  useEffect(() => {
+    const hasWeighin = rosterData.some(fighter => fighter.weighin !== undefined && fighter.weighin !== 0);
+    if (hasWeighin) {
+      setConductWeighins(true);
+    }
+  }, [rosterData]);
 
   if (!rosterData?.length) {
     return (
@@ -200,22 +226,91 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
     );
   }
 
+
+
+  const handleSaveWeight = async (fighterId: string) => {
+    const newWeight = parseFloat(currentEditingValue);
+    if (isNaN(newWeight)) {
+      toast.error("Invalid weight");
+      return;
+    }
+    setSavingWeights((prev) => ({ ...prev, [fighterId]: true }));
+    try {
+      // Check if event sanctioning is PMT
+      if (eventData.sanctioning === "PMT") {
+        // Use the Firebase function to update the weighin.
+        await saveWeighin(fighterId, eventId, newWeight);
+        // After saving, re-fetch the updated PMT roster (if desired).
+        const updatedPmtRoster = await fetchPmtRoster(eventId);
+        if (updatedPmtRoster) {
+          setRosterData(updatedPmtRoster);
+        }
+      } else {
+        console.log(`Fighter's weight ${newWeight}`);
+        setRosterData((prevRoster) =>
+          prevRoster.map((fighter) =>
+            fighter.fighter_id === fighterId ? { ...fighter, weighin: newWeight } : fighter
+          )
+        );
+      }
+      toast.success("Weight saved");
+    } catch (error) {
+      console.error("Error saving weight", error);
+      toast.error("Error saving weight");
+    } finally {
+      setSavingWeights((prev) => ({ ...prev, [fighterId]: false }));
+      setEditingFighterId(null);
+    }
+  };
+
+
+
+
+
   return (
     <div className="mt-2">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            Event Roster
+
+        <div className="flex items-center justify-center gap-3">Roster {showUnmatchedOnly && (<div>Unmatched</div>)} {!showUnmatchedOnly && (<div>All Fighters</div>)}</div>
+
+
+            <CardTitle className="flex items-center justify-center gap-3">
+
+
+
+
             <Button
               onClick={() => setOpenAddFighterModal(true)}
               className="flex items-center gap-1"
             >
               <Plus className="h-4 w-4" /> Add Fighter
             </Button>
+
+            <Button
+              variant={conductWeighins ? 'default' : 'outline'}
+              onClick={() => setConductWeighins(prev => !prev)}
+            >
+              {conductWeighins ? 'Weighins On' : 'Conduct Weighins'}
+            </Button>
+
+
+
+
+
+            <Button
+              variant={showUnmatchedOnly ? 'default' : 'outline'}
+              onClick={() => setShowUnmatchedOnly(prev => !prev)}
+            >
+              {showUnmatchedOnly ? 'All Fighters' : 'Unmatched Fighters'}
+            </Button>
+
+
           </CardTitle>
 
-          {/* NEW: Filter (search) input */}
-          <div className="mt-3">
+
+
+          <div className="flex items-center justify-center gap-3">
             <input
               type="text"
               className="border rounded p-2 w-full sm:w-1/2"
@@ -224,6 +319,8 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+
+
         </CardHeader>
 
         <CardContent>
@@ -231,6 +328,9 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
             <Table>
               <TableHeader>
                 <TableRow>
+
+                  {conductWeighins && <TableHead>Weighin</TableHead>}
+
                   <TableHead>Photo</TableHead>
                   {/* Sortable column example for Name */}
                   <TableHead
@@ -253,7 +353,7 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
                     className="cursor-pointer select-none"
                     onClick={() => handleSort('weightclass')}
                   >
-                    Weight
+                    Weightclass
                     {sortKey === 'weightclass' && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
                   </TableHead>
                   {/* Sortable column example for age */}
@@ -282,11 +382,41 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
 
               <TableBody>
                 {displayedRoster.map((fighter, index) => {
+                  console.log("map log", fighter.fighter_id, fighter.weightclass);
                   const fighterId = fighter.fighter_id || '';
                   const name = `${fighter.first || ''} ${fighter.last || ''}`;
 
                   return (
                     <TableRow key={index}>
+
+
+                      {conductWeighins && (
+                        <TableCell>
+                          <input
+                            className="no-zoom"
+                            style={{ width: '50px' }}
+                            ref={editingFighterId === fighter.fighter_id ? editingInputRef : null}
+                            type="number"
+                            value={
+                              editingFighterId === fighter.fighter_id
+                                ? currentEditingValue
+                                : fighter.weighin?.toString() || ''
+                            }
+                            onChange={(e) => handleWeighinChange(fighter.fighter_id, e.target.value)}
+                            onFocus={() => handleFocus(fighter.fighter_id, fighter.weighin?.toString() || '')}
+                            onBlur={async () => {
+                              if (fighter.weighin !== parseFloat(currentEditingValue)) {
+                                console.log("Saving weight on blur.");
+                                await handleSaveWeight(fighter.fighter_id);
+                                setCurrentEditingValue(fighter.weighin?.toString() || '');
+                              }
+                            }}
+                          />
+                          {savingWeights[fighter.fighter_id] && <span>Weight is Saving...</span>}
+                        </TableCell>
+                      )}
+
+
                       <TableCell>
                         <div className="relative h-10 w-10 overflow-hidden rounded-full">
                           <Image
@@ -317,15 +447,16 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
                       <TableCell>
                         <span
                           className={`
-                            cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium 
-                            ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
-                          `}
-                          onClick={() => refreshFighterData()}
+      cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium 
+      ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
+    `}
+                          onClick={() =>
+                            refreshOneFighterData(fighter, promoterId, eventId, setIsRefreshing, setRosterData)
+                          }
                         >
                           <RefreshCw
-                            className={`h-3 w-3 mr-1 ${
-                              isRefreshing[fighterId] ? 'animate-spin' : ''
-                            }`}
+                            className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''
+                              }`}
                           />
                           {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
                         </span>
@@ -348,62 +479,64 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
             </Table>
           </div>
         </CardContent>
+
       </Card>
 
-        {openAddFighterModal && eventId && (
-          <AddFighterModal
-            eventId={eventId}
-            savesTo="roster"
-            promoterId={promoterId}
-            isOpen={openAddFighterModal}
-            onClose={() => setOpenAddFighterModal(false)}
-          />
-        )}
+      {openAddFighterModal && eventId && (
+        <AddFighterModal
+          eventId={eventId}
+          savesTo="roster"
+          promoterId={promoterId}
+          isOpen={openAddFighterModal}
+          onClose={() => setOpenAddFighterModal(false)}
+        />
+      )}
 
-        {openPotentialMatchesModal && (
-          <FindPotentialMatchesModal
-            fighter={selectedFighter as RosterFighter}
-            onClose={() => setOpenPotentialMatchesModal(false)}
-          />
-        )}
-
-
-
-    {selectedFighter && (
-    <CreateEditBout
-      roster={rosterData}
-      red={red}
-      blue={blue}
-     
-      weightclass={selectedFighter?.weightclass || 0}
-      setWeightclass={() => {}}
-    
-      bout_type="MT"
-      setBoutType={() => {}}
-      boutConfirmed={true}
-      setBoutConfirmed={() => {}}
-      isCreatingMatch={false}
-      setRed={setRed}
-      setBlue={setBlue}
-      setIsCreatingMatch={() => {}}
-      promoterId={promoterId}
-      eventId={eventId}
-      eventData={eventData}
-      isAdmin={isAdmin ?? false}
-      action='create'
-      existingBouts={bouts}
+      {openPotentialMatchesModal && (
+        <FindPotentialMatchesModal
+          fighter={selectedFighter as RosterFighter}
+          onClose={() => setOpenPotentialMatchesModal(false)}
+        />
+      )}
 
 
-      onClose={() => {
-        setSelectedFighter(null);
-        setRed(null);
-        setBlue(null);
-      }}
 
-    />
+      {selectedFighter && (
+        <CreateEditBout
+          roster={rosterData}
+          red={red}
+          blue={blue}
 
-    )}
-</div>
-      
+          weightclass={selectedFighter?.weightclass || 0}
+          setWeightclass={() => { }}
+
+          bout_type="MT"
+          setBoutType={() => { }}
+          boutConfirmed={true}
+          setBoutConfirmed={() => { }}
+          isCreatingMatch={false}
+          setRed={setRed}
+          setBlue={setBlue}
+          setIsCreatingMatch={() => { }}
+          promoterId={promoterId}
+          eventId={eventId}
+          eventData={eventData}
+          isAdmin={isAdmin ?? false}
+          action='create'
+          existingBouts={bouts}
+
+
+          onClose={() => {
+            setSelectedFighter(null);
+            setRed(null);
+            setBlue(null);
+            onBoutsRefresh?.();
+          }}
+
+        />
+
+      )}
+    </div>
+
   );
 }

@@ -1,9 +1,9 @@
 // app/events/[promoterId]/[eventId]/edit/page.tsx
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
-import {fetchPmtRoster} from '@/utils/apiFunctions/fetchPmtRoster';
+import {fetchPmtRoster} from '@/utils/apiFunctions/pmtRoster';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
-import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
+import {fetchTechBoutsRoster} from '@/utils/apiFunctions/techboutsRoster';
 import PageDashboard from './PageDashboard';
 
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts'; 
@@ -13,7 +13,7 @@ import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts';
 
 
 
-export default async function EditEventRoute({ 
+export default async function AdminPage({ 
   params 
 }: { 
   params: Promise<{ promoterId: string,  eventId: string }> 

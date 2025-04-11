@@ -41,8 +41,7 @@ export async function editTechBoutsEvent(promoterId: string, eventId: string, up
       tickets_enabled: updatedEventData.ticket_enabled,
       photos_enabled: updatedEventData.photoPackageEnabled,
       photos_price: updatedEventData.photoPackagePrice,
-      coach_enabled: updatedEventData.coach_enabled,
-      coach_price: updatedEventData.coachRegPrice,
+      coachRegEnabled: updatedEventData.coachRegEnabled,
       payLaterEnabled: updatedEventData.payLaterEnabled ?? false,
     };
     

@@ -140,7 +140,6 @@ export default function TournamentDashboard({
               <p><span className="font-medium">Date:</span> {format(parseISO(eventData.date), 'MMMM d, yyyy')}</p>
               <p><span className="font-medium">Location:</span> {eventData.city}, {eventData.state}</p>
               <p><span className="font-medium">Registration Fee:</span> ${eventData.registration_fee}</p>
-              <p><span className="font-medium">Competition Type:</span> {eventData.competition_type}</p>
             </div>
           </div>
 

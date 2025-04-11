@@ -4,8 +4,7 @@
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { db } from '@/lib/firebase_techbouts/config';
-import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+
 import FighterForm from '../events/FighterForm';
 import {
   Dialog,
@@ -18,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { FullContactFighter } from '@/utils/types';
-
+import { saveToRoster } from '@/utils/apiFunctions/techboutsRoster';
+import { saveToTechBoutsFighterDatabase } from '@/utils/apiFunctions/techboutsDatabase';
 
 interface AddFighterModalProps {
   eventId?: string;
@@ -56,15 +56,20 @@ export default function AddFighterModal({
     setIsSubmitting(true);
 
     try {
-      // Always save fighter to the fighters collection
-      await saveToTechBoutsFighters(fighterData);
 
-      // Then save to roster or elsewhere based on savesTo prop
+         
+      await saveToTechBoutsFighterDatabase(fighterData);
+
+
+
       if (savesTo === 'roster') {
         if (!eventId) {
           throw new Error('Missing eventId for roster save');
         }
-        await saveToRoster(fighterData);
+        if (!eventId || !promoterId) {
+          throw new Error('Missing eventId or promoterId for roster save');
+        }
+        await saveToRoster(fighterData, eventId, promoterId);
       }
 
       toast.success("Fighter added", {
@@ -89,85 +94,90 @@ export default function AddFighterModal({
     }
   };
 
-  const saveToTechBoutsFighters = async (fighter: FullContactFighter) => {
-    // Save the fighter to the global fighters collection
-    const fighterId = fighter.fighter_id || `${fighter.first}${fighter.last}${Date.now()}`;
-    await setDoc(doc(db, 'techbouts_fighters', fighterId), fighter);
-  };
 
-  const saveToRoster = async (fighter: FullContactFighter) => {
-    if (!eventId) throw new Error("eventId is required for saving to roster");
-    if (!promoterId) throw new Error("promoterId is required for saving to roster");
-       try {
-      // Get current date
-      const currentDate = new Date().toISOString();
+
+
+  // const saveToTechBoutsFighters = async (fighter: FullContactFighter) => {
+  //   // Save the fighter to the global fighters collection
+  //   await setDoc(doc(db, 'techbouts_fighters', fighterId), fighter);
+  // };
+
+
+
+  // const saveToRoster = async (fighter: FullContactFighter) => {
+  //   if (!eventId) throw new Error("eventId is required for saving to roster");
+  //   if (!promoterId) throw new Error("promoterId is required for saving to roster");
+  //      try {
+  //     // Get current date
+  //     const currentDate = new Date().toISOString();
       
-      // Determine fighter class based on experience and amateur status
+  //     // Determine fighter class based on experience and amateur status
       
-      // Determine age_gender classification
-      const ageGenderClassification = determineAgeGender(fighter.age, fighter.gender);
+  //     // Determine age_gender classification
+  //     const ageGenderClassification = determineAgeGender(fighter.age, fighter.gender);
       
-      // Calculate height in inches
+  //     // Calculate height in inches
       
-      // Prepare fighter data with additional fields
-      const fullContactFighterData = {
-        ...fighter,
-        // Ensure ID fields
-        id: fighter.fighter_id,
-        docId: fighter.fighter_id,
+  //     // Prepare fighter data with additional fields
+  //     const fullContactFighterData = {
+  //       ...fighter,
+  //       // Ensure ID fields
+  //       docId: fighter.fighter_id,
         
-        // Format email to lowercase for consistency
-        email: fighter.email.toLowerCase(),
+  //       // Format email to lowercase for consistency
+  //       email: fighter.email.toLowerCase(),
         
-        // Add calculated fields
+  //       // Add calculated fields
        
-        age_gender: ageGenderClassification,
-        confirmed: true,
+  //       age_gender: ageGenderClassification,
+  //       confirmed: true,
         
-        // Add registration date
-        date_registered: currentDate
-      };
+  //       // Add registration date
+  //       date_registered: currentDate
+  //     };
       
-      // Reference to the roster_json document
-      const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
+  //     // Reference to the roster_json document
+  //     const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
       
-      // Check if the document exists
-      const rosterJsonDoc = await getDoc(rosterJsonRef);
-      const batch = writeBatch(db);
+  //     // Check if the document exists
+  //     const rosterJsonDoc = await getDoc(rosterJsonRef);
+  //     const batch = writeBatch(db);
       
-      if (rosterJsonDoc.exists()) {
-        // Document exists, get the current fighters array
-        const data = rosterJsonDoc.data();
-        const fighters = data.fighters || [];
+  //     if (rosterJsonDoc.exists()) {
+  //       // Document exists, get the current fighters array
+  //       const data = rosterJsonDoc.data();
+  //       const fighters = data.fighters || [];
         
-        // Add the new fighter to the array
-        fighters.push(fullContactFighterData);
+  //       // Add the new fighter to the array
+  //       fighters.push(fullContactFighterData);
         
-        // Update the document with the new array
-        batch.update(rosterJsonRef, { fighters: fighters });
-      } else {
-        // Document doesn't exist, create it with the fighter as the first item in the array
-        batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
-      }
+  //       // Update the document with the new array
+  //       batch.update(rosterJsonRef, { fighters: fighters });
+  //     } else {
+  //       // Document doesn't exist, create it with the fighter as the first item in the array
+  //       batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
+  //     }
       
-      // The individual fighter document creation has been removed
+  //     // The individual fighter document creation has been removed
       
-      // Commit the batch
-      await batch.commit();
-    } catch (error) {
-      console.error('Error saving fighter data to Firestore:', error);
-      throw new Error('Failed to save fighter data');
-    }
-  };
+  //     // Commit the batch
+  //     await batch.commit();
+  //   } catch (error) {
+  //     console.error('Error saving fighter data to Firestore:', error);
+  //     throw new Error('Failed to save fighter data');
+  //   }
+  // };
   
   
-  const determineAgeGender = (age: number, gender: string): string => {
-    if (age >= 40) return gender === 'MALE' ? 'MASTER MALE' : 'MASTER FEMALE';
-    if (age >= 18) return gender === 'MALE' ? 'ADULT MALE' : 'ADULT FEMALE';
-    if (age >= 15) return gender === 'MALE' ? 'JUNIOR MALE' : 'JUNIOR FEMALE';
-    if (age >= 12) return gender === 'MALE' ? 'CADET MALE' : 'CADET FEMALE';
-    return gender === 'MALE' ? 'YOUTH MALE' : 'YOUTH FEMALE';
-  };
+  // const determineAgeGender = (age: number, gender: string): string => {
+  //   if (age >= 40) return gender === 'MALE' ? 'MASTER MALE' : 'MASTER FEMALE';
+  //   if (age >= 18) return gender === 'MALE' ? 'ADULT MALE' : 'ADULT FEMALE';
+  //   if (age >= 15) return gender === 'MALE' ? 'JUNIOR MALE' : 'JUNIOR FEMALE';
+  //   if (age >= 12) return gender === 'MALE' ? 'CADET MALE' : 'CADET FEMALE';
+  //   return gender === 'MALE' ? 'YOUTH MALE' : 'YOUTH FEMALE';
+  // };
+
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

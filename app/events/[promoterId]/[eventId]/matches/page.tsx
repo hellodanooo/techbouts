@@ -2,8 +2,10 @@
 import { Suspense } from 'react';
 import PageClient from './PageClient';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
-import {fetchTechBoutsRoster} from '@/utils/apiFunctions/fetchTechBoutsRoster';
+import {fetchTechBoutsRoster} from '@/utils/apiFunctions/techboutsRoster';
+
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts'; 
+
 import { notFound } from 'next/navigation';
 
 

@@ -199,7 +199,6 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       date: pendingEvent.date,
       registration_fee: pendingEvent.registration_fee,
       promoterId: pendingEvent.promoterId,
-      competition_type: pendingEvent.competition_type || 'FightCard', // Default competition type
       address: pendingEvent.address || 'TBA',
       eventId: docId,
       id: docId,
@@ -219,8 +218,6 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       ticket_price_description: pendingEvent.ticket_price_description || '',
       ticket_price2: pendingEvent.ticket_price2 || 0,
       ticket_price2_description: pendingEvent.ticket_price2_description || '',
-      coach_price: pendingEvent.coach_price || 0,
-      coach_enabled: pendingEvent.coach_enabled || false,
       photos_enabled: pendingEvent.photos_enabled || false,
       photos_price: pendingEvent.photos_price || 0,
       sanctioning: pendingEvent.sanctioning || 'None',
@@ -245,6 +242,7 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       locale: pendingEvent.locale || 'en',
       disableRegistration: pendingEvent.disableRegistration || false,
       photoPackagePrice: pendingEvent.photoPackagePrice || 0,
+      coachRegEnabled: pendingEvent.coachRegEnabled || false,
       coachRegPrice: pendingEvent.coachRegPrice || 0,
       photoPackageEnabled: pendingEvent.photoPackageEnabled || false,
       

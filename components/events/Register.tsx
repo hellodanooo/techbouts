@@ -639,7 +639,7 @@ const handleRegistrationSubmit = async () => {
         amount: convertedFee.amount,
         currency: convertedFee.currency,
         idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
-        pmt_id: fighterData.fighter_id,
+        fighter_id: fighterData.fighter_id,
         locale,
         sanctioning
       });

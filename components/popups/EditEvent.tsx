@@ -300,7 +300,6 @@ export default function EditEventModal({
                 style={inputStyle}
                 id="competition_type"
                 name="competition_type"
-                value={formData.competition_type || ''}
                 onChange={handleInputChange}
                 required
               />

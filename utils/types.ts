@@ -48,7 +48,7 @@ export interface FullContactFighter {
 }
 
 export interface RosterFighter extends FullContactFighter {
-result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW';
+result: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
 weighin: number;
 photo_package?: boolean;
 date_registered?: string;
@@ -59,6 +59,57 @@ payment_info: {
 };
 }
 
+export interface PmtFighterRecord {
+  pmt_id: string;
+  first: string;
+  last: string;
+  gym?: string;
+  email?: string;
+  age?: number;
+  weightclass?: number; // Single weight class instead of an array
+  weighin?: number;
+  win?: number;
+
+  loss?: number;
+  tournament_win?: number;
+  tournament_loss?: number;
+  nc?: number;
+  dq?: number;
+  lastUpdated?: string;
+
+  // Skill Ratings (Optional)
+  bodykick?: number;
+  boxing?: number;
+  clinch?: number;
+  defense?: number;
+  footwork?: number;
+  headkick?: number;
+  kicks?: number;
+  knees?: number;
+  legkick?: number;
+  ringawareness?: number;
+
+  // Fight History
+  fights?: Array<{
+    eventId: string;
+    eventName: string;
+    date: string;
+    result: string;
+    weightclass: number;
+    opponent_id?: string;
+    bout_type: string;
+    bodykick?: number;
+    boxing?: number;
+    clinch?: number;
+    defense?: number;
+    footwork?: number;
+    headkick?: number;
+    kicks?: number;
+    knees?: number;
+    legkick?: number;
+    ringawareness?: number;
+  }>;
+}
 export interface Bout {
   boutId: string;
   weightclass: number;
@@ -118,8 +169,8 @@ export interface EventType {
   ticket_price2?: number;
   ticket_price2_description?: string;
   event_details?: string;
-  coach_price?: number;
-  coach_enabled?: boolean;
+  coachRegPrice: number;
+  coachRegEnabled?: boolean;
   photos_enabled?: boolean;
   photos_price?: number;
   sanctioning: string;
@@ -142,7 +193,6 @@ export interface EventType {
   numMats: number;
   locale: string;
   photoPackagePrice: number;
-  coachRegPrice: number;
   photoPackageEnabled: boolean;
 
   payLaterEnabled?: boolean;
@@ -244,6 +294,15 @@ export type GymRecord = {
   website: string;
 }
 
+
+
+
+////////////////////////////
+
+
+
+
+
 export interface PMTFight {
   eventId: string;
   eventName: string;
@@ -302,56 +361,6 @@ interface EmailCampaign {
   isTest: boolean;
 }
 
-export interface PmtFighterRecord {
-  pmt_id: string;
-  first: string;
-  last: string;
-  gym?: string;
-  email?: string;
-  age?: number;
-  weightclass?: number; // Single weight class instead of an array
-  win?: number;
-
-  loss?: number;
-  tournament_win?: number;
-  tournament_loss?: number;
-  nc?: number;
-  dq?: number;
-  lastUpdated?: string;
-
-  // Skill Ratings (Optional)
-  bodykick?: number;
-  boxing?: number;
-  clinch?: number;
-  defense?: number;
-  footwork?: number;
-  headkick?: number;
-  kicks?: number;
-  knees?: number;
-  legkick?: number;
-  ringawareness?: number;
-
-  // Fight History
-  fights?: Array<{
-    eventId: string;
-    eventName: string;
-    date: string;
-    result: string;
-    weightclass: number;
-    opponent_id?: string;
-    bout_type: string;
-    bodykick?: number;
-    boxing?: number;
-    clinch?: number;
-    defense?: number;
-    footwork?: number;
-    headkick?: number;
-    kicks?: number;
-    knees?: number;
-    legkick?: number;
-    ringawareness?: number;
-  }>;
-}
 
 export interface FightRecord {
   date: string;
@@ -362,70 +371,7 @@ export interface FightRecord {
   bout_type?: string;
 }
 
-export interface EventType {
-  competition_type: 'FightCard' | 'Tournament';
-  event_name: string;
-  venue_name?: string;
-  address: string;
-  eventId: string;
-  id: string;
-  city: string;
-  state: string;
-  date: string;
-  flyer: string;
-  coordinates?: { latitude: number; longitude: number };
-  currency?: string;
-  disableRegistration: boolean;
-  registration_link?: string;
-  matches_link?: string;
-  weighin_date?: string;
-  weighin_start_time?: string;
-  weighin_end_time?: string;
-  rules_meeting_time?: string;
-  bouts_start_time?: string;
-  docId?: string;
-  doors_open?: string;
-  spectator_info?: string;
-  registration_enabled: boolean;
-  registration_fee: number;
-  tickets_enabled: boolean;
-  ticket_price: number;
-  ticket_price_description?: string;
-  ticket_price2?: number;
-  ticket_price2_description?: string;
-  event_details?: string;
-  coach_price?: number;
-  coach_enabled?: boolean;
-  photos_enabled?: boolean;
-  photos_price?: number;
-  sanctioning: string;
-  sanctioningEmail?: string;
-  email: string;
-  promoterId: string;
-  promoterEmail: string;
-  promotionName: string;
-  status?: string;
-  street?: string;
-  postal_code?: string;
-  country: string;
-  colonia?: string;
-  municipality?: string;
-  ticket_enabled?: boolean;
-  ticket_system_option?: 'inHouse' | 'thirdParty' | 'none';
-  ticket_link?: string;
-  zip?: string;
-  name?: string;
-  numMats: number;
-  locale: string;
-  photoPackagePrice: number;
-  coachRegPrice: number;
-  photoPackageEnabled: boolean;
 
-  payLaterEnabled?: boolean;
-  sanctioningLogoUrl?: string;
-  promotionLogoUrl?: string;
-  stripeAccountId?: string;
-}
 
 export interface Promoter {
   city: string;
@@ -470,6 +416,70 @@ export interface DetailedSanctioningBody extends BasicSanctioningBody {
   mainOfficePhone: string;
   emergencyContact: string;
 }
+
+
+// export interface EventType {
+//   competition_type: 'FightCard' | 'Tournament';
+//   event_name: string;
+//   venue_name?: string;
+//   address: string;
+//   eventId: string;
+//   id: string;
+//   city: string;
+//   state: string;
+//   date: string;
+//   flyer: string;
+//   coordinates?: { latitude: number; longitude: number };
+//   currency?: string;
+//   disableRegistration: boolean;
+//   registration_link?: string;
+//   matches_link?: string;
+//   weighin_date?: string;
+//   weighin_start_time?: string;
+//   weighin_end_time?: string;
+//   rules_meeting_time?: string;
+//   bouts_start_time?: string;
+//   docId?: string;
+//   doors_open?: string;
+//   spectator_info?: string;
+//   registration_enabled: boolean;
+//   registration_fee: number;
+//   tickets_enabled: boolean;
+//   ticket_price: number;
+//   ticket_price_description?: string;
+//   ticket_price2?: number;
+//   ticket_price2_description?: string;
+//   event_details?: string;
+//   coachRegPrice: number;
+//   coachRegEnabled?: boolean;
+//   photos_enabled?: boolean;
+//   photos_price?: number;
+//   sanctioning: string;
+//   sanctioningEmail?: string;
+//   email: string;
+//   promoterId: string;
+//   promoterEmail: string;
+//   promotionName: string;
+//   status?: string;
+//   street?: string;
+//   postal_code?: string;
+//   country: string;
+//   colonia?: string;
+//   municipality?: string;
+//   ticket_enabled?: boolean;
+//   ticket_system_option?: 'inHouse' | 'thirdParty' | 'none';
+//   ticket_link?: string;
+//   zip?: string;
+//   name?: string;
+//   numMats: number;
+//   locale: string;
+//   photoPackagePrice: number;
+//   photoPackageEnabled: boolean;
+//   payLaterEnabled?: boolean;
+//   sanctioningLogoUrl?: string;
+//   promotionLogoUrl?: string;
+//   stripeAccountId?: string;
+// }
 
 // export interface BaseFighter {
 //   first: string;

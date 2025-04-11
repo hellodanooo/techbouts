@@ -16,10 +16,6 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import EmailTable from './EmailClient'; // adjust path as needed
 import { RosterFighter, Bout } from '@/utils/types';
 
-
-
-
-
 interface PageDashboardProps {
     eventId: string;
     eventData: EventType;
@@ -175,6 +171,14 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                     </CollapsibleTrigger>
                     <CollapsibleContent className="p-4 bg-white">
 
+                    <div className="mb-4 flex justify-center">
+                        <button
+                            onClick={() => window.location.href = `/events/${promoterId}/${eventId}/matches`}
+                            className='px-4 py-2 border-4 border-black text-black rounded-md hover:bg-black hover:text-white transition-colors'
+                        >
+                            Open Matches Page
+                        </button>
+                    </div>
 
                         <Matches
                             initialRoster={roster}

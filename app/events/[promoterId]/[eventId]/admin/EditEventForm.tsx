@@ -117,7 +117,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     status: eventData.status || 'confirmed',
     sanctioning: eventData.sanctioning || '',
     photoPackageEnabled: eventData.photoPackageEnabled || false,
-    coach_enabled: eventData.coach_enabled || false,
+    coachRegEnabled: eventData.coachRegEnabled || false,
     disableRegistration: eventData.disableRegistration || false,
     payLaterEnabled: eventData.payLaterEnabled,
   });
@@ -642,13 +642,13 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                 <div className="flex items-center space-x-4">
                   <Switch
                     id="coach-reg"
-                    checked={formData.coach_enabled}
-                    onCheckedChange={handleSwitchChange('coach_enabled')}
+                    checked={formData.coachRegEnabled}
+                    onCheckedChange={handleSwitchChange('coachRegEnabled')}
                   />
                   <Label htmlFor="coach-reg">Coach Registration</Label>
                 </div>
 
-                {formData.coach_enabled && (
+                {formData.coachRegEnabled && (
                   <div>
                     <Label>Coach Registration Price</Label>
                     <input

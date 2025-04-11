@@ -38,7 +38,6 @@ const EventOptions: React.FC<EventOptionsProps> = ({ event }) => {
     <div className="space-y-4">
       <section className="space-y-2">
         <h3 className="text-xl font-semibold">{event.event_name}</h3>
-        <p className="text-sm text-gray-600">{event.competition_type}</p>
       </section>
 
       <section className="grid grid-cols-2 gap-4">
@@ -72,7 +71,7 @@ const EventOptions: React.FC<EventOptionsProps> = ({ event }) => {
         <p className="text-sm">Rules Meeting: {formatTime(event.rules_meeting_time ?? '')}</p>
       </section>
 
-      {(event.registration_enabled || event.tickets_enabled || event.coach_enabled || event.photos_enabled) && (
+      {(event.registration_enabled || event.tickets_enabled || event.coachRegEnabled || event.photos_enabled) && (
         <section className="space-y-2">
           <h4 className="font-medium text-gray-700">Pricing</h4>
           <div className="grid grid-cols-2 gap-4">
@@ -91,10 +90,10 @@ const EventOptions: React.FC<EventOptionsProps> = ({ event }) => {
                 )}
               </div>
             )}
-            {event.coach_enabled && (
+            {event.coachRegEnabled && (
               <div>
                 <p className="text-sm text-gray-600">Coach Pass</p>
-                <p>{formatCurrency(event.coach_price ?? 0)}</p>
+                <p>{formatCurrency(event.coachRegPrice ?? 0)}</p>
               </div>
             )}
             {event.photos_enabled && (
