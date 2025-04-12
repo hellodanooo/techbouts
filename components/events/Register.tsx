@@ -230,79 +230,118 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     fetchExchangeRate();
   }, [locale, baseRegistrationFee, currentRegistrationFee]);
 
+
+
+
   const validateForm = (): string | null => {
-    if (!fighterData) {
-      return 'Fighter data is incomplete.';
-    }
+  if (!fighterData) {
+    return locale === 'es' 
+      ? 'Los datos del luchador están incompletos.' 
+      : 'Fighter data is incomplete.';
+  }
 
-    // First and last name validation
-    if (!fighterData.first) {
-      return 'Please enter a first name.';
-    }
-    if (!fighterData.last) {
-      return 'Please enter a last name.';
-    }
+  // First and last name validation
+  if (!fighterData.first) {
+    return locale === 'es' 
+      ? 'Por favor, introduce un nombre.' 
+      : 'Please enter a first name.';
+  }
+  if (!fighterData.last) {
+    return locale === 'es' 
+      ? 'Por favor, introduce un apellido.' 
+      : 'Please enter a last name.';
+  }
 
-    // Email validation
-    if (!fighterData.email) {
-      return 'Please enter an email address.';
-    }
-    if (!fighterData.email.includes('@')) {
-      return 'Please enter a valid email address.';
-    }
+  // Email validation
+  if (!fighterData.email) {
+    return locale === 'es' 
+      ? 'Por favor, introduce una dirección de correo electrónico.' 
+      : 'Please enter an email address.';
+  }
+  if (!fighterData.email.includes('@')) {
+    return locale === 'es' 
+      ? 'Por favor, introduce una dirección de correo electrónico válida.' 
+      : 'Please enter a valid email address.';
+  }
 
-    // Date of birth validation
-    if (!fighterData.dob) {
-      return 'Please enter a date of birth.';
-    }
-    if (!dateRegex.test(fighterData.dob)) {
-      return 'Birthday must be in MM/DD/YYYY format.';
-    }
+  // Date of birth validation
+  if (!fighterData.dob) {
+    return locale === 'es' 
+      ? 'Por favor, introduce una fecha de nacimiento.' 
+      : 'Please enter a date of birth.';
+  }
+  if (!dateRegex.test(fighterData.dob)) {
+    return locale === 'es' 
+      ? 'La fecha de nacimiento debe estar en formato MM/DD/AAAA.' 
+      : 'Birthday must be in MM/DD/YYYY format.';
+  }
 
-    if (fighterData.age < 2) {
-      return 'Please Selecte your Birthday To Calculate Age: You might need to select another year and then choose date again';
-    }
+  if (fighterData.age < 2) {
+    return locale === 'es' 
+      ? 'Por favor, selecciona tu fecha de nacimiento para calcular la edad: Es posible que debas seleccionar otro año y luego elegir la fecha nuevamente.' 
+      : 'Please Select your Birthday To Calculate Age: You might need to select another year and then choose date again';
+  }
 
-    // Gym validation
-    if (!fighterData.gym) {
-      return 'Please select a gym.';
-    }
+  // Gym validation
+  if (!fighterData.gym) {
+    return locale === 'es' 
+      ? 'Por favor, selecciona un gimnasio.' 
+      : 'Please select a gym.';
+  }
 
-    // Weight class validation
-    if (!fighterData.weightclass) {
-      return 'Please select a weight class.';
-    }
+  // Weight class validation
+  if (!fighterData.weightclass) {
+    return locale === 'es' 
+      ? 'Por favor, selecciona una categoría de peso.' 
+      : 'Please select a weight class.';
+  }
 
-    // Gender validation
-    if (!fighterData.gender) {
-      return 'Please select a gender.';
-    }
+  // Gender validation
+  if (!fighterData.gender) {
+    return locale === 'es' 
+      ? 'Por favor, selecciona un género.' 
+      : 'Please select a gender.';
+  }
 
-    // Phone number validation
-    if (!fighterData.phone) {
-      return 'Please enter a phone number.';
-    }
+  // Phone number validation
+  if (!fighterData.phone) {
+    return locale === 'es' 
+      ? 'Por favor, introduce un número de teléfono.' 
+      : 'Please enter a phone number.';
+  }
 
-    // Coach phone number validation
-    if (!fighterData.coach_phone) {
-      return 'Please enter a coach phone number.';
-    }
+  // Coach phone number validation
+  if (!fighterData.coach_phone) {
+    return locale === 'es' 
+      ? 'Por favor, introduce un número de teléfono del entrenador.' 
+      : 'Please enter a coach phone number.';
+  }
 
-    // Coach name validation
-    if (!fighterData.coach_name) {
-      return 'Please enter a coach name.';
-    }
+  // Coach name validation
+  if (!fighterData.coach_name) {
+    return locale === 'es' 
+      ? 'Por favor, introduce el nombre del entrenador.' 
+      : 'Please enter a coach name.';
+  }
 
-    // Height validation (additional for heightFoot and heightInch if needed)
+  // Height validation with locale-specific checks
+  if (locale === 'es') {
+    // For Spanish locale, we only check for heightCm
+    if (!fighterData.heightCm) {
+      return 'Por favor, selecciona una altura en centímetros.';
+    }
+  } else {
+    // For English locale, check feet and inches
     if (!fighterData.heightFoot) {
       return 'Please select foot for height.';
     }
     if (!fighterData.heightInch) {
       return 'Please select inches for height.';
     }
+  }
 
-    return null; // No errors found
-  };
+  return null; // No errors found
+};
 
   const validateCreditCode = async () => {
     if (!creditCode) {
@@ -697,8 +736,35 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           }, 2000);
 
         } else {
-          setStatusMessage(formContent.paymentFailedMessage);
-          throw new Error('Payment failed: Unable to process payment');
+          setStatusMessage('Submitting registration with pay later option...');
+  
+          // Save the fighter registration data with a flag to indicate pay later.
+          const fighterDataWithPayLater = {
+            ...fighterData,
+            paymentIntentId: '',
+            paymentAmount: convertedFee.amount,
+            paymentCurrency: convertedFee.currency,
+            paymentStatus: 'pending'
+          };
+          
+          await saveFighterToFirestore(db, eventId, fighterDataWithPayLater, currentDate, promoterId);
+          
+          // Optionally, send a confirmation email indicating "pay later" instructions.
+          await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
+          
+          setStatusMessage('Registration Successful. Please pay at weigh-ins.');
+          
+          // Reset form and close modal after a delay
+          setTimeout(() => {
+            setFighterData(null);
+            setCreditCode('');
+            setIsCreditCodeValid(null);
+            setCreditCodeRedeemed(null);
+            setIsPayLater(false);
+            setStatusMessage('');
+            closeModal();
+          }, 2000);
+        
         }
       }
     } catch (error: unknown) {
@@ -868,7 +934,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
                 {formContent.registrationFeeLabel}{" "}
                 {convertedFee.currency === 'MXN'
                   ? `${convertedFee.amount} MXN`
-                  : `$${currentRegistrationFee} USD`} + 10% surcharge
+                  : `$${currentRegistrationFee} USD`}
               </AlertDescription>
             </Alert>
           ) : (

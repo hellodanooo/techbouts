@@ -735,10 +735,20 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
             <CardContent>
               <div className="space-y-4">
                 <Tabs defaultValue="email" onValueChange={(value) => setSearchType(value as 'email' | 'last')}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="email">{formLabels.searchByEmail}</TabsTrigger>
-                    <TabsTrigger value="last">{formLabels.searchByLastName}</TabsTrigger>
-                  </TabsList>
+                <TabsList className="grid w-full grid-cols-2 gap-1">
+    <TabsTrigger 
+      className="text-xs sm:text-sm whitespace-normal break-words px-1 py-2" 
+      value="email"
+    >
+      {formLabels.searchByEmail}
+    </TabsTrigger>
+    <TabsTrigger 
+      className="text-xs sm:text-sm whitespace-normal break-words px-1 py-2" 
+      value="last"
+    >
+      {formLabels.searchByLastName}
+    </TabsTrigger>
+  </TabsList>
                   <TabsContent value="email" className="space-y-2">
                     <Label htmlFor="emailSearch">{formLabels.searchByEmail}</Label>
                     <Input
