@@ -115,6 +115,7 @@ export default function EmbedRegistrationPage({
             promotionLogoUrl={eventData.promotionLogoUrl}
             sanctioning={eventData.sanctioning}
             payLaterEnabled={eventData.payLaterEnabled ?? false}
+            redirectUrl={eventData.redirect_url ?? ''}
           />
         )}
       </div>
