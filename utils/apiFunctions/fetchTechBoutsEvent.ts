@@ -90,6 +90,7 @@ export async function fetchTechBoutsEvent(promoterId: string, eventId: string): 
       sanctioningLogoUrl: data.sanctioningLogoUrl || '',
       stripeAccountId: data.stripeAccountId || '',
       payLaterEnabled: data.payLaterEnabled || false,
+      redirect_url: data.redirect_url || '',
       
     };
 

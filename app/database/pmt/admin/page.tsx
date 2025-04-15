@@ -42,6 +42,7 @@ export default function FighterDatabase() {
         functions,
         "calc_pmt_records_year"
       );
+      
       const response = await calcPmtRecordsYear({ year: selectedYear });
   
       const data = response.data as { totalFighters: number };

@@ -1,3 +1,5 @@
+// /components/events/Register.tsx
+
 
 'use client';
 import React, { useState, useEffect } from 'react';
@@ -32,9 +34,8 @@ interface RegisterProps {
   sanctioning: string;
   customWaiver?: string;
   payLaterEnabled: boolean;
+  redirectUrl?: string;
 }
-
-
 
 
 const CARD_ELEMENT_OPTIONS = {
@@ -71,7 +72,7 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning, customWaiver, payLaterEnabled }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning, customWaiver, payLaterEnabled, redirectUrl }) => {
 
   const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -86,6 +87,18 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   const elements = useElements();
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isPayLater, setIsPayLater] = useState(false);
+
+
+
+
+  const handleRedirect = (url: string | undefined) => {
+    if (url && typeof window !== 'undefined') {
+      // Use a short timeout to allow any final UI updates to complete
+      setTimeout(() => {
+        window.location.href = url;
+      }, 1000); // Give a bit more time to see the "Redirecting..." message
+    }
+  };
 
   const handlePayLaterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsPayLater(e.target.checked);
@@ -654,8 +667,17 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
 
         setStatusMessage('Email Sent');
-        closeModal();
+
+
+     if (redirectUrl) {
+        setStatusMessage('Redirecting...');
+        handleRedirect(redirectUrl);
       } else {
+        closeModal();
+      }
+    } else {
+
+
         // Handle paid registration
         setStatusMessage('Posting Payment...');
 
@@ -678,9 +700,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
           token = createdToken;
         }
-
-
-
 
         let fighterDataWithPayment = fighterData;
 
@@ -725,6 +744,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
           setStatusMessage('Email Sent');
           setStatusMessage('Registration Successful');
+
+           // Handle redirect if URL exists
+        if (redirectUrl) {
+          setStatusMessage('Redirecting...');
+          handleRedirect(redirectUrl);
+        } else {
           setTimeout(() => {
             setFighterData(null);
             setCreditCode('');
@@ -734,8 +759,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
             setStatusMessage('');
             closeModal();
           }, 2000);
-
-        } else {
+        }
+      } else {
           setStatusMessage('Submitting registration with pay later option...');
   
           // Save the fighter registration data with a flag to indicate pay later.
@@ -754,17 +779,20 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           
           setStatusMessage('Registration Successful. Please pay at weigh-ins.');
           
-          // Reset form and close modal after a delay
-          setTimeout(() => {
-            setFighterData(null);
-            setCreditCode('');
-            setIsCreditCodeValid(null);
-            setCreditCodeRedeemed(null);
-            setIsPayLater(false);
-            setStatusMessage('');
-            closeModal();
-          }, 2000);
-        
+          if (redirectUrl) {
+            setStatusMessage('Redirecting...');
+            handleRedirect(redirectUrl);
+          } else {
+            setTimeout(() => {
+              setFighterData(null);
+              setCreditCode('');
+              setIsCreditCodeValid(null);
+              setCreditCodeRedeemed(null);
+              setIsPayLater(false);
+              setStatusMessage('');
+              closeModal();
+            }, 2000);
+          }
         }
       }
     } catch (error: unknown) {
@@ -776,6 +804,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       setIsSubmitting(false);
     }
   };
+
+
+
+
+
+
 
 
   return (
@@ -987,6 +1021,11 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
           </Button>
         </CardFooter>
+        {redirectUrl && (
+          <div className="text-center mt-4">
+            redirectUrl: {redirectUrl}
+            </div>
+            )}
       </Card>
 
       {isSubmitting && (

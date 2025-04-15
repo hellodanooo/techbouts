@@ -201,6 +201,8 @@ export interface EventType {
   stripeAccountId?: string;
   customWaiver?: string;
   bout_type?: string;
+  
+  redirect_url?: string;
 }
 
 export type GymRecord = {
@@ -394,15 +396,20 @@ export interface Promoter {
 
 };
 
-export interface BasicSanctioningBody {
+
+
+
+
+export interface SanctioningBody {
   id: string;
   name: string;
   email: string;
   website: string;
   region: string;
-}
-
-export interface DetailedSanctioningBody extends BasicSanctioningBody {
+  country: string;
+  state: string;
+  city: string;
+  address: string;
   officialName: string;
   registeredAddress: string;
   corporateUrl: string;
@@ -415,6 +422,7 @@ export interface DetailedSanctioningBody extends BasicSanctioningBody {
   stateAffiliations: string[];
   mainOfficePhone: string;
   emergencyContact: string;
+  rulesUrl: string;
 }
 
 

@@ -4,11 +4,11 @@
 import { useState } from 'react';
 import { db } from '@/lib/firebase_techbouts/config';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { DetailedSanctioningBody } from '@/utils/types';
+import { SanctioningBody } from '@/utils/types';
 
 interface AddSanctioningBodyProps {
   onClose: () => void;
-  sanctioningBodies: DetailedSanctioningBody[];
+  sanctioningBodies: SanctioningBody[];
 }
 
 const AddSanctioningBody: React.FC<AddSanctioningBodyProps> = ({ onClose, sanctioningBodies }) => {

@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 
 import { calculateRecordsAll, FighterRecord, ProcessedEvent } from '@/utils/pmt/calculateRecordsAll';
 import { addMergePmtRecords } from '@/utils/pmt/addMergePmtRecords';
-
-
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 export default function TransferPmtToTechbouts() {
   const [pmtRecords, setPmtRecords] = useState<Map<string, FighterRecord>>(new Map());

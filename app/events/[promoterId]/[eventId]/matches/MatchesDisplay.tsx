@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import Image from 'next/image';
 import { RosterFighter, Bout, EventType } from '@/utils/types';
 import CreateEditBout from './CreateEditBout';
+import { LuMoveVertical } from "react-icons/lu";
+
 
 interface MatchesDisplayProps {
   bouts: Bout[] ;
@@ -94,6 +96,11 @@ export default function MatchesDisplay({
                       <div>{redFighter.gym}</div>
                     </TableCell>
                     <TableCell className="text-center">
+                        {isAdmin && (
+                        <div className="flex justify-center border border-black rounded-md p-1">
+                          <LuMoveVertical />
+                        </div>
+                        )}
                       <div>Bout {bout.boutNum}</div>
                       <div>{bout.weightclass} lbs</div>
                       <div>{bout.bout_type}</div>

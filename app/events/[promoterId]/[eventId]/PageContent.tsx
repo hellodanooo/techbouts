@@ -292,6 +292,7 @@ const stripeInstance = useMemo(() => {
                       sanctioning={eventData.sanctioning}
                       customWaiver={eventData.customWaiver}
                       payLaterEnabled={eventData.payLaterEnabled || false}
+                      redirectUrl={eventData.redirect_url || ''}
                     />
                   )}
                 </CardContent>

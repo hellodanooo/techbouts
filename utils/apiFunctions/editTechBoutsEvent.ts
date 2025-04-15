@@ -43,6 +43,8 @@ export async function editTechBoutsEvent(promoterId: string, eventId: string, up
       photos_price: updatedEventData.photoPackagePrice,
       coachRegEnabled: updatedEventData.coachRegEnabled,
       payLaterEnabled: updatedEventData.payLaterEnabled ?? false,
+      redirect_url: updatedEventData.redirect_url || '',
+
     };
     
     console.log('editTechBoutsEvent - Transformed data:', transformedData);

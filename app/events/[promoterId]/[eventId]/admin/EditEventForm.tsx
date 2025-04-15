@@ -120,10 +120,13 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     coachRegEnabled: eventData.coachRegEnabled || false,
     disableRegistration: eventData.disableRegistration || false,
     payLaterEnabled: eventData.payLaterEnabled,
+    customWaiver: eventData.customWaiver || '',
+    redirect_url: eventData.redirect_url || '',
   });
 
 
   const [customWaiverEnabled, setCustomWaiverEnabled] = useState(!!formData.customWaiver);
+const [redirectUrlEnabled, setRedirectUrlEnabled] = useState(!!formData.redirect_url);
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -676,6 +679,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
 
 
 
+
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
                     <Switch
@@ -707,6 +711,36 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
                 </div>
 
 
+                <div className="space-y-4">
+  <div className="flex items-center space-x-4">
+    <Switch
+      id="redirect_url_enabled"
+      checked={redirectUrlEnabled}
+      onCheckedChange={(checked) => {
+        setRedirectUrlEnabled(checked);
+        if (!checked) {
+          setFormData(prev => ({ ...prev, redirect_url: '' }));
+        }
+      }}
+    />
+    <Label htmlFor="redirect_url_enabled">Add Redirect URL</Label>
+  </div>
+
+  {redirectUrlEnabled && (
+    <div>
+      <Label htmlFor="redirect_url">Redirect URL</Label>
+      <input
+        type="url"
+        id="redirect_url"
+        name="redirect_url"
+        value={formData.redirect_url || ''}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        placeholder="Enter the URL to redirect users after registration"
+      />
+    </div>
+  )}
+</div>
 
 
                 <div className="flex items-center space-x-4">

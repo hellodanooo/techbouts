@@ -1,4 +1,4 @@
-// components/CreateBout.tsx
+// app/events/[promoterId]/[eventId]/matches/CreateEditBout.tsx
 'use client'
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { deleteFighterFromRoster } from '@/utils/apiFunctions/techboutsRoster';
-// import RosterTable from '../admin/RosterTable';
 
 interface SaveBoutProps {
   action: 'create' | 'edit';
@@ -64,6 +63,7 @@ export default function CreateBout({
   const [boutNum, setBoutNum] = useState(1);
   const [ringNum, setRingNum] = useState(1);
   const [dayNum, setDayNum] = useState(1);
+  const [originalBoutNum, setOriginalBoutNum] = useState<number | undefined>(undefined);
 
 
   const [openSections, setOpenSections] = useState({
@@ -79,13 +79,25 @@ export default function CreateBout({
 
   useEffect(() => {
     if (action !== 'create') return;
-  
     const maxExistingBout = existingBouts
       .filter(b => b.ringNum === ringNum && b.dayNum === dayNum)
       .reduce((max, b) => Math.max(max, b.boutNum), 0);
   
     setBoutNum(maxExistingBout + 1);
   }, [action, existingBouts, ringNum, dayNum]);
+
+
+  useEffect(() => {
+    if (action === 'edit' && existingBoutId) {
+      const existingBout = existingBouts.find(b => b.boutId === existingBoutId);
+      if (existingBout) {
+        setBoutNum(existingBout.boutNum);
+        setRingNum(existingBout.ringNum);
+        setDayNum(existingBout.dayNum);
+        setOriginalBoutNum(existingBout.boutNum); // Store the original number
+      }
+    }
+  }, [action, existingBoutId, existingBouts]);
 
 
   const handleSwapCorners = () => {
@@ -159,7 +171,8 @@ export default function CreateBout({
           bout: updatedBout,
           promoterId,
           eventId,
-        });
+          originalBoutNum,   
+             });
   
         toast.success("Bout updated successfully.");
       }
@@ -173,8 +186,6 @@ export default function CreateBout({
   };
   
   
-  
-
   const handleDeleteBout = async () => {
     if (!existingBoutId) {
       toast.error("No boutId to delete");

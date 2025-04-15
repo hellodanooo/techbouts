@@ -113,10 +113,13 @@ export const editBout = async ({
   bout,
   promoterId,
   eventId,
+  originalBoutNum,
+
 }: {
   bout: Bout; // the updated bout object
   promoterId: string;
   eventId: string;
+  originalBoutNum?: number;
 }) => {
   try {
     const boutsRef = doc(
@@ -140,11 +143,43 @@ export const editBout = async ({
       return;
     }
 
-    // Overwrite fields at that index
-    existingBouts[index] = bout;
 
-    // Now re-save
-    await setDoc(boutsRef, { bouts: existingBouts });
+
+    // Check if bout number has changed and there might be conflicts
+    if (originalBoutNum !== undefined && bout.boutNum !== originalBoutNum) {
+      const moveSuccess = await moveBout({
+        boutNum: bout.boutNum,
+        ringNum: bout.ringNum,
+        dayNum: bout.dayNum,
+        promoterId,
+        eventId,
+        existingBoutId: bout.boutId
+      });
+
+      if (!moveSuccess) {
+        toast.error("Failed to arrange bout order");
+        return;
+      }
+    }
+
+    // Get fresh data after possible reordering
+    const updatedBoutsDoc = await getDoc(boutsRef);
+    const updatedData = updatedBoutsDoc.data();
+    const updatedBouts: Bout[] = updatedData?.bouts || [];
+
+    // Find index again as it might have changed
+    const updatedIndex = updatedBouts.findIndex((b) => b.boutId === bout.boutId);
+    
+    if (updatedIndex === -1) {
+      // The bout might have been removed or ID changed during reordering
+      // Simply add the updated bout to the array
+      await setDoc(boutsRef, { bouts: [...updatedBouts, bout] });
+    } else {
+      // Update the bout
+      updatedBouts[updatedIndex] = bout;
+      await setDoc(boutsRef, { bouts: updatedBouts });
+    }
+    
     toast.success("Bout updated successfully");
   } catch (error) {
     console.error("Error editing bout:", error);
@@ -194,3 +229,62 @@ export const deleteBout = async ({
   }
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const moveBout = async ({
+  boutNum,        // Target bout number
+  ringNum,
+  dayNum,
+  promoterId,
+  eventId,
+  existingBoutId = null, // ID of bout being edited or null for new bout
+}: {
+  boutNum: number;
+  ringNum: number;
+  dayNum: number;
+  promoterId: string;
+  eventId: string;
+  existingBoutId?: string | null;
+}): Promise<boolean> => {
+  try {
+    // Get the existing bouts
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts document found.");
+      return false;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+    
+console.log("bout before moving:", existingBouts);
+
+
+    
+    console.log("Successfully moved/rearranged bouts");
+    return true;
+  } catch (error) {
+    console.error("Error moving bouts:", error);
+    toast.error("Failed to rearrange bouts");
+    return false;
+  }
+};
