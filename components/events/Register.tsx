@@ -93,13 +93,29 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
   const handleRedirect = (url: string | undefined) => {
     if (url && typeof window !== 'undefined') {
-
       // Use a short timeout to allow any final UI updates to complete
-      setTimeout(() => {
-        window.location.href = url;
-      }, 1000); // Give a bit more time to see the "Redirecting..." message
+        try {
+          // First try to access the top-level window (breaking out of all iframes)
+          if (window.top) {
+            window.top.location.href = url;
+          } 
+          // If that fails, try the immediate parent
+          else if (window.parent && window.parent !== window) {
+            window.parent.location.href = url;
+          } 
+          // If all else fails, navigate the current window
+          else {
+            window.location.href = url;
+          }
+        } catch (e) {
+          // If accessing parent/top windows fails due to security restrictions,
+          // fall back to opening in a new tab
+          console.error('Failed to redirect parent window:', e);
+          window.open(url, '_blank');
+        }
     }
   };
+
 
   const handlePayLaterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsPayLater(e.target.checked);
@@ -811,7 +827,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           } else {
             closeModal();
           }
-          
+
         }
       }
     } catch (error: unknown) {
