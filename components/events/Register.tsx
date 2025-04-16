@@ -93,6 +93,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
   const handleRedirect = (url: string | undefined) => {
     if (url && typeof window !== 'undefined') {
+
       // Use a short timeout to allow any final UI updates to complete
       setTimeout(() => {
         window.location.href = url;
@@ -669,12 +670,23 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         setStatusMessage('Email Sent');
 
 
-     if (redirectUrl) {
-        setStatusMessage('Redirecting...');
-        handleRedirect(redirectUrl);
-      } else {
-        closeModal();
-      }
+        if (sanctioning === 'PBSC') {
+          // Set the redirect URL based on the locale
+          const pbscRedirectUrl = locale === 'es'
+            ? 'https://www.pointboxing.com/rules-espanol'
+            : 'https://www.pointboxing.com/rules';
+            
+          setStatusMessage('Redirecting to PBSC rules...');
+          handleRedirect(pbscRedirectUrl);
+        } else if (redirectUrl) {
+          setStatusMessage('Redirecting...');
+          handleRedirect(redirectUrl);
+        } else {
+          closeModal();
+        }
+
+
+
     } else {
 
 
@@ -745,21 +757,24 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           setStatusMessage('Email Sent');
           setStatusMessage('Registration Successful');
 
-           // Handle redirect if URL exists
-        if (redirectUrl) {
-          setStatusMessage('Redirecting...');
-          handleRedirect(redirectUrl);
-        } else {
-          setTimeout(() => {
-            setFighterData(null);
-            setCreditCode('');
-            setIsCreditCodeValid(null);
-            setCreditCodeRedeemed(null);
-            setIsPayLater(false);
-            setStatusMessage('');
+
+
+          if (sanctioning === 'PBSC') {
+            // Set the redirect URL based on the locale
+            const pbscRedirectUrl = locale === 'es'
+              ? 'https://www.pointboxing.com/rules-espanol'
+              : 'https://www.pointboxing.com/rules';
+              
+            setStatusMessage('Redirecting to PBSC rules...');
+            handleRedirect(pbscRedirectUrl);
+          } else if (redirectUrl) {
+            setStatusMessage('Redirecting...');
+            handleRedirect(redirectUrl);
+          } else {
             closeModal();
-          }, 2000);
-        }
+          }
+
+
       } else {
           setStatusMessage('Submitting registration with pay later option...');
   
@@ -779,20 +794,24 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           
           setStatusMessage('Registration Successful. Please pay at weigh-ins.');
           
-          if (redirectUrl) {
+
+
+
+          if (sanctioning === 'PBSC') {
+            // Set the redirect URL based on the locale
+            const pbscRedirectUrl = locale === 'es'
+              ? 'https://www.pointboxing.com/rules-espanol'
+              : 'https://www.pointboxing.com/rules';
+              
+            setStatusMessage('Redirecting to PBSC rules...');
+            handleRedirect(pbscRedirectUrl);
+          } else if (redirectUrl) {
             setStatusMessage('Redirecting...');
             handleRedirect(redirectUrl);
           } else {
-            setTimeout(() => {
-              setFighterData(null);
-              setCreditCode('');
-              setIsCreditCodeValid(null);
-              setCreditCodeRedeemed(null);
-              setIsPayLater(false);
-              setStatusMessage('');
-              closeModal();
-            }, 2000);
+            closeModal();
           }
+          
         }
       }
     } catch (error: unknown) {
