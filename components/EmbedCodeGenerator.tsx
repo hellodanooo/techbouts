@@ -23,7 +23,11 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
     hideHeader: true,
     customColor: false,
     primaryColor: '#3B82F6',
-    allowResize: true
+    allowResize: true,
+    responsiveWidth: true, 
+    responsiveHeight: false, 
+    aspectRatio: false, 
+    aspectRatioValue: '16/9'
   });
 
   // Base URL of your application
@@ -45,8 +49,8 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
     
     return `<iframe 
   src="${baseUrl}/events/${promoterId}/${eventId}/embed${queryString}" 
-  width="${width}" 
-  height="${height}" 
+  width="100%" 
+  height="100%" 
   frameborder="0" 
   scrolling="auto"
   allow="payment"
