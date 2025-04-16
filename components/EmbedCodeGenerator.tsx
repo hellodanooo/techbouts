@@ -50,7 +50,7 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
     return `<iframe 
   src="${baseUrl}/events/${promoterId}/${eventId}/embed${queryString}" 
   width="100%" 
-  height="100%" 
+  height="2000px" 
   frameborder="0" 
   scrolling="auto"
   allow="payment"
