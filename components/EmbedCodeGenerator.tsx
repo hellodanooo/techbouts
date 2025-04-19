@@ -66,6 +66,8 @@ export default function EmbedCodeGenerator({ eventId, eventName, promoterId }: E
   </div>`;
   };
   
+
+  
   // Generate the JavaScript embed code (more advanced)
   const generateJsCode = () => {
     return `<div id="techbouts-registration-${promoterId}-${eventId}"></div>

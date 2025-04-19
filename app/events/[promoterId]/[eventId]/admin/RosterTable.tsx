@@ -1,19 +1,20 @@
 // components/RosterTable.tsx
 'use client'
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Save } from "lucide-react";
 import AddFighterModal from '../../../../../components/database/AddFighterModal';
 import { toast } from 'sonner';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import CreateEditBout from '@/app/events/[promoterId]/[eventId]/matches/CreateEditBout';
 
-import { refreshOneFighterData } from '@/utils/apiFunctions/techboutsRoster';
+import { refreshOneFighterData, saveTechBoutsWeighin, fetchTechBoutsRoster } from '@/utils/apiFunctions/techboutsRoster';
 
-import { fetchPmtRoster, saveWeighin } from '@/utils/apiFunctions/pmtRoster';
+import { fetchPmtRoster, savePmtWeighin } from '@/utils/apiFunctions/pmtRoster';
 
+import { Loader2 } from "lucide-react";
 
 
 import {
@@ -64,13 +65,11 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
 
   // WEIGHINS
   const [conductWeighins, setConductWeighins] = useState(false);
-  const [editingFighterId, setEditingFighterId] = useState<string | null>(null);
-  const [currentEditingValue, setCurrentEditingValue] = useState<string>('');
+  const [weighinValues, setWeighinValues] = useState<{ [key: string]: string }>({});
   const [savingWeights, setSavingWeights] = useState<{ [key: string]: boolean }>({});
-  const editingInputRef = useRef<HTMLInputElement>(null);
-
+  const [unsavedChanges, setUnsavedChanges] = useState<Set<string>>(new Set());
+  
   const [showUnmatchedOnly, setShowUnmatchedOnly] = useState(false);
-
 
   const matchedFighterIds = useMemo(() => {
     const ids = new Set<string>();
@@ -80,6 +79,19 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
     });
     return ids;
   }, [bouts]);
+
+  // Initialize weighin values from roster data
+  useEffect(() => {
+    if (rosterData?.length) {
+      const initialValues: { [key: string]: string } = {};
+      rosterData.forEach(fighter => {
+        if (fighter.fighter_id) {
+          initialValues[fighter.fighter_id] = fighter.weighin?.toString() || '';
+        }
+      });
+      setWeighinValues(initialValues);
+    }
+  }, [rosterData]);
 
   // Handle sorting when a header is clicked
   const handleSort = (key: keyof RosterFighter) => {
@@ -137,16 +149,12 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
       setBlue(null);
       setSelectedFighter(fighter);
     }
-    // else if red is set but blue isn’t, pick this fighter for blue
+    // else if red is set but blue isn't, pick this fighter for blue
     else if (!blue) {
       setBlue(fighter);
       setSelectedFighter(fighter);
     }
   };
-
-
-
-
 
   const isValidUrl = (url: string | undefined): boolean => {
     if (!url) return false;
@@ -171,18 +179,18 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
     }
   };
 
-
-
-
   const handleWeighinChange = (fighterId: string, value: string) => {
-    if (fighterId === editingFighterId) {
-      setCurrentEditingValue(value);
-    }
-  };
-
-  const handleFocus = (fighterId: string, initialValue: string) => {
-    setEditingFighterId(fighterId);
-    setCurrentEditingValue(initialValue);
+    setWeighinValues(prev => ({
+      ...prev,
+      [fighterId]: value
+    }));
+    
+    // Mark this fighter as having unsaved changes
+    setUnsavedChanges(prev => {
+      const newSet = new Set(prev);
+      newSet.add(fighterId);
+      return newSet;
+    });
   };
 
   useEffect(() => {
@@ -226,72 +234,81 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
     );
   }
 
-
-
   const handleSaveWeight = async (fighterId: string) => {
-    const newWeight = parseFloat(currentEditingValue);
+    const newWeight = parseFloat(weighinValues[fighterId]);
     if (isNaN(newWeight)) {
       toast.error("Invalid weight");
       return;
     }
+    
+    // Don't save if already saving
+    if (savingWeights[fighterId]) return;
+    
     setSavingWeights((prev) => ({ ...prev, [fighterId]: true }));
+    
     try {
       // Check if event sanctioning is PMT
       if (eventData.sanctioning === "PMT") {
         // Use the Firebase function to update the weighin.
-        await saveWeighin(fighterId, eventId, newWeight);
+        await savePmtWeighin(fighterId, eventId, newWeight);
         // After saving, re-fetch the updated PMT roster (if desired).
         const updatedPmtRoster = await fetchPmtRoster(eventId);
         if (updatedPmtRoster) {
           setRosterData(updatedPmtRoster);
         }
       } else {
-        console.log(`Fighter's weight ${newWeight}`);
-        setRosterData((prevRoster) =>
-          prevRoster.map((fighter) =>
-            fighter.fighter_id === fighterId ? { ...fighter, weighin: newWeight } : fighter
-          )
-        );
+        console.log(`Saving fighter's weight: ${newWeight}lbs`);
+        // Save the weight to TechBouts database
+        await saveTechBoutsWeighin(fighterId, eventId, newWeight, promoterId);
+        
+        // Fetch the fresh data from Firebase instead of updating locally
+        const updatedRoster = await fetchTechBoutsRoster(promoterId, eventId);
+        setRosterData(updatedRoster);
       }
+      
+      // Remove from unsaved changes
+      setUnsavedChanges(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fighterId);
+        return newSet;
+      });
+      
       toast.success("Weight saved");
     } catch (error) {
       console.error("Error saving weight", error);
       toast.error("Error saving weight");
     } finally {
       setSavingWeights((prev) => ({ ...prev, [fighterId]: false }));
-      setEditingFighterId(null);
     }
   };
-
-
-
-
 
   return (
     <div className="mt-2">
       <Card className="w-full">
         <CardHeader>
 
-        <div className="flex items-center justify-center gap-3">Roster {showUnmatchedOnly && (<div>Unmatched</div>)} {!showUnmatchedOnly && (<div>All Fighters</div>)}</div>
+        <div className="flex items-center justify-center gap-2">Roster {showUnmatchedOnly && (<div>Unmatched</div>)} {!showUnmatchedOnly && (<div>All Fighters</div>)}</div>
 
 
-            <CardTitle className="flex items-center justify-center gap-3">
+            <CardTitle className="flex items-center justify-center gap-2">
 
 
 
 
             <Button
               onClick={() => setOpenAddFighterModal(true)}
-              className="flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" /> Add Fighter
+              className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
+              >
+              <Plus className="h-4 w-4" /> Add
             </Button>
 
             <Button
               variant={conductWeighins ? 'default' : 'outline'}
               onClick={() => setConductWeighins(prev => !prev)}
+              className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
+
             >
-              {conductWeighins ? 'Weighins On' : 'Conduct Weighins'}
+              {conductWeighins ? 'Weighins On' : 'Weighins'}
             </Button>
 
 
@@ -301,8 +318,10 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
             <Button
               variant={showUnmatchedOnly ? 'default' : 'outline'}
               onClick={() => setShowUnmatchedOnly(prev => !prev)}
+              className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
+
             >
-              {showUnmatchedOnly ? 'All Fighters' : 'Unmatched Fighters'}
+              {showUnmatchedOnly ? 'All' : 'Unmatched'}
             </Button>
 
 
@@ -385,6 +404,7 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
                   console.log("map log", fighter.fighter_id, fighter.weightclass);
                   const fighterId = fighter.fighter_id || '';
                   const name = `${fighter.first || ''} ${fighter.last || ''}`;
+                  const hasUnsavedChanges = unsavedChanges.has(fighterId);
 
                   return (
                     <TableRow key={index}>
@@ -392,27 +412,37 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
 
                       {conductWeighins && (
                         <TableCell>
+                          <div className="flex items-center">
                           <input
-                            className="no-zoom"
-                            style={{ width: '50px' }}
-                            ref={editingFighterId === fighter.fighter_id ? editingInputRef : null}
-                            type="number"
-                            value={
-                              editingFighterId === fighter.fighter_id
-                                ? currentEditingValue
-                                : fighter.weighin?.toString() || ''
-                            }
-                            onChange={(e) => handleWeighinChange(fighter.fighter_id, e.target.value)}
-                            onFocus={() => handleFocus(fighter.fighter_id, fighter.weighin?.toString() || '')}
-                            onBlur={async () => {
-                              if (fighter.weighin !== parseFloat(currentEditingValue)) {
-                                console.log("Saving weight on blur.");
-                                await handleSaveWeight(fighter.fighter_id);
-                                setCurrentEditingValue(fighter.weighin?.toString() || '');
-                              }
-                            }}
-                          />
-                          {savingWeights[fighter.fighter_id] && <span>Weight is Saving...</span>}
+                              className="no-zoom"
+                              style={{ width: '50px' }}
+                              type="number"
+                              value={weighinValues[fighterId] || ''}
+                              onChange={(e) => handleWeighinChange(fighterId, e.target.value)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.currentTarget.select();
+                              }}
+                            />
+                            
+                            {hasUnsavedChanges && !savingWeights[fighterId] && (
+                              <button 
+                                className="ml-1 bg-green-500 text-white p-1 rounded hover:bg-blue-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveWeight(fighterId);
+                                }}
+                              >
+                                <Save className="h-4 w-4" />
+                              </button>
+                            )}
+                            
+                            {savingWeights[fighterId] && (
+                              <div className="ml-1">
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                       )}
 

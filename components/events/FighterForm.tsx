@@ -678,6 +678,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+     
       <form className="space-y-6">
         {/* Waiver Section */}
 
@@ -720,12 +721,11 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           </Card>
         )}
 
-
-
-        <fieldset disabled={!isWaiverChecked} className="space-y-6">
+        <fieldset 
+          disabled={!isWaiverChecked} 
+          className={`space-y-6 ${!isWaiverChecked ? 'bg-gray-200 text-gray-500 opacity-50' : ''}`}
+        >
           {/* Returning Fighter Search */}
-
-
 
           <Card>
             <CardHeader>
@@ -822,6 +822,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
               </div>
             </CardContent>
+
           </Card>
 
     
@@ -1450,6 +1451,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           </Card>
         </fieldset>
       </form>
+
     </LocalizationProvider>
   );
 

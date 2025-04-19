@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
-import { fetchTechboutsBouts } from '@/utils/apiFunctions/fetchTechboutsBouts';
+import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts';
 import EmbedMatchesPage from './EmbedMatches';
 
 

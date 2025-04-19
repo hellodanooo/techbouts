@@ -1,6 +1,6 @@
 // utils/apiFunctions/techBoutsRoster.ts
 import { toast } from 'sonner';
-import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch, updateDoc } from 'firebase/firestore';
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config'; // adjust this import based on where your firebase config is
 import { RosterFighter } from '@/utils/types';
 
@@ -213,9 +213,6 @@ export const fetchTechBoutsRoster = async (promoterId: string, eventId: string) 
     }
   };
 
-
-
-
   ////////////////////////////////   suporting functions
 
   const determineAgeGender = (age: number, gender: string): string => {
@@ -225,3 +222,50 @@ export const fetchTechBoutsRoster = async (promoterId: string, eventId: string) 
     if (age >= 12) return gender === 'MALE' ? 'CADET MALE' : 'CADET FEMALE';
     return gender === 'MALE' ? 'YOUTH MALE' : 'YOUTH FEMALE';
   };
+
+
+/**
+ * Saves the weighin value for a fighter in TechBouts Firebase.
+ *
+ * @param fighterId - The fighter's ID
+ * @param eventId - The event's ID
+ * @param newWeight - The new weighin value to save
+ * @returns Promise that resolves when the update is complete
+ */
+export async function saveTechBoutsWeighin(fighterId: string, eventId: string, newWeight: number, promoterId: string): Promise<void> {
+  try {
+    // Build a reference to the fighter document in the roster_json collection
+    const rosterJsonRef = doc(techboutsDb, "events", "promotions", promoterId, eventId, "roster_json", "fighters");
+    
+    // Get the current roster document
+    const rosterDoc = await getDoc(rosterJsonRef);
+    
+    if (!rosterDoc.exists()) {
+      console.error("Roster document not found");
+      throw new Error("Roster document not found");
+    }
+    
+    // Get the current fighters array
+    const data = rosterDoc.data();
+    const fighters = data.fighters || [];
+    
+    // Find the fighter and update their weighin value
+    const updatedFighters = fighters.map((fighter: RosterFighter) => {
+      if (fighter.fighter_id === fighterId) {
+        return {
+          ...fighter,
+          weighin: newWeight
+        };
+      }
+      return fighter;
+    });
+    
+    // Update the document with the modified fighters array
+    await setDoc(rosterJsonRef, { fighters: updatedFighters });
+    
+    console.log(`Successfully updated weighin for fighter ${fighterId} in event ${eventId} to ${newWeight}lbs`);
+  } catch (error) {
+    console.error("Error updating weighin:", error);
+    throw error;
+  }
+}
