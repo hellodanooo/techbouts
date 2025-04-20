@@ -9,13 +9,9 @@ import AddFighterModal from '../../../../../components/database/AddFighterModal'
 import { toast } from 'sonner';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import CreateEditBout from '@/app/events/[promoterId]/[eventId]/matches/CreateEditBout';
-
 import { refreshOneFighterData, saveTechBoutsWeighin, fetchTechBoutsRoster } from '@/utils/apiFunctions/techboutsRoster';
-
 import { fetchPmtRoster, savePmtWeighin } from '@/utils/apiFunctions/pmtRoster';
-
 import { Loader2 } from "lucide-react";
-
 
 import {
   Card,
@@ -23,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import {
   Table,
   TableBody,
@@ -31,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -348,7 +346,13 @@ export default function RosterTable({ roster, eventId, promoterId, isAdmin, even
               <TableHeader>
                 <TableRow>
 
-                  {conductWeighins && <TableHead>Weighin</TableHead>}
+                  {conductWeighins && 
+                  <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort('weighin')}
+                  >Weighin
+                  </TableHead>
+                  }
 
                   <TableHead>Photo</TableHead>
                   {/* Sortable column example for Name */}

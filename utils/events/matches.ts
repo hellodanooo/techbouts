@@ -331,8 +331,6 @@ export const createMatchesFromWeighins = async ({
       `events/promotions/${promoterId}/${eventId}/roster_json/fighters`
     );
     const rosterDoc = await getDoc(rosterRef);
-
-    console.log("Roster path:", `events/promotions/${promoterId}/${eventId}/roster/fighters`);
     
     if (!rosterDoc.exists()) {
       toast.error("No roster found for this event");
@@ -417,6 +415,7 @@ export const createMatchesFromWeighins = async ({
       blue: RosterFighter;
       avgWeight: number;
       isYouth: boolean;
+      weightDifference: number;
     }[] = [];
 
     // Process each gender group
@@ -426,21 +425,190 @@ export const createMatchesFromWeighins = async ({
 
     reportStatus("🔄 Beginning matching process...");
 
+    // Maximum allowed weight difference (in pounds)
+    const MAX_WEIGHT_DIFF = 10;
+    // Maximum allowed age difference for youth fighters (in months)
+    const MAX_YOUTH_AGE_DIFF_MONTHS = 24;
+
+    // Process each gender group separately
     Object.keys(fightersByGender).forEach(gender => {
-      reportStatus(`⚙️ Processing ${fightersByGender[gender].length} ${gender} fighters`);
+      const fighters = fightersByGender[gender];
+      reportStatus(`⚙️ Processing ${fighters.length} ${gender} fighters`);
       
-      // ... rest of function remains the same ...
+      // We'll use this array to track which fighters have been matched
+      const matched = new Array(fighters.length).fill(false);
       
-      // Make sure to use reportStatus instead of just console.log for important updates!
+      // For each fighter
+      for (let i = 0; i < fighters.length; i++) {
+        // Skip if this fighter is already matched
+        if (matched[i]) continue;
+        
+        const fighter1 = fighters[i];
+        const fighter1Weight = fighter1.weighin || 0;
+        const fighter1IsYouth = isUnder18(fighter1.dob);
+        const fighter1AgeMonths = calculateAgeInMonths(fighter1.dob);
+        
+        // Find the best match for this fighter
+        let bestMatchIndex = -1;
+        let minWeightDiff = Infinity;
+        
+        for (let j = i + 1; j < fighters.length; j++) {
+          // Skip if this potential opponent is already matched
+          if (matched[j]) continue;
+          
+          const fighter2 = fighters[j];
+          const fighter2Weight = fighter2.weighin || 0;
+          const fighter2IsYouth = isUnder18(fighter2.dob);
+          const fighter2AgeMonths = calculateAgeInMonths(fighter2.dob);
+          
+          // Calculate weight difference
+          const weightDiff = Math.abs(fighter1Weight - fighter2Weight);
+          
+          // Both must be youth or both must be adults
+          if (fighter1IsYouth !== fighter2IsYouth) continue;
+          
+          // If both are youth, check age difference
+          if (fighter1IsYouth && fighter2IsYouth) {
+            const ageDiffMonths = Math.abs(fighter1AgeMonths - fighter2AgeMonths);
+            if (ageDiffMonths > MAX_YOUTH_AGE_DIFF_MONTHS) continue;
+          }
+          
+          // Check if weight difference is acceptable
+          if (weightDiff <= MAX_WEIGHT_DIFF && weightDiff < minWeightDiff) {
+            minWeightDiff = weightDiff;
+            bestMatchIndex = j;
+          }
+        }
+        
+        // If we found a match
+        if (bestMatchIndex !== -1) {
+          const fighter2 = fighters[bestMatchIndex];
+          const avgWeight = Math.round((fighter1.weighin + fighter2.weighin) / 2);
+          
+          proposedMatches.push({
+            red: fighter1,
+            blue: fighter2,
+            avgWeight,
+            isYouth: fighter1IsYouth,
+            weightDifference: minWeightDiff
+          });
+          
+          // Mark both fighters as matched
+          matched[i] = true;
+          matched[bestMatchIndex] = true;
+          
+          matchesCreated++;
+          
+          reportStatus(`🤼 Created match: ${fighter1.first} ${fighter1.last} (${fighter1.weighin}lbs) vs ${fighter2.first} ${fighter2.last} (${fighter2.weighin}lbs)`);
+        }
+      }
+      
+      // Count unmatched fighters
+      const unmatchedCount = matched.filter(m => !m).length;
+      unmatchedTotal += unmatchedCount;
+      
+      reportStatus(`✅ Created ${matchesCreated - totalProcessed} ${gender} matches, ${unmatchedCount} fighters unmatched`);
+      totalProcessed = matchesCreated;
+    });
+
+    // Final report
+    reportStatus(`📊 Match creation summary: ${matchesCreated} matches created, ${unmatchedTotal} fighters unmatched`);
+    
+    if (proposedMatches.length === 0) {
+      reportStatus("⚠️ No matches could be created with the current criteria");
+      return { 
+        success: false, 
+        message: "No matches could be created with the current criteria", 
+        matches: [] 
+      };
+    }
+
+    // Sort matches - youth first, then by average weight (lightest first)
+    const sortedMatches = [...proposedMatches].sort((a, b) => {
+      // Youth matches come first
+      if (a.isYouth && !b.isYouth) return -1;
+      if (!a.isYouth && b.isYouth) return 1;
+      
+      // For matches of the same youth status, sort by weight (lightest first)
+      return a.avgWeight - b.avgWeight;
     });
     
-    // ... rest of function remains the same ...
+    reportStatus(`🔄 Sorted ${sortedMatches.length} matches by youth status and weight`);
+    
+    // If saveMatches is false, just return the proposed matches without saving
+    if (!saveMatches) {
+      reportStatus("✅ Generated match suggestions successfully (not saved)");
+      setIsCreatingMatches(false);
+      return { 
+        success: true, 
+        message: `Created ${matchesCreated} matches (not saved)`, 
+        matches: sortedMatches 
+      };
+    }
+    
+    // Save the matches to Firestore
+    try {
+      reportStatus("💾 Saving matches to database...");
+      
+      const boutsRef = doc(
+        db,
+        `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+      );
+      const boutsDoc = await getDoc(boutsRef);
+      
+      // Convert proposed matches to Bout objects with sequential bout numbers
+      const newBouts: Bout[] = sortedMatches.map((match, index) => {
+        const boutNum = startingBoutNum + index;
+        return {
+          weightclass: match.avgWeight, // Use the average weight as the weightclass
+          ringNum,
+          boutNum,
+          red: match.red,
+          blue: match.blue,
+          methodOfVictory: '',
+          confirmed: false,
+          eventId,
+          eventName,
+          url: '',
+          date,
+          promotionId: promoterId,
+          promotionName,
+          sanctioning,
+          bout_type,
+          dayNum,
+          class: '',
+          boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
+        };
+      });
+      
+      if (boutsDoc.exists()) {
+        const data = boutsDoc.data();
+        const existingBouts = data.bouts || [];
+        await setDoc(boutsRef, { bouts: [...existingBouts, ...newBouts] });
+      } else {
+        await setDoc(boutsRef, { bouts: newBouts });
+      }
+      
+      reportStatus(`✅ Successfully saved ${newBouts.length} matches to database`);
+      return { 
+        success: true, 
+        message: `Created and saved ${newBouts.length} matches`, 
+        matches: newBouts 
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      reportStatus(`❌ Error saving matches: ${errorMessage}`);
+      return { 
+        success: false, 
+        message: `Error saving matches: ${errorMessage}`, 
+        matches: sortedMatches 
+      };
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error creating matches from weighins:", error);
     toast.error("Failed to create matches from weighins");
     reportStatus(`❌ Error: ${errorMessage}`);
-    setIsCreatingMatches(false);
     return { 
       success: false, 
       message: `Error: ${errorMessage}`, 
