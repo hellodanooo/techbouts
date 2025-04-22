@@ -1,7 +1,7 @@
 // app/events/[promoterId]/[eventId]/edit/PageDashboard.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import EditEventForm from './EditEventForm';
 import RosterTable from './RosterTable';
 import OfficialsEvent from './OfficialsEvent';
@@ -16,6 +16,10 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import EmailTable from './EmailClient'; // adjust path as needed
 import { RosterFighter, Bout } from '@/utils/types';
 import { FaPerson } from "react-icons/fa6";
+import { fighterClick } from '@/utils/handleFighterClick';
+import { useRouter } from 'next/navigation';
+import CreateEditBout from '../matches/CreateEditBout';
+import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts';
 
 
 interface PageDashboardProps {
@@ -26,16 +30,28 @@ interface PageDashboardProps {
     bouts: Bout[];
 }
 
-export default function PageDashboard({ eventData, eventId, promoterId, roster, bouts }: PageDashboardProps) {
+export default function PageDashboard({ eventData, eventId, promoterId, roster, bouts: initialBouts }: PageDashboardProps) {
+    const router = useRouter();
     const { user, isAdmin } = useAuth();
     const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
     const isPromoter = user?.email === eventData.promoterEmail;
     const [showEmbed, setShowEmbed] = useState(false);
+    const [bouts, setBouts] = useState<Bout[]>(initialBouts);
+
+    const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
+    const [red, setRed] = useState<RosterFighter | null>(null);
+    const [blue, setBlue] = useState<RosterFighter | null>(null);
+    const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
+
+   
+   
     const [openSections, setOpenSections] = useState({
         roster: false,
         matches: false,
         emails: false,
     });
+
+
 
     const toggleSection = (section: keyof typeof openSections) => {
         setOpenSections(prev => ({
@@ -60,6 +76,43 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
     // Check if user is authorized
     const isAuthorized = isAdmin || isPromoter || isSanctioning;
+
+
+    const handleFighterClick = useMemo(() => {
+        return fighterClick(
+          isAdmin,
+          router,
+          setRed,
+          setBlue,
+          setSelectedFighter,
+          red,
+          blue
+        );
+      }, [isAdmin, router, red, blue]);
+
+
+      const refreshBouts = async () => {
+        try {
+          const updated = await fetchTechboutsBouts(promoterId, eventId);
+          setBouts(updated);
+          // Clear fighter selection states after refresh
+          setSelectedFighter(null);
+          setRed(null);
+          setBlue(null);
+          setSelectedBout(null);
+        } catch (err) {
+          console.error("Failed to refresh bouts", err);
+        }
+      };
+
+      const handleCloseCreateEditBout = () => {
+        setSelectedFighter(null);
+        setRed(null);
+        setBlue(null);
+        setSelectedBout(null);
+        refreshBouts();
+      };
+    
 
     // Return unauthorized message if not authorized
     if (!isAuthorized) {
@@ -112,7 +165,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
         );
     }
 
-    // Original content for authorized users
+
     return (
 
         <div>
@@ -133,6 +186,9 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             </div>
 
 
+         
+
+
             <Collapsible
                 open={openSections.roster}
                 onOpenChange={() => toggleSection('roster')}
@@ -149,6 +205,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                 </CollapsibleTrigger>
                 <CollapsibleContent className="p-4 bg-white">
 
+               
                     <div className='mb-6'>
                     <RosterTable
     roster={roster}
@@ -157,10 +214,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
     isAdmin={isAdmin}
     eventData={eventData}
     bouts={bouts || []} 
-    handleFighterClick={() => {
-        // Placeholder function that doesn't use the fighter parameter
-        console.log('Fighter click not implemented in this view');
-    }}
+    handleFighterClick={handleFighterClick}
 />
                     </div>
                 </CollapsibleContent>
@@ -260,6 +314,38 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                     </div>
                 </CollapsibleContent>
             </Collapsible>
+
+
+            {isAdmin && (selectedFighter || selectedBout) && (
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">
+            {selectedBout ? "Edit Bout" : "Create New Bout"}
+          </h2>
+          <CreateEditBout
+            roster={roster}
+            promoterId={promoterId}
+            eventId={eventId}
+            isAdmin={isAdmin}
+            red={selectedBout ? selectedBout.red : red}
+            blue={selectedBout ? selectedBout.blue : blue}
+            weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
+            setWeightclass={() => {}}
+            bout_type={selectedBout?.bout_type || "MT"}
+            setBoutType={() => {}}
+            boutConfirmed={selectedBout ? true : false}
+            setBoutConfirmed={() => {}}
+            isCreatingMatch={false}
+            setRed={setRed}
+            setBlue={setBlue}
+            setIsCreatingMatch={() => {}}
+            eventData={eventData}
+            action={selectedBout ? "edit" : "create"}
+            existingBoutId={selectedBout?.boutId}
+            existingBouts={bouts}
+            onClose={handleCloseCreateEditBout}
+          />
+        </div>
+      )}
 
         </div>
     );
