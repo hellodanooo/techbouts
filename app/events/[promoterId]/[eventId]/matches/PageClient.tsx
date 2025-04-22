@@ -1,9 +1,8 @@
 // app/events/[promoterId]/[eventId]/matches/PageClient.tsx
 'use client';
 
-import React, { useState } from 'react';
-
-
+import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import MatchesDisplay from './MatchesDisplay';
 import { useAuth } from '@/context/AuthContext';
@@ -14,8 +13,8 @@ import { fetchTechboutsBouts, deleteTechboutsMatchesJson } from '@/utils/apiFunc
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react";
 import StatusMessages from '@/components/loading_screens/StatusMessages';
-
-
+import CreateEditBout from './CreateEditBout';
+import { fighterClick } from '@/utils/handleFighterClick';
 
 interface PageClientProps {
   eventId: string;
@@ -27,32 +26,53 @@ interface PageClientProps {
   roster: RosterFighter[];
 }
 
-
 export default function PageClient({
   eventId,
   promoterId,
   eventData,
   bouts: initialBouts,
   roster,
-
 }: PageClientProps) {
   console.log("eventData Page Client", eventData);
   const { isAdmin } = useAuth();
+  const router = useRouter();
   const [bouts, setBouts] = useState<Bout[]>(initialBouts);
   const [statusMessages, setStatusMessages] = useState<string[]>([]);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isCreatingMatches, setIsCreatingMatches] = useState(false);
-
+  
+  // Lifted state for fighter selection
+  const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
+  const [red, setRed] = useState<RosterFighter | null>(null);
+  const [blue, setBlue] = useState<RosterFighter | null>(null);
+  const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
+  
+  // Create a shared fighter click handler for all child components
+  const handleFighterClick = useMemo(() => {
+    return fighterClick(
+      isAdmin,
+      router,
+      setRed,
+      setBlue,
+      setSelectedFighter,
+      red,
+      blue
+    );
+  }, [isAdmin, router, red, blue]);
 
   const refreshBouts = async () => {
     try {
       const updated = await fetchTechboutsBouts(promoterId, eventId);
       setBouts(updated);
+      // Clear fighter selection states after refresh
+      setSelectedFighter(null);
+      setRed(null);
+      setBlue(null);
+      setSelectedBout(null);
     } catch (err) {
       console.error("Failed to refresh bouts", err);
     }
   };
-
 
   const handleDeleteMatches = async () => {
     const success = await deleteTechboutsMatchesJson(promoterId, eventId);
@@ -61,7 +81,6 @@ export default function PageClient({
       setBouts([]);
     }
   };
-
 
   const handleAutoMatch = async () => {
     // Reset status messages and show modal
@@ -155,23 +174,38 @@ export default function PageClient({
     setShowStatusModal(false);
   };
 
+  // Handle bout selection
+  const handleBoutSelect = (bout: Bout) => {
+    if (isAdmin) {
+      setSelectedBout(bout);
+      // Clear any fighter selection when selecting a bout
+      setSelectedFighter(null);
+      setRed(null);
+      setBlue(null);
+    }
+  };
+
+  const handleCloseCreateEditBout = () => {
+    setSelectedFighter(null);
+    setRed(null);
+    setBlue(null);
+    setSelectedBout(null);
+    refreshBouts();
+  };
 
   return (
     <div className="">
       <Header />
-
       
       {isAdmin && (
-             <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0', gap:'5px' }}>
-
-        <Button 
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0', gap:'5px' }}>
+          <Button 
             onClick={handleAutoMatch}
             disabled={isCreatingMatches}
-        >
-          {isCreatingMatches ? "Creating Matches..." : "Auto Match"}
-        </Button>
-
-       
+          >
+            {isCreatingMatches ? "Creating Matches..." : "Auto Match"}
+          </Button>
+          
           <Button 
             variant="destructive" 
             onClick={handleDeleteMatches}
@@ -181,21 +215,69 @@ export default function PageClient({
             <Trash2 size={16} />
             Delete Matches
           </Button>
+        </div>
+      )}
 
-          </div>
-
-        )}
-
-<StatusMessages 
+      <StatusMessages 
         messages={statusMessages} 
         isVisible={showStatusModal} 
         onClose={closeStatusModal} 
       />
-      <MatchesDisplay bouts={bouts} promoterId={promoterId} eventId={eventId} isAdmin={isAdmin} eventData={eventData} />
+      
+      <MatchesDisplay 
+        bouts={bouts} 
+        promoterId={promoterId} 
+        eventId={eventId} 
+        isAdmin={isAdmin} 
+        eventData={eventData}
+        // Pass down the shared state and handlers
+        handleFighterClick={handleFighterClick}
+        onBoutSelect={handleBoutSelect}
+      />
 
-      <RosterTable promoterId={promoterId} eventId={eventId} roster={roster} eventData={eventData} isAdmin={isAdmin} bouts={bouts} onBoutsRefresh={refreshBouts} />
-
-     
+      <RosterTable 
+        promoterId={promoterId} 
+        eventId={eventId} 
+        roster={roster} 
+        eventData={eventData} 
+        isAdmin={isAdmin} 
+        bouts={bouts}
+        // Pass down the shared state and handlers 
+        handleFighterClick={handleFighterClick}
+        onBoutsRefresh={refreshBouts}
+      />
+      
+      {/* Add the CreateEditBout here at the parent level */}
+      {isAdmin && (selectedFighter || selectedBout) && (
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">
+            {selectedBout ? "Edit Bout" : "Create New Bout"}
+          </h2>
+          <CreateEditBout
+            roster={roster}
+            promoterId={promoterId}
+            eventId={eventId}
+            isAdmin={isAdmin}
+            red={selectedBout ? selectedBout.red : red}
+            blue={selectedBout ? selectedBout.blue : blue}
+            weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
+            setWeightclass={() => {}}
+            bout_type={selectedBout?.bout_type || "MT"}
+            setBoutType={() => {}}
+            boutConfirmed={selectedBout ? true : false}
+            setBoutConfirmed={() => {}}
+            isCreatingMatch={false}
+            setRed={setRed}
+            setBlue={setBlue}
+            setIsCreatingMatch={() => {}}
+            eventData={eventData}
+            action={selectedBout ? "edit" : "create"}
+            existingBoutId={selectedBout?.boutId}
+            existingBouts={bouts}
+            onClose={handleCloseCreateEditBout}
+          />
+        </div>
+      )}
     </div>
   );
 }

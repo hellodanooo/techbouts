@@ -150,14 +150,18 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                 <CollapsibleContent className="p-4 bg-white">
 
                     <div className='mb-6'>
-                        <RosterTable
-                            roster={roster}
-                            eventId={eventId}
-                            promoterId={promoterId}
-                            isAdmin={isAdmin}
-                            eventData={eventData}
-                            bouts={bouts || []}
-                        />
+                    <RosterTable
+    roster={roster}
+    eventId={eventId}
+    promoterId={promoterId}
+    isAdmin={isAdmin}
+    eventData={eventData}
+    bouts={bouts || []} 
+    handleFighterClick={() => {
+        // Placeholder function that doesn't use the fighter parameter
+        console.log('Fighter click not implemented in this view');
+    }}
+/>
                     </div>
                 </CollapsibleContent>
             </Collapsible>

@@ -276,7 +276,6 @@ console.log("bout before moving:", existingBouts);
 };
 
 
-
 export const createMatchesFromWeighins = async ({
   eventId,
   promoterId,

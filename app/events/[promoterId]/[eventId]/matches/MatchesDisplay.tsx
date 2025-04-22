@@ -1,32 +1,30 @@
+// app/events/[promoterId]/[eventId]/matches/MatchesDisplay.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import Image from 'next/image';
 import { RosterFighter, Bout, EventType } from '@/utils/types';
-import CreateEditBout from './CreateEditBout';
-import { LuMoveVertical } from "react-icons/lu";
-
 
 interface MatchesDisplayProps {
-  bouts: Bout[] ;
+  bouts: Bout[];
   promoterId: string;
   eventId: string;
   isAdmin?: boolean;
   eventData: EventType;
+  // Updated props to use shared handlers
+  handleFighterClick: (fighter: RosterFighter) => void;
+  onBoutSelect: (bout: Bout) => void;
 }
 
 export default function MatchesDisplay({
   bouts,
-  promoterId,
-  eventId,
   isAdmin,
-  eventData
-
+  handleFighterClick,
+  onBoutSelect
 }: MatchesDisplayProps) {
   console.log('Matching Display', bouts);
-  const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
 
   const isValidUrl = (url: string | undefined): boolean => {
     if (!url) return false;
@@ -42,18 +40,6 @@ export default function MatchesDisplay({
 
   const getPhotoUrl = (fighter: RosterFighter): string => {
     return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
-  };
-
-  // const getGymId = (gym: string | undefined): string => {
-  //   if (!gym) return '';
-  //   return gym.toUpperCase().replace(/[^A-Z0-9]/g, '_');
-  // };
-
-
-  const handleRowClick = (bout: Bout) => {
-    if (isAdmin) {
-      setSelectedBout(bout);
-    }
   };
 
   return (
@@ -80,41 +66,51 @@ export default function MatchesDisplay({
                 if (!redFighter || !blueFighter) return null;
 
                 return (
-                  <TableRow key={index}
-                  onClick={() => handleRowClick(bout)}
-                  className={isAdmin ? "cursor-pointer hover:bg-gray-100" : ""}
-                  >
+                  <TableRow key={index}>
                     <TableCell className="text-center">
-                      <Image
-                        src={getPhotoUrl(redFighter)}
-                        alt="Red Fighter"
-                        width={80}
-                        height={80}
-                        className="rounded-md mx-auto"
-                      />
-                      <div>{`${redFighter.first} ${redFighter.last}`}</div>
-                      <div>{redFighter.gym}</div>
+                      <div 
+                        className="cursor-pointer" 
+                        onClick={() => handleFighterClick(redFighter)}
+                      >
+                        <Image
+                          src={getPhotoUrl(redFighter)}
+                          alt="Red Fighter"
+                          width={80}
+                          height={80}
+                          className="rounded-md mx-auto"
+                        />
+                        <div>{`${redFighter.first} ${redFighter.last}`}</div>
+                        <div>{redFighter.gym}</div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                        {isAdmin && (
-                        <div className="flex justify-center border border-black rounded-md p-1">
-                          <LuMoveVertical />
+                      {isAdmin && (
+                        <div 
+                          className="border border-black rounded-md p-1 cursor-pointer hover:bg-gray-100"
+                          onClick={() => onBoutSelect(bout)}
+                        >
+                          Edit
                         </div>
-                        )}
+                      )}
                       <div>Bout {bout.boutNum}</div>
                       <div>{bout.weightclass} lbs</div>
                       <div>{bout.bout_type}</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Image
-                        src={getPhotoUrl(blueFighter)}
-                        alt="Blue Fighter"
-                        width={80}
-                        height={80}
-                        className="rounded-md mx-auto"
-                      />
-                      <div>{`${blueFighter.first} ${blueFighter.last}`}</div>
-                      <div>{blueFighter.gym}</div>
+                      <div 
+                        className="cursor-pointer" 
+                        onClick={() => handleFighterClick(blueFighter)}
+                      >
+                        <Image
+                          src={getPhotoUrl(blueFighter)}
+                          alt="Blue Fighter"
+                          width={80}
+                          height={80}
+                          className="rounded-md mx-auto"
+                        />
+                        <div>{`${blueFighter.first} ${blueFighter.last}`}</div>
+                        <div>{blueFighter.gym}</div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -122,48 +118,6 @@ export default function MatchesDisplay({
             </TableBody>
           </Table>
         )}
-
-{isAdmin && selectedBout && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-2">Edit Selected Bout</h2>
-            {/* 
-                Pass the selected bout data in to CreateBout. 
-                If your CreateBout has separate "red" and "blue" props, you can do something like:
-            */}
-            <CreateEditBout
-              // Provide full roster if needed or however you fetch it
-              roster={[]}
-              promoterId={promoterId}
-              eventId={eventId}
-              isAdmin={isAdmin}
-
-              // Pre-populate from the selected bout
-              red={selectedBout.red || null}
-              blue={selectedBout.blue || null}
-         
-              weightclass={selectedBout.weightclass ?? 0}
-              setWeightclass={() => { } }
-          
-              bout_type={selectedBout.bout_type ?? "MT"}
-              setBoutType={() => { } }
-              boutConfirmed={false}
-              setBoutConfirmed={() => { } }
-              isCreatingMatch={false}
-              setIsCreatingMatch={() => { } }
-              setRed={() => { } }
-              setBlue={() => { } }
-              eventData={eventData}
-              action="edit"
-              existingBoutId={selectedBout.boutId} 
-              existingBouts={bouts}
-              onClose={() => {
-               setSelectedBout(null);
-              }}
-            
-            />
-          </div>
-        )}
-
       </CardContent>
     </Card>
   );
