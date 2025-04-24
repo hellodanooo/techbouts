@@ -101,6 +101,7 @@ export async function fetchPmtRoster(eventId: string): Promise<RosterFighter[] |
  * @param newWeight - The new weighin value to save
  */
 export async function savePmtWeighin(fighterId: string, eventId: string, newWeight: number): Promise<void> {
+
   try {
     // Build a reference to the fighter document in the roster subcollection.
     const fighterDocRef = doc(pmtDb, "events", eventId, "roster", fighterId);

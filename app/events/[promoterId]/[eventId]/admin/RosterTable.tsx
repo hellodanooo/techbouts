@@ -256,8 +256,13 @@ export default function RosterTable({
     <div className="mt-2">
       <Card className="w-full">
         <CardHeader>
-          <div className="flex items-center justify-center gap-2">Roster {showUnmatchedOnly && (<div>Unmatched</div>)} {!showUnmatchedOnly && (<div>All Fighters</div>)}</div>
-
+        <div className="flex items-center justify-center gap-2">
+  Roster {showUnmatchedOnly ? (
+    <div>{displayedRoster.length} Unmatched</div>
+  ) : (
+    <div>All {rosterData.length} Fighters</div>
+  )}
+</div>
           <CardTitle className="flex items-center justify-center gap-2">
             <Button
               onClick={() => setOpenAddFighterModal(true)}

@@ -91,6 +91,18 @@ export default function PageClient({
     // First add an initial message
     setStatusMessages(["🔍 Starting match creation process..."]);
 
+    const matchedFighterIds = new Set();
+    bouts.forEach((bout) => {
+      if (bout.red?.fighter_id) matchedFighterIds.add(bout.red.fighter_id);
+      if (bout.blue?.fighter_id) matchedFighterIds.add(bout.blue.fighter_id);
+    });
+  
+    // Filter the roster to only include unmatched fighters
+    const unmatchedRoster = roster.filter(fighter => 
+      !matchedFighterIds.has(fighter.fighter_id)
+    );
+
+
     // We'll use a set to prevent duplicate messages
     const processedMessages = new Set();
 
@@ -146,7 +158,8 @@ export default function PageClient({
         sanctioning: eventData.sanctioning || '',
         setIsCreatingMatches,
         updateStatus,
-        saveMatches: true
+        saveMatches: true,
+        roster: unmatchedRoster,
       });
 
       // If successful, refresh the bouts display
@@ -280,4 +293,5 @@ export default function PageClient({
       )}
     </div>
   );
+
 }
