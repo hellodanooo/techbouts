@@ -13,7 +13,6 @@ interface MatchesDisplayProps {
   eventId: string;
   isAdmin?: boolean;
   eventData: EventType;
-  // Updated props to use shared handlers
   handleFighterClick: (fighter: RosterFighter) => void;
   onBoutSelect: (bout: Bout) => void;
 }

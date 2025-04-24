@@ -80,7 +80,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
     const handleFighterClick = useMemo(() => {
         return fighterClick(
-          isAdmin,
+        isAuthorized,
           router,
           setRed,
           setBlue,

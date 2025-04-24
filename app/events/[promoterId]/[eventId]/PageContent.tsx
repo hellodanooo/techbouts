@@ -35,8 +35,7 @@ export default function PageContentEvent({
 
   const [showEmbedModal, setShowEmbedModal] = useState(false);
 
-
-  const isAuthorizedPromoter = useMemo(() => {
+  const isAuthorized = useMemo(() => {
     if (isAdmin) return true;
     if (!user?.email) return false;
   
@@ -128,7 +127,7 @@ const stripeInstance = useMemo(() => {
           
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{eventData.name}</h1>
-            {isAuthorizedPromoter && (
+            {isAuthorized && (
               <Link
                 href={`/events/${promoterId}/${eventId}/admin`}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -268,7 +267,7 @@ const stripeInstance = useMemo(() => {
                   </div>
 
 
-                  {isAuthorizedPromoter && (
+                  {isAuthorized && (
                     <button
                       className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
                       onClick={() => setShowEmbedModal(true)}

@@ -55,13 +55,10 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-
   const [openSections, setOpenSections] = useState({
     details: false,
 
   });
-
-
 
   const handleDeleteEvent = async () => {
     setIsDeleting(true);
@@ -229,20 +226,9 @@ const [redirectUrlEnabled, setRedirectUrlEnabled] = useState(!!formData.redirect
 
   };
 
-
-
-
-
-
   const handleCancel = () => {
     router.back();
   };
-
-
-
-
-
-
 
   useEffect(() => {
     return () => {

@@ -230,7 +230,6 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
         ticket_system_option: formData.ticket_system_option ?? "none",
         ticket_link: formData.ticket_link ?? "",
         zip: formData.zip ?? "",
-        name: formData.name ?? "",
         numMats: formData.numMats ?? 2,
         locale: formData.locale ?? "en",
         currency: formData.currency ?? "USD",
