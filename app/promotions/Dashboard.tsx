@@ -267,25 +267,30 @@ const PromoterDashboard = ({
         isPromoter={isPromoter}
         isNewUser={isNewUser}
       />
-      <h1>Promoter Dashboard</h1>
+                <div className='flex p-2 pb-8 gap-4 items-center'>
 
-      {isAdmin && (
-        <div style={{ width: '50%' }}>
-          <div>Admin Enabled</div>
+      <div className='custom-font-megapunch' style={{ lineHeight: '1.2' }}>Promoter Dashboard</div>
+
+{isAdmin && (
+            <div>Admin Enabled</div>
+
+)}
+
           <button
-            className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
+            className="button-2"
             onClick={() => setShowPromoterModal(true)}
           >
-            Add Promoter
+            Add Your Promotion
           </button>
         </div>
-      )}
+  
 
       {showPromoterModal && (
         <AddEditPromoter
           onClose={() => setShowPromoterModal(false)}
           isAdmin={isAdmin}
           add={true}
+          user={user && user.email ? { email: user.email } : undefined}
         />
       )}
 

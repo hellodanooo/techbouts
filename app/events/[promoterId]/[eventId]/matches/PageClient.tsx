@@ -1,7 +1,7 @@
 // app/events/[promoterId]/[eventId]/matches/PageClient.tsx
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import MatchesDisplay from './MatchesDisplay';
@@ -33,13 +33,13 @@ export default function PageClient({
   bouts: initialBouts,
   roster,
 }: PageClientProps) {
-  console.log("eventData Page Client", eventData);
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
   const [bouts, setBouts] = useState<Bout[]>(initialBouts);
   const [statusMessages, setStatusMessages] = useState<string[]>([]);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isCreatingMatches, setIsCreatingMatches] = useState(false);
+  const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
   
   // Lifted state for fighter selection
   const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
@@ -47,10 +47,27 @@ export default function PageClient({
   const [blue, setBlue] = useState<RosterFighter | null>(null);
   const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
   
+  // Set up sanctioning email based on event sanctioning body
+  useEffect(() => {
+    if (eventData.sanctioning === 'PMT') {
+      setSanctioningEmail('info@pointmuaythaica.com');
+    } else if (eventData.sanctioning === 'PBSC') {
+      setSanctioningEmail('borntowincsc@gmail.com');
+    } else {
+      setSanctioningEmail('');
+    }
+  }, [eventData.sanctioning]);
+  
+  // Check authorization statuses
+  const isPromoter = user?.email === eventData.promoterEmail;
+  const isSanctioning = user?.email === sanctioningEmail;
+  const isAuthorized = isAdmin || isPromoter || isSanctioning;
+  const isAdminOrSanctioningOrPromoter = isAdmin || isSanctioning || isPromoter;
+  
   // Create a shared fighter click handler for all child components
   const handleFighterClick = useMemo(() => {
     return fighterClick(
-      isAdmin,
+      isAuthorized, // Pass isAuthorized rather than just isAdmin
       router,
       setRed,
       setBlue,
@@ -58,7 +75,7 @@ export default function PageClient({
       red,
       blue
     );
-  }, [isAdmin, router, red, blue]);
+  }, [isAuthorized, router, red, blue]); // Updated dependency array
 
   const refreshBouts = async () => {
     try {
@@ -189,7 +206,7 @@ export default function PageClient({
 
   // Handle bout selection
   const handleBoutSelect = (bout: Bout) => {
-    if (isAdmin) {
+    if (isAdminOrSanctioningOrPromoter) { // Updated from isAdmin to isAdminOrSanctioningOrPromoter
       setSelectedBout(bout);
       // Clear any fighter selection when selecting a bout
       setSelectedFighter(null);
@@ -210,7 +227,17 @@ export default function PageClient({
     <div className="">
       <Header />
       
-      {isAdmin && (
+      <div className="bg-gray-100 p-2 rounded mb-4 flex justify-center">
+        {isAdminOrSanctioningOrPromoter && (
+          <div className="text-sm text-gray-700">
+            {isSanctioning ? 'Sanctioning Access Enabled' : 
+             isPromoter ? 'Promoter Access Enabled' : 
+             'Admin Access Enabled'}
+          </div>
+        )}
+      </div>
+      
+      {isAdminOrSanctioningOrPromoter && ( // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0', gap:'5px' }}>
           <Button 
             onClick={handleAutoMatch}
@@ -241,7 +268,7 @@ export default function PageClient({
         bouts={bouts} 
         promoterId={promoterId} 
         eventId={eventId} 
-        isAdmin={isAdmin} 
+        isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         eventData={eventData}
         // Pass down the shared state and handlers
         handleFighterClick={handleFighterClick}
@@ -253,7 +280,7 @@ export default function PageClient({
         eventId={eventId} 
         roster={roster} 
         eventData={eventData} 
-        isAdmin={isAdmin} 
+        isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         bouts={bouts}
         // Pass down the shared state and handlers 
         handleFighterClick={handleFighterClick}
@@ -261,7 +288,7 @@ export default function PageClient({
       />
       
       {/* Add the CreateEditBout here at the parent level */}
-      {isAdmin && (selectedFighter || selectedBout) && (
+      {isAdminOrSanctioningOrPromoter && (selectedFighter || selectedBout) && ( // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">
           <h2 className="text-lg font-semibold mb-2">
             {selectedBout ? "Edit Bout" : "Create New Bout"}
@@ -270,7 +297,7 @@ export default function PageClient({
             roster={roster}
             promoterId={promoterId}
             eventId={eventId}
-            isAdmin={isAdmin}
+            isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
             red={selectedBout ? selectedBout.red : red}
             blue={selectedBout ? selectedBout.blue : blue}
             weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
@@ -288,10 +315,10 @@ export default function PageClient({
             existingBoutId={selectedBout?.boutId}
             existingBouts={bouts}
             onClose={handleCloseCreateEditBout}
+            sanctioning={eventData.sanctioning}
           />
         </div>
       )}
     </div>
   );
-
 }

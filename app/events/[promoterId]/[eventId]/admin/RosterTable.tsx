@@ -1,7 +1,6 @@
 // components/RosterTable.tsx
 'use client'
 import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
 import { RefreshCw, Save } from "lucide-react";
@@ -38,9 +37,9 @@ interface RosterTableProps {
   isAdmin?: boolean;
   eventData: EventType;
   bouts: Bout[];
-  // Updated props to use shared handler
   handleFighterClick: (fighter: RosterFighter) => void;
   onBoutsRefresh?: () => void;
+
 }
 
 const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
@@ -53,7 +52,6 @@ export default function RosterTable({
   bouts, 
   handleFighterClick, 
 }: RosterTableProps) {
-  const router = useRouter();
   const [openPotentialMatchesModal, setOpenPotentialMatchesModal] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = useState<{ [key: string]: boolean }>({});
   const [openAddFighterModal, setOpenAddFighterModal] = useState(false);
@@ -170,6 +168,34 @@ export default function RosterTable({
     }
   }, [rosterData]);
 
+
+  const refreshRosterData = async () => {
+    try {
+      let updatedRoster;
+      if (eventData.sanctioning === "PMT") {
+        updatedRoster = await fetchPmtRoster(eventId);
+      } else {
+        updatedRoster = await fetchTechBoutsRoster(promoterId, eventId);
+      }
+      
+      if (updatedRoster) {
+        setRosterData(updatedRoster);
+        toast.success("Roster updated successfully");
+      }
+    } catch (error) {
+      console.error("Error refreshing roster data", error);
+      toast.error("Failed to refresh roster data");
+    }
+  };
+
+  const handleFighterAdded = async () => {
+    setOpenAddFighterModal(false);
+    await refreshRosterData();
+  };
+
+
+
+
   if (!rosterData?.length) {
     return (
       <Card className="w-full mt-2">
@@ -186,15 +212,16 @@ export default function RosterTable({
           </div>
 
           {openAddFighterModal && eventId && (
-            <AddFighterModal
-              eventId={eventId}
-              promoterId={promoterId}
-              savesTo="roster"
-              isOpen={openAddFighterModal}
-              onClose={() => setOpenAddFighterModal(false)}
-              onRosterUpdated={() => router.refresh()}
-            />
-          )}
+  <AddFighterModal
+    eventId={eventId}
+    savesTo="roster"
+    promoterId={promoterId}
+    isOpen={openAddFighterModal}
+    onClose={() => setOpenAddFighterModal(false)}
+    onRosterUpdated={handleFighterAdded}
+    sanctioning={eventData.sanctioning}
+  />
+)}
         </CardHeader>
 
         <CardContent>

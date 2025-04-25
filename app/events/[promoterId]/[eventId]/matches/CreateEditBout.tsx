@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { deleteFighterFromRoster } from '@/utils/apiFunctions/techboutsRoster';
+import { deleteFighterPmtRoster } from '@/utils/apiFunctions/pmtRoster';
 
 interface SaveBoutProps {
   action: 'create' | 'edit';
@@ -36,6 +37,7 @@ interface SaveBoutProps {
   existingBoutId?: string;
   existingBouts: Bout[];
   onClose: () => void;
+  sanctioning: string;
 }
 
 
@@ -59,6 +61,7 @@ export default function CreateBout({
   existingBoutId,
   existingBouts,
   onClose,
+  sanctioning,
 }: SaveBoutProps) {
   const [boutNum, setBoutNum] = useState(1);
   const [ringNum, setRingNum] = useState(1);
@@ -82,7 +85,7 @@ export default function CreateBout({
     const maxExistingBout = existingBouts
       .filter(b => b.ringNum === ringNum && b.dayNum === dayNum)
       .reduce((max, b) => Math.max(max, b.boutNum), 0);
-  
+
     setBoutNum(maxExistingBout + 1);
   }, [action, existingBouts, ringNum, dayNum]);
 
@@ -115,7 +118,7 @@ export default function CreateBout({
       toast.error("Missing required fighters");
       return;
     }
-  
+
     setIsCreatingMatch(true);
     try {
       if (action === 'create') {
@@ -138,14 +141,14 @@ export default function CreateBout({
           bout_type,
           dayNum,
         });
-  
+
         toast.success(`Bout ${boutNum} created successfully.`);
       } else {
         if (!existingBoutId) {
           toast.error("No existing boutId found for editing");
           return;
         }
-  
+
         const updatedBout: Bout = {
           boutId: existingBoutId,
           weightclass,
@@ -166,14 +169,14 @@ export default function CreateBout({
           dayNum,
           class: '',
         };
-  
+
         await editBout({
           bout: updatedBout,
           promoterId,
           eventId,
-          originalBoutNum,   
-             });
-  
+          originalBoutNum,
+        });
+
         toast.success("Bout updated successfully.");
       }
     } catch (error) {
@@ -184,17 +187,17 @@ export default function CreateBout({
       onClose();
     }
   };
-  
-  
+
+
   const handleDeleteBout = async () => {
     if (!existingBoutId) {
       toast.error("No boutId to delete");
       return;
     }
-  
+
     const confirm = window.confirm(`This will delete boutId: ${existingBoutId}. Continue?`);
     if (!confirm) return;
-  
+
     try {
       await deleteBout({
         boutId: existingBoutId,
@@ -225,12 +228,14 @@ export default function CreateBout({
   return (
     <Card className="fixed -top-10 left-0 w-full bg-gray-200 shadow z-50 border-b">
       <CardHeader>
-    
+
       </CardHeader>
       <CardContent>
+<div>Sanctioning: {sanctioning}</div>
+
         {/* TOP BUTTONS */}
         <div className="flex mb-4 space-x-2">
-          
+
           <Button
             onClick={handleSaveBout}
             disabled={!red || !blue || isCreatingMatch}
@@ -252,14 +257,14 @@ export default function CreateBout({
             </Button>
           )}
 
-             <Button variant="outline" onClick={onClose} disabled={isCreatingMatch}>
-      Close
-    </Button>
+          <Button variant="outline" onClick={onClose} disabled={isCreatingMatch}>
+            Close
+          </Button>
         </div>
 
-     
 
-  
+
+
         <Collapsible
           open={openSections.boutSettings}
           onOpenChange={() => toggleSection('boutSettings')}
@@ -367,86 +372,74 @@ export default function CreateBout({
 
         {/* SELECTED FIGHTERS */}
         <div className="">
-  {/* Red Corner */}
-  <div className="border border-black p-2 w-100 rounded-md">
-    <p className="font-medium mb-2">Red Corner</p>
-    {red ? (
-      <div className="flex items-center justify-between w-full">
-        <p className="font-semibold">{`${red.first || ''} ${red.last || ''}`}</p>
-        <p>{red.gym || 'No gym'}</p>
-        <p>{red.weightclass || 'No Weight'}</p>
-        <p>{red.gender || 'No Gender'}</p>
-      
-      </div>
-    ) : (
-      <p className="text-muted-foreground">No fighter selected</p>
-    )}
+          {/* Red Corner */}
+          <div className="border border-black p-2 w-100 rounded-md">
+            <p className="font-medium mb-2">Red Corner</p>
+            {red ? (
+              <div className="flex items-center justify-between w-full">
+                <p className="font-semibold">{`${red.first || ''} ${red.last || ''}`}</p>
+                <p>{red.gym || 'No gym'}</p>
+                <p>{red.weightclass || 'No Weight'}</p>
+                <p>{red.gender || 'No Gender'}</p>
 
-{red && !blue && (
-      <div className="flex items-center justify-end w-full">
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No fighter selected</p>
+            )}
 
-<Button
-variant="outline"
-size="sm"
-className='mr-5'
-onClick={() => navigateToFighterDetail(red)}
->
-Edit
-</Button>
+            {red && !blue && (
+              <div className="flex items-center justify-end w-full">
 
-  <Button
-    variant="destructive"
-    size="sm"
-    onClick={() => {
-      deleteFighterFromRoster(red.fighter_id, promoterId, eventId);
-      setRed(null);
-    }}
-  >
-    Delete
-  </Button>
-</div>
-)}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className='mr-5'
+                  onClick={() => navigateToFighterDetail(red)}
+                >
+                  Edit
+                </Button>
 
-  </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (sanctioning === "PMT") {
+                      deleteFighterPmtRoster(red.fighter_id, eventId);
+                    } else {
+                      deleteFighterFromRoster(red.fighter_id, promoterId, eventId);
+                    }
+                    setRed(null);
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            )}
 
-  {/* Blue Corner */}
-  <div className="border border-black p-2 w-100 rounded-md">
-    
-    {blue ? (
-    
-    <p className="mb-1">Blue Corner</p>
-        ):( <div></div>  )}
-   
-    {blue ? (
-      <div className="flex items-center justify-between w-full">
-        <p className="text-lg font-semibold">{`${blue.first || ''} ${blue.last || ''}`}</p>
-        <p className='ml-1'>{blue.gym || 'No gym'}</p>
-        <p className='ml-1'>{blue.weightclass || 'No Weight'}</p>
-        <p className='ml-1'>{blue.gender || 'Not Gender'}</p>
-     
-      </div>
-    ) : (
-      <p className="text-muted-foreground">Select Another Fighter to Create Match</p>
-    )}
-  </div>
-</div>
+          </div>
 
-        {/* Roster table to pick fighters if needed */}
-        {/* <RosterTable
-          roster={roster}
-          eventId={eventId}
-          promoterId={promoterId}
-          isAdmin={isAdmin}
-          eventData={eventData}
-          onFighterSelect={(fighter) => {
-            if (!red || (red && blue)) {
-              setRed(fighter);
-            } else {
-              setBlue(fighter);
-            }
-          }}
-          isExpanded={true}
-        /> */}
+          {/* Blue Corner */}
+          <div className="border border-black p-2 w-100 rounded-md">
+
+            {blue ? (
+
+              <p className="mb-1">Blue Corner</p>
+            ) : (<div></div>)}
+
+            {blue ? (
+              <div className="flex items-center justify-between w-full">
+                <p className="text-lg font-semibold">{`${blue.first || ''} ${blue.last || ''}`}</p>
+                <p className='ml-1'>{blue.gym || 'No gym'}</p>
+                <p className='ml-1'>{blue.weightclass || 'No Weight'}</p>
+                <p className='ml-1'>{blue.gender || 'Not Gender'}</p>
+
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Select Another Fighter to Create Match</p>
+            )}
+          </div>
+        </div>
+
       </CardContent>
     </Card>
   );

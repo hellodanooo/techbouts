@@ -1,10 +1,12 @@
 // utils/apiFunctions/pmtRoster.ts
 
-import { PmtFighterRecord, RosterFighter } from '../types';
+import { PmtFighterRecord, RosterFighter, FullContactFighter } from '../types';
 import { collection, getDocs } from "firebase/firestore";
 
 import { db as pmtDb } from '@/lib/firebase_pmt/config';
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
+
+import { generateFighterId } from './techboutsDatabase';
 
 
 function transformPmtFighterToRosterFighter(pmt: PmtFighterRecord): RosterFighter {
@@ -110,6 +112,84 @@ export async function savePmtWeighin(fighterId: string, eventId: string, newWeig
     console.log(`Successfully updated weighin for fighter ${fighterId} in event ${eventId}`);
   } catch (error) {
     console.error("Error updating weighin:", error);
+    throw error;
+  }
+}
+
+
+
+/**
+ * Adds a fighter to the PMT roster for a specific event.
+ *
+ * @param fighter - The fighter data to add to the roster
+ * @param eventId - The event's ID
+ * @returns Promise with the fighter's PMT ID
+ */
+
+
+export async function addFighterToPmtRoster(
+  fighter: FullContactFighter, 
+  eventId: string
+): Promise<string> {
+  try {
+    // Generate a PMT ID for the fighter (using UUID)
+    const pmtFighterId = generateFighterId(fighter.first, fighter.last, fighter.dob);
+    
+    // Format the data for PMT database structure
+    const pmtFighterData: PmtFighterRecord = {
+      pmt_id: pmtFighterId,
+      first: fighter.first || '',
+      last: fighter.last || '',
+      age: fighter.age || 0,
+      gym: fighter.gym || '',
+      email: fighter.email || '',
+      weightclass: fighter.weightclass ? parseFloat(String(fighter.weightclass)) : 0,
+      win: fighter.pmt_win || 0,
+      loss: fighter.pmt_loss || 0,
+      nc: fighter.nc || 0,
+      dq: fighter.dq || 0,
+      fights: fighter.pmt_fights || [],
+      lastUpdated: new Date().toISOString(),
+    };
+    
+    // Create a reference to the fighter document in the roster subcollection
+    const fighterDocRef = doc(pmtDb, "events", eventId, "roster", pmtFighterId);
+    
+    // Add the fighter to the roster
+    await setDoc(fighterDocRef, pmtFighterData);
+    
+    console.log(`Successfully added fighter ${fighter.first} ${fighter.last} to PMT roster with ID: ${pmtFighterId}`);
+    
+    return pmtFighterId;
+  } catch (error) {
+    console.error("Error adding fighter to PMT roster:", error);
+    throw error;
+  }
+}
+
+
+
+/**
+ * Deletes a fighter from the PMT roster for a specific event.
+ *
+ * @param fighterId - The fighter's ID (from PMT)
+ * @param eventId - The event's ID
+ * @returns Promise that resolves when deletion is complete
+ */
+export async function deleteFighterPmtRoster(
+  fighterId: string, 
+  eventId: string
+): Promise<void> {
+  try {
+    // Build a reference to the fighter document in the roster subcollection.
+    const fighterDocRef = doc(pmtDb, "events", eventId, "roster", fighterId);
+    
+    // Delete the fighter document
+    await deleteDoc(fighterDocRef);
+    
+    console.log(`Successfully deleted fighter ${fighterId} from PMT roster in event ${eventId}`);
+  } catch (error) {
+    console.error("Error deleting fighter from PMT roster:", error);
     throw error;
   }
 }

@@ -68,19 +68,20 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             setSanctioningEmail('borntowincsc@gmail.com');
         } else {
             setSanctioningEmail('');
-
         }
-    }, [eventData.sanctioning]);  // ✅ Runs only when eventData.sanctioning changes
+
+    }, [eventData.sanctioning]);  
 
     const isSanctioning = user?.email === sanctioningEmail;
 
     // Check if user is authorized
     const isAuthorized = isAdmin || isPromoter || isSanctioning;
 
+    const isAdminOrSanctioningOrPromoter = isAdmin || isSanctioning || isPromoter;
 
     const handleFighterClick = useMemo(() => {
         return fighterClick(
-        isAuthorized,
+          isAuthorized,
           router,
           setRed,
           setBlue,
@@ -88,7 +89,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
           red,
           blue
         );
-      }, [isAdmin, router, red, blue]);
+      }, [isAuthorized, router, red, blue]); // Changed from isAdmin to isAuthorized
 
 
       const refreshBouts = async () => {
@@ -198,8 +199,12 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                     <h2 className="text-xl font-semibold">Roster</h2>  <div className='flex justify-center items-center border border-gray-300 rounded-[5px] p-1'>
                         {roster.length} <FaPerson className='ml-2' />
                         </div>
-                    {isAdmin && (
-                        <div>Admin Roster Enabled</div>)}
+                        {isAdminOrSanctioningOrPromoter && (
+                        <div>
+                            {isSanctioning ? 'Sanctioning Access Enabled' : isPromoter ? 'Promoter Access Enabled' : 'Admin Access Enabled'}
+                        </div>
+                        )}
+                       
                        
                     {openSections.roster ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                 </CollapsibleTrigger>
@@ -211,7 +216,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
     roster={roster}
     eventId={eventId}
     promoterId={promoterId}
-    isAdmin={isAdmin}
+    isAdmin={isAdminOrSanctioningOrPromoter}
     eventData={eventData}
     bouts={bouts || []} 
     handleFighterClick={handleFighterClick}
@@ -316,7 +321,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             </Collapsible>
 
 
-            {isAdmin && (selectedFighter || selectedBout) && (
+            {isAdminOrSanctioningOrPromoter && (selectedFighter || selectedBout) && (
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">
           <h2 className="text-lg font-semibold mb-2">
             {selectedBout ? "Edit Bout" : "Create New Bout"}
@@ -325,7 +330,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             roster={roster}
             promoterId={promoterId}
             eventId={eventId}
-            isAdmin={isAdmin}
+            isAdmin={isAdminOrSanctioningOrPromoter}
             red={selectedBout ? selectedBout.red : red}
             blue={selectedBout ? selectedBout.blue : blue}
             weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
@@ -343,6 +348,7 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             existingBoutId={selectedBout?.boutId}
             existingBouts={bouts}
             onClose={handleCloseCreateEditBout}
+            sanctioning={eventData.sanctioning}
           />
         </div>
       )}

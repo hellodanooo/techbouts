@@ -61,6 +61,8 @@ body {
 }
 .custom-font-megapunch {
   font-family: 'Megapunch';
+  font-size: 1.5rem; /* Adjust the size as needed */
+  letter-spacing: 0.1em; /* Adjust spacing as needed */
 }
 
 
@@ -301,7 +303,6 @@ body {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-  width: 50%;
 }
 
 .button-80:not(:disabled):hover {
@@ -380,11 +381,12 @@ body {
     rgba(54, 69, 75, 1) -1px -1px 6px 0px;
   border: solid 2px #030f14;
   cursor: pointer;
-  font-size: 18px;
-  padding: 0.7em 1.7em;
+  font-size: clamp(1rem, 2vw, 1.5rem); 
+  padding: 2px 8px;
   outline: none;
   transition: all 0.3s;
   user-select: none;
+  line-height: 1.2; 
 }
 
 .button-2:hover {

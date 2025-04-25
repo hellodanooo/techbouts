@@ -7,7 +7,6 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import SanctionPopup from './popups/One'
 import { Promoter } from '../utils/types';
 import LogoUpload from './LogoUpload';
-import { useAuth } from '@/context/AuthContext';
 
 interface AddEditPromoterProps {
   onClose: () => void;
@@ -15,6 +14,10 @@ interface AddEditPromoterProps {
   add?: boolean;
   edit?: boolean;
   promoterData?: Promoter;
+  user?: {
+    email: string;
+    // other user properties if needed
+  };
 }
 
 const initialFormData: Promoter = {
@@ -48,9 +51,9 @@ const AddEditPromoter: React.FC<AddEditPromoterProps> = ({
   onClose, 
   isAdmin = false, 
   edit = false,
-  promoterData
+  promoterData,
+  user
 }) => {
-  const { user } = useAuth();
 
   const [formData, setFormData] = useState<Promoter>(
     // Initialize with promoterData if available, otherwise use initialFormData
@@ -83,10 +86,29 @@ const AddEditPromoter: React.FC<AddEditPromoterProps> = ({
   );
 
   useEffect(() => {
-    if (isAdmin || (user?.email && promoterData?.email && user.email === promoterData.email)) {
-      setAuthenticated(true);
+    // When editing: user must be admin OR the owner of the promotion
+    if (edit) {
+      if (isAdmin || (user?.email && promoterData?.email && user.email === promoterData.email)) {
+        setAuthenticated(true);
+      }
+    } 
+    // When creating new: any logged-in user with an email can create a promotion
+    else {
+      if (isAdmin || user?.email) {
+        setAuthenticated(true);
+      }
     }
-  }, [isAdmin, user, promoterData]);
+  }, [isAdmin, user, promoterData, edit]);
+
+  useEffect(() => {
+    // If adding a new promoter and user email is available, pre-fill the email field
+    if (!edit && user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email
+      }));
+    }
+  }, [edit, user]);
 
   const handleLogoUploadSuccess = (downloadUrl: string) => {
     setLogoUrl(downloadUrl);
