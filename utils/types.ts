@@ -110,6 +110,7 @@ export interface PmtFighterRecord {
     ringawareness?: number;
   }>;
 }
+
 export interface Bout {
   boutId: string;
   weightclass: number;
