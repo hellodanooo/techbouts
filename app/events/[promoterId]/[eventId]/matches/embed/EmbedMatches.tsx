@@ -14,9 +14,6 @@ type Props = {
     isAdmin: boolean;
   };
   
-
-
-
 export default function EmbedMatchesPage({ eventId, promoterId, bouts, eventData, isAdmin=false }: Props) {
 
 

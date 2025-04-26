@@ -269,11 +269,13 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
                             {showEmbed && (
                                 <div className="mt-4">
+
                                     <EmbedMatchesGenerator
                                         eventId={eventId}
                                         eventName={eventData.name || eventData.event_name || 'Event'}
                                         promoterId={promoterId}
                                     />
+                                    
                                 </div>
                             )}
                         </div>

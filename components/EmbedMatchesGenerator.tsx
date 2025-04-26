@@ -45,7 +45,7 @@ export default function EmbedMatchesGenerator({ eventId, eventName, promoterId }
     
     return `<iframe 
 src="${baseUrl}/events/${promoterId}/${eventId}/matches/embed${queryString}"
-  width="${width}" 
+ width="100%"
   height="${height}" 
   frameborder="0" 
   scrolling="auto"
