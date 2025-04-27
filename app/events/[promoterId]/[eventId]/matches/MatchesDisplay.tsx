@@ -43,6 +43,16 @@ export default function MatchesDisplay({
     return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
   };
 
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + '...';
+    }
+    return text;
+  };
+  
+
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -132,12 +142,13 @@ export default function MatchesDisplay({
                               className="font-medium"
                               style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
                             >
-                              {`${redFighter.first} ${redFighter.last}`}
+                              {truncateText(redFighter.first, 8)} {truncateText(redFighter.last, 8)}
                             </div>
                             <div className="text-sm text-gray-500"
                               style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
-
-                            >{redFighter.gym}</div>
+                            >
+{truncateText(blueFighter.gym, 15)}
+                              </div>
                           </div>
 
                         </div>
@@ -209,8 +220,6 @@ export default function MatchesDisplay({
 
                         </div>
 
-
-
                         <div
                           className="cursor-pointer flex-shrink-0 text-right"
                           onClick={() => handleFighterClick(blueFighter)}
@@ -227,13 +236,13 @@ export default function MatchesDisplay({
                               className="font-medium"
                               style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
                             >
-                              {`${blueFighter.first} ${blueFighter.last}`}
-                            </div>
+                              {truncateText(blueFighter.first, 8)} {truncateText(blueFighter.last, 8)}
+                              </div>
                             <div
                               className="text-sm text-gray-500"
                               style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
                             >
-                              {blueFighter.gym}
+                             {truncateText(blueFighter.gym, 15)}
                             </div>
                           </div>
 

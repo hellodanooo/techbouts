@@ -64,7 +64,6 @@ export default function CreateBout({
   existingBouts,
   onClose,
   sanctioning,
-  existingBoutId: string,
 }: SaveBoutProps) {
   const [boutNum, setBoutNum] = useState(1);
   const [ringNum, setRingNum] = useState(1);
@@ -239,48 +238,7 @@ export default function CreateBout({
       <CardContent>
 <div>Sanctioning: {sanctioning} boutId: {existingBoutId}</div>
 
-        {/* TOP BUTTONS */}
-        <div className="flex mb-4 space-x-2">
-
-          <Button
-            onClick={handleSaveBout}
-            disabled={!red || !blue || isCreatingMatch}
-          >
-            {isCreatingMatch ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                {isEdit ? "Updating..." : "Creating..."}
-              </>
-            ) : (
-              isEdit ? "Update Bout" : "Create Bout"
-            )}
-          </Button>
-
-
-
-          {isEdit && existingBoutId && (
-  <Button 
-    variant="secondary" 
-    onClick={() => setShowUpdateResults(true)}
-    disabled={isCreatingMatch}
-  >
-    Submit Results
-  </Button>
-)}
-
-
-          {/* If in edit mode, show delete */}
-          {isEdit && (
-
-            <Button variant="destructive" onClick={handleDeleteBout} disabled={isCreatingMatch}>
-              Delete Bout
-            </Button>
-          )}
-
-          <Button variant="outline" onClick={onClose} disabled={isCreatingMatch}>
-            Close
-          </Button>
-        </div>
+ 
 
 
         {showUpdateResults && currentBout && (
@@ -476,6 +434,49 @@ export default function CreateBout({
             )}
           </div>
         </div>
+
+      {/* TOP BUTTONS */}
+      <div className="flex mt-4 space-x-2 justify-center">
+
+    <Button
+      onClick={handleSaveBout}
+      disabled={!red || !blue || isCreatingMatch}
+    >
+      {isCreatingMatch ? (
+        <>
+          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          {isEdit ? "Updating..." : "Creating..."}
+        </>
+      ) : (
+        isEdit ? "Update Bout" : "Create Bout"
+      )}
+    </Button>
+
+
+
+    {isEdit && existingBoutId && (
+    <Button 
+    variant="secondary" 
+    onClick={() => setShowUpdateResults(true)}
+    disabled={isCreatingMatch}
+    >
+    Submit Results
+    </Button>
+    )}
+
+
+    {/* If in edit mode, show delete */}
+    {isEdit && (
+
+      <Button variant="destructive" onClick={handleDeleteBout} disabled={isCreatingMatch}>
+        Delete Bout
+      </Button>
+    )}
+
+    <Button variant="outline" onClick={onClose} disabled={isCreatingMatch}>
+      Close
+    </Button>
+    </div>
 
       </CardContent>
     </Card>
