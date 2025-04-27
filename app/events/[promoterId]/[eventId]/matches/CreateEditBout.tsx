@@ -362,22 +362,9 @@ export default function CreateBout({
                 </Button>
               </div>
             </div>
-            <div className="flex justify-center mt-4">
-              <Button
-              onClick={handleSaveBout}
-              disabled={!red || !blue || isCreatingMatch}
-              style={{ backgroundColor: 'green', color: 'white' }}
-              >
-              {isCreatingMatch ? (
-                <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                {isEdit ? "Updating..." : "Creating..."}
-                </>
-              ) : (
-                isEdit ? "Update Bout" : "Create Bout"
-              )}
-              </Button>
-            </div>
+
+           
+
           </CollapsibleContent>
         </Collapsible>
 
@@ -478,7 +465,20 @@ export default function CreateBout({
 
       </Button>
     )}
-
+              <Button
+              onClick={handleSaveBout}
+              disabled={!red || !blue || isCreatingMatch}
+              style={{ backgroundColor: 'green', color: 'white' }}
+              >
+              {isCreatingMatch ? (
+                <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {isEdit ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                isEdit ? "Update Bout" : "Create Bout"
+              )}
+              </Button>
     <Button variant="outline" onClick={onClose} disabled={isCreatingMatch}>
       Close
     </Button>
