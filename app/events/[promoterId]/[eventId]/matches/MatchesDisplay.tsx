@@ -68,32 +68,37 @@ export default function MatchesDisplay({
 
                 return (
                   <TableRow key={index}>
-                    <TableCell className="text-center">
-                      <div className="flex items-center gap-2 relative">
+                      <TableCell>
 
-                        <div className="absolute right-0 top-0 text-xs flex flex-col"
+                      <div className="flex items-center justify-start relative"
+                      >
+
+                        {/* STATS TABLE */}
+                        <div className="absolute top-0 right-0 text-xs flex flex-col"
                           style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
-
                         >
-
-                          <div className="flex items-center justify-center text-center -mb-9"
+                          <div className="flex items-center justify-center text-center"
+                            style={{ marginBottom: '-9px' }}
                           >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
                             >MT:</div>
-                            <div className="text-center">{redFighter.mt_win}-{redFighter.mt_loss}</div>
+                            <div className="text-center">{blueFighter.mt_win}-{blueFighter.mt_loss}</div>
                           </div>
 
-                          {/* MMA Record */}
-                          <div className="flex items-center justify-center text-center -mb-9">
+                          <div className="flex items-center justify-center text-center"
+                            style={{ marginBottom: '-9px' }}
+                          >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
                             >MMA:</div>
-                            <div className="text-center">{redFighter.mma_win}-{redFighter.mma_loss}</div>
+                            <div className="text-center">{blueFighter.mma_win}-{blueFighter.mma_loss}</div>
                           </div>
 
-                          <div className="flex items-center justify-center text-center -mb-9">
+                          <div className="flex items-center justify-center text-center"
+                            style={{ marginBottom: '-9px' }}
+                          >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
                             >PMT:</div>
-                            <div className="text-center">{redFighter.pmt_win}-{redFighter.pmt_loss}</div>
+                            <div className="text-center">{blueFighter.pmt_win}-{blueFighter.pmt_loss}</div>
                           </div>
 
                           <div className="flex items-center justify-center text-center">
@@ -105,6 +110,11 @@ export default function MatchesDisplay({
                         </div>
 
 
+{/* STATS CONTAINER */}
+                   
+
+
+{/* FIGHTER PHOTO AND INFO */}
                         <div
                           className="cursor-pointer flex-shrink-0"
                           onClick={() => handleFighterClick(redFighter)}
@@ -158,39 +168,35 @@ export default function MatchesDisplay({
                       <div>{bout.bout_type}</div>
                     </TableCell>
 
-                    {/* Blue Corner - Fighter Image & Info combined */}
+          
                     <TableCell>
-                      <div className="flex items-center justify-end gap-4 relative"
-
+                      <div className="flex items-center justify-end relative"
                       >
 
                         {/* STATS TABLE */}
                         <div className="absolute top-0 left-0 text-xs flex flex-col"
                           style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
-
                         >
-                          {/* MT Record */}
-                          <div className="flex items-center justify-center text-center -mb-9"
+                          <div className="flex items-center justify-center text-center"
+                            style={{ marginBottom: '-9px' }}
                           >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
                             >MT:</div>
                             <div className="text-center">{blueFighter.mt_win}-{blueFighter.mt_loss}</div>
                           </div>
 
-                          {/* MMA Record */}
-                          <div className="flex items-center justify-center text-center -mb-9"
+                          <div className="flex items-center justify-center text-center"
+                            style={{ marginBottom: '-9px' }}
                           >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
                             >MMA:</div>
                             <div className="text-center">{blueFighter.mma_win}-{blueFighter.mma_loss}</div>
                           </div>
 
-
-                          {/* PMT Record */}
-                          <div className="flex items-center justify-center text-center -mb-9"
+                          <div className="flex items-center justify-center text-center"
+                            style={{ marginBottom: '-9px' }}
                           >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
-                              style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
                             >PMT:</div>
                             <div className="text-center">{blueFighter.pmt_win}-{blueFighter.pmt_loss}</div>
                           </div>
