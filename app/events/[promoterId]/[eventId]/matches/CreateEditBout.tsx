@@ -15,6 +15,7 @@ import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { deleteFighterFromRoster } from '@/utils/apiFunctions/techboutsRoster';
 import { deleteFighterPmtRoster } from '@/utils/apiFunctions/pmtRoster';
 import UpdateBoutResults from './UpdateBoutResults';
+import { FaTrashAlt } from "react-icons/fa";
 
 
 interface SaveBoutProps {
@@ -361,6 +362,22 @@ export default function CreateBout({
                 </Button>
               </div>
             </div>
+            <div className="flex justify-center mt-4">
+              <Button
+              onClick={handleSaveBout}
+              disabled={!red || !blue || isCreatingMatch}
+              style={{ backgroundColor: 'green', color: 'white' }}
+              >
+              {isCreatingMatch ? (
+                <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {isEdit ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                isEdit ? "Update Bout" : "Create Bout"
+              )}
+              </Button>
+            </div>
           </CollapsibleContent>
         </Collapsible>
 
@@ -438,19 +455,7 @@ export default function CreateBout({
       {/* TOP BUTTONS */}
       <div className="flex mt-4 space-x-2 justify-center">
 
-    <Button
-      onClick={handleSaveBout}
-      disabled={!red || !blue || isCreatingMatch}
-    >
-      {isCreatingMatch ? (
-        <>
-          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-          {isEdit ? "Updating..." : "Creating..."}
-        </>
-      ) : (
-        isEdit ? "Update Bout" : "Create Bout"
-      )}
-    </Button>
+  
 
 
 
@@ -460,7 +465,7 @@ export default function CreateBout({
     onClick={() => setShowUpdateResults(true)}
     disabled={isCreatingMatch}
     >
-    Submit Results
+    Result
     </Button>
     )}
 
@@ -469,7 +474,8 @@ export default function CreateBout({
     {isEdit && (
 
       <Button variant="destructive" onClick={handleDeleteBout} disabled={isCreatingMatch}>
-        Delete Bout
+     <FaTrashAlt />
+
       </Button>
     )}
 
