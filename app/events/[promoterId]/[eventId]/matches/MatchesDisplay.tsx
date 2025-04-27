@@ -71,31 +71,35 @@ export default function MatchesDisplay({
                     <TableCell className="text-center">
                       <div className="flex items-center gap-2 relative">
 
-                        <div className="absolute right-5 top-0 text-xs flex flex-col gap-1">
+                        <div className="absolute right-0 top-0 text-xs flex flex-col"
+                                                  style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
 
-                          {/* MT Record */}
-                          <div className="flex items-center justify-center text-center"
+                        >
 
+                          <div className="flex items-center justify-center text-center mb-[-9]"
                           >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
-                              style={{ fontSize: 'clamp(0.7rem, 1vw, 1.5rem)' }}
                               >MT:</div>
                             <div className="text-center">{redFighter.mt_win}-{redFighter.mt_loss}</div>
                           </div>
 
                           {/* MMA Record */}
-                          <div className="flex items-center justify-center text-center">
+                          <div className="flex items-center justify-center text-center mb-[-9]">
                             <div className="custom-font-megapunch opacity-30 w-12 text-center" 
-                              style={{ fontSize: 'clamp(0.7rem, 1vw, 1.5rem)' }}
                               >MMA:</div>
                             <div className="text-center">{redFighter.mma_win}-{redFighter.mma_loss}</div>
                           </div>
 
-                          <div className="flex items-center justify-center text-center">
+                          <div className="flex items-center justify-center text-center mb-[-9]">
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
-                              style={{ fontSize: 'clamp(0.7rem, 1vw, 1.5rem)' }}
                               >PMT:</div>
                             <div className="text-center">{redFighter.pmt_win}-{redFighter.pmt_loss}</div>
+                          </div>
+
+                          <div className="flex items-center justify-center text-center">
+                            <div className="custom-font-megapunch opacity-30 w-12 text-center"
+                              >PBSC:</div>
+                            <div className="text-center">{redFighter.pb_win}-{redFighter.pb_loss}</div>
                           </div>
 
                         </div>
@@ -156,36 +160,46 @@ export default function MatchesDisplay({
 
                     {/* Blue Corner - Fighter Image & Info combined */}
                     <TableCell>
-                      <div className="flex items-center justify-end gap-4 relative">
-                        {/* MT Record in Top Left */}
-                        <div className="absolute top-0 left-2 text-xs flex flex-col gap-1">
+                      <div className="flex items-center justify-end gap-4 relative"
+                      
+                      >
+                     
+                     {/* STATS TABLE */}
+                        <div className="absolute top-0 left-0 text-xs flex flex-col"
+                          style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
+
+                        >
                           {/* MT Record */}
-                          <div className="flex items-center justify-center text-center">
-                            <div className="custom-font-megapunch opacity-30 w-12 text-center" 
-                              style={{ fontSize: 'clamp(0.7rem, 1vw, 1.5rem)' }}
-                              >MT:</div>
+                          <div className="flex items-center justify-center text-center mb-[-9]"
+                          >
+                            <div className="custom-font-megapunch opacity-30 w-12 text-center"
+                            >MT:</div>
                             <div className="text-center">{blueFighter.mt_win}-{blueFighter.mt_loss}</div>
                           </div>
 
                           {/* MMA Record */}
-                          <div className="flex items-center justify-center text-center">
+                          <div className="flex items-center justify-center text-center mb-[-9]"
+                          >
                             <div className="custom-font-megapunch opacity-30 w-12 text-center"
-                              style={{ fontSize: 'clamp(0.7rem, 1vw, 1.5rem)' }}
-                              >MMA:</div>
+                            >MMA:</div>
                             <div className="text-center">{blueFighter.mma_win}-{blueFighter.mma_loss}</div>
                           </div>
-                          
+
 
                           {/* PMT Record */}
-                          <div className="flex items-center justify-center text-center">
-                            <div className="custom-font-megapunch opacity-30 w-12 text-center" 
-                              style={{ fontSize: 'clamp(0.7rem, 1vw, 1.5rem)' }}
-                              >PMT:</div>
+                          <div className="flex items-center justify-center text-center mb-[-9]"
+                          >
+                            <div className="custom-font-megapunch opacity-30 w-12 text-center"
+                              style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
+                            >PMT:</div>
                             <div className="text-center">{blueFighter.pmt_win}-{blueFighter.pmt_loss}</div>
                           </div>
 
-
-
+                          <div className="flex items-center justify-center text-center">
+                            <div className="custom-font-megapunch opacity-30 w-12 text-center"
+                            >PBSC:</div>
+                            <div className="text-center">{redFighter.pb_win}-{redFighter.pb_loss}</div>
+                          </div>
 
                         </div>
 
