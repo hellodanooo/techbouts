@@ -2,12 +2,13 @@
 
 // this component should create the fighter and pass to the root screen to submit to roster
 'use client';
-import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
+import React, { useState, useEffect, useCallback } from 'react';import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase_techbouts/config';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -254,20 +255,25 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   };
 
   const handleDateChange = (date: dayjs.Dayjs | null) => {
-    if (date) {
+    if (date && date.isValid()) {
       const formattedDate = date.format('MM/DD/YYYY');
-      setFormData({
+      const calculatedAge = calculateAge(formattedDate);
+      
+      const updatedFormData = {
         ...formData,
         dob: formattedDate,
-        age: calculateAge(formattedDate),
-        fighter_id: formData.first && formData.last && formData.dob ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighter_id,
-      });
+        age: calculatedAge,
+        fighter_id: formData.first && formData.last ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighter_id,
+      };
+      
+      setFormData(updatedFormData);
+      onFormDataChange(updatedFormData);
       setSelectedDate(date);
       setDobError(null);
-    } else {
-      setDobError("Invalid date");
     }
   };
+
+
 
   const [formData, setFormData] = useState<FullContactFighter>({
     // Basic Information
@@ -610,13 +616,13 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
   //////////////////////////////////////////////////////////////////
 
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const upperCaseValue = value.toUpperCase();
-
+  
     // Instead of using setFormData with a callback, create the new data first
     const newFormData = { ...formData };
-
+  
     switch (name) {
       case "weightclass":
         newFormData.weightclass = parseInt(value, 10) || 0;
@@ -635,7 +641,6 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           setDobError("Date must be in MM/DD/YYYY format");
         }
         break;
-
       case "email":
         newFormData.email = value;
         if (value.toLowerCase().includes('@example.com')) {
@@ -644,12 +649,10 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
           setEmailError(null);
         }
         break;
-
       default:
         if (name in newFormData) {
           (newFormData[name as keyof FullContactFighter] as string) = upperCaseValue;
         }
-
         if (name === 'first' || name === 'last') {
           if (newFormData.first && newFormData.last && newFormData.dob) {
             newFormData.fighter_id = generateFighterId(newFormData.first, newFormData.last, newFormData.dob);
@@ -657,12 +660,12 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
         }
         break;
     }
-
+  
     // Set the state once with the new data
     setFormData(newFormData);
     // Call onFormDataChange directly with the new data
     onFormDataChange(newFormData);
-  };
+  }, [formData, onFormDataChange]);
 
 
   const maxYear = dayjs().subtract(5, 'year');
@@ -1002,28 +1005,41 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
 
                 {/* Date of Birth and Gender */}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Date of Birth</Label>
-                    <DatePicker
-                      value={selectedDate}
-                      onChange={handleDateChange}
-                      minDate={minYear}
-                      maxDate={maxYear}
-                      slotProps={{
-                        textField: {
-                          sx: {
-                            width: '100%',
-                            '& .MuiInputBase-root': {
-                              borderRadius: '0.375rem',
-                            },
-                          },
-                        },
-                      }}
-                    />
-                    {dobError && (
-                      <p className="text-sm text-destructive">{dobError}</p>
-                    )}
-                  </div>
+                 
+                <div className="space-y-2">
+  <Label htmlFor="dob">Date of Birth</Label>
+  <Input
+    id="dob"
+    name="dob"
+    type="date"
+    value={formData.dob ? dayjs(formData.dob, 'MM/DD/YYYY').format('YYYY-MM-DD') : ''}
+    onChange={(e) => {
+      const date = dayjs(e.target.value);
+      if (date.isValid()) {
+        const formattedDate = date.format('MM/DD/YYYY');
+        const calculatedAge = calculateAge(formattedDate);
+        
+        const updatedFormData = {
+          ...formData,
+          dob: formattedDate,
+          age: calculatedAge,
+          fighter_id: formData.first && formData.last ? generateFighterId(formData.first, formData.last, formattedDate) : formData.fighter_id,
+        };
+        
+        setFormData(updatedFormData);
+        setSelectedDate(date);
+        setDobError(null);
+        onFormDataChange(updatedFormData);
+      }
+    }}
+    max={maxYear.format('YYYY-MM-DD')}
+    min={minYear.format('YYYY-MM-DD')}
+    className="w-full"
+  />
+  {dobError && (
+    <p className="text-sm text-destructive">{dobError}</p>
+  )}
+</div>
 
 
                   <div className="space-y-2">
