@@ -5,6 +5,83 @@ import { RosterFighter, Bout } from '../types';
 
 
 
+
+export const updateBoutResults = async ({
+  boutId,
+  redResult,
+  blueResult,
+  methodOfVictory,
+  promoterId,
+  eventId,
+}: {
+  boutId: string;
+  redResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
+  blueResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
+  methodOfVictory: string;
+  promoterId: string;
+  eventId: string;
+}) => {
+  try {
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts found to update.");
+      return false;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+
+    // Find the bout to update
+    const boutIndex = existingBouts.findIndex((b) => b.boutId === boutId);
+    if (boutIndex === -1) {
+      toast.error(`Bout ID ${boutId} not found`);
+      return false;
+    }
+
+    // Update the bout with results
+    const updatedBout = {
+      ...existingBouts[boutIndex],
+      red: {
+        ...existingBouts[boutIndex].red,
+        result: redResult
+      },
+      blue: {
+        ...existingBouts[boutIndex].blue,
+        result: blueResult
+      },
+      methodOfVictory: methodOfVictory
+    };
+
+    // Replace the bout in the array
+    existingBouts[boutIndex] = updatedBout;
+
+    // Save back to Firebase
+    await setDoc(boutsRef, { bouts: existingBouts });
+    
+    toast.success("Bout results updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error updating bout results:", error);
+    toast.error("Failed to update bout results");
+    return false;
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
 export const createMatchesFromWeighins = async ({
   roster,
   eventId,
@@ -388,13 +465,27 @@ export const createMatch = async ({
       return;
     }
 
+
+    const redWithResetResult: RosterFighter = {
+      ...red,
+      result: '-',  // Reset result to empty '-'
+    };
+
+    const blueWithResetResult: RosterFighter = {
+      ...blue,
+      result: '-',  // Reset result to empty '-'
+    };
+
+
+
+
     const bout: Bout = {
       
       weightclass: weightclass,
       ringNum: ringNum,
       boutNum: boutNum,
-      red,
-      blue,
+      red: redWithResetResult,
+      blue: blueWithResetResult,
       methodOfVictory: '',
       confirmed: false,
       eventId,
@@ -408,6 +499,7 @@ export const createMatch = async ({
       dayNum,
       class: '',
       boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
+      
     };
 
 

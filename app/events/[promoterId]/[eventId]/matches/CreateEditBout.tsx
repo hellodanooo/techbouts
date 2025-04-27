@@ -14,6 +14,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { deleteFighterFromRoster } from '@/utils/apiFunctions/techboutsRoster';
 import { deleteFighterPmtRoster } from '@/utils/apiFunctions/pmtRoster';
+import UpdateBoutResults from './UpdateBoutResults';
+
 
 interface SaveBoutProps {
   action: 'create' | 'edit';
@@ -62,11 +64,13 @@ export default function CreateBout({
   existingBouts,
   onClose,
   sanctioning,
+  existingBoutId: string,
 }: SaveBoutProps) {
   const [boutNum, setBoutNum] = useState(1);
   const [ringNum, setRingNum] = useState(1);
   const [dayNum, setDayNum] = useState(1);
   const [originalBoutNum, setOriginalBoutNum] = useState<number | undefined>(undefined);
+  const [showUpdateResults, setShowUpdateResults] = useState(false);
 
 
   const [openSections, setOpenSections] = useState({
@@ -224,6 +228,8 @@ export default function CreateBout({
     }
   };
 
+  const currentBout = existingBoutId ? existingBouts.find(b => b.boutId === existingBoutId) : null;
+
 
   return (
     <Card className="fixed -top-10 left-0 w-full bg-gray-200 shadow z-50 border-b">
@@ -231,7 +237,7 @@ export default function CreateBout({
 
       </CardHeader>
       <CardContent>
-<div>Sanctioning: {sanctioning}</div>
+<div>Sanctioning: {sanctioning} boutId: {existingBoutId}</div>
 
         {/* TOP BUTTONS */}
         <div className="flex mb-4 space-x-2">
@@ -250,8 +256,22 @@ export default function CreateBout({
             )}
           </Button>
 
+
+
+          {isEdit && existingBoutId && (
+  <Button 
+    variant="secondary" 
+    onClick={() => setShowUpdateResults(true)}
+    disabled={isCreatingMatch}
+  >
+    Submit Results
+  </Button>
+)}
+
+
           {/* If in edit mode, show delete */}
           {isEdit && (
+
             <Button variant="destructive" onClick={handleDeleteBout} disabled={isCreatingMatch}>
               Delete Bout
             </Button>
@@ -263,6 +283,22 @@ export default function CreateBout({
         </div>
 
 
+        {showUpdateResults && currentBout && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="w-full max-w-md">
+              <UpdateBoutResults
+                bout={currentBout}
+                promoterId={promoterId}
+                eventId={eventId}
+                onClose={() => setShowUpdateResults(false)}
+                onSuccess={() => {
+                  setShowUpdateResults(false);
+                  // Optionally refresh the bout data here
+                }}
+              />
+            </div>
+          </div>
+        )}
 
 
         <Collapsible
@@ -377,6 +413,7 @@ export default function CreateBout({
             <p className="font-medium mb-2">Red Corner</p>
             {red ? (
               <div className="flex items-center justify-between w-full">
+                
                 <p className="font-semibold">{`${red.first || ''} ${red.last || ''}`}</p>
                 <p>{red.gym || 'No gym'}</p>
                 <p>{red.weightclass || 'No Weight'}</p>
