@@ -16,7 +16,7 @@ interface MatchesDisplayProps {
   isAdmin?: boolean;
   eventData: EventType;
   handleFighterClick: (fighter: RosterFighter) => void;
-  onBoutSelect: (bout: Bout) => void;
+  onBoutSelect?: (bout: Bout) => void;
 }
 
 export default function MatchesDisplay({
@@ -162,14 +162,20 @@ export default function MatchesDisplay({
         </TableCell>
 
         <TableCell className="text-center">
-          {isAdmin && (
-            <div
-              className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
-              onClick={() => onBoutSelect(bout)}
-            >
-              <FaEdit style={{ fontSize: '1.2rem' }} />
-            </div>
-          )}
+        {isAdmin && (
+  <div
+    className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
+    onClick={() => {
+      if (onBoutSelect) {
+        onBoutSelect(bout);
+      } else {
+        console.log('Bout selected:', bout.boutId || 'bout has no ID');
+      }
+    }}
+  >
+    <FaEdit style={{ fontSize: '1.2rem' }} />
+  </div>
+)}
           <div
             className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-400 mx-auto"
             style={{ fontSize: '0.9rem' }}

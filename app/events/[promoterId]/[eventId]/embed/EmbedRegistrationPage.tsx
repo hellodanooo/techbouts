@@ -2,26 +2,40 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import Register from '@/components/events/Register';
-import { EventType } from '@/utils/types';
+import { EventType, Bout, RosterFighter } from '@/utils/types';
+import MatchesDisplay from '../matches/MatchesDisplay';
+import { CardContent } from '@/components/ui/card';
 
 type Props = {
   eventId: string;
+  promoterId: string;
   eventData: EventType | null;
+  bouts?: Bout[]; // Adjust type as needed
 };
 
 export default function EmbedRegistrationPage({
   eventId,
-  eventData
+  promoterId,
+  eventData,
+  bouts,
 }: Props) {
+  
   const [isLoaded, setIsLoaded] = useState(false);
   const [locale, setLocale] = useState('en');
+
+  const router = useRouter();
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   useEffect(() => {
     // Mark component as loaded
     setIsLoaded(true);
+
+    setIsRegisterOpen(!eventData?.disableRegistration);
+
 
     // Set locale based on event country
     if (
@@ -63,6 +77,9 @@ export default function EmbedRegistrationPage({
       }, '*');
     }
 
+
+
+
     return () => {
       clearInterval(heightInterval);
     };
@@ -84,6 +101,17 @@ export default function EmbedRegistrationPage({
     }
   }, [locale, stripeMEX, stripeUSD, stripePBSC, eventData?.sanctioning]);
 
+
+
+ 
+  // Handle fighter click
+  const handleFighterClick = (fighter: RosterFighter) => {
+    if (fighter && fighter.fighter_id) {
+      router.push(`/fighters/${fighter.fighter_id}`);
+    }
+  };
+
+
   if (!eventData) {
     return (
       <div className="p-4 text-center">
@@ -104,6 +132,14 @@ export default function EmbedRegistrationPage({
         </h2>
         
         {isLoaded && (
+
+
+
+
+<div>
+
+{isRegisterOpen && (
+    <CardContent>
           <Register
             eventId={eventId}
             promoterId={eventData.promoterId}
@@ -117,7 +153,28 @@ export default function EmbedRegistrationPage({
             payLaterEnabled={eventData.payLaterEnabled ?? false}
             redirectUrl={eventData.redirect_url ?? ''}
           />
-        )}
+          </CardContent>
+)}
+
+      
+    
+          <MatchesDisplay 
+          bouts={bouts || []} 
+          promoterId={promoterId} 
+          eventId={eventId} 
+          isAdmin={false} 
+          eventData={eventData}
+          handleFighterClick={handleFighterClick}
+        />
+
+
+
+
+</div>
+
+      
+      
+      )}
       </div>
     </Elements>
   );
