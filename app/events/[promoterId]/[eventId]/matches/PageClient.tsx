@@ -15,6 +15,7 @@ import { Trash2 } from "lucide-react";
 import StatusMessages from '@/components/loading_screens/StatusMessages';
 import CreateEditBout from './CreateEditBout';
 import { fighterClick } from '@/utils/handleFighterClick';
+import { handleExportHtml } from '@/utils/events/matches';
 
 interface PageClientProps {
   eventId: string;
@@ -246,6 +247,20 @@ export default function PageClient({
             {isCreatingMatches ? "Creating Matches..." : "Auto Match"}
           </Button>
           
+
+<Button
+variant="destructive"
+  
+              onClick={() => handleExportHtml(bouts, eventData)}
+              className="flex items-center gap-2"
+              >HTML</Button>
+
+  
+            
+        
+
+
+
           <Button 
             variant="destructive" 
             onClick={handleDeleteMatches}

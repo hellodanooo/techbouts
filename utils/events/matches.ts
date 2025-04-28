@@ -719,7 +719,7 @@ export const isValidUrl = (url: string | undefined): boolean => {
 };
 
 
-export const getPhotoUrl = (fighter: RosterFighter, defaultPhotoUrl: string = "/images/techbouts_fighter_icon.png"): string => {
+export const getPhotoUrl = (fighter: RosterFighter, defaultPhotoUrl: string = "https://www.techbouts.com/images/techbouts_fighter_icon.png"): string => {
   return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
 };
 
