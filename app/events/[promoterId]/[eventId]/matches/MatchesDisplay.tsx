@@ -22,10 +22,28 @@ interface MatchesDisplayProps {
 export default function MatchesDisplay({
   bouts,
   isAdmin,
+  eventData,
   handleFighterClick,
   onBoutSelect
 }: MatchesDisplayProps) {
-  const [showCompletedBouts, setShowCompletedBouts] = useState(false);
+  const [showCompletedBouts, setShowCompletedBouts] = useState(() => {
+    if (eventData && eventData.date) {
+      const eventDate = new Date(eventData.date);
+      const currentDate = new Date();
+      
+      // Reset time components to compare just the dates
+      eventDate.setHours(0, 0, 0, 0);
+      currentDate.setHours(0, 0, 0, 0);
+      
+      // Calculate difference in days
+      const diffTime = currentDate.getTime() - eventDate.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      
+      // Return true if event date is at least 1 day in the past
+      return diffDays >= 1;
+    }
+    return false;
+  });
 
   // Function to check if a bout is finished
   const isBoutFinished = (bout: Bout): boolean => {

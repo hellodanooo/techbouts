@@ -1,8 +1,7 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase_techbouts/config';
-import { RosterFighter, Bout } from '../types';
-
+import { RosterFighter, Bout, EventType } from '../types';
 
 
 
@@ -71,16 +70,6 @@ export const updateBoutResults = async ({
     return false;
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 export const createMatchesFromWeighins = async ({
   roster,
@@ -701,3 +690,404 @@ console.log("bout before moving:", existingBouts);
 };
 
 
+
+export const isBoutFinished = (bout: Bout): boolean => {
+  // Check if both red and blue have results other than null, blank, or "-"
+  const redResult = bout.red?.result;
+  const blueResult = bout.blue?.result;
+  
+  // Consider a bout finished if both fighters have valid results
+  return (
+    redResult && 
+    redResult !== '-' &&
+    blueResult && 
+    blueResult !== '-'
+  );
+};
+
+/**
+ * Validates if a URL is properly formatted
+ */
+export const isValidUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+
+export const getPhotoUrl = (fighter: RosterFighter, defaultPhotoUrl: string = "/images/techbouts_fighter_icon.png"): string => {
+  return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
+};
+
+
+export const truncateText = (text: string, maxLength: number) => {
+  if (!text) return '';
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
+
+const generateFighterStatsHtml = (fighter: RosterFighter) => {
+  return `
+    <div class="fighter-stats">
+      <table style="border-collapse: collapse; line-height: 0.8; font-size: 12px;">
+        <tbody>
+          <tr>
+            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">YRS:</td>
+            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.years_exp || '-'}</td>
+          </tr>
+          ${(fighter.mt_win > 0 || fighter.mt_loss > 0) ? `
+          <tr>
+            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">MT:</td>
+            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.mt_win}-${fighter.mt_loss}</td>
+          </tr>` : ''}
+          ${(fighter.mma_win > 0 || fighter.mma_loss > 0) ? `
+          <tr>
+            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">MMA:</td>
+            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.mma_win}-${fighter.mma_loss}</td>
+          </tr>` : ''}
+          ${(fighter.pmt_win > 0 || fighter.pmt_loss > 0) ? `
+          <tr>
+            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">PMT:</td>
+            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.pmt_win}-${fighter.pmt_loss}</td>
+          </tr>` : ''}
+          ${(fighter.pb_win > 0 || fighter.pb_loss > 0) ? `
+          <tr>
+            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">PBSC:</td>
+            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.pb_win}-${fighter.pb_loss}</td>
+          </tr>` : ''}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
+/**
+ * Generates HTML content for a bout card
+ */
+export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
+  // Separate bouts into finished and unfinished
+  const finishedBouts = bouts.filter(bout => isBoutFinished(bout));
+  const unfinishedBouts = bouts.filter(bout => !isBoutFinished(bout));
+  
+  const cssStyles = `
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .event-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .event-title {
+        font-size: 28px;
+        font-weight: bold;
+      }
+      .event-date {
+        font-size: 18px;
+        color: #666;
+      }
+      .event-location {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 10px;
+      }
+      .bouts-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      .bouts-table th {
+        background-color: #f0f0f0;
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #ddd;
+      }
+      .bouts-table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        vertical-align: top;
+      }
+      .bout-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid #999;
+        margin: 0 auto 8px auto;
+        font-size: 14px;
+      }
+      .section-header {
+        background-color: #e9e9e9;
+        text-align: center;
+        font-weight: bold;
+        padding: 8px;
+      }
+      .red-fighter {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+      }
+      .blue-fighter {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        text-align: right;
+      }
+      .fighter-photo {
+        width: 60px;
+        height: 60px;
+        border-radius: 6px;
+        object-fit: cover;
+      }
+      .fighter-info {
+        margin: 0 10px;
+      }
+      .fighter-name {
+        font-weight: bold;
+        font-size: 16px;
+      }
+      .fighter-gym {
+        color: #666;
+        font-size: 14px;
+      }
+      .fighter-stats {
+        font-size: 12px;
+        color: #555;
+      }
+      .match-info {
+        text-align: center;
+      }
+      .weightclass {
+        margin-bottom: 5px;
+      }
+      .bout-type {
+        margin-bottom: 5px;
+      }
+      .bout-result {
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      .result-red {
+        color: #d32f2f;
+      }
+      .result-blue {
+        color: #1976d2;
+      }
+      @media print {
+        body {
+          font-size: 12px;
+        }
+        .event-title {
+          font-size: 24px;
+        }
+        .event-date, .event-location {
+          font-size: 14px;
+        }
+        .fighter-name {
+          font-size: 14px;
+        }
+        .fighter-gym {
+          font-size: 12px;
+        }
+      }
+    </style>
+  `;
+
+  let boutsHtml = '';
+  
+  // Add event information
+  boutsHtml += `
+    <div class="event-header">
+      <div class="event-title">${eventData?.event_name || 'Fight Card'}</div>
+      <div class="event-date">${eventData?.date || 'TBD'}</div>
+      <div class="event-location">${eventData?.venue_name || ''} ${eventData?.state || ''}</div>
+    </div>
+  `;
+
+  // Build table
+  boutsHtml += `
+    <table class="bouts-table">
+      <thead>
+        <tr>
+          <th style="width: 40%;">Red Corner</th>
+          <th style="width: 20%;">Match Info</th>
+          <th style="width: 40%;">Blue Corner</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  // Add finished bouts section if any
+  if (finishedBouts.length > 0) {
+    boutsHtml += `
+      <tr>
+        <td colspan="3" class="section-header">Completed Bouts</td>
+      </tr>
+    `;
+
+    // Add finished bouts
+    finishedBouts.forEach(bout => {
+      if (bout.red && bout.blue) {
+        const redFighter = bout.red;
+        const blueFighter = bout.blue;
+        boutsHtml += `
+          <tr>
+            <td>
+              <div class="red-fighter">
+                <div>
+                  <img class="fighter-photo" src="${getPhotoUrl(redFighter)}" alt="${redFighter.first} ${redFighter.last}">
+                  <div class="fighter-info">
+                    <div class="fighter-name">${redFighter.first} ${redFighter.last}</div>
+                    <div class="fighter-gym">${redFighter.gym || ''}</div>
+                  </div>
+                </div>
+                ${generateFighterStatsHtml(redFighter)}
+              </div>
+            </td>
+            <td class="match-info">
+              <div class="bout-number">${bout.boutNum}</div>
+              <div class="weightclass">${bout.weightclass || ''}</div>
+              <div class="bout-type">${bout.bout_type || ''}</div>
+              ${isBoutFinished(bout) ? `
+              <div class="bout-result">
+                <div class="result-red">${redFighter.result}</div>
+                <div class="result-blue">${blueFighter.result}</div>
+              </div>` : ''}
+            </td>
+            <td>
+              <div class="blue-fighter">
+                <div>
+                  <img class="fighter-photo" src="${getPhotoUrl(blueFighter)}" alt="${blueFighter.first} ${blueFighter.last}">
+                  <div class="fighter-info">
+                    <div class="fighter-name">${blueFighter.first} ${blueFighter.last}</div>
+                    <div class="fighter-gym">${blueFighter.gym || ''}</div>
+                  </div>
+                </div>
+                ${generateFighterStatsHtml(blueFighter)}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    });
+  }
+
+  // Add unfinished bouts section
+  if (unfinishedBouts.length > 0) {
+    boutsHtml += `
+      <tr>
+        <td colspan="3" class="section-header">Upcoming Bouts</td>
+      </tr>
+    `;
+
+    // Add unfinished bouts
+    unfinishedBouts.forEach(bout => {
+      if (bout.red && bout.blue) {
+        const redFighter = bout.red;
+        const blueFighter = bout.blue;
+        boutsHtml += `
+          <tr>
+            <td>
+              <div class="red-fighter">
+                <div>
+                  <img class="fighter-photo" src="${getPhotoUrl(redFighter)}" alt="${redFighter.first} ${redFighter.last}">
+                  <div class="fighter-info">
+                    <div class="fighter-name">${redFighter.first} ${redFighter.last}</div>
+                    <div class="fighter-gym">${redFighter.gym || ''}</div>
+                  </div>
+                </div>
+                ${generateFighterStatsHtml(redFighter)}
+              </div>
+            </td>
+            <td class="match-info">
+              <div class="bout-number">${bout.boutNum}</div>
+              <div class="weightclass">${bout.weightclass || ''}</div>
+              <div class="bout-type">${bout.bout_type || ''}</div>
+            </td>
+            <td>
+              <div class="blue-fighter">
+                <div>
+                  <img class="fighter-photo" src="${getPhotoUrl(blueFighter)}" alt="${blueFighter.first} ${blueFighter.last}">
+                  <div class="fighter-info">
+                    <div class="fighter-name">${blueFighter.first} ${blueFighter.last}</div>
+                    <div class="fighter-gym">${blueFighter.gym || ''}</div>
+                  </div>
+                </div>
+                ${generateFighterStatsHtml(blueFighter)}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    });
+  }
+
+  boutsHtml += `
+      </tbody>
+    </table>
+  `;
+
+  // Complete HTML document
+  const fullHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${eventData?.event_name || 'Fight Card'}</title>
+      ${cssStyles}
+    </head>
+    <body>
+      ${boutsHtml}
+    </body>
+    </html>
+  `;
+
+  return fullHtml;
+};
+
+/**
+ * Handles exporting bout information as HTML
+ */
+export const handleExportHtml = async (bouts: Bout[], eventData?: EventType): Promise<void> => {
+  try {
+    // Generate the HTML content for the bouts
+    const htmlContent = generateBoutsHtml(bouts, eventData);
+    
+    // Create a blob from the HTML content
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    
+    // Create a URL for the blob
+    const url = URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element and trigger download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${eventData?.event_name || 'fight-card'}.html`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    return Promise.resolve();
+  } catch (error) {
+    console.error('Error exporting HTML:', error);
+    return Promise.reject(error);
+  }
+};

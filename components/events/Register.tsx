@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 // MAIN COMPONENTS
 import FighterForm from './FighterForm';
 
@@ -848,20 +848,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div className="">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="space-y-4">
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-bold">Registration Form</CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={closeModal}
-              className="rounded-full"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+         
           </div>
 
           <div className="flex justify-center items-center space-x-4">

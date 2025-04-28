@@ -138,6 +138,7 @@ export default function EmbedRegistrationPage({
 
 <div>
 
+
 {isRegisterOpen && (
     <CardContent>
           <Register
