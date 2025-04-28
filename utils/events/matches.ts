@@ -732,93 +732,53 @@ export const truncateText = (text: string, maxLength: number) => {
   return text;
 };
 
-const generateFighterStatsHtml = (fighter: RosterFighter) => {
-  return `
-    <div class="fighter-stats">
-      <table style="border-collapse: collapse; line-height: 0.8; font-size: 12px;">
-        <tbody>
-          <tr>
-            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">YRS:</td>
-            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.years_exp || '-'}</td>
-          </tr>
-          ${(fighter.mt_win > 0 || fighter.mt_loss > 0) ? `
-          <tr>
-            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">MT:</td>
-            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.mt_win}-${fighter.mt_loss}</td>
-          </tr>` : ''}
-          ${(fighter.mma_win > 0 || fighter.mma_loss > 0) ? `
-          <tr>
-            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">MMA:</td>
-            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.mma_win}-${fighter.mma_loss}</td>
-          </tr>` : ''}
-          ${(fighter.pmt_win > 0 || fighter.pmt_loss > 0) ? `
-          <tr>
-            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">PMT:</td>
-            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.pmt_win}-${fighter.pmt_loss}</td>
-          </tr>` : ''}
-          ${(fighter.pb_win > 0 || fighter.pb_loss > 0) ? `
-          <tr>
-            <td style="opacity: 0.7; width: 40px; text-align: center; padding: 0;">PBSC:</td>
-            <td style="text-align: center; padding: 0 0 0 2px;">${fighter.pb_win}-${fighter.pb_loss}</td>
-          </tr>` : ''}
-        </tbody>
-      </table>
-    </div>
-  `;
-};
+
 
 /**
- * Generates HTML content for a bout card
+ * Generates HTML content for a bout card optimized for Squarespace pasting
  */
 export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
   // Separate bouts into finished and unfinished
   const finishedBouts = bouts.filter(bout => isBoutFinished(bout));
   const unfinishedBouts = bouts.filter(bout => !isBoutFinished(bout));
   
+  // Squarespace-friendly CSS using inline styles and simple class names
   const cssStyles = `
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      .event-header {
+      .tb-event-header {
         text-align: center;
         margin-bottom: 30px;
       }
-      .event-title {
+      .tb-event-title {
         font-size: 28px;
         font-weight: bold;
       }
-      .event-date {
+      .tb-event-date {
         font-size: 18px;
         color: #666;
       }
-      .event-location {
+      .tb-event-location {
         font-size: 16px;
         color: #666;
         margin-bottom: 10px;
       }
-      .bouts-table {
+      .tb-bouts-table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
       }
-      .bouts-table th {
+      .tb-bouts-table th {
         background-color: #f0f0f0;
         padding: 12px;
         text-align: center;
         border: 1px solid #ddd;
       }
-      .bouts-table td {
+      .tb-bouts-table td {
         padding: 12px;
         border: 1px solid #ddd;
         vertical-align: top;
       }
-      .bout-number {
+      .tb-bout-number {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -829,98 +789,145 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
         margin: 0 auto 8px auto;
         font-size: 14px;
       }
-      .section-header {
+      .tb-section-header {
         background-color: #e9e9e9;
         text-align: center;
         font-weight: bold;
         padding: 8px;
       }
-      .red-fighter {
+      .tb-red-fighter {
         position: relative;
         display: flex;
         align-items: flex-start;
       }
-      .blue-fighter {
+      .tb-blue-fighter {
         position: relative;
         display: flex;
         align-items: flex-start;
         justify-content: flex-end;
         text-align: right;
       }
-      .fighter-photo {
+      .tb-fighter-photo {
         width: 60px;
         height: 60px;
         border-radius: 6px;
         object-fit: cover;
       }
-      .fighter-info {
+      .tb-fighter-info {
         margin: 0 10px;
       }
-      .fighter-name {
+      .tb-fighter-name {
         font-weight: bold;
         font-size: 16px;
       }
-      .fighter-gym {
+      .tb-fighter-gym {
         color: #666;
         font-size: 14px;
       }
-      .fighter-stats {
+      .tb-fighter-stats {
         font-size: 12px;
         color: #555;
+        position: absolute;
+        top: 0;
       }
-      .match-info {
+      .tb-fighter-stats-left {
+        right: 0;
+      }
+      .tb-fighter-stats-right {
+        left: 0;
+      }
+      .tb-match-info {
         text-align: center;
       }
-      .weightclass {
+      .tb-weightclass {
         margin-bottom: 5px;
       }
-      .bout-type {
+      .tb-bout-type {
         margin-bottom: 5px;
       }
-      .bout-result {
+      .tb-bout-result {
         font-weight: bold;
         margin-top: 10px;
       }
-      .result-red {
+      .tb-result-red {
         color: #d32f2f;
       }
-      .result-blue {
+      .tb-result-blue {
         color: #1976d2;
       }
-      @media print {
-        body {
-          font-size: 12px;
-        }
-        .event-title {
-          font-size: 24px;
-        }
-        .event-date, .event-location {
-          font-size: 14px;
-        }
-        .fighter-name {
-          font-size: 14px;
-        }
-        .fighter-gym {
-          font-size: 12px;
-        }
+      .tb-stats-table {
+        border-collapse: collapse;
+        line-height: 0.8;
+        font-size: 12px;
+      }
+      .tb-stats-label {
+        opacity: 0.7;
+        width: 40px;
+        text-align: center;
+        padding: 0;
+      }
+      .tb-stats-value {
+        text-align: center;
+        padding: 0 0 0 2px;
       }
     </style>
   `;
 
-  let boutsHtml = '';
+  const generateFighterStatsHtml = (fighter: RosterFighter, align: 'left' | 'right') => {
+    const alignClass = align === 'left' ? 'tb-fighter-stats-left' : 'tb-fighter-stats-right';
+    
+    return `
+      <div class="tb-fighter-stats ${alignClass}">
+        <table class="tb-stats-table">
+          <tbody>
+            <tr>
+              <td class="tb-stats-label">YRS:</td>
+              <td class="tb-stats-value">${fighter.years_exp || '-'}</td>
+            </tr>
+            ${(fighter.mt_win > 0 || fighter.mt_loss > 0) ? `
+            <tr>
+              <td class="tb-stats-label">MT:</td>
+              <td class="tb-stats-value">${fighter.mt_win}-${fighter.mt_loss}</td>
+            </tr>` : ''}
+            ${(fighter.mma_win > 0 || fighter.mma_loss > 0) ? `
+            <tr>
+              <td class="tb-stats-label">MMA:</td>
+              <td class="tb-stats-value">${fighter.mma_win}-${fighter.mma_loss}</td>
+            </tr>` : ''}
+            ${(fighter.pmt_win > 0 || fighter.pmt_loss > 0) ? `
+            <tr>
+              <td class="tb-stats-label">PMT:</td>
+              <td class="tb-stats-value">${fighter.pmt_win}-${fighter.pmt_loss}</td>
+            </tr>` : ''}
+            ${(fighter.pb_win > 0 || fighter.pb_loss > 0) ? `
+            <tr>
+              <td class="tb-stats-label">PBSC:</td>
+              <td class="tb-stats-value">${fighter.pb_win}-${fighter.pb_loss}</td>
+            </tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+  
+  // Create a single div container for Squarespace
+  let boutsHtml = '<div class="techbouts-card-container">';
+  
+  // Add the CSS
+  boutsHtml += cssStyles;
   
   // Add event information
   boutsHtml += `
-    <div class="event-header">
-      <div class="event-title">${eventData?.event_name || 'Fight Card'}</div>
-      <div class="event-date">${eventData?.date || 'TBD'}</div>
-      <div class="event-location">${eventData?.venue_name || ''} ${eventData?.state || ''}</div>
+    <div class="tb-event-header">
+      <div class="tb-event-title">${eventData?.event_name || 'Fight Card'}</div>
+      <div class="tb-event-date">${eventData?.date || 'TBD'}</div>
+      <div class="tb-event-location">${eventData?.venue_name || ''} ${eventData?.state || ''}</div>
     </div>
   `;
 
   // Build table
   boutsHtml += `
-    <table class="bouts-table">
+    <table class="tb-bouts-table">
       <thead>
         <tr>
           <th style="width: 40%;">Red Corner</th>
@@ -935,7 +942,7 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
   if (finishedBouts.length > 0) {
     boutsHtml += `
       <tr>
-        <td colspan="3" class="section-header">Completed Bouts</td>
+        <td colspan="3" class="tb-section-header">Completed Bouts</td>
       </tr>
     `;
 
@@ -947,37 +954,37 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
         boutsHtml += `
           <tr>
             <td>
-              <div class="red-fighter">
+              <div class="tb-red-fighter">
                 <div>
-                  <img class="fighter-photo" src="${getPhotoUrl(redFighter)}" alt="${redFighter.first} ${redFighter.last}">
-                  <div class="fighter-info">
-                    <div class="fighter-name">${redFighter.first} ${redFighter.last}</div>
-                    <div class="fighter-gym">${redFighter.gym || ''}</div>
+                  <img class="tb-fighter-photo" src="${getPhotoUrl(redFighter)}" alt="${redFighter.first} ${redFighter.last}">
+                  <div class="tb-fighter-info">
+                    <div class="tb-fighter-name">${redFighter.first} ${redFighter.last}</div>
+                    <div class="tb-fighter-gym">${redFighter.gym || ''}</div>
                   </div>
                 </div>
-                ${generateFighterStatsHtml(redFighter)}
+                ${generateFighterStatsHtml(redFighter, 'left')}
               </div>
             </td>
-            <td class="match-info">
-              <div class="bout-number">${bout.boutNum}</div>
-              <div class="weightclass">${bout.weightclass || ''}</div>
-              <div class="bout-type">${bout.bout_type || ''}</div>
+            <td class="tb-match-info">
+              <div class="tb-bout-number">${bout.boutNum}</div>
+              <div class="tb-weightclass">${bout.weightclass || ''}</div>
+              <div class="tb-bout-type">${bout.bout_type || ''}</div>
               ${isBoutFinished(bout) ? `
-              <div class="bout-result">
-                <div class="result-red">${redFighter.result}</div>
-                <div class="result-blue">${blueFighter.result}</div>
+              <div class="tb-bout-result">
+                <div class="tb-result-red">${redFighter.result}</div>
+                <div class="tb-result-blue">${blueFighter.result}</div>
               </div>` : ''}
             </td>
             <td>
-              <div class="blue-fighter">
+              <div class="tb-blue-fighter">
                 <div>
-                  <img class="fighter-photo" src="${getPhotoUrl(blueFighter)}" alt="${blueFighter.first} ${blueFighter.last}">
-                  <div class="fighter-info">
-                    <div class="fighter-name">${blueFighter.first} ${blueFighter.last}</div>
-                    <div class="fighter-gym">${blueFighter.gym || ''}</div>
+                  <img class="tb-fighter-photo" src="${getPhotoUrl(blueFighter)}" alt="${blueFighter.first} ${blueFighter.last}">
+                  <div class="tb-fighter-info">
+                    <div class="tb-fighter-name">${blueFighter.first} ${blueFighter.last}</div>
+                    <div class="tb-fighter-gym">${blueFighter.gym || ''}</div>
                   </div>
                 </div>
-                ${generateFighterStatsHtml(blueFighter)}
+                ${generateFighterStatsHtml(blueFighter, 'right')}
               </div>
             </td>
           </tr>
@@ -990,7 +997,7 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
   if (unfinishedBouts.length > 0) {
     boutsHtml += `
       <tr>
-        <td colspan="3" class="section-header">Upcoming Bouts</td>
+        <td colspan="3" class="tb-section-header">Upcoming Bouts</td>
       </tr>
     `;
 
@@ -1002,32 +1009,32 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
         boutsHtml += `
           <tr>
             <td>
-              <div class="red-fighter">
+              <div class="tb-red-fighter">
                 <div>
-                  <img class="fighter-photo" src="${getPhotoUrl(redFighter)}" alt="${redFighter.first} ${redFighter.last}">
-                  <div class="fighter-info">
-                    <div class="fighter-name">${redFighter.first} ${redFighter.last}</div>
-                    <div class="fighter-gym">${redFighter.gym || ''}</div>
+                  <img class="tb-fighter-photo" src="${getPhotoUrl(redFighter)}" alt="${redFighter.first} ${redFighter.last}">
+                  <div class="tb-fighter-info">
+                    <div class="tb-fighter-name">${redFighter.first} ${redFighter.last}</div>
+                    <div class="tb-fighter-gym">${redFighter.gym || ''}</div>
                   </div>
                 </div>
-                ${generateFighterStatsHtml(redFighter)}
+                ${generateFighterStatsHtml(redFighter, 'left')}
               </div>
             </td>
-            <td class="match-info">
-              <div class="bout-number">${bout.boutNum}</div>
-              <div class="weightclass">${bout.weightclass || ''}</div>
-              <div class="bout-type">${bout.bout_type || ''}</div>
+            <td class="tb-match-info">
+              <div class="tb-bout-number">${bout.boutNum}</div>
+              <div class="tb-weightclass">${bout.weightclass || ''}</div>
+              <div class="tb-bout-type">${bout.bout_type || ''}</div>
             </td>
             <td>
-              <div class="blue-fighter">
+              <div class="tb-blue-fighter">
                 <div>
-                  <img class="fighter-photo" src="${getPhotoUrl(blueFighter)}" alt="${blueFighter.first} ${blueFighter.last}">
-                  <div class="fighter-info">
-                    <div class="fighter-name">${blueFighter.first} ${blueFighter.last}</div>
-                    <div class="fighter-gym">${blueFighter.gym || ''}</div>
+                  <img class="tb-fighter-photo" src="${getPhotoUrl(blueFighter)}" alt="${blueFighter.first} ${blueFighter.last}">
+                  <div class="tb-fighter-info">
+                    <div class="tb-fighter-name">${blueFighter.first} ${blueFighter.last}</div>
+                    <div class="tb-fighter-gym">${blueFighter.gym || ''}</div>
                   </div>
                 </div>
-                ${generateFighterStatsHtml(blueFighter)}
+                ${generateFighterStatsHtml(blueFighter, 'right')}
               </div>
             </td>
           </tr>
@@ -1036,58 +1043,60 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
     });
   }
 
+  // Close the table and container div
   boutsHtml += `
       </tbody>
     </table>
-  `;
+  </div>`;
 
-  // Complete HTML document
-  const fullHtml = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${eventData?.event_name || 'Fight Card'}</title>
-      ${cssStyles}
-    </head>
-    <body>
-      ${boutsHtml}
-    </body>
-    </html>
-  `;
-
-  return fullHtml;
+  return boutsHtml;
 };
 
 /**
- * Handles exporting bout information as HTML
+ * Handles exporting bout information as HTML for Squarespace
  */
 export const handleExportHtml = async (bouts: Bout[], eventData?: EventType): Promise<void> => {
   try {
     // Generate the HTML content for the bouts
     const htmlContent = generateBoutsHtml(bouts, eventData);
     
-    // Create a blob from the HTML content
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    // Copy the HTML content to clipboard
+    await navigator.clipboard.writeText(htmlContent);
     
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
-    
-    // Create a temporary anchor element and trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${eventData?.event_name || 'fight-card'}.html`;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    // Provide a success message
+    toast.success("HTML copied to clipboard! Ready to paste into Squarespace Code Block.");
     
     return Promise.resolve();
   } catch (error) {
-    console.error('Error exporting HTML:', error);
-    return Promise.reject(error);
+    console.error('Error copying HTML to clipboard:', error);
+    toast.error("Failed to copy HTML to clipboard. Please try again.");
+    
+    // Fallback method if clipboard API fails
+    try {
+      // Create a temporary textarea element
+      const textarea = document.createElement('textarea');
+      textarea.value = generateBoutsHtml(bouts, eventData);
+      
+      // Make the textarea out of viewport
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-999999px';
+      textarea.style.top = '-999999px';
+      document.body.appendChild(textarea);
+      
+      // Select and copy the content
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      
+      // Clean up
+      document.body.removeChild(textarea);
+      toast.success("HTML copied to clipboard using fallback method!");
+      
+      return Promise.resolve();
+    } catch (fallbackError) {
+      console.error('Fallback clipboard copy failed:', fallbackError);
+      toast.error("All clipboard copy methods failed. Please try another approach.");
+      return Promise.reject(fallbackError);
+    }
   }
 };

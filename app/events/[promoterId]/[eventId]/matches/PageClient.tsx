@@ -16,6 +16,7 @@ import StatusMessages from '@/components/loading_screens/StatusMessages';
 import CreateEditBout from './CreateEditBout';
 import { fighterClick } from '@/utils/handleFighterClick';
 import { handleExportHtml } from '@/utils/events/matches';
+import { ClipboardCopy } from "lucide-react";
 
 interface PageClientProps {
   eventId: string;
@@ -248,12 +249,15 @@ export default function PageClient({
           </Button>
           
 
-<Button
-variant="destructive"
-  
-              onClick={() => handleExportHtml(bouts, eventData)}
-              className="flex items-center gap-2"
-              >HTML</Button>
+          <Button
+  variant="outline"
+  onClick={() => handleExportHtml(bouts, eventData)}
+  className="flex items-center gap-2"
+  disabled={isCreatingMatches}
+>
+  <ClipboardCopy size={16} /> {/* Import ClipboardCopy from lucide-react at the top */}
+  Copy HTML
+</Button>
 
   
             
