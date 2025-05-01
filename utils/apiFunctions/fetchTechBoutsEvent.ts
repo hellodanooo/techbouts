@@ -91,6 +91,7 @@ export async function fetchTechBoutsEvent(promoterId: string, eventId: string): 
       stripeAccountId: data.stripeAccountId || '',
       payLaterEnabled: data.payLaterEnabled || false,
       redirect_url: data.redirect_url || '',
+      display_roster: data.display_roster || false,
       
     };
 

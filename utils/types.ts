@@ -204,6 +204,8 @@ export interface EventType {
   bout_type?: string;
   
   redirect_url?: string;
+
+  display_roster?: boolean;
 }
 
 export type GymRecord = {

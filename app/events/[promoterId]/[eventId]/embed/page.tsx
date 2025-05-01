@@ -4,6 +4,8 @@ import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
 import EmbedRegistrationPage from './EmbedRegistrationPage';
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts';
+import {fetchTechBoutsRoster} from '@/utils/apiFunctions/techboutsRoster';
+import {fetchPmtRoster} from '@/utils/apiFunctions/pmtRoster';
 
 export async function generateMetadata({
   params
@@ -25,10 +27,17 @@ export default async function Page({
   
   // Fetch event data
   let eventData = null;
+  let roster = null;
+
   try {
     eventData = await fetchPmtEvent(eventId);
+    if (eventData) {
+      eventData.sanctioning = "PMT";
+      roster = await fetchPmtRoster(eventId);
+    }
     if (!eventData) {
       eventData = await fetchTechBoutsEvent(promoterId, eventId);
+      roster = await fetchTechBoutsRoster(promoterId, eventId);
 
 
     }
@@ -50,6 +59,7 @@ export default async function Page({
       promoterId={promoterId}
       eventData={eventData} 
       bouts={matchesData}
+      roster={roster}
     />
   );
 }

@@ -9,12 +9,15 @@ import Register from '@/components/events/Register';
 import { EventType, Bout, RosterFighter } from '@/utils/types';
 import MatchesDisplay from '../matches/MatchesDisplay';
 import { CardContent } from '@/components/ui/card';
+import RosterTable from '../admin/RosterTable';
 
 type Props = {
   eventId: string;
   promoterId: string;
   eventData: EventType | null;
-  bouts?: Bout[]; // Adjust type as needed
+  bouts?: Bout[];
+  roster: RosterFighter[];
+
 };
 
 export default function EmbedRegistrationPage({
@@ -22,6 +25,7 @@ export default function EmbedRegistrationPage({
   promoterId,
   eventData,
   bouts,
+  roster,
 }: Props) {
   
   const [isLoaded, setIsLoaded] = useState(false);
@@ -157,7 +161,22 @@ export default function EmbedRegistrationPage({
           </CardContent>
 )}
 
-      
+
+   {eventData.display_roster && (
+
+<RosterTable
+          eventId={eventId}
+          promoterId={promoterId}
+          eventData={eventData}
+          isAdmin={false}
+          handleFighterClick={handleFighterClick}
+          roster={roster || []} // Assuming roster is part of eventData
+          bouts={bouts || []} // Pass bouts as expected
+        />
+
+)}
+
+
     
           <MatchesDisplay 
           bouts={bouts || []} 

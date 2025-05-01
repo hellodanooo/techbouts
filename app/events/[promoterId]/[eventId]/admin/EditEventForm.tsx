@@ -119,6 +119,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     payLaterEnabled: eventData.payLaterEnabled,
     customWaiver: eventData.customWaiver || '',
     redirect_url: eventData.redirect_url || '',
+    display_roster: eventData.display_roster || false,
   });
 
 
@@ -738,7 +739,20 @@ const [redirectUrlEnabled, setRedirectUrlEnabled] = useState(!!formData.redirect
                   <Label htmlFor="disable-registration">Disable Registration</Label>
                 </div>
 
+
+<div className="flex items-center space-x-4">
+  <Switch
+    id="display-roster"
+    checked={formData.display_roster}
+    onCheckedChange={handleSwitchChange('display_roster')}
+  />
+  <Label htmlFor="display-roster">Display Roster</Label>
+  </div>
+
+
               </div>
+
+
             </div>
 
 
