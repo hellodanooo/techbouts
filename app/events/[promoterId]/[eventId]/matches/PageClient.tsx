@@ -8,7 +8,7 @@ import MatchesDisplay from './MatchesDisplay';
 import { useAuth } from '@/context/AuthContext';
 import RosterTable from '@/app/events/[promoterId]/[eventId]/admin/RosterTable';
 import Header from '@/components/headers/Header';
-import { createMatchesFromWeighins } from '@/utils/events/matches';
+import { createMatchesFromWeighins, createMatchesFromWeightclasses } from '@/utils/events/matches';
 import { fetchTechboutsBouts, deleteTechboutsMatchesJson } from '@/utils/apiFunctions/techboutsBouts';
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react";
@@ -49,6 +49,9 @@ export default function PageClient({
   const [blue, setBlue] = useState<RosterFighter | null>(null);
   const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
   
+  const [matchMethod, setMatchMethod] = useState<'weighins' | 'weightclasses'>('weighins');
+const [showMatchOptions, setShowMatchOptions] = useState(false);
+
   // Set up sanctioning email based on event sanctioning body
   useEffect(() => {
     if (eventData.sanctioning === 'PMT') {
@@ -102,14 +105,23 @@ export default function PageClient({
   };
 
   const handleAutoMatch = async () => {
+    if (!showMatchOptions) {
+      // If options aren't shown yet, show them first
+      setShowMatchOptions(true);
+      return;
+    }
+    
+    // Reset options display
+    setShowMatchOptions(false);
+    
     // Reset status messages and show modal
     setStatusMessages([]);
     setShowStatusModal(true);
     setIsCreatingMatches(true);
-
+  
     // First add an initial message
-    setStatusMessages(["🔍 Starting match creation process..."]);
-
+    setStatusMessages([`🔍 Starting match creation process using ${matchMethod}...`]);
+  
     const matchedFighterIds = new Set();
     bouts.forEach((bout) => {
       if (bout.red?.fighter_id) matchedFighterIds.add(bout.red.fighter_id);
@@ -120,11 +132,10 @@ export default function PageClient({
     const unmatchedRoster = roster.filter(fighter => 
       !matchedFighterIds.has(fighter.fighter_id)
     );
-
-
+  
     // We'll use a set to prevent duplicate messages
     const processedMessages = new Set();
-
+  
     // Create a wrapper around console.log to capture all logs
     const originalConsoleLog = console.log;
     console.log = function(message, ...args) {
@@ -150,7 +161,7 @@ export default function PageClient({
         setStatusMessages(prev => [...prev, message]);
       }
     };
-
+  
     try {
       // Create a more direct status updater function
       const updateStatus = (message: string) => {
@@ -166,24 +177,40 @@ export default function PageClient({
           setStatusMessages(prev => [...prev, message]);
         }
       };
-
-      // Call the match creation function with status updates
-      const result = await createMatchesFromWeighins({
-        eventId,
-        promoterId,
-        eventName: eventData.name || '',
-        promotionName: eventData.promotionName || '',
-        date: eventData.date || '',
-        sanctioning: eventData.sanctioning || '',
-        setIsCreatingMatches,
-        updateStatus,
-        saveMatches: true,
-        roster: unmatchedRoster,
-      });
-
+  
+      // Call the appropriate match creation function based on selected method
+      let result;
+      if (matchMethod === 'weighins') {
+        result = await createMatchesFromWeighins({
+          eventId,
+          promoterId,
+          eventName: eventData.name || '',
+          promotionName: eventData.promotionName || '',
+          date: eventData.date || '',
+          sanctioning: eventData.sanctioning || '',
+          setIsCreatingMatches,
+          updateStatus,
+          saveMatches: true,
+          roster: unmatchedRoster,
+        });
+      } else {
+        result = await createMatchesFromWeightclasses({
+          eventId,
+          promoterId,
+          eventName: eventData.name || '',
+          promotionName: eventData.promotionName || '',
+          date: eventData.date || '',
+          sanctioning: eventData.sanctioning || '',
+          setIsCreatingMatches,
+          updateStatus,
+          saveMatches: true,
+          roster: unmatchedRoster,
+        });
+      }
+  
       // If successful, refresh the bouts display
       if (result && result.success) {
-        updateStatus("✅ Successfully created matches! Refreshing display...");
+        updateStatus(`✅ Successfully created matches using ${matchMethod}! Refreshing display...`);
         await refreshBouts();
       } else if (result) {
         updateStatus(`⚠️ ${result.message || "No matches were created"}`);
@@ -201,6 +228,7 @@ export default function PageClient({
       // They'll need to close it manually
     }
   };
+
 
   const closeStatusModal = () => {
     setShowStatusModal(false);
@@ -241,13 +269,53 @@ export default function PageClient({
       
       {isAdminOrSanctioningOrPromoter && ( // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0', gap:'5px' }}>
-          <Button 
-            onClick={handleAutoMatch}
-            disabled={isCreatingMatches}
-          >
-            {isCreatingMatches ? "Creating Matches..." : "Auto Match"}
-          </Button>
+           {showMatchOptions ? (
+      <div className="flex gap-2 items-center">
+        <Button 
+          variant={matchMethod === 'weighins' ? 'default' : 'outline'}
+          onClick={() => setMatchMethod('weighins')}
+          disabled={isCreatingMatches}
+          className="flex items-center gap-2"
+        >
+          <span>Use Weighins</span>
+        </Button>
+        
+        <Button 
+          variant={matchMethod === 'weightclasses' ? 'default' : 'outline'}
+          onClick={() => setMatchMethod('weightclasses')}
+          disabled={isCreatingMatches}
+          className="flex items-center gap-2"
+        >
+          <span>Use Weightclasses</span>
+        </Button>
+        
+        <Button 
+          onClick={handleAutoMatch}
+          disabled={isCreatingMatches}
+        >
+          {isCreatingMatches ? "Creating Matches..." : "Create Matches"}
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setShowMatchOptions(false)}
+          disabled={isCreatingMatches}
+        >
+          Cancel
+        </Button>
+      </div>
+    ) : (
+      <Button 
+        onClick={handleAutoMatch}
+        disabled={isCreatingMatches}
+      >
+        {isCreatingMatches ? "Creating Matches..." : "Auto Match"}
+      </Button>
+    )}
           
+
+
+
 
           <Button
   variant="outline"
