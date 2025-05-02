@@ -97,9 +97,23 @@ export default function MatchesDisplay({
 
   // Component to render fighter stats
   const FighterStats = ({ fighter, align }: { fighter: RosterFighter, align: 'left' | 'right' }) => (
-    <div className={`absolute top-0 ${align === 'left' ? 'right-0' : 'left-0'} text-xs`}
+    <div className={`absolute flex top-0 ${align === 'left' ? 'right-0' : 'left-0'} text-xs`}
       style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
     >
+
+<table className="border-collapse" style={{ lineHeight: '0.8' }}>
+        <tbody>
+         
+            <tr>
+              <td className="text-center py-0 pl-0.5">{fighter.age_gender}</td>
+            </tr>
+       <tr>
+       <td className="text-center py-0 pl-0.5">{fighter.age}</td>
+       </tr>
+        </tbody>
+      </table>
+
+
       <table className="border-collapse" style={{ lineHeight: '0.8' }}>
         <tbody>
          
