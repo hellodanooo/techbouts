@@ -65,7 +65,10 @@ const EmailTable: React.FC<EmailTableProps> = ({ data }) => {
       String(fighter.pmt_win || ''),
       String(fighter.state || ''),
       String(fighter.weightclass || ''),
-      String(fighter.years_exp || '')
+      String(fighter.years_exp || ''),
+      String(fighter.payment_info?.paymentAmount || ''),
+      String(fighter.payment_info?.paymentCurrency || ''),
+      String(fighter.payment_info?.paymentIntentId || '')
     ]);
 
     // Handle CSV string escaping for fields that might contain commas
