@@ -510,6 +510,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       first: (selectedFighter.first || '').toUpperCase(),
       last: (selectedFighter.last || '').toUpperCase(),
       email: selectedFighter.email || '',
+      phone: selectedFighter.phone || '',
       dob: formattedDob,
       age: calculatedAge,
       gender: selectedFighter.gender || '',
@@ -571,7 +572,7 @@ const FighterForm: React.FC<FighterFormProps> = ({ onFormDataChange, locale, use
       other_exp: selectedFighter.other_exp || '',
 
       // Contact Information
-      phone: selectedFighter.phone || '',
+  
 
 
 

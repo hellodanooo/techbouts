@@ -534,6 +534,11 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         age: fighterData.age,
         gender: fighterData.gender,
         email: fighterData.email.toLowerCase(),
+        phone: fighterData.phone,
+        heightFoot: fighterData.heightFoot || 0,
+        heightInch: fighterData.heightInch || 0,
+        heightCm: fighterData.heightCm || 0,
+        
 
         // Gym Information
         gym: fighterData.gym,
@@ -541,6 +546,7 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         coach_email: fighterData.coach_email || '',
         coach_name: fighterData.coach_name,
         coach_phone: fighterData.coach_phone,
+
 
         // Location Information
         state: fighterData.state || '',
