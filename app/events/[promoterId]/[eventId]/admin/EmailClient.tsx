@@ -27,48 +27,73 @@ interface EmailTableProps {
 const EmailTable: React.FC<EmailTableProps> = ({ data }) => {
   const downloadCSV = () => {
     const headers = [
-      'First Name', 'Last Name', 'Email', 'Coach Email', 'Phone', 'Coach Phone',
-      'Age', 'Age Gender', 'Boxing Loss', 'Boxing Win', 'City', 'Coach', 
-      'Coach Name', 'Date Registered', 'DOB', 'Doc ID', 'Fighter ID', 
-      'Gender', 'Gym', 'Gym ID', 'ID', 'MMA Loss', 'MMA Win', 
-      'MT Loss', 'MT Win', 'Payment Amount', 'Payment Currency', 
-      'Payment Intent ID', 'PMT Loss', 'PMT Win', 'State', 
-      'Weight Class', 'Years Experience'
+      'First Name',        // 1
+      'Last Name',         // 2
+      'Email',             // 3
+      'Coach Email',       // 4 
+      'Phone',             // 5
+      'Coach Phone',       // 6
+      'Age',               // 7
+      'Age Gender',        // 8 
+      'Boxing Loss',       // 9
+      'Boxing Win',        // 10
+      'City',              // 11
+      'Coach',             // 12
+      'Coach Name',        // 13
+      'Date Registered',   // 14 
+      'DOB',               // 15
+      'Doc ID',            // 16
+      'Fighter ID',        // 17
+      'Gender',            // 18
+      'Gym',               // 19
+      'Gym ID',            // 20
+      'MMA Win',           // 22
+      'MMA Loss',          // 23
+      'MT Loss',           // 24
+      'MT Win',            // 25
+      'PMT Loss',          // 26
+      'PMT Win',           // 27
+      'State',             // 28
+      'Weight Class',      // 29 
+      'Years Experience',  // 30
+      'Payment Amount',    // 31
+      'Payment Currency',  // 32
+      'Payment Intent ID'  // 33
     ];
     
     const rows = data.map(fighter => [
-      String(fighter.first || ''),
-      String(fighter.last || ''),
-      String(fighter.email || ''),
-      String(fighter.coach_email || ''),
-      String(fighter.phone || ''),
-      String(fighter.coach_phone || ''),
-      String(fighter.age || ''),
-      String(fighter.age_gender || ''),
-      String(fighter.boxing_loss || ''),
-      String(fighter.boxing_win || ''),
-      String(fighter.city || ''),
-      String(fighter.coach || ''),
-      String(fighter.coach_name || ''),
-      String(fighter.date_registered || ''),
-      String(fighter.dob || ''),
-      String(fighter.docId || ''),
-      String(fighter.fighter_id || ''),
-      String(fighter.gender || ''),
-      String(fighter.gym || ''),
-      String(fighter.gym_id || ''),
-      String(fighter.mma_loss || ''),
-      String(fighter.mma_win || ''),
-      String(fighter.mt_loss || ''),
-      String(fighter.mt_win || ''),
-      String(fighter.pmt_loss || ''),
-      String(fighter.pmt_win || ''),
-      String(fighter.state || ''),
-      String(fighter.weightclass || ''),
-      String(fighter.years_exp || ''),
-      String(fighter.payment_info?.paymentAmount || ''),
-      String(fighter.payment_info?.paymentCurrency || ''),
-      String(fighter.payment_info?.paymentIntentId || '')
+      String(fighter.first || ''),                      // 1 - First Name
+      String(fighter.last || ''),                       // 2 - Last Name
+      String(fighter.email || ''),                      // 3 - Email
+      String(fighter.coach_email || ''),                // 4 - Coach Email
+      String(fighter.phone || ''),                      // 5 - Phone
+      String(fighter.coach_phone || ''),                // 6 - Coach Phone
+      String(fighter.age || ''),                        // 7 - Age
+      String(fighter.age_gender || ''),                 // 8 - Age Gender
+      String(fighter.boxing_loss || ''),                // 9 - Boxing Loss
+      String(fighter.boxing_win || ''),                 // 10 - Boxing Win
+      String(fighter.city || ''),                       // 11 - City
+      String(fighter.coach || ''),                      // 12 - Coach
+      String(fighter.coach_name || ''),                 // 13 - Coach Name
+      String(fighter.date_registered || ''),            // 14 - Date Registered
+      String(fighter.dob || ''),                        // 15 - DOB
+      String(fighter.docId || ''),                      // 16 - Doc ID
+      String(fighter.fighter_id || ''),                 // 17 - Fighter ID
+      String(fighter.gender || ''),                     // 18 - Gender
+      String(fighter.gym || ''),                        // 19 - Gym
+      String(fighter.gym_id || ''),                     // 20 - Gym ID
+      String(fighter.mma_win || ''),                    // 22 - MMA Win
+      String(fighter.mma_loss || ''),                   // 23 - MMA Loss
+      String(fighter.mt_loss || ''),                    // 24 - MT Loss
+      String(fighter.mt_win || ''),                     // 25 - MT Win
+      String(fighter.pmt_loss || ''),                   // 26 - PMT Loss
+      String(fighter.pmt_win || ''),                    // 27 - PMT Win
+      String(fighter.state || ''),                      // 28 - State (was incorrectly mapped to "weightclass")
+      String(fighter.weightclass || ''),                // 29 - Weight Class
+      String(fighter.years_exp || ''),                  // 30 - Years Experience
+      String(fighter.payment_info?.paymentAmount || ''), // 31 - Payment Amount
+      String(fighter.payment_info?.paymentCurrency || ''), // 32 - Payment Currency
+      String(fighter.payment_info?.paymentIntentId || '') // 33 - Payment Intent ID
     ]);
 
     // Handle CSV string escaping for fields that might contain commas
