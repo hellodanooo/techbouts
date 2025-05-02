@@ -10,6 +10,7 @@ import { EventType, Bout, RosterFighter } from '@/utils/types';
 import MatchesDisplay from '../matches/MatchesDisplay';
 import { CardContent } from '@/components/ui/card';
 import RosterTable from '../admin/RosterTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Props = {
   eventId: string;
@@ -33,6 +34,9 @@ export default function EmbedRegistrationPage({
 
   const router = useRouter();
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('register');
+
+
 
   useEffect(() => {
     // Mark component as loaded
@@ -140,45 +144,53 @@ export default function EmbedRegistrationPage({
 
 
 
-<div>
+<Tabs defaultValue="register" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-3 mb-4">
+        {isRegisterOpen && (
+          <TabsTrigger value="register">Register</TabsTrigger>
+        )}
+        {eventData.display_roster && (
+          <TabsTrigger value="roster">Fighters</TabsTrigger>
+        )}
+        <TabsTrigger value="matches">Matches</TabsTrigger>
+      </TabsList>
 
-
-{isRegisterOpen && (
-    <CardContent>
-          <Register
-            eventId={eventId}
-            promoterId={eventData.promoterId}
-            locale={locale}
-            eventName={eventData.event_name ?? eventData.name ?? 'Event'}
-            closeModal={() => null}
-            registrationFee={eventData.registration_fee ?? 0}
-            sanctioningLogoUrl={eventData.sanctioningLogoUrl}
-            promotionLogoUrl={eventData.promotionLogoUrl}
-            sanctioning={eventData.sanctioning}
-            payLaterEnabled={eventData.payLaterEnabled ?? false}
-            redirectUrl={eventData.redirect_url ?? ''}
-          />
+      {isRegisterOpen && (
+        <TabsContent value="register">
+          <CardContent>
+            <Register
+              eventId={eventId}
+              promoterId={eventData.promoterId}
+              locale={locale}
+              eventName={eventData.event_name ?? eventData.name ?? 'Event'}
+              closeModal={() => null}
+              registrationFee={eventData.registration_fee ?? 0}
+              sanctioningLogoUrl={eventData.sanctioningLogoUrl}
+              promotionLogoUrl={eventData.promotionLogoUrl}
+              sanctioning={eventData.sanctioning}
+              payLaterEnabled={eventData.payLaterEnabled ?? false}
+              redirectUrl={eventData.redirect_url ?? ''}
+            />
           </CardContent>
-)}
+        </TabsContent>
+      )}
 
+      {eventData.display_roster && (
+        <TabsContent value="roster">
+          <RosterTable
+            eventId={eventId}
+            promoterId={promoterId}
+            eventData={eventData}
+            isAdmin={false}
+            handleFighterClick={handleFighterClick}
+            roster={roster}
+            bouts={bouts || []}
+          />
+        </TabsContent>
+      )}
 
-   {eventData.display_roster && (
-
-<RosterTable
-          eventId={eventId}
-          promoterId={promoterId}
-          eventData={eventData}
-          isAdmin={false}
-          handleFighterClick={handleFighterClick}
-          roster={roster || []} // Assuming roster is part of eventData
-          bouts={bouts || []} // Pass bouts as expected
-        />
-
-)}
-
-
-    
-          <MatchesDisplay 
+      <TabsContent value="matches">
+        <MatchesDisplay 
           bouts={bouts || []} 
           promoterId={promoterId} 
           eventId={eventId} 
@@ -186,15 +198,13 @@ export default function EmbedRegistrationPage({
           eventData={eventData}
           handleFighterClick={handleFighterClick}
         />
-
-
-
-
-</div>
+      </TabsContent>
+    </Tabs>
 
       
       
       )}
+
       </div>
     </Elements>
   );
