@@ -523,85 +523,6 @@ console.log('bout', bout)
 };
 
 
-export const editBout = async ({
-  bout,
-  promoterId,
-  eventId,
-  originalBoutNum,
-
-}: {
-  bout: Bout; // the updated bout object
-  promoterId: string;
-  eventId: string;
-  originalBoutNum?: number;
-}) => {
-  try {
-    const boutsRef = doc(
-      db,
-      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
-    );
-    const boutsDoc = await getDoc(boutsRef);
-
-    if (!boutsDoc.exists()) {
-      toast.error("No bouts found to edit.");
-      return;
-    }
-
-    const data = boutsDoc.data();
-    const existingBouts: Bout[] = data.bouts || [];
-
-    // Find index of the existing bout in the array
-    const index = existingBouts.findIndex((b) => b.boutId === bout.boutId);
-    if (index === -1) {
-      toast.error(`Bout ID ${bout.boutId} not found`);
-      return;
-    }
-
-
-
-    // Check if bout number has changed and there might be conflicts
-    if (originalBoutNum !== undefined && bout.boutNum !== originalBoutNum) {
-      const moveSuccess = await moveBout({
-        boutNum: bout.boutNum,
-        ringNum: bout.ringNum,
-        dayNum: bout.dayNum,
-        promoterId,
-        eventId,
-        existingBoutId: bout.boutId
-      });
-
-      if (!moveSuccess) {
-        toast.error("Failed to arrange bout order");
-        return;
-      }
-    }
-
-    // Get fresh data after possible reordering
-    const updatedBoutsDoc = await getDoc(boutsRef);
-    const updatedData = updatedBoutsDoc.data();
-    const updatedBouts: Bout[] = updatedData?.bouts || [];
-
-    // Find index again as it might have changed
-    const updatedIndex = updatedBouts.findIndex((b) => b.boutId === bout.boutId);
-    
-    if (updatedIndex === -1) {
-      // The bout might have been removed or ID changed during reordering
-      // Simply add the updated bout to the array
-      await setDoc(boutsRef, { bouts: [...updatedBouts, bout] });
-    } else {
-      // Update the bout
-      updatedBouts[updatedIndex] = bout;
-      await setDoc(boutsRef, { bouts: updatedBouts });
-    }
-    
-    toast.success("Bout updated successfully");
-  } catch (error) {
-    console.error("Error editing bout:", error);
-    toast.error("Failed to edit bout");
-  }
-};
-
-
 export const deleteBout = async ({
   boutId,
   promoterId,
@@ -646,19 +567,21 @@ export const deleteBout = async ({
 
 
 export const moveBout = async ({
-  boutNum,        // Target bout number
+  newBoutNum,    
+  originalBoutNum,    
   ringNum,
   dayNum,
   promoterId,
   eventId,
-  existingBoutId = null, // ID of bout being edited or null for new bout
+  existingBoutId,
 }: {
-  boutNum: number;
+  newBoutNum: number;
+  originalBoutNum: number; 
   ringNum: number;
   dayNum: number;
   promoterId: string;
   eventId: string;
-  existingBoutId?: string | null;
+  existingBoutId: string;
 }): Promise<boolean> => {
   try {
     // Get the existing bouts
@@ -674,21 +597,372 @@ export const moveBout = async ({
     }
 
     const data = boutsDoc.data();
-    const existingBouts: Bout[] = data.bouts || [];
+    const originalBouts: Bout[] = [...(data.bouts || [])];
     
-console.log("bout before moving:", existingBouts);
-
-
+    // Log the original bouts array
+    console.log(`[MOVE BOUT] Original bouts JSON:`, JSON.stringify(originalBouts, null, 2));
+    console.log(`[MOVE BOUT] Starting move operation. Original bouts: ${originalBouts.length}`);
     
-    console.log("Successfully moved/rearranged bouts");
-    return true;
+    if (originalBouts.length === 0) {
+      toast.error("No bouts found to reorder.");
+      return false;
+    }
+    
+    // IMPORTANT: Identify any duplicate boutNums in the original data before we start
+    const boutsWithSameNum = new Map();
+    originalBouts.forEach(bout => {
+      const key = `day${bout.dayNum}ring${bout.ringNum}bout${bout.boutNum}`;
+      if (!boutsWithSameNum.has(key)) {
+        boutsWithSameNum.set(key, []);
+      }
+      boutsWithSameNum.get(key).push(bout.boutId);
+    });
+    
+    // Log any duplicates found in the original data
+    boutsWithSameNum.forEach((boutIds, key) => {
+      if (boutIds.length > 1) {
+        console.error(`⚠️ ORIGINAL DATA HAS DUPLICATES! Key ${key} has ${boutIds.length} bouts: ${boutIds.join(', ')}`);
+      }
+    });
+    
+    // Find the bout to move
+    let boutToMove: Bout | undefined;
+    if (existingBoutId) {
+      boutToMove = originalBouts.find(bout => bout.boutId === existingBoutId);
+      
+      if (!boutToMove) {
+        toast.error(`Could not find bout with ID ${existingBoutId}`);
+        return false;
+      }
+      
+      // Log the bout being moved
+      console.log(`[MOVE BOUT] Bout being moved:`, JSON.stringify(boutToMove, null, 2));
+      console.log(`[MOVE BOUT] Moving bout: ${boutToMove.red?.first} vs ${boutToMove.blue?.first} (Originally at position ${originalBoutNum}, moving to ${newBoutNum})`);
+    }
+    
+    // CRITICAL FIX: Completely separate the bouts
+    // 1. Create a NEW array with ALL bouts EXCEPT the one being moved
+    const boutsWithoutMoved = originalBouts.filter(bout => 
+      !existingBoutId || bout.boutId !== existingBoutId
+    );
+    
+    // 2. Separate by day/ring
+    const sameDayRingBouts = boutsWithoutMoved.filter(
+      bout => bout.dayNum === dayNum && bout.ringNum === ringNum
+    );
+    
+    const otherBouts = boutsWithoutMoved.filter(
+      bout => bout.dayNum !== dayNum || bout.ringNum !== ringNum
+    );
+    
+    // 3. Sort the bouts in the same day/ring by their current boutNum
+    sameDayRingBouts.sort((a, b) => {
+      const numA = typeof a.boutNum === 'number' ? a.boutNum : parseInt(String(a.boutNum));
+      const numB = typeof b.boutNum === 'number' ? b.boutNum : parseInt(String(b.boutNum));
+      return numA - numB;
+    });
+    
+    // 4. Calculate insertion point ensuring it's within bounds
+    let targetPosition = Math.max(1, Math.min(sameDayRingBouts.length + 1, newBoutNum));
+    console.log(`[MOVE BOUT] Target position for insertion: ${targetPosition} (boutNum=${newBoutNum})`);
+    
+    // Find and log the bout at the target position (if any)
+    if (targetPosition <= sameDayRingBouts.length) {
+      const boutAtTargetPosition = sameDayRingBouts[targetPosition - 1];
+      console.log(`[MOVE BOUT] Bout at target position ${targetPosition}:`, JSON.stringify(boutAtTargetPosition, null, 2));
+      console.log(`[MOVE BOUT] This bout will be shifted: ${boutAtTargetPosition.red?.first} vs ${boutAtTargetPosition.blue?.first}`);
+    } else {
+      console.log(`[MOVE BOUT] No bout at target position ${targetPosition} - will append to end`);
+    }
+    
+    // 5. Create a new array for the reordered bouts
+    const reorderedBouts = [...sameDayRingBouts];
+    
+    // 6. Insert the bout at the specified position if we're moving one
+    if (boutToMove) {
+      reorderedBouts.splice(targetPosition - 1, 0, {
+        ...boutToMove,
+        dayNum,
+        ringNum
+      });
+      console.log(`[MOVE BOUT] Inserted bout at position ${targetPosition}`);
+    }
+    
+    // 7. Resequence ALL bouts in this day/ring with NEW boutNum and NEW boutId
+    console.log(`[MOVE BOUT] All updated boutNums after resequencing:`);
+    
+    const resequencedBouts = reorderedBouts.map((bout, index) => {
+      // Calculate the new boutNum (1-based) and create a new boutId
+      const newBoutNum = index + 1;
+      const sanctioning = bout.sanctioning || '';
+      const newBoutId = `day${dayNum}ring${ringNum}bout${newBoutNum}${sanctioning}${promoterId}${eventId}`;
+      
+      const oldBoutNum = bout.boutNum;
+      const isMovedBout = bout.boutId === existingBoutId || 
+                          (bout.red?.first === boutToMove?.red?.first && 
+                           bout.blue?.first === boutToMove?.blue?.first);
+      
+      // Log each bout's resequencing info
+      if (isMovedBout) {
+        console.log(`[MOVE BOUT] 🟢 MOVED: ${bout.red?.first} vs ${bout.blue?.first}, old=${oldBoutNum}, new=${newBoutNum}`);
+      } else if (newBoutNum >= targetPosition) {
+        console.log(`[MOVE BOUT] 🔼 SHIFTED: ${bout.red?.first} vs ${bout.blue?.first}, old=${oldBoutNum}, new=${newBoutNum}`);
+      } else {
+        console.log(`[MOVE BOUT] ⬜ UNCHANGED: ${bout.red?.first} vs ${bout.blue?.first}, old=${oldBoutNum}, new=${newBoutNum}`);
+      }
+      
+      // Log the ID change
+      console.log(`   [BOUT ID] old: ${bout.boutId}`);
+      console.log(`   [BOUT ID] new: ${newBoutId}`);
+      
+      // Create a completely new bout object to avoid any reference issues
+      return {
+        ...bout,
+        boutNum: newBoutNum,
+        boutId: newBoutId
+      };
+    });
+    
+    // 8. Create the final array with other bouts and resequenced bouts
+    const finalBouts = [...otherBouts, ...resequencedBouts];
+    
+    // 9. Verify there are no duplicates in our final array
+    const finalBoutMap = new Map();
+    let hasDuplicates = false;
+    
+    finalBouts.forEach(bout => {
+      const key = `day${bout.dayNum}ring${bout.ringNum}bout${bout.boutNum}`;
+      if (finalBoutMap.has(key)) {
+        hasDuplicates = true;
+        console.error(`Duplicate found in FINAL array: ${key}`);
+        console.error(`  First: ${finalBoutMap.get(key).red?.first} vs ${finalBoutMap.get(key).blue?.first}`);
+        console.error(`  Second: ${bout.red?.first} vs ${bout.blue?.first}`);
+      }
+      finalBoutMap.set(key, bout);
+    });
+    
+    if (hasDuplicates) {
+      console.error("[MOVE BOUT] Duplicates detected in final array, aborting save");
+      toast.error("Error: Duplicate bout numbers detected");
+      return false;
+    }
+    
+    // 10. Verify that count is preserved when moving a bout
+    if (existingBoutId && finalBouts.length !== originalBouts.length) {
+      console.error(`[MOVE BOUT] Count mismatch: Original=${originalBouts.length}, Final=${finalBouts.length}`);
+      toast.error("Error: Bout count mismatch");
+      return false;
+    }
+    
+    // 11. COMPLETELY REPLACE the bouts array in the document
+    console.log(`[MOVE BOUT] Saving ${finalBouts.length} bouts with COMPLETE replacement`);
+    
+    try {
+      // Use set with { merge: false } to completely replace the document
+      await setDoc(boutsRef, { bouts: finalBouts });
+      console.log("[MOVE BOUT] Successfully saved resequenced bouts");
+      toast.success("Bout order updated successfully");
+      return true;
+    } catch (saveError) {
+      console.error("[MOVE BOUT] Error saving bouts:", saveError);
+      toast.error("Failed to save bout order");
+      return false;
+    }
   } catch (error) {
-    console.error("Error moving bouts:", error);
-    toast.error("Failed to rearrange bouts");
+    console.error("[MOVE BOUT] Error in moveBout function:", error);
+    toast.error("Failed to rearrange bout");
     return false;
   }
 };
 
+
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+
+export const editBout = async ({
+  bout,
+  promoterId,
+  eventId,
+  originalBoutNum,
+}: {
+  bout: Bout; // the updated bout object
+  promoterId: string;
+  eventId: string;
+  originalBoutNum?: number;
+}) => {
+  try {
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts found to edit.");
+      return;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+
+    // Find index of the existing bout in the array
+    const index = existingBouts.findIndex((b) => b.boutId === bout.boutId);
+    
+    console.log(`[EDIT BOUT] Editing bout: ${bout.red?.first} vs ${bout.blue?.first}`);
+    console.log(`[EDIT BOUT] Original boutNum: ${originalBoutNum}, New boutNum: ${bout.boutNum}`);
+    console.log(`[EDIT BOUT] BoutId: ${bout.boutId}`);
+    console.log(`[EDIT BOUT] Found at index: ${index}`);
+
+    // Check if bout number has changed and there might be conflicts
+    if (originalBoutNum !== undefined && bout.boutNum !== originalBoutNum) {
+      console.log(`[EDIT BOUT] Bout number changed from ${originalBoutNum} to ${bout.boutNum}. Moving bout...`);
+      
+      // Store the fighters for identification after move
+      const redFighterId = bout.red?.fighter_id;
+      const blueFighterId = bout.blue?.fighter_id;
+      
+      const moveSuccess = await moveBout({
+        newBoutNum: bout.boutNum,
+        originalBoutNum: originalBoutNum,
+        ringNum: bout.ringNum,
+        dayNum: bout.dayNum,
+        promoterId,
+        eventId,
+        existingBoutId: bout.boutId
+      });
+      
+      if (!moveSuccess) {
+        toast.error("Failed to arrange bout order");
+        return;
+      }
+      
+      // After moveBout, the bout has a new ID. We don't need to perform additional updates
+      // as the moveBout function already handles the complete replacement.
+      console.log(`[EDIT BOUT] Bout successfully moved. Not performing additional updates.`);
+      return;
+    }
+
+    // Get fresh data (needed for the case where we didn't move the bout)
+    const updatedBoutsDoc = await getDoc(boutsRef);
+    const updatedData = updatedBoutsDoc.data();
+    const updatedBouts: Bout[] = updatedData?.bouts || [];
+
+    // Find index again
+    const updatedIndex = updatedBouts.findIndex((b) => b.boutId === bout.boutId);
+    console.log(`[EDIT BOUT] Updated index after getting fresh data: ${updatedIndex}`);
+    
+    if (updatedIndex === -1) {
+      // We couldn't find the bout by its ID
+      console.log(`[EDIT BOUT] Bout ID ${bout.boutId} not found in updated data`);
+      
+      // Check if we can find the bout by fighter IDs instead
+      const redFighterId = bout.red?.fighter_id;
+      const blueFighterId = bout.blue?.fighter_id;
+      
+      const fighterMatchIndex = updatedBouts.findIndex(b => 
+        (b.red?.fighter_id === redFighterId) && 
+        (b.blue?.fighter_id === blueFighterId)
+      );
+      
+      if (fighterMatchIndex !== -1) {
+        console.log(`[EDIT BOUT] Found matching bout by fighter IDs at index ${fighterMatchIndex}`);
+        console.log(`[EDIT BOUT] Using found bout ID: ${updatedBouts[fighterMatchIndex].boutId}`);
+        
+        // Update the matched bout instead of adding a new one
+        updatedBouts[fighterMatchIndex] = {
+          ...bout,
+          // Keep the correct boutId and boutNum from the database
+          boutId: updatedBouts[fighterMatchIndex].boutId,
+          boutNum: updatedBouts[fighterMatchIndex].boutNum
+        };
+        
+        await setDoc(boutsRef, { bouts: updatedBouts });
+        toast.success("Bout updated successfully");
+        return;
+      }
+      
+      // If no match was found, this is likely a new bout
+      console.log(`[EDIT BOUT] No matching fighters found. Treating as a new bout.`);
+      
+      // Check for duplicate boutNum in same day/ring
+      const sameDayRingBouts = updatedBouts.filter(
+        b => b.dayNum === bout.dayNum && b.ringNum === bout.ringNum
+      );
+      
+      const existingBoutWithSameNum = sameDayRingBouts.find(
+        b => b.boutNum === bout.boutNum
+      );
+      
+      if (existingBoutWithSameNum) {
+        console.log(`[EDIT BOUT] Found existing bout with same number ${bout.boutNum}`);
+        
+        // Generate a new unique boutNum at the end
+        const highestBoutNum = Math.max(...sameDayRingBouts.map(b => 
+          typeof b.boutNum === 'number' ? b.boutNum : parseInt(String(b.boutNum))
+        ), 0);
+        
+        const newBoutNum = highestBoutNum + 1;
+        console.log(`[EDIT BOUT] Assigning new boutNum: ${newBoutNum}`);
+        
+        // Generate a new boutId
+        const sanctioning = bout.sanctioning || '';
+        const newBoutId = `day${bout.dayNum}ring${bout.ringNum}bout${newBoutNum}${sanctioning}${promoterId}${eventId}`;
+        
+        // Add the bout with new boutNum and boutId
+        await setDoc(boutsRef, { 
+          bouts: [...updatedBouts, {
+            ...bout,
+            boutNum: newBoutNum,
+            boutId: newBoutId
+          }] 
+        });
+      } else {
+        // No conflicts, add the bout as is
+        await setDoc(boutsRef, { bouts: [...updatedBouts, bout] });
+      }
+    } else {
+      // Update the bout at its existing position
+      updatedBouts[updatedIndex] = bout;
+      await setDoc(boutsRef, { bouts: updatedBouts });
+    }
+    
+    console.log(`[EDIT BOUT] Bout update completed successfully`);
+    toast.success("Bout updated successfully");
+    
+    // Perform a verification check for duplicates
+    const verifyDoc = await getDoc(boutsRef);
+    if (verifyDoc.exists()) {
+      const verifyData = verifyDoc.data();
+      const verifyBouts: Bout[] = verifyData.bouts || [];
+      
+      // Check for duplicates by fighter pair
+      const pairMap = new Map();
+      let hasDuplicates = false;
+      
+      verifyBouts.forEach(b => {
+        const redId = b.red?.fighter_id;
+        const blueId = b.blue?.fighter_id ;
+        const key = `${redId}_vs_${blueId}`;
+        
+        if (pairMap.has(key)) {
+          hasDuplicates = true;
+          console.error(`[EDIT BOUT] ⚠️ Found duplicate after save: ${b.red?.first} vs ${b.blue?.first}`);
+          console.error(`[EDIT BOUT] First bout: ${pairMap.get(key).boutId}, second bout: ${b.boutId}`);
+        }
+        
+        pairMap.set(key, b);
+      });
+      
+      if (hasDuplicates) {
+        console.error(`[EDIT BOUT] Duplicates detected after save! Manual cleanup may be needed.`);
+        toast.warning("Bout updated, but duplicates exist. Please check the bout list.");
+      }
+    }
+  } catch (error) {
+    console.error("[EDIT BOUT] Error editing bout:", error);
+    toast.error("Failed to edit bout");
+  }
+};
 
 
 export const isBoutFinished = (bout: Bout): boolean => {
