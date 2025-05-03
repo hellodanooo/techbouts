@@ -267,15 +267,23 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
         )}
       </div>
       
-      {isAdminOrSanctioningOrPromoter && ( // Updated from isAdmin to isAdminOrSanctioningOrPromoter
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0', gap:'5px' }}>
-           {showMatchOptions ? (
-      <div className="flex gap-2 items-center">
+
+
+
+   {isAdminOrSanctioningOrPromoter && (
+  <div className="flex flex-wrap justify-center gap-2 mx-2 my-4">
+    
+    {showMatchOptions ? (
+  <div className="bg-gray-50 p-4 rounded-lg border shadow-sm max-w-xl mx-auto my-4">
+    <div className="mb-3 text-center">
+      <h3 className="text-sm font-medium text-gray-700">1. Select matching method:</h3>
+      <div className="flex justify-center gap-3 mt-2">
         <Button 
           variant={matchMethod === 'weighins' ? 'default' : 'outline'}
           onClick={() => setMatchMethod('weighins')}
           disabled={isCreatingMatches}
-          className="flex items-center gap-2"
+          className="flex-1 max-w-[150px]"
+          size="sm"
         >
           <span>Use Weighins</span>
         </Button>
@@ -284,66 +292,76 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
           variant={matchMethod === 'weightclasses' ? 'default' : 'outline'}
           onClick={() => setMatchMethod('weightclasses')}
           disabled={isCreatingMatches}
-          className="flex items-center gap-2"
+          className="flex-1 max-w-[150px]"
+          size="sm"
         >
           <span>Use Weightclasses</span>
         </Button>
-        
+      </div>
+    </div>
+    
+    <div className="text-center">
+      <h3 className="text-sm font-medium text-gray-700 mb-2">2. Create matches:</h3>
+      <div className="flex justify-center gap-3">
         <Button 
           onClick={handleAutoMatch}
           disabled={isCreatingMatches}
+          size="sm"
+          className="flex-1 max-w-[150px]"
         >
-          {isCreatingMatches ? "Creating Matches..." : "Create Matches"}
+          {isCreatingMatches ? "Creating..." : "Create Matches"}
         </Button>
         
         <Button 
           variant="outline" 
           onClick={() => setShowMatchOptions(false)}
           disabled={isCreatingMatches}
+          size="sm"
+          className="flex-1 max-w-[150px]"
         >
           Cancel
         </Button>
       </div>
-    ) : (
-      <Button 
-        onClick={handleAutoMatch}
-        disabled={isCreatingMatches}
-      >
-        {isCreatingMatches ? "Creating Matches..." : "Auto Match"}
-      </Button>
-    )}
-          
-
-
-
-
-          <Button
-  variant="outline"
-  onClick={() => handleExportHtml(bouts, eventData)}
-  className="flex items-center gap-2"
-  disabled={isCreatingMatches}
->
-  <ClipboardCopy size={16} /> {/* Import ClipboardCopy from lucide-react at the top */}
-  Copy HTML
-</Button>
-
-  
-            
+    </div>
+  </div>
+) : (
+  <Button 
+    onClick={handleAutoMatch}
+    disabled={isCreatingMatches}
+    size="sm"
+  >
+    {isCreatingMatches ? "Creating..." : "Auto Match"}
+  </Button>
+)}
         
 
 
+    <Button
+      variant="outline"
+      onClick={() => handleExportHtml(bouts, eventData)}
+      className="flex items-center gap-1"
+      disabled={isCreatingMatches}
+      size="sm"
+    >
+      <ClipboardCopy size={14} />
+      Copy HTML
+    </Button>
 
-          <Button 
-            variant="destructive" 
-            onClick={handleDeleteMatches}
-            className="flex items-center gap-2"
-            disabled={isCreatingMatches}
-          >
-            <Trash2 size={16} />
-            Delete Matches
-          </Button>
-        </div>
-      )}
+    <Button 
+      variant="destructive" 
+      onClick={handleDeleteMatches}
+      className="flex items-center gap-1"
+      disabled={isCreatingMatches}
+      size="sm"
+    >
+      <Trash2 size={14} />
+      Delete Matches
+    </Button>
+  </div>
+)}
+
+
+
 
       <StatusMessages 
         messages={statusMessages} 

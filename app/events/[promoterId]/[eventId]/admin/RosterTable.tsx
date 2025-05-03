@@ -34,7 +34,7 @@ interface RosterTableProps {
   roster: RosterFighter[];
   eventId: string;
   promoterId: string;
-  isAdmin?: boolean;
+  isAdmin: boolean;
   eventData: EventType;
   bouts: Bout[];
   handleFighterClick: (fighter: RosterFighter) => void;
@@ -48,6 +48,7 @@ export default function RosterTable({
   roster, 
   eventId, 
   promoterId, 
+  isAdmin,
   eventData, 
   bouts, 
   handleFighterClick, 
@@ -291,6 +292,14 @@ export default function RosterTable({
   )}
 </div>
           <CardTitle className="flex items-center justify-center gap-2">
+           
+
+
+           {            isAdmin && (
+            
+       <div className='flex'>
+
+       
             <Button
               onClick={() => setOpenAddFighterModal(true)}
               className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
@@ -305,6 +314,15 @@ export default function RosterTable({
             >
               {conductWeighins ? 'Weighins On' : 'Weighins'}
             </Button>
+
+            </div>
+
+          )}
+
+
+
+
+
 
             <Button
               variant={showUnmatchedOnly ? 'default' : 'outline'}
@@ -392,37 +410,38 @@ export default function RosterTable({
                     <TableRow key={index}>
                       {conductWeighins && (
                         <TableCell>
-                          <div className="flex items-center">
-                          <input
+                            <div className="flex items-center">
+                            <input
                               className="no-zoom"
                               style={{ width: '50px' }}
                               type="number"
                               value={weighinValues[fighterId] || ''}
                               onChange={(e) => handleWeighinChange(fighterId, e.target.value)}
                               onClick={(e) => {
-                                e.stopPropagation();
-                                e.currentTarget.select();
+                              e.stopPropagation();
+                              e.currentTarget.select();
                               }}
+                              disabled={!isAdmin}
                             />
                             
-                            {hasUnsavedChanges && !savingWeights[fighterId] && (
+                            {isAdmin && hasUnsavedChanges && !savingWeights[fighterId] && (
                               <button 
-                                className="ml-1 bg-green-500 text-white p-1 rounded hover:bg-blue-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSaveWeight(fighterId);
-                                }}
+                              className="ml-1 bg-green-500 text-white p-1 rounded hover:bg-blue-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveWeight(fighterId);
+                              }}
                               >
-                                <Save className="h-4 w-4" />
+                              <Save className="h-4 w-4" />
                               </button>
                             )}
                             
                             {savingWeights[fighterId] && (
                               <div className="ml-1">
-                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
                               </div>
                             )}
-                          </div>
+                            </div>
                         </TableCell>
                       )}
 

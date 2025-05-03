@@ -100,50 +100,36 @@ export default function MatchesDisplay({
     <div className={`absolute flex top-0 ${align === 'left' ? 'right-0' : 'left-0'} text-xs`}
       style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
     >
-
-<table className="border-collapse" style={{ lineHeight: '0.8' }}>
+      <table className="border-collapse" style={{ lineHeight: '0.8', borderSpacing: '0px' }}>
         <tbody>
          
             <tr>
-              <td className="text-center py-0 pl-0.5">{fighter.age_gender}</td>
-            </tr>
-       <tr>
-       <td className="text-center py-0 pl-0.5">{fighter.age}</td>
-       </tr>
-        </tbody>
-      </table>
-
-
-      <table className="border-collapse" style={{ lineHeight: '0.8' }}>
-        <tbody>
-         
-            <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-center py-0 pr-0">YRS:</td>
-              <td className="text-center py-0 pl-0.5">{fighter.years_exp}</td>
+              <td className="custom-font-megapunch opacity-30 text-right">YRS:</td>
+              <td className="text-left">{fighter.years_exp}</td>
             </tr>
        
           {(fighter.mt_win > 0 || fighter.mt_loss > 0) && (
             <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-center py-0 pr-0">MT:</td>
-              <td className="text-center py-0 pl-0.5">{fighter.mt_win}-{fighter.mt_loss}</td>
+              <td className="custom-font-megapunch opacity-30 text-right">MT:</td>
+              <td className="text-left ">{fighter.mt_win}-{fighter.mt_loss}</td>
             </tr>
           )}
           {(fighter.mma_win > 0 || fighter.mma_loss > 0) && (
             <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-center py-0 pr-0">MMA:</td>
-              <td className="text-center py-0 pl-0.5">{fighter.mma_win}-{fighter.mma_loss}</td>
+              <td className="custom-font-megapunch opacity-30 w-5 text-right">MMA:</td>
+              <td className="text-left ">{fighter.mma_win}-{fighter.mma_loss}</td>
             </tr>
           )}
           {(fighter.pmt_win > 0 || fighter.pmt_loss > 0) && (
             <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-center py-0 pr-0">PMT:</td>
-              <td className="text-center py-0 pl-0.5">{fighter.pmt_win}-{fighter.pmt_loss}</td>
+              <td className="custom-font-megapunch opacity-30 w-10 text-right">PMT:</td>
+              <td className="text-left">{fighter.pmt_win}-{fighter.pmt_loss}</td>
             </tr>
           )}
           {(fighter.pb_win > 0 || fighter.pb_loss > 0) && (
             <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-center py-0 pr-0">PBSC:</td>
-              <td className="text-center py-0 pl-0.5">{fighter.pb_win}-{fighter.pb_loss}</td>
+              <td className="custom-font-megapunch opacity-30 w-10 text-right">PBSC:</td>
+              <td className="text-left">{fighter.pb_win}-{fighter.pb_loss}</td>
             </tr>
           )}
         </tbody>
@@ -160,6 +146,7 @@ export default function MatchesDisplay({
 
     return (
       <TableRow key={index}>
+        {/* RED FIGHTER */}
         <TableCell>
           <div className="flex items-center justify-start relative">
             <FighterStats fighter={redFighter} align="left" />
@@ -169,45 +156,63 @@ export default function MatchesDisplay({
               onClick={() => handleFighterClick(redFighter)}
             >
               <Image
-                src={getPhotoUrl(redFighter)}
-                alt="Red Fighter"
-                width={40}
-                height={40}
-                className="rounded-md"
+          src={getPhotoUrl(redFighter)}
+          alt="Red Fighter"
+          width={40}
+          height={40}
+          className="rounded-md mr-auto -mb-1"
               />
-
+     <div className="flex justify-start bg-gray-100 border border-black rounded-md mr-auto ml-1 pl-1 pr-1"
+                   style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
+                   >
+         
+         {redFighter.weighin > 0 && <div>{redFighter.weighin} lbs</div>}
+          
+           <div className="text-center pl-0.5"
+           
+           >
+             {redFighter.gender?.startsWith('F') ? (
+               <span className="text-pink-500">F</span>
+             ) : redFighter.gender?.startsWith('M') ? (
+               <span className="text-blue-500">M</span>
+             ) : (
+              redFighter.gender
+             )}
+           </div>
+           <div className="text-center pl-0.5">{redFighter.age}</div>
+               </div>
               <div className="text-left">
-                <div
-                  className="font-medium"
-                  style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
-                >
-                  {truncateText(redFighter.first, 8)} {truncateText(redFighter.last, 8)}
-                </div>
-                <div className="text-sm text-gray-500"
-                  style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
-                >
-                  {truncateText(redFighter.gym, 15)}
-                </div>
+          <div
+            className="font-medium"
+            style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
+          >
+            {truncateText(redFighter.first, 8)} {truncateText(redFighter.last, 8)}
+          </div>
+          <div className="text-sm text-gray-500"
+            style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
+          >
+            {truncateText(redFighter.gym, 15)}
+          </div>
               </div>
             </div>
           </div>
         </TableCell>
-
+      {/* CENTER CONTENT */}
         <TableCell className="text-center">
         {isAdmin && (
-  <div
-    className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
-    onClick={() => {
-      if (onBoutSelect) {
+        <div
+          className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
+          onClick={() => {
+            if (onBoutSelect) {
         onBoutSelect(bout);
-      } else {
+            } else {
         console.log('Bout selected:', bout.boutId || 'bout has no ID');
-      }
-    }}
-  >
-    <FaEdit style={{ fontSize: '1.2rem' }} />
-  </div>
-)}
+            }
+          }}
+        >
+          <FaEdit style={{ fontSize: '1.2rem' }} />
+        </div>
+      )}
           <div
             className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-400 mx-auto"
             style={{ fontSize: '0.9rem' }}
@@ -224,7 +229,7 @@ export default function MatchesDisplay({
             </div>
           )}
         </TableCell>
-
+      {/* BLUE FIGHTER */}
         <TableCell>
           <div className="flex items-center justify-end relative">
             <FighterStats fighter={blueFighter} align="right" />
@@ -234,25 +239,47 @@ export default function MatchesDisplay({
               onClick={() => handleFighterClick(blueFighter)}
             >
               <Image
-                src={getPhotoUrl(blueFighter)}
-                alt="Blue Fighter"
-                width={40}
-                height={40}
-                className="rounded-md ml-auto"
+          src={getPhotoUrl(blueFighter)}
+          alt="Blue Fighter"
+          width={40}
+          height={40}
+          className="rounded-md ml-auto -mb-1"
               />
+
+                <div className="flex justify-end bg-gray-100 border border-black rounded-md ml-auto mr-1 pl-1 pr-1"
+                   style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
+                >
+               
+              {blueFighter.weighin > 0 && <div>{blueFighter.weighin} lbs</div>}
+               
+                <div className="text-center pl-0.5">
+                {blueFighter.gender?.startsWith('F') ? (
+                <span className="text-pink-500">F</span>
+                ) : blueFighter.gender?.startsWith('M') ? (
+                <span className="text-blue-500">M</span>
+                ) : (
+                blueFighter.gender
+                )}
+                </div>
+                <div className="text-center pl-0.5">{blueFighter.age}</div>
+                </div>
+
               <div className="text-right">
-                <div
-                  className="font-medium"
-                  style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
-                >
-                  {truncateText(blueFighter.first, 8)} {truncateText(blueFighter.last, 8)}
-                </div>
-                <div
-                  className="text-sm text-gray-500"
-                  style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)' }}
-                >
-                  {truncateText(blueFighter.gym, 15)}
-                </div>
+
+
+
+          <div
+            className="font-medium"
+            style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
+          >
+            {truncateText(blueFighter.first, 8)} {truncateText(blueFighter.last, 8)}
+          </div>
+          <div
+            className="text-sm text-gray-500"
+            style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
+          >
+            {truncateText(blueFighter.gym, 15)}
+          </div>
               </div>
             </div>
           </div>
