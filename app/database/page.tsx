@@ -19,7 +19,7 @@ const LoadingFighters = () => (
 );
 
 // Function to get initial data directly from Firestore
-async function getInitialData() {
+async function getInitialFighters() {
   try {
     // Get total count
     const fightersRef = collection(techboutsDb, 'techbouts_fighters');
@@ -114,7 +114,7 @@ async function getInitialData() {
 export async function generateMetadata(): Promise<Metadata> {
   try {
     // Get the data including total count
-    const { totalCount } = await getInitialData();
+    const { totalCount } = await getInitialFighters();
     
     return {
       title: `TechBouts Fighter Database - ${totalCount} Fighters`,
@@ -132,7 +132,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function FighterDatabase() {
   try {
     // Get initial fighters (just a small subset of 50)
-    const { fighters: initialFighters, totalCount, pagination } = await getInitialData();
+    const { fighters: initialFighters, totalCount, pagination } = await getInitialFighters();
 
     return (
       <div className="w-full flex flex-col items-center space-y-6">

@@ -3,13 +3,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
-import { RefreshCw, Save } from "lucide-react";
+import { RefreshCw, Save, CheckCircle, Plus, Loader2 } from "lucide-react";
 import AddFighterModal from '../../../../../components/database/AddFighterModal';
 import { toast } from 'sonner';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import { refreshOneFighterData, saveTechBoutsWeighin, fetchTechBoutsRoster } from '@/utils/apiFunctions/techboutsRoster';
 import { fetchPmtRoster, savePmtWeighin } from '@/utils/apiFunctions/pmtRoster';
-import { Loader2 } from "lucide-react";
+
+import { checkFighterExistsInDatabase, addFighterToDatabase } from "@/utils/records/database";
+
+
 
 import {
   Card,
@@ -28,7 +31,6 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 interface RosterTableProps {
   roster: RosterFighter[];
@@ -71,6 +73,40 @@ export default function RosterTable({
   const [unsavedChanges, setUnsavedChanges] = useState<Set<string>>(new Set());
   
   const [showUnmatchedOnly, setShowUnmatchedOnly] = useState(false);
+
+  const [fightersInDatabase, setFightersInDatabase] = useState<{ [key: string]: boolean }>({});
+  const [addingToDatabase, setAddingToDatabase] = useState<{ [key: string]: boolean }>({});
+
+
+  const handleAddToDatabase = async (fighter: RosterFighter) => {
+    if (!fighter.fighter_id) return;
+    
+    // Set loading state
+    setAddingToDatabase(prev => ({ ...prev, [fighter.fighter_id!]: true }));
+    
+    try {
+      const success = await addFighterToDatabase(fighter);
+      
+      if (success) {
+        // Update the status in our state
+        setFightersInDatabase(prev => ({ 
+          ...prev, 
+          [fighter.fighter_id!]: true 
+        }));
+        
+        toast.success(`${fighter.first} ${fighter.last} added to database`);
+      } else {
+        toast.error("Failed to add fighter to database");
+      }
+    } catch (error) {
+      console.error("Error adding fighter to database:", error);
+      toast.error("Error adding fighter to database");
+    } finally {
+      // Clear loading state
+      setAddingToDatabase(prev => ({ ...prev, [fighter.fighter_id!]: false }));
+    }
+  };
+
 
   const matchedFighterIds = useMemo(() => {
     const ids = new Set<string>();
@@ -195,6 +231,25 @@ export default function RosterTable({
   };
 
 
+  useEffect(() => {
+    const checkFightersExistence = async () => {
+      const existenceMap: { [key: string]: boolean } = {};
+      
+      // Check existence for each fighter in the roster
+      for (const fighter of rosterData) {
+        if (fighter.fighter_id) {
+          const exists = await checkFighterExistsInDatabase(fighter.fighter_id);
+          existenceMap[fighter.fighter_id] = exists;
+        }
+      }
+      
+      setFightersInDatabase(existenceMap);
+    };
+    
+    if (rosterData?.length) {
+      checkFightersExistence();
+    }
+  }, [rosterData]);
 
 
   if (!rosterData?.length) {
@@ -394,8 +449,18 @@ export default function RosterTable({
                     {sortKey === 'gender' && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
                   </TableHead>
                   <TableHead>MT-MMA</TableHead>
-                  <TableHead>Refresh</TableHead>
-                  <TableHead>Search</TableHead>
+                  {isAdmin && (
+                    <TableHead>Refresh</TableHead>
+                  )  
+                }
+                  {isAdmin && (
+
+                    <TableHead>Search</TableHead>
+                  )}
+              {isAdmin && (
+                    <TableHead>Database</TableHead>
+                  )}
+                
                 </TableRow>
               </TableHeader>
 
@@ -466,23 +531,28 @@ export default function RosterTable({
                       <TableCell>{fighter.age || '-'}</TableCell>
                       <TableCell>{fighter.gender || '-'}</TableCell>
                       <TableCell>{`${fighter.mt_win || 0}-${fighter.mt_loss || 0}`}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`
-      cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium 
-      ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
-    `}
-                          onClick={() =>
-                            refreshOneFighterData(fighter, promoterId, eventId, setIsRefreshing, setRosterData)
-                          }
-                        >
-                          <RefreshCw
-                            className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''
-                              }`}
-                          />
-                          {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
-                        </span>
-                      </TableCell>
+                      
+                      {isAdmin && (
+                             <TableCell>
+                             <span
+                               className={`
+           cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium 
+           ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
+         `}
+                               onClick={() =>
+                                 refreshOneFighterData(fighter, promoterId, eventId, setIsRefreshing, setRosterData)
+                               }
+                             >
+                               <RefreshCw
+                                 className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''
+                                   }`}
+                               />
+                               {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
+                             </span>
+                           </TableCell>
+                      )}
+                 
+                 {isAdmin && (
                       <TableCell>
                         <span
                           className="cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
@@ -495,6 +565,38 @@ export default function RosterTable({
                           Search
                         </span>
                       </TableCell>
+                    )}
+
+ {isAdmin && (
+  <TableCell className="text-center">
+    {fightersInDatabase[fighterId] !== undefined ? (
+      fightersInDatabase[fighterId] ? (
+        <CheckCircle className="h-5 w-5 text-green-500" />
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          className="px-2 py-1 text-xs h-8"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddToDatabase(fighter);
+          }}
+          disabled={addingToDatabase[fighterId]}
+        >
+          {addingToDatabase[fighterId] ? (
+            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+          ) : (
+            <Plus className="h-3 w-3 mr-1" />
+          )}
+          Add
+        </Button>
+      )
+    ) : (
+      <span className="text-xs text-gray-400">Checking...</span>
+    )}
+  </TableCell>
+)}
+
                     </TableRow>
                   );
                 })}

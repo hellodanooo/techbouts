@@ -610,8 +610,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     }
   }
 
-
-
   // Helper function to determine age_gender classification
   function determineAgeGender(age: number, gender: string): 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS' {
     if (age >= 18) {
