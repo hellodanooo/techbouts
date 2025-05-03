@@ -115,7 +115,7 @@ export default function EmbedRegistrationPage({
   // Handle fighter click
   const handleFighterClick = (fighter: RosterFighter) => {
     if (fighter && fighter.fighter_id) {
-      router.push(`/fighters/${fighter.fighter_id}`);
+      router.push(`/fighter/${fighter.fighter_id}`);
     }
   };
 

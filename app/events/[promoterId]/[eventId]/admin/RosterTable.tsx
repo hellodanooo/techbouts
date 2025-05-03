@@ -448,7 +448,7 @@ export default function RosterTable({
                     Gender
                     {sortKey === 'gender' && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
                   </TableHead>
-                  <TableHead>MT-MMA</TableHead>
+                  <TableHead>Records</TableHead>
                   {isAdmin && (
                     <TableHead>Refresh</TableHead>
                   )  
@@ -530,7 +530,12 @@ export default function RosterTable({
                       <TableCell>{fighter.weightclass || '-'}</TableCell>
                       <TableCell>{fighter.age || '-'}</TableCell>
                       <TableCell>{fighter.gender || '-'}</TableCell>
-                      <TableCell>{`${fighter.mt_win || 0}-${fighter.mt_loss || 0}`}</TableCell>
+                        <TableCell>
+                        <div>
+                          {fighter.mt_win > 0 || fighter.mt_loss > 0 ? `${fighter.mt_win || 0}-${fighter.mt_loss || 0}` : ''}
+                          {fighter.mma_win > 0 || fighter.mma_loss > 0 ? ` ${fighter.mma_win || 0}-${fighter.mma_loss || 0}` : ''}
+                        </div>
+                        </TableCell>
                       
                       {isAdmin && (
                              <TableCell>
