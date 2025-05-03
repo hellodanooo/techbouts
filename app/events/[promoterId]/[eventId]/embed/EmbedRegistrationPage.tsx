@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import Register from '@/components/events/Register';
@@ -32,7 +31,7 @@ export default function EmbedRegistrationPage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [locale, setLocale] = useState('en');
 
-  const router = useRouter();
+
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('register');
 
@@ -111,13 +110,12 @@ export default function EmbedRegistrationPage({
 
 
 
- 
-  // Handle fighter click
   const handleFighterClick = (fighter: RosterFighter) => {
     if (fighter && fighter.fighter_id) {
-      router.push(`/fighter/${fighter.fighter_id}`);
+      window.open(`https://www.techbouts.com/fighter/${fighter.fighter_id}`, '_blank');
     }
   };
+
 
 
   if (!eventData) {
