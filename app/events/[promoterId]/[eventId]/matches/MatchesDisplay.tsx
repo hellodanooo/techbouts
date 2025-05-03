@@ -45,6 +45,30 @@ export default function MatchesDisplay({
     return false;
   });
 
+
+  const [selectedRing, setSelectedRing] = useState<number | null>(null);
+
+  const ringNumbers = useMemo(() => {
+    const rings = new Set<number>();
+    bouts.forEach(bout => {
+      // Check both ringNum and ringNumber properties since your data shows ringNum
+      const ring = bout.ringNum || bout.ringNum || 1;
+      rings.add(ring);
+    });
+    return Array.from(rings).sort((a, b) => a - b);
+  }, [bouts]);
+
+  const filteredBouts = useMemo(() => {
+    if (selectedRing === null) return bouts;
+    return bouts.filter(bout => {
+      // Check both ringNum and ringNumber properties
+      const ring = bout.ringNum || bout.ringNum || 1;
+      return ring === selectedRing;
+    });
+  }, [bouts, selectedRing]);
+
+
+
   // Function to check if a bout is finished
   const isBoutFinished = (bout: Bout): boolean => {
     // Check if both red and blue have results other than null, blank, or "-"
@@ -60,9 +84,11 @@ export default function MatchesDisplay({
     );
   };
 
-  // Separate bouts into finished and unfinished
+
+
+  // Separate filtered bouts into finished and unfinished
   const { finishedBouts, unfinishedBouts } = useMemo(() => {
-    return bouts.reduce((acc, bout) => {
+    return filteredBouts.reduce((acc, bout) => {
       if (isBoutFinished(bout)) {
         acc.finishedBouts.push(bout);
       } else {
@@ -70,7 +96,10 @@ export default function MatchesDisplay({
       }
       return acc;
     }, { finishedBouts: [] as Bout[], unfinishedBouts: [] as Bout[] });
-  }, [bouts]);
+  }, [filteredBouts]);
+
+
+
 
   const isValidUrl = (url: string | undefined): boolean => {
     if (!url) return false;
@@ -166,7 +195,7 @@ export default function MatchesDisplay({
                    style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
                    >
          
-         {redFighter.weighin > 0 && <div>{redFighter.weighin} lbs</div>}
+        
           
            <div className="text-center pl-0.5"
            
@@ -180,6 +209,9 @@ export default function MatchesDisplay({
              )}
            </div>
            <div className="text-center pl-0.5">{redFighter.age}</div>
+
+           {redFighter.weighin > 0 && <div className='ml-1'>{redFighter.weighin} lbs</div>}
+
                </div>
               <div className="text-left">
           <div
@@ -250,7 +282,7 @@ export default function MatchesDisplay({
                    style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
                 >
                
-              {blueFighter.weighin > 0 && <div>{blueFighter.weighin} lbs</div>}
+              {blueFighter.weighin > 0 && <div className='mr-1'>{blueFighter.weighin} lbs</div>}
                
                 <div className="text-center pl-0.5">
                 {blueFighter.gender?.startsWith('F') ? (
@@ -291,6 +323,32 @@ export default function MatchesDisplay({
   return (
     <Card className="w-full">
       <CardHeader>
+
+      {ringNumbers.length > 1 && (
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button
+              onClick={() => setSelectedRing(null)}
+              variant={selectedRing === null ? "default" : "outline"}
+              size="sm"
+              className="min-w-[80px]"
+            >
+              All Rings
+            </Button>
+            {ringNumbers.map(ringNum => (
+              <Button
+                key={ringNum}
+                onClick={() => setSelectedRing(ringNum)}
+                variant={selectedRing === ringNum ? "default" : "outline"}
+                size="sm"
+                className="min-w-[80px]"
+              >
+                Ring {ringNum}
+              </Button>
+            ))}
+          </div>
+        )}
+
+
         {finishedBouts.length > 0 && (
           <Button
             onClick={() => setShowCompletedBouts(!showCompletedBouts)}

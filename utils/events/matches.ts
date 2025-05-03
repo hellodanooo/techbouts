@@ -4,71 +4,103 @@ import { db } from '@/lib/firebase_techbouts/config';
 import { RosterFighter, Bout, EventType } from '../types';
 
 
-
-export const updateBoutResults = async ({
-  boutId,
-  redResult,
-  blueResult,
-  methodOfVictory,
-  promoterId,
-  eventId,
-}: {
-  boutId: string;
-  redResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
-  blueResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
-  methodOfVictory: string;
-  promoterId: string;
-  eventId: string;
-}) => {
-  try {
-    const boutsRef = doc(
-      db,
-      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
-    );
-    const boutsDoc = await getDoc(boutsRef);
-
-    if (!boutsDoc.exists()) {
-      toast.error("No bouts found to update.");
-      return false;
-    }
-
-    const data = boutsDoc.data();
-    const existingBouts: Bout[] = data.bouts || [];
-
-    // Find the bout to update
-    const boutIndex = existingBouts.findIndex((b) => b.boutId === boutId);
-    if (boutIndex === -1) {
-      toast.error(`Bout ID ${boutId} not found`);
-      return false;
-    }
-
-    // Update the bout with results
-    const updatedBout = {
-      ...existingBouts[boutIndex],
-      red: {
-        ...existingBouts[boutIndex].red,
-        result: redResult
-      },
-      blue: {
-        ...existingBouts[boutIndex].blue,
-        result: blueResult
-      },
-      methodOfVictory: methodOfVictory
-    };
-
-    // Replace the bout in the array
-    existingBouts[boutIndex] = updatedBout;
-
-    // Save back to Firebase
-    await setDoc(boutsRef, { bouts: existingBouts });
-    
-    toast.success("Bout results updated successfully");
-    return true;
-  } catch (error) {
-    console.error("Error updating bout results:", error);
-    toast.error("Failed to update bout results");
-    return false;
+/**
+ * Handles proper sequencing of boutNums within a specific day and ring
+ * Can be used after deletion, creation, or any operation that might disrupt the sequence
+ * 
+ * @param bouts - Array of all bouts
+ * @param dayNum - The day number to resequence
+ * @param ringNum - The ring number to resequence
+ * @param startingBoutNum - Optional starting bout number (defaults to 1)
+ * @returns The resequenced array of bouts
+ */
+export const sequenceBouts = (
+  bouts: Bout[],
+  dayNum: number,
+  ringNum: number,
+  startingBoutNum: number = 1
+): Bout[] => {
+  console.log(`[SEQUENCE BOUTS] Starting to sequence bouts for day ${dayNum}, ring ${ringNum}`);
+  console.log(`[SEQUENCE BOUTS] Total bouts before sequencing: ${bouts.length}`);
+  
+  // Separate bouts into those that need sequencing (matching day/ring) and others
+  const boutsToSequence = bouts.filter(
+    bout => bout.dayNum === dayNum && bout.ringNum === ringNum
+  );
+  
+  const otherBouts = bouts.filter(
+    bout => bout.dayNum !== dayNum || bout.ringNum !== ringNum
+  );
+  
+  console.log(`[SEQUENCE BOUTS] Found ${boutsToSequence.length} bouts to sequence for day ${dayNum}, ring ${ringNum}`);
+  console.log(`[SEQUENCE BOUTS] Other bouts not affected: ${otherBouts.length}`);
+  
+  if (boutsToSequence.length === 0) {
+    console.log(`[SEQUENCE BOUTS] No bouts to sequence, returning original array`);
+    return bouts;
   }
+  
+  // Sort the bouts by their current boutNum
+  boutsToSequence.sort((a, b) => {
+    const numA = typeof a.boutNum === 'number' ? a.boutNum : parseInt(String(a.boutNum));
+    const numB = typeof b.boutNum === 'number' ? b.boutNum : parseInt(String(b.boutNum));
+    return numA - numB;
+  });
+  
+  // Resequence the boutNums and update boutIds
+  const resequencedBouts = boutsToSequence.map((bout, index) => {
+    const newBoutNum = startingBoutNum + index;
+    const oldBoutNum = bout.boutNum;
+    const sanctioning = bout.sanctioning || '';
+    const promoterId = bout.promotionId;
+    const eventId = bout.eventId;
+    
+    // Create a new boutId with the updated sequence number
+    const newBoutId = `day${dayNum}ring${ringNum}bout${newBoutNum}${sanctioning}${promoterId}${eventId}`;
+    
+    // Log the change
+    if (oldBoutNum !== newBoutNum) {
+      console.log(`[SEQUENCE BOUTS] Resequencing bout: ${bout.red?.first} vs ${bout.blue?.first}`);
+      console.log(`[SEQUENCE BOUTS] Old boutNum: ${oldBoutNum}, New boutNum: ${newBoutNum}`);
+      console.log(`[SEQUENCE BOUTS] Old boutId: ${bout.boutId}`);
+      console.log(`[SEQUENCE BOUTS] New boutId: ${newBoutId}`);
+    }
+    
+    // Return a new bout object with updated boutNum and boutId
+    return {
+      ...bout,
+      boutNum: newBoutNum,
+      boutId: newBoutId
+    };
+  });
+  
+  // Combine the resequenced bouts with the other bouts
+  const finalBouts = [...otherBouts, ...resequencedBouts];
+  
+  console.log(`[SEQUENCE BOUTS] Sequencing complete. Final bout count: ${finalBouts.length}`);
+  
+  // Verify no duplicates in the final array
+  const finalBoutMap = new Map();
+  let hasDuplicates = false;
+  
+  finalBouts.forEach(bout => {
+    const key = `day${bout.dayNum}ring${bout.ringNum}bout${bout.boutNum}`;
+    if (finalBoutMap.has(key)) {
+      hasDuplicates = true;
+      console.error(`[SEQUENCE BOUTS] Duplicate found in final array: ${key}`);
+      console.error(`  First: ${finalBoutMap.get(key).red?.first} vs ${finalBoutMap.get(key).blue?.first}`);
+      console.error(`  Second: ${bout.red?.first} vs ${bout.blue?.first}`);
+    }
+    finalBoutMap.set(key, bout);
+  });
+  
+  if (hasDuplicates) {
+    console.error("[SEQUENCE BOUTS] Duplicates detected in final array!");
+  } else {
+    console.log("[SEQUENCE BOUTS] No duplicates detected in final array");
+  }
+  
+  return finalBouts;
 };
 
 export const createMatchesFromWeighins = async ({
@@ -84,8 +116,8 @@ export const createMatchesFromWeighins = async ({
   ringNum = 1, 
   startingBoutNum = 1,
   setIsCreatingMatches,
-  updateStatus, // Callback function to report status
-  saveMatches = false // Flag to control whether to save matches or just log them
+  updateStatus, 
+  saveMatches = false 
 }: {
   roster: RosterFighter[];
   eventId: string;
@@ -332,53 +364,73 @@ export const createMatchesFromWeighins = async ({
     // Save the matches to Firestore
     try {
       reportStatus("💾 Saving matches to database...");
-      
-      const boutsRef = doc(
-        db,
-        `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
-      );
-      const boutsDoc = await getDoc(boutsRef);
-      
-      // Convert proposed matches to Bout objects with sequential bout numbers
-      const newBouts: Bout[] = sortedMatches.map((match, index) => {
-        const boutNum = startingBoutNum + index;
-        return {
-          weightclass: match.avgWeight, // Use the average weight as the weightclass
-          ringNum,
-          boutNum,
-          red: match.red,
-          blue: match.blue,
-          methodOfVictory: '',
-          confirmed: false,
-          eventId,
-          eventName,
-          url: '',
-          date,
-          promotionId: promoterId,
-          promotionName,
-          sanctioning,
-          bout_type,
-          dayNum,
-          class: '',
-          boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
-        };
-      });
-      
-      if (boutsDoc.exists()) {
-        const data = boutsDoc.data();
-        const existingBouts = data.bouts || [];
-        await setDoc(boutsRef, { bouts: [...existingBouts, ...newBouts] });
-      } else {
-        await setDoc(boutsRef, { bouts: newBouts });
+    
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+    
+    let existingBouts: Bout[] = [];
+    
+    if (boutsDoc.exists()) {
+      const data = boutsDoc.data();
+      existingBouts = data.bouts || [];
+    }
+    
+    // Find the highest bout number for the specific day and ring
+    const highestBoutNum = existingBouts.reduce((highest, bout) => {
+      if (bout.dayNum === dayNum && bout.ringNum === ringNum) {
+        const boutNum = typeof bout.boutNum === 'number' ? bout.boutNum : parseInt(String(bout.boutNum));
+        return Math.max(highest, boutNum);
       }
-      
-      reportStatus(`✅ Successfully saved ${newBouts.length} matches to database`);
-      return { 
-        success: true, 
-        message: `Created and saved ${newBouts.length} matches`, 
-        matches: newBouts 
+      return highest;
+    }, 0);
+    
+    // If existing bouts are found, start new bouts after the highest existing bout number
+    const actualStartingBoutNum = highestBoutNum > 0 ? highestBoutNum + 1 : startingBoutNum;
+    
+    reportStatus(`Found highest bout number ${highestBoutNum} for day ${dayNum}, ring ${ringNum}. Starting new bouts at ${actualStartingBoutNum}`);
+    
+    // Convert proposed matches to Bout objects with sequential bout numbers
+    const newBouts: Bout[] = sortedMatches.map((match, index) => {
+      const boutNum = actualStartingBoutNum + index;
+      return {
+        weightclass: match.avgWeight, // Use the average weight as the weightclass
+        ringNum,
+        boutNum,
+        red: match.red,
+        blue: match.blue,
+        methodOfVictory: '',
+        confirmed: false,
+        eventId,
+        eventName,
+        url: '',
+        date,
+        promotionId: promoterId,
+        promotionName,
+        sanctioning,
+        bout_type,
+        dayNum,
+        class: '',
+        boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
       };
-    } catch (error) {
+    });
+    
+    const combinedBouts = [...existingBouts, ...newBouts];
+    
+    // Make sure there are no duplicates or gaps in the sequence
+    const finalBouts = sequenceBouts(combinedBouts, dayNum, ringNum, startingBoutNum);
+    
+    await setDoc(boutsRef, { bouts: finalBouts });
+    
+    reportStatus(`✅ Successfully saved ${newBouts.length} matches to database`);
+    return { 
+      success: true, 
+      message: `Created and saved ${newBouts.length} matches`, 
+      matches: newBouts 
+    };
+  } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       reportStatus(`❌ Error saving matches: ${errorMessage}`);
       return { 
@@ -402,169 +454,368 @@ export const createMatchesFromWeighins = async ({
   }
 };
 
-
-export const createMatch = async ({
-  red,
-  blue,
-  weightclass,
-  boutNum,
-  ringNum,
+export const createMatchesFromWeightclasses = async ({
+  roster,
   eventId,
   promoterId,
   eventName,
   promotionName,
   date,
   sanctioning,
-  bout_type,
-  dayNum,
-  setIsCreatingMatch,
-  setRed,
-  setBlue,
+  bout_type = '',
+  dayNum = 1,
+  ringNum = 1, 
+  startingBoutNum = 1,
+  setIsCreatingMatches,
+  updateStatus,
+  saveMatches = false
 }: {
-  red: RosterFighter | null;
-  blue: RosterFighter | null;
-  weightclass: number;
-  boutNum: number;
-  ringNum: number;
+  roster: RosterFighter[];
   eventId: string;
   promoterId: string;
   eventName: string;
   promotionName: string;
   date: string;
   sanctioning: string;
-  bout_type: string;
-  dayNum: number;
-  setIsCreatingMatch: (value: boolean) => void;
-  setRed: (fighter: RosterFighter | null) => void;
-  setBlue: (fighter: RosterFighter | null) => void;
+  bout_type?: string;
+  dayNum?: number;
+  ringNum?: number;
+  startingBoutNum?: number;
+  setIsCreatingMatches: (value: boolean) => void;
+  updateStatus?: (message: string) => void;
+  saveMatches?: boolean;
 }) => {
-  if (!red || !blue || !eventId || !promoterId) {
-    toast.error("Missing fighters or event/promoter IDs");
-    return;
+  // Helper function to update status if callback provided
+  const reportStatus = (message: string) => {
+    console.log(message); // Always log to console
+    if (updateStatus) {
+      updateStatus(message); // Update UI if callback provided
+    }
+  };
+
+  if (!eventId || !promoterId) {
+    toast.error("Missing event or promoter IDs");
+    reportStatus("❌ Error: Missing event or promoter IDs");
+    return { success: false, message: "Missing event or promoter IDs", matches: [] };
   }
 
-  setIsCreatingMatch(true);
+  setIsCreatingMatches(true);
 
   try {
-    const redId = red.fighter_id;
-    const blueId = blue.fighter_id;
+    reportStatus("🔍 Getting fighter roster...");
+    
+    // Get all fighters from the roster
+    const allFighters: RosterFighter[] = roster || [];
 
-    if (!redId || !blueId) {
-      toast.error("Fighter IDs are missing");
-      return;
-    }
+    reportStatus(`📋 Found ${allFighters.length} total fighters in roster`);
 
-
-    const redWithResetResult: RosterFighter = {
-      ...red,
-      result: '-',  // Reset result to empty '-'
-    };
-
-    const blueWithResetResult: RosterFighter = {
-      ...blue,
-      result: '-',  // Reset result to empty '-'
-    };
-
-
-
-
-    const bout: Bout = {
-      
-      weightclass: weightclass,
-      ringNum: ringNum,
-      boutNum: boutNum,
-      red: redWithResetResult,
-      blue: blueWithResetResult,
-      methodOfVictory: '',
-      confirmed: false,
-      eventId,
-      eventName,
-      url: '',
-      date,
-      promotionId: promoterId,
-      promotionName,
-      sanctioning,
-      bout_type,
-      dayNum,
-      class: '',
-      boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
-      
-    };
-
-
-console.log('bout', bout)
-
-    const boutsRef = doc(
-      db,
-      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
-    );
-    const boutsDoc = await getDoc(boutsRef);
-
-    if (boutsDoc.exists()) {
-      const data = boutsDoc.data();
-      const existingBouts = data.bouts || [];
-      await setDoc(boutsRef, { bouts: [...existingBouts, bout] });
-    } else {
-      await setDoc(boutsRef, { bouts: [bout] });
-    }
-
-    toast.success(
-      `Match created: ${red.first} ${red.last} vs ${blue.first} ${blue.last}`
+    // Filter fighters with valid weightclass values
+    const eligibleFighters = allFighters.filter(
+      fighter => fighter.weightclass && fighter.weightclass > 0
     );
 
-    setRed(null);
-    setBlue(null);
+    reportStatus(`✅ Found ${eligibleFighters.length} fighters with valid weightclass values`);
+
+    if (eligibleFighters.length === 0) {
+      toast.error("No fighters with valid weightclass values found");
+      reportStatus("❌ Error: No fighters with valid weightclass values found");
+      setIsCreatingMatches(false);
+      return { success: false, message: "No fighters with valid weightclass values", matches: [] };
+    }
+
+    // Group fighters by gender
+    const fightersByGender: { [key: string]: RosterFighter[] } = {};
+    
+    eligibleFighters.forEach(fighter => {
+      const gender = fighter.gender || 'unknown';
+      if (!fightersByGender[gender]) {
+        fightersByGender[gender] = [];
+      }
+      fightersByGender[gender].push(fighter);
+    });
+
+    const genderReport = Object.keys(fightersByGender).map(gender => 
+      `${gender}: ${fightersByGender[gender].length}`
+    ).join(', ');
+    
+    reportStatus(`👥 Fighter gender breakdown: ${genderReport}`);
+
+    // Calculate age in months for each fighter
+    const calculateAgeInMonths = (dob: string): number => {
+      if (!dob) return 0;
+      
+      const birthDate = new Date(dob);
+      const today = new Date();
+      
+      const yearDiff = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      return yearDiff * 12 + monthDiff;
+    };
+
+    // Helper to check if a fighter is under 18
+    const isUnder18 = (dob: string): boolean => {
+      if (!dob) return false;
+      
+      const birthDate = new Date(dob);
+      const today = new Date();
+      
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        return age - 1 < 18;
+      }
+      
+      return age < 18;
+    };
+
+    // Count youth fighters
+    const youthCount = eligibleFighters.filter(fighter => isUnder18(fighter.dob)).length;
+    reportStatus(`👶 Found ${youthCount} youth fighters (under 18)`);
+
+    // Store proposed matches
+    const proposedMatches: { 
+      red: RosterFighter; 
+      blue: RosterFighter;
+      weightclass: number;
+      isYouth: boolean;
+    }[] = [];
+
+    // Process each gender group
+    let totalProcessed = 0;
+    let matchesCreated = 0;
+    let unmatchedTotal = 0;
+
+    reportStatus("🔄 Beginning matching process by weightclass...");
+
+    // Maximum allowed age difference for youth fighters (in months)
+    const MAX_YOUTH_AGE_DIFF_MONTHS = 24;
+
+    // Process each gender group separately
+    Object.keys(fightersByGender).forEach(gender => {
+      const fighters = fightersByGender[gender];
+      reportStatus(`⚙️ Processing ${fighters.length} ${gender} fighters`);
+      
+      // Group fighters by weightclass
+      const fightersByWeightclass: { [key: number]: RosterFighter[] } = {};
+      
+      fighters.forEach(fighter => {
+        const weightclass = fighter.weightclass || 0;
+        if (weightclass > 0) {
+          if (!fightersByWeightclass[weightclass]) {
+            fightersByWeightclass[weightclass] = [];
+          }
+          fightersByWeightclass[weightclass].push(fighter);
+        }
+      });
+      
+      reportStatus(`📊 Found ${Object.keys(fightersByWeightclass).length} different weightclasses`);
+      
+      // For each weightclass, match fighters
+      Object.entries(fightersByWeightclass).forEach(([weightclassStr, fightersInClass]) => {
+        const weightclass = parseInt(weightclassStr);
+        
+        reportStatus(`⚖️ Processing weightclass ${weightclass} with ${fightersInClass.length} fighters`);
+        
+        // We'll use this array to track which fighters have been matched
+        const matched = new Array(fightersInClass.length).fill(false);
+        
+        // For each fighter
+        for (let i = 0; i < fightersInClass.length; i++) {
+          // Skip if this fighter is already matched
+          if (matched[i]) continue;
+          
+          const fighter1 = fightersInClass[i];
+          const fighter1IsYouth = isUnder18(fighter1.dob);
+          const fighter1AgeMonths = calculateAgeInMonths(fighter1.dob);
+          
+          // Find the best match for this fighter
+          let bestMatchIndex = -1;
+          
+          for (let j = i + 1; j < fightersInClass.length; j++) {
+            // Skip if this potential opponent is already matched
+            if (matched[j]) continue;
+            
+            const fighter2 = fightersInClass[j];
+            const fighter2IsYouth = isUnder18(fighter2.dob);
+            const fighter2AgeMonths = calculateAgeInMonths(fighter2.dob);
+            
+            // Both must be youth or both must be adults
+            if (fighter1IsYouth !== fighter2IsYouth) continue;
+            
+            // If both are youth, check age difference
+            if (fighter1IsYouth && fighter2IsYouth) {
+              const ageDiffMonths = Math.abs(fighter1AgeMonths - fighter2AgeMonths);
+              if (ageDiffMonths > MAX_YOUTH_AGE_DIFF_MONTHS) continue;
+            }
+            
+            // We found a match within the same weightclass!
+            bestMatchIndex = j;
+            break;
+          }
+          
+          // If we found a match
+          if (bestMatchIndex !== -1) {
+            const fighter2 = fightersInClass[bestMatchIndex];
+            
+            proposedMatches.push({
+              red: fighter1,
+              blue: fighter2,
+              weightclass,
+              isYouth: fighter1IsYouth
+            });
+            
+            // Mark both fighters as matched
+            matched[i] = true;
+            matched[bestMatchIndex] = true;
+            
+            matchesCreated++;
+            
+            reportStatus(`🤼 Created match: ${fighter1.first} ${fighter1.last} vs ${fighter2.first} ${fighter2.last} at ${weightclass}lbs`);
+          }
+        }
+        
+        // Count unmatched fighters in this weightclass
+        const unmatchedInClass = matched.filter(m => !m).length;
+        unmatchedTotal += unmatchedInClass;
+        
+        if (unmatchedInClass > 0) {
+          reportStatus(`⚠️ ${unmatchedInClass} fighters unmatched in weightclass ${weightclass}`);
+        }
+      });
+      
+      reportStatus(`✅ Created ${matchesCreated - totalProcessed} ${gender} matches`);
+      totalProcessed = matchesCreated;
+    });
+
+    // Final report
+    reportStatus(`📊 Match creation summary: ${matchesCreated} matches created by weightclass, ${unmatchedTotal} fighters unmatched`);
+    
+    if (proposedMatches.length === 0) {
+      reportStatus("⚠️ No matches could be created with the current criteria");
+      return { 
+        success: false, 
+        message: "No matches could be created with the current criteria", 
+        matches: [] 
+      };
+    }
+
+    // Sort matches - youth first, then by weightclass (lightest first)
+    const sortedMatches = [...proposedMatches].sort((a, b) => {
+      // Youth matches come first
+      if (a.isYouth && !b.isYouth) return -1;
+      if (!a.isYouth && b.isYouth) return 1;
+      
+      // For matches of the same youth status, sort by weightclass (lightest first)
+      return a.weightclass - b.weightclass;
+    });
+    
+    reportStatus(`🔄 Sorted ${sortedMatches.length} matches by youth status and weightclass`);
+    
+    // If saveMatches is false, just return the proposed matches without saving
+    if (!saveMatches) {
+      reportStatus("✅ Generated match suggestions successfully (not saved)");
+      setIsCreatingMatches(false);
+      return { 
+        success: true, 
+        message: `Created ${matchesCreated} matches (not saved)`, 
+        matches: sortedMatches 
+      };
+    }
+    
+    // Save the matches to Firestore
+    try {
+      reportStatus("💾 Saving matches to database...");
+      
+      const boutsRef = doc(
+        db,
+        `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+      );
+      const boutsDoc = await getDoc(boutsRef);
+      
+      let existingBouts: Bout[] = [];
+      
+      if (boutsDoc.exists()) {
+        const data = boutsDoc.data();
+        existingBouts = data.bouts || [];
+      }
+      
+      // Find the highest bout number for the specific day and ring
+      const highestBoutNum = existingBouts.reduce((highest, bout) => {
+        if (bout.dayNum === dayNum && bout.ringNum === ringNum) {
+          const boutNum = typeof bout.boutNum === 'number' ? bout.boutNum : parseInt(String(bout.boutNum));
+          return Math.max(highest, boutNum);
+        }
+        return highest;
+      }, 0);
+      
+      // If existing bouts are found, start new bouts after the highest existing bout number
+      const actualStartingBoutNum = highestBoutNum > 0 ? highestBoutNum + 1 : startingBoutNum;
+      
+      reportStatus(`Found highest bout number ${highestBoutNum} for day ${dayNum}, ring ${ringNum}. Starting new bouts at ${actualStartingBoutNum}`);
+      
+      // Convert proposed matches to Bout objects with sequential bout numbers
+      const newBouts: Bout[] = sortedMatches.map((match, index) => {
+        const boutNum = actualStartingBoutNum + index;
+        return {
+          weightclass: match.weightclass, // Use the actual weightclass
+          ringNum,
+          boutNum,
+          red: match.red,
+          blue: match.blue,
+          methodOfVictory: '',
+          confirmed: false,
+          eventId,
+          eventName,
+          url: '',
+          date,
+          promotionId: promoterId,
+          promotionName,
+          sanctioning,
+          bout_type,
+          dayNum,
+          class: '',
+          boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
+        };
+      });
+      
+      const combinedBouts = [...existingBouts, ...newBouts];
+      
+      // Make sure there are no duplicates or gaps in the sequence
+      const finalBouts = sequenceBouts(combinedBouts, dayNum, ringNum, startingBoutNum);
+      
+      await setDoc(boutsRef, { bouts: finalBouts });
+      
+      reportStatus(`✅ Successfully saved ${newBouts.length} matches to database`);
+      return { 
+        success: true, 
+        message: `Created and saved ${newBouts.length} matches`, 
+        matches: newBouts 
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      reportStatus(`❌ Error saving matches: ${errorMessage}`);
+      return { 
+        success: false, 
+        message: `Error saving matches: ${errorMessage}`, 
+        matches: sortedMatches 
+      };
+    }
   } catch (error) {
-    console.error("Error creating match:", error);
-    toast.error("Failed to create match");
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error creating matches from weightclasses:", error);
+    toast.error("Failed to create matches from weightclasses");
+    reportStatus(`❌ Error: ${errorMessage}`);
+    return { 
+      success: false, 
+      message: `Error: ${errorMessage}`, 
+      matches: [] 
+    };
   } finally {
-    setIsCreatingMatch(false);
+    setIsCreatingMatches(false);
   }
 };
-
-
-export const deleteBout = async ({
-  boutId,
-  promoterId,
-  eventId,
-}: {
-  boutId: string;
-  promoterId: string;
-  eventId: string;
-}) => {
-  try {
-    const boutsRef = doc(
-      db,
-      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
-    );
-    const boutsDoc = await getDoc(boutsRef);
-
-    if (!boutsDoc.exists()) {
-      toast.error("No bouts found to delete.");
-      return;
-    }
-
-    const data = boutsDoc.data();
-    const existingBouts: Bout[] = data.bouts || [];
-
-    console.log("📦 Existing bouts:", existingBouts);
-    const boutToDelete = existingBouts.find((b) => b.boutId === boutId);
-    console.log("🗑️ Deleting bout:", boutToDelete);
-
-    // Filter out the bout to delete
-    const updatedBouts = existingBouts.filter((b) => b.boutId !== boutId);
-    console.log("✅ Updated bouts after deletion:", updatedBouts);
-
-    // Only update the bouts field
-    await setDoc(boutsRef, { bouts: updatedBouts }, { merge: true });
-    toast.success(`Bout ${boutId} deleted successfully`);
-  } catch (error) {
-    console.error("Error deleting bout:", error);
-    toast.error("Failed to delete bout");
-  }
-};
-
-
 
 export const moveBout = async ({
   newBoutNum,    
@@ -774,6 +1025,257 @@ export const moveBout = async ({
     return false;
   }
 };
+
+
+export const deleteBout = async ({
+  boutId,
+  promoterId,
+  eventId,
+}: {
+  boutId: string;
+  promoterId: string;
+  eventId: string;
+}) => {
+  try {
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts found to delete.");
+      return;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+
+    console.log("📦 Existing bouts:", existingBouts);
+    const boutToDelete = existingBouts.find((b) => b.boutId === boutId);
+    
+    if (!boutToDelete) {
+      toast.error(`Bout ID ${boutId} not found`);
+      return;
+    }
+    
+    console.log("🗑️ Deleting bout:", boutToDelete);
+
+    // Filter out the bout to delete
+    const updatedBouts = existingBouts.filter((b) => b.boutId !== boutId);
+    console.log("✅ Updated bouts after deletion:", updatedBouts);
+
+    // Get the day and ring number from the bout being deleted
+    const dayNum = boutToDelete.dayNum;
+    const ringNum = boutToDelete.ringNum;
+
+    // Resequence the bouts in the same day and ring
+    const resequencedBouts = sequenceBouts(updatedBouts, dayNum, ringNum);
+
+    // Only update the bouts field
+    await setDoc(boutsRef, { bouts: resequencedBouts }, { merge: true });
+    toast.success(`Bout ${boutId} deleted and bout order resequenced successfully`);
+  } catch (error) {
+    console.error("Error deleting bout:", error);
+    toast.error("Failed to delete bout");
+  }
+};
+
+
+export const updateBoutResults = async ({
+  boutId,
+  redResult,
+  blueResult,
+  methodOfVictory,
+  promoterId,
+  eventId,
+}: {
+  boutId: string;
+  redResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
+  blueResult: 'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-';
+  methodOfVictory: string;
+  promoterId: string;
+  eventId: string;
+}) => {
+  try {
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (!boutsDoc.exists()) {
+      toast.error("No bouts found to update.");
+      return false;
+    }
+
+    const data = boutsDoc.data();
+    const existingBouts: Bout[] = data.bouts || [];
+
+    // Find the bout to update
+    const boutIndex = existingBouts.findIndex((b) => b.boutId === boutId);
+    if (boutIndex === -1) {
+      toast.error(`Bout ID ${boutId} not found`);
+      return false;
+    }
+
+    // Update the bout with results
+    const updatedBout = {
+      ...existingBouts[boutIndex],
+      red: {
+        ...existingBouts[boutIndex].red,
+        result: redResult
+      },
+      blue: {
+        ...existingBouts[boutIndex].blue,
+        result: blueResult
+      },
+      methodOfVictory: methodOfVictory
+    };
+
+    // Replace the bout in the array
+    existingBouts[boutIndex] = updatedBout;
+
+    // Save back to Firebase
+    await setDoc(boutsRef, { bouts: existingBouts });
+    
+    toast.success("Bout results updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error updating bout results:", error);
+    toast.error("Failed to update bout results");
+    return false;
+  }
+};
+
+
+
+
+export const createMatch = async ({
+  red,
+  blue,
+  weightclass,
+  boutNum,
+  ringNum,
+  eventId,
+  promoterId,
+  eventName,
+  promotionName,
+  date,
+  sanctioning,
+  bout_type,
+  dayNum,
+  setIsCreatingMatch,
+  setRed,
+  setBlue,
+}: {
+  red: RosterFighter | null;
+  blue: RosterFighter | null;
+  weightclass: number;
+  boutNum: number;
+  ringNum: number;
+  eventId: string;
+  promoterId: string;
+  eventName: string;
+  promotionName: string;
+  date: string;
+  sanctioning: string;
+  bout_type: string;
+  dayNum: number;
+  setIsCreatingMatch: (value: boolean) => void;
+  setRed: (fighter: RosterFighter | null) => void;
+  setBlue: (fighter: RosterFighter | null) => void;
+}) => {
+  if (!red || !blue || !eventId || !promoterId) {
+    toast.error("Missing fighters or event/promoter IDs");
+    return;
+  }
+
+  setIsCreatingMatch(true);
+
+  try {
+    const redId = red.fighter_id;
+    const blueId = blue.fighter_id;
+
+    if (!redId || !blueId) {
+      toast.error("Fighter IDs are missing");
+      return;
+    }
+
+
+    const redWithResetResult: RosterFighter = {
+      ...red,
+      result: '-',  // Reset result to empty '-'
+    };
+
+    const blueWithResetResult: RosterFighter = {
+      ...blue,
+      result: '-',  // Reset result to empty '-'
+    };
+
+
+
+
+    const bout: Bout = {
+      
+      weightclass: weightclass,
+      ringNum: ringNum,
+      boutNum: boutNum,
+      red: redWithResetResult,
+      blue: blueWithResetResult,
+      methodOfVictory: '',
+      confirmed: false,
+      eventId,
+      eventName,
+      url: '',
+      date,
+      promotionId: promoterId,
+      promotionName,
+      sanctioning,
+      bout_type,
+      dayNum,
+      class: '',
+      boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
+      
+    };
+
+
+console.log('bout', bout)
+
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    if (boutsDoc.exists()) {
+      const data = boutsDoc.data();
+      const existingBouts = data.bouts || [];
+      await setDoc(boutsRef, { bouts: [...existingBouts, bout] });
+    } else {
+      await setDoc(boutsRef, { bouts: [bout] });
+    }
+
+    toast.success(
+      `Match created: ${red.first} ${red.last} vs ${blue.first} ${blue.last}`
+    );
+
+    setRed(null);
+    setBlue(null);
+  } catch (error) {
+    console.error("Error creating match:", error);
+    toast.error("Failed to create match");
+  } finally {
+    setIsCreatingMatch(false);
+  }
+};
+
+
+
+
+
+
+
 
 
 /////////////////////////////////////////////////
@@ -1375,346 +1877,3 @@ export const handleExportHtml = async (bouts: Bout[], eventData?: EventType): Pr
 
 
 
-
-export const createMatchesFromWeightclasses = async ({
-  roster,
-  eventId,
-  promoterId,
-  eventName,
-  promotionName,
-  date,
-  sanctioning,
-  bout_type = '',
-  dayNum = 1,
-  ringNum = 1, 
-  startingBoutNum = 1,
-  setIsCreatingMatches,
-  updateStatus,
-  saveMatches = false
-}: {
-  roster: RosterFighter[];
-  eventId: string;
-  promoterId: string;
-  eventName: string;
-  promotionName: string;
-  date: string;
-  sanctioning: string;
-  bout_type?: string;
-  dayNum?: number;
-  ringNum?: number;
-  startingBoutNum?: number;
-  setIsCreatingMatches: (value: boolean) => void;
-  updateStatus?: (message: string) => void;
-  saveMatches?: boolean;
-}) => {
-  // Helper function to update status if callback provided
-  const reportStatus = (message: string) => {
-    console.log(message); // Always log to console
-    if (updateStatus) {
-      updateStatus(message); // Update UI if callback provided
-    }
-  };
-
-  if (!eventId || !promoterId) {
-    toast.error("Missing event or promoter IDs");
-    reportStatus("❌ Error: Missing event or promoter IDs");
-    return { success: false, message: "Missing event or promoter IDs", matches: [] };
-  }
-
-  setIsCreatingMatches(true);
-
-  try {
-    reportStatus("🔍 Getting fighter roster...");
-    
-    // Get all fighters from the roster
-    const allFighters: RosterFighter[] = roster || [];
-
-    reportStatus(`📋 Found ${allFighters.length} total fighters in roster`);
-
-    // Filter fighters with valid weightclass values
-    const eligibleFighters = allFighters.filter(
-      fighter => fighter.weightclass && fighter.weightclass > 0
-    );
-
-    reportStatus(`✅ Found ${eligibleFighters.length} fighters with valid weightclass values`);
-
-    if (eligibleFighters.length === 0) {
-      toast.error("No fighters with valid weightclass values found");
-      reportStatus("❌ Error: No fighters with valid weightclass values found");
-      setIsCreatingMatches(false);
-      return { success: false, message: "No fighters with valid weightclass values", matches: [] };
-    }
-
-    // Group fighters by gender
-    const fightersByGender: { [key: string]: RosterFighter[] } = {};
-    
-    eligibleFighters.forEach(fighter => {
-      const gender = fighter.gender || 'unknown';
-      if (!fightersByGender[gender]) {
-        fightersByGender[gender] = [];
-      }
-      fightersByGender[gender].push(fighter);
-    });
-
-    const genderReport = Object.keys(fightersByGender).map(gender => 
-      `${gender}: ${fightersByGender[gender].length}`
-    ).join(', ');
-    
-    reportStatus(`👥 Fighter gender breakdown: ${genderReport}`);
-
-    // Calculate age in months for each fighter
-    const calculateAgeInMonths = (dob: string): number => {
-      if (!dob) return 0;
-      
-      const birthDate = new Date(dob);
-      const today = new Date();
-      
-      const yearDiff = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      return yearDiff * 12 + monthDiff;
-    };
-
-    // Helper to check if a fighter is under 18
-    const isUnder18 = (dob: string): boolean => {
-      if (!dob) return false;
-      
-      const birthDate = new Date(dob);
-      const today = new Date();
-      
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        return age - 1 < 18;
-      }
-      
-      return age < 18;
-    };
-
-    // Count youth fighters
-    const youthCount = eligibleFighters.filter(fighter => isUnder18(fighter.dob)).length;
-    reportStatus(`👶 Found ${youthCount} youth fighters (under 18)`);
-
-    // Store proposed matches
-    const proposedMatches: { 
-      red: RosterFighter; 
-      blue: RosterFighter;
-      weightclass: number;
-      isYouth: boolean;
-    }[] = [];
-
-    // Process each gender group
-    let totalProcessed = 0;
-    let matchesCreated = 0;
-    let unmatchedTotal = 0;
-
-    reportStatus("🔄 Beginning matching process by weightclass...");
-
-    // Maximum allowed age difference for youth fighters (in months)
-    const MAX_YOUTH_AGE_DIFF_MONTHS = 24;
-
-    // Process each gender group separately
-    Object.keys(fightersByGender).forEach(gender => {
-      const fighters = fightersByGender[gender];
-      reportStatus(`⚙️ Processing ${fighters.length} ${gender} fighters`);
-      
-      // Group fighters by weightclass
-      const fightersByWeightclass: { [key: number]: RosterFighter[] } = {};
-      
-      fighters.forEach(fighter => {
-        const weightclass = fighter.weightclass || 0;
-        if (weightclass > 0) {
-          if (!fightersByWeightclass[weightclass]) {
-            fightersByWeightclass[weightclass] = [];
-          }
-          fightersByWeightclass[weightclass].push(fighter);
-        }
-      });
-      
-      reportStatus(`📊 Found ${Object.keys(fightersByWeightclass).length} different weightclasses`);
-      
-      // For each weightclass, match fighters
-      Object.entries(fightersByWeightclass).forEach(([weightclassStr, fightersInClass]) => {
-        const weightclass = parseInt(weightclassStr);
-        
-        reportStatus(`⚖️ Processing weightclass ${weightclass} with ${fightersInClass.length} fighters`);
-        
-        // We'll use this array to track which fighters have been matched
-        const matched = new Array(fightersInClass.length).fill(false);
-        
-        // For each fighter
-        for (let i = 0; i < fightersInClass.length; i++) {
-          // Skip if this fighter is already matched
-          if (matched[i]) continue;
-          
-          const fighter1 = fightersInClass[i];
-          const fighter1IsYouth = isUnder18(fighter1.dob);
-          const fighter1AgeMonths = calculateAgeInMonths(fighter1.dob);
-          
-          // Find the best match for this fighter
-          let bestMatchIndex = -1;
-          
-          for (let j = i + 1; j < fightersInClass.length; j++) {
-            // Skip if this potential opponent is already matched
-            if (matched[j]) continue;
-            
-            const fighter2 = fightersInClass[j];
-            const fighter2IsYouth = isUnder18(fighter2.dob);
-            const fighter2AgeMonths = calculateAgeInMonths(fighter2.dob);
-            
-            // Both must be youth or both must be adults
-            if (fighter1IsYouth !== fighter2IsYouth) continue;
-            
-            // If both are youth, check age difference
-            if (fighter1IsYouth && fighter2IsYouth) {
-              const ageDiffMonths = Math.abs(fighter1AgeMonths - fighter2AgeMonths);
-              if (ageDiffMonths > MAX_YOUTH_AGE_DIFF_MONTHS) continue;
-            }
-            
-            // We found a match within the same weightclass!
-            bestMatchIndex = j;
-            break;
-          }
-          
-          // If we found a match
-          if (bestMatchIndex !== -1) {
-            const fighter2 = fightersInClass[bestMatchIndex];
-            
-            proposedMatches.push({
-              red: fighter1,
-              blue: fighter2,
-              weightclass,
-              isYouth: fighter1IsYouth
-            });
-            
-            // Mark both fighters as matched
-            matched[i] = true;
-            matched[bestMatchIndex] = true;
-            
-            matchesCreated++;
-            
-            reportStatus(`🤼 Created match: ${fighter1.first} ${fighter1.last} vs ${fighter2.first} ${fighter2.last} at ${weightclass}lbs`);
-          }
-        }
-        
-        // Count unmatched fighters in this weightclass
-        const unmatchedInClass = matched.filter(m => !m).length;
-        unmatchedTotal += unmatchedInClass;
-        
-        if (unmatchedInClass > 0) {
-          reportStatus(`⚠️ ${unmatchedInClass} fighters unmatched in weightclass ${weightclass}`);
-        }
-      });
-      
-      reportStatus(`✅ Created ${matchesCreated - totalProcessed} ${gender} matches`);
-      totalProcessed = matchesCreated;
-    });
-
-    // Final report
-    reportStatus(`📊 Match creation summary: ${matchesCreated} matches created by weightclass, ${unmatchedTotal} fighters unmatched`);
-    
-    if (proposedMatches.length === 0) {
-      reportStatus("⚠️ No matches could be created with the current criteria");
-      return { 
-        success: false, 
-        message: "No matches could be created with the current criteria", 
-        matches: [] 
-      };
-    }
-
-    // Sort matches - youth first, then by weightclass (lightest first)
-    const sortedMatches = [...proposedMatches].sort((a, b) => {
-      // Youth matches come first
-      if (a.isYouth && !b.isYouth) return -1;
-      if (!a.isYouth && b.isYouth) return 1;
-      
-      // For matches of the same youth status, sort by weightclass (lightest first)
-      return a.weightclass - b.weightclass;
-    });
-    
-    reportStatus(`🔄 Sorted ${sortedMatches.length} matches by youth status and weightclass`);
-    
-    // If saveMatches is false, just return the proposed matches without saving
-    if (!saveMatches) {
-      reportStatus("✅ Generated match suggestions successfully (not saved)");
-      setIsCreatingMatches(false);
-      return { 
-        success: true, 
-        message: `Created ${matchesCreated} matches (not saved)`, 
-        matches: sortedMatches 
-      };
-    }
-    
-    // Save the matches to Firestore
-    try {
-      reportStatus("💾 Saving matches to database...");
-      
-      const boutsRef = doc(
-        db,
-        `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
-      );
-      const boutsDoc = await getDoc(boutsRef);
-      
-      // Convert proposed matches to Bout objects with sequential bout numbers
-      const newBouts: Bout[] = sortedMatches.map((match, index) => {
-        const boutNum = startingBoutNum + index;
-        return {
-          weightclass: match.weightclass, // Use the actual weightclass
-          ringNum,
-          boutNum,
-          red: match.red,
-          blue: match.blue,
-          methodOfVictory: '',
-          confirmed: false,
-          eventId,
-          eventName,
-          url: '',
-          date,
-          promotionId: promoterId,
-          promotionName,
-          sanctioning,
-          bout_type,
-          dayNum,
-          class: '',
-          boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
-        };
-      });
-      
-      if (boutsDoc.exists()) {
-        const data = boutsDoc.data();
-        const existingBouts = data.bouts || [];
-        await setDoc(boutsRef, { bouts: [...existingBouts, ...newBouts] });
-      } else {
-        await setDoc(boutsRef, { bouts: newBouts });
-      }
-      
-      reportStatus(`✅ Successfully saved ${newBouts.length} matches to database`);
-      return { 
-        success: true, 
-        message: `Created and saved ${newBouts.length} matches`, 
-        matches: newBouts 
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      reportStatus(`❌ Error saving matches: ${errorMessage}`);
-      return { 
-        success: false, 
-        message: `Error saving matches: ${errorMessage}`, 
-        matches: sortedMatches 
-      };
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error creating matches from weightclasses:", error);
-    toast.error("Failed to create matches from weightclasses");
-    reportStatus(`❌ Error: ${errorMessage}`);
-    return { 
-      success: false, 
-      message: `Error: ${errorMessage}`, 
-      matches: [] 
-    };
-  } finally {
-    setIsCreatingMatches(false);
-  }
-};
