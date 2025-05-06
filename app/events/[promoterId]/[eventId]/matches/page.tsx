@@ -2,11 +2,12 @@
 import { Suspense } from 'react';
 import PageClient from './PageClient';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
-import {fetchTechBoutsRoster} from '@/utils/apiFunctions/techboutsRoster';
+import { fetchTechBoutsRoster } from '@/utils/apiFunctions/techboutsRoster';
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts'; 
 import { notFound } from 'next/navigation';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 import { fetchPmtRoster } from '@/utils/apiFunctions/pmtRoster';
+import { Bout } from '@/utils/types';
 
 // Update the type to match Next.js 15 pattern with params as a Promise
 interface PageProps {
@@ -30,7 +31,7 @@ export default async function MatchesPage({ params }: PageProps) {
   
   // Try to fetch TechBouts event data first
   let eventData = await fetchTechBoutsEvent(promoterId, eventId);
-  let matchesData = [];
+  let bouts: Bout[] = [];
   let rosterData = [];
   let sanctioning = eventData?.sanctioning || '';
 
@@ -41,7 +42,6 @@ export default async function MatchesPage({ params }: PageProps) {
     rosterData = await fetchPmtRoster(eventId) || [];
     sanctioning = 'PMT';
     
-    
     // If PMT data is also not found, return 404
     if (!eventData) {
       console.error('Event not found in either TechBouts or PMT');
@@ -49,20 +49,25 @@ export default async function MatchesPage({ params }: PageProps) {
     }
     
     // Add PMT-specific data fetching here if needed
-    // matchesData = await fetchPmtBouts(eventId);
-    // rosterData = await fetchPmtRoster(eventId);
+    // bouts = await fetchPmtBouts(eventId);
   } else {
     // Fetch TechBouts specific data
     try {
-      matchesData = await fetchTechboutsBouts(promoterId, eventId);
+      // fetchTechboutsBouts now processes bouts internally
+      bouts = await fetchTechboutsBouts(promoterId, eventId);
       rosterData = await fetchTechBoutsRoster(promoterId, eventId);
     } catch (err) {
       console.error('Error fetching TechBouts data:', err);
     }
   }
-
+  
   console.log(`Using ${sanctioning} data for event:`, eventData);
-  console.log("Bouts data:", matchesData);
+  console.log("Total bouts:", bouts.length);
+  
+  // Count regular and bracket bouts for logging
+  const bracketBouts = bouts.filter(bout => bout.bracket_bout_type);
+  console.log("Regular bouts:", bouts.length - bracketBouts.length);
+  console.log("Bracket bouts:", bracketBouts.length);
 
   return (
     <Suspense fallback={<div>Loading fighters roster...</div>}>
@@ -71,9 +76,9 @@ export default async function MatchesPage({ params }: PageProps) {
         promoterId={promoterId}
         eventData={eventData}
         initialRoster={rosterData}
-        bouts={matchesData}
+        bouts={bouts}
         roster={rosterData}
-        sanctioning={sanctioning} // Pass the source to the client component
+        sanctioning={sanctioning}
       />
     </Suspense>
   );

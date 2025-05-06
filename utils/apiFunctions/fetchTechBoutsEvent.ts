@@ -92,6 +92,7 @@ export async function fetchTechBoutsEvent(promoterId: string, eventId: string): 
       payLaterEnabled: data.payLaterEnabled || false,
       redirect_url: data.redirect_url || '',
       display_roster: data.display_roster || false,
+      display_matches: data.display_matches || false,
       
     };
 

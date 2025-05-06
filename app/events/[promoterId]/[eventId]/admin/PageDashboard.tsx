@@ -18,7 +18,7 @@ import { RosterFighter, Bout } from '@/utils/types';
 import { FaPerson } from "react-icons/fa6";
 import { fighterClick } from '@/utils/handleFighterClick';
 import { useRouter } from 'next/navigation';
-import CreateEditBout from '../matches/CreateEditBout';
+import CreateEditBout from '../matches/CreateEditMatches';
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts';
 
 
@@ -78,6 +78,9 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
     const isAuthorized = isAdmin || isPromoter || isSanctioning;
 
     const isAdminOrSanctioningOrPromoter = isAdmin || isSanctioning || isPromoter;
+    const [third, setThird] = useState<RosterFighter | null>(null);
+    const [fourth, setFourth] = useState<RosterFighter | null>(null);
+
 
     const handleFighterClick = useMemo(() => {
         return fighterClick(
@@ -86,8 +89,12 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
           setRed,
           setBlue,
           setSelectedFighter,
+          setThird, // Add missing argument
+          setFourth, // Add missing argument
           red,
-          blue
+          blue,
+          third, // Add missing argument
+          fourth // Add missing argument
         );
       }, [isAuthorized, router, red, blue]); // Changed from isAdmin to isAuthorized
 
@@ -337,8 +344,8 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             blue={selectedBout ? selectedBout.blue : blue}
             weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
             setWeightclass={() => {}}
-            bout_type={selectedBout?.bout_type || "MT"}
-            setBoutType={() => {}}
+            bout_ruleset={selectedBout?.bout_ruleset || "MT"}
+            setBoutRuleset={() => {}}
             boutConfirmed={selectedBout ? true : false}
             setBoutConfirmed={() => {}}
             isCreatingMatch={false}
@@ -351,6 +358,10 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             existingBouts={bouts}
             onClose={handleCloseCreateEditBout}
             sanctioning={eventData.sanctioning}
+            third={third}
+            fourth={fourth}
+            setThird={setThird}
+            setFourth={setFourth}
           />
         </div>
       )}

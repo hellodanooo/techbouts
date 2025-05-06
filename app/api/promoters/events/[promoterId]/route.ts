@@ -74,6 +74,7 @@ export async function GET(
               photoPackagePrice: event.photoPackagePrice ?? 0,
               coachRegPrice: event.coachRegPrice ?? 0,
               photoPackageEnabled: event.photoPackageEnabled ?? false,
+              display_matches: event.display_matches ?? false,
               
             } as EventType;
           });

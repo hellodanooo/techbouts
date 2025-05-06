@@ -33,6 +33,7 @@ export default function EmbedRegistrationPage({
 
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  
   const [activeTab, setActiveTab] = useState('register');
 
 
@@ -150,7 +151,10 @@ export default function EmbedRegistrationPage({
         {eventData.display_roster && (
           <TabsTrigger value="roster">Fighters</TabsTrigger>
         )}
-        <TabsTrigger value="matches">Matches</TabsTrigger>
+        {eventData.display_matches && (
+          <TabsTrigger value="matches">Matches</TabsTrigger>
+        )}
+     
       </TabsList>
 
       {isRegisterOpen && (
@@ -187,6 +191,7 @@ export default function EmbedRegistrationPage({
         </TabsContent>
       )}
 
+      {eventData.display_matches && (
       <TabsContent value="matches">
         <MatchesDisplay 
           bouts={bouts || []} 
@@ -197,6 +202,7 @@ export default function EmbedRegistrationPage({
           handleFighterClick={handleFighterClick}
         />
       </TabsContent>
+      )}
     </Tabs>
 
       

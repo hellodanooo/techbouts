@@ -466,7 +466,7 @@ export default function RosterTable({
 
               <TableBody>
                 {displayedRoster.map((fighter, index) => {
-                  console.log("map log", fighter.fighter_id, fighter.weightclass);
+                  // console.log("map log", fighter.fighter_id, fighter.weightclass);
                   const fighterId = fighter.fighter_id || '';
                   const name = `${fighter.first || ''} ${fighter.last || ''}`;
                   const hasUnsavedChanges = unsavedChanges.has(fighterId);

@@ -239,6 +239,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
         photoPackageEnabled: formData.photoPackageEnabled ?? false,
         sanctioningLogoUrl: sanctioningLogoUrl,
         promotionLogoUrl: formData.promotionLogoUrl ?? "",
+        display_matches: formData.display_matches ?? false, // Added property
       };
       
       // Call the appropriate API based on sanctioning type

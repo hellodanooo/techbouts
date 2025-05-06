@@ -69,6 +69,7 @@ export async function GET() {
             ticket_link: event.ticket_link ?? "",
             street: event.street ?? "",
             zip: event.zip ?? "",
+            display_matches: event.display_matches ?? false,
        
           };
         });

@@ -2,10 +2,11 @@
 import { Metadata } from 'next';
 import { fetchPmtEvent } from '@/utils/apiFunctions/fetchPmtEvent';
 import { fetchTechBoutsEvent } from '@/utils/apiFunctions/fetchTechBoutsEvent';
-import EmbedRegistrationPage from './EmbedRegistrationPage';
 import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts';
 import {fetchTechBoutsRoster} from '@/utils/apiFunctions/techboutsRoster';
 import {fetchPmtRoster} from '@/utils/apiFunctions/pmtRoster';
+
+import EmbedRegistrationPage from './EmbedRegistrationPage';
 
 export async function generateMetadata({
   params
@@ -45,13 +46,7 @@ export default async function Page({
     console.error('Error fetching event data for embed:', error);
   }
 
-  let matchesData = [];
-
-  try {
-    matchesData = await fetchTechboutsBouts(promoterId, eventId);
-  } catch (err) {
-    console.error('Error fetching TechBouts data:', err);
-  }
+  const matchesData = await fetchTechboutsBouts(promoterId, eventId);
 
   return (
     <EmbedRegistrationPage 

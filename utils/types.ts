@@ -128,7 +128,9 @@ eventId: string;
   promotionId: string;
   promotionName: string;
   sanctioning: string;
-  bout_type: string;
+  bout_ruleset: string;
+  bracket_bout_type?: 'semifinal' | 'final'| 'qualifier' | '';
+  bracket_bout_fighters?: RosterFighter[]; // ORDER OF FIGHTERS IS THE SEEDS
   dayNum: number;
   class: 'A' | 'B' | 'C' | '';
 }
@@ -206,6 +208,7 @@ export interface EventType {
   redirect_url?: string;
 
   display_roster?: boolean;
+  display_matches: boolean;
 }
 
 export type GymRecord = {

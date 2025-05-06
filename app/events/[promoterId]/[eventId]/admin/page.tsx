@@ -12,7 +12,6 @@ import { fetchTechboutsBouts } from '@/utils/apiFunctions/techboutsBouts';
 //import { fetchPuristRoster } from '@/utils/apiFunctions/fetchPuristRoster';
 
 
-
 export default async function AdminPage({ 
   params 
 }: { 

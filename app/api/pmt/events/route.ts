@@ -128,6 +128,7 @@ export async function GET() {
       street: extractField(event, 'street', 'string') || '',
    
       name: extractField(event, 'name', 'string') || extractField(event, 'event_name', 'string') || '',
+      display_matches: extractField(event, 'display_matches', 'boolean') || false,
     }));
 
     console.log('Fetched Upcoming Events:', events);

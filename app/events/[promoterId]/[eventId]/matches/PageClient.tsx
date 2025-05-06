@@ -13,7 +13,7 @@ import { fetchTechboutsBouts, deleteTechboutsMatchesJson } from '@/utils/apiFunc
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react";
 import StatusMessages from '@/components/loading_screens/StatusMessages';
-import CreateEditBout from './CreateEditBout';
+import CreateEditMatches from './CreateEditMatches';
 import { fighterClick } from '@/utils/handleFighterClick';
 import { handleExportHtml } from '@/utils/events/matches';
 import { ClipboardCopy } from "lucide-react";
@@ -44,9 +44,16 @@ export default function PageClient({
   const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
   
   // Lifted state for fighter selection
-  const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
+
+  
   const [red, setRed] = useState<RosterFighter | null>(null);
-  const [blue, setBlue] = useState<RosterFighter | null>(null);
+const [blue, setBlue] = useState<RosterFighter | null>(null);
+const [third, setThird] = useState<RosterFighter | null>(null);
+const [fourth, setFourth] = useState<RosterFighter | null>(null);
+const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
+
+  
+  
   const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
   
   const [matchMethod, setMatchMethod] = useState<'weighins' | 'weightclasses'>('weighins');
@@ -72,25 +79,35 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
   // Create a shared fighter click handler for all child components
   const handleFighterClick = useMemo(() => {
     return fighterClick(
-      isAuthorized, // Pass isAuthorized rather than just isAdmin
+      isAuthorized,
       router,
       setRed,
       setBlue,
+      setThird,
+      setFourth,
       setSelectedFighter,
       red,
-      blue
+      blue,
+      third,
+      fourth
     );
-  }, [isAuthorized, router, red, blue]); // Updated dependency array
+  }, [isAuthorized, router, red, blue, third, fourth]); // Updated dependency array
 
   const refreshBouts = async () => {
     try {
-      const updated = await fetchTechboutsBouts(promoterId, eventId);
-      setBouts(updated);
+      // Fetch bouts - they'll be automatically processed by the updated fetchTechboutsBouts function
+      const updatedBouts = await fetchTechboutsBouts(promoterId, eventId);
+      
+      // Simply update the state with the processed bouts
+      setBouts(updatedBouts);
+      
       // Clear fighter selection states after refresh
       setSelectedFighter(null);
       setRed(null);
       setBlue(null);
       setSelectedBout(null);
+      setThird(null);
+      setFourth(null);
     } catch (err) {
       console.error("Failed to refresh bouts", err);
     }
@@ -251,6 +268,8 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
     setBlue(null);
     setSelectedBout(null);
     refreshBouts();
+    setThird(null);
+    setFourth(null);
   };
 
   return (
@@ -334,8 +353,6 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
   </Button>
 )}
         
-
-
     <Button
       variant="outline"
       onClick={() => handleExportHtml(bouts, eventData)}
@@ -398,30 +415,34 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
           <h2 className="text-lg font-semibold mb-2">
             {selectedBout ? "Edit Bout" : "Create New Bout"}
           </h2>
-          <CreateEditBout
-            roster={roster}
-            promoterId={promoterId}
-            eventId={eventId}
-            isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
-            red={selectedBout ? selectedBout.red : red}
-            blue={selectedBout ? selectedBout.blue : blue}
-            weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
-            setWeightclass={() => {}}
-            bout_type={selectedBout?.bout_type || "MT"}
-            setBoutType={() => {}}
-            boutConfirmed={selectedBout ? true : false}
-            setBoutConfirmed={() => {}}
-            isCreatingMatch={false}
-            setRed={setRed}
-            setBlue={setBlue}
-            setIsCreatingMatch={() => {}}
-            eventData={eventData}
-            action={selectedBout ? "edit" : "create"}
-            existingBoutId={selectedBout?.boutId}
-            existingBouts={bouts}
-            onClose={handleCloseCreateEditBout}
-            sanctioning={eventData.sanctioning}
-          />
+          <CreateEditMatches
+      roster={roster}
+      promoterId={promoterId}
+      eventId={eventId}
+      isAdmin={isAdminOrSanctioningOrPromoter}
+      red={selectedBout ? selectedBout.red : red}
+      blue={selectedBout ? selectedBout.blue : blue}
+      third={third}               
+      fourth={fourth}              
+      weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
+      setWeightclass={() => {}}
+      bout_ruleset={selectedBout?.bout_ruleset || "MT"}
+      setBoutRuleset={() => {}}
+      boutConfirmed={selectedBout ? true : false}
+      setBoutConfirmed={() => {}}
+      isCreatingMatch={false}
+      setRed={setRed}
+      setBlue={setBlue}
+      setThird={setThird}         
+      setFourth={setFourth}      
+      setIsCreatingMatch={() => {}}
+      eventData={eventData}
+      action={selectedBout ? "edit" : "create"}
+      existingBoutId={selectedBout?.boutId}
+      existingBouts={bouts}
+      onClose={handleCloseCreateEditBout}
+      sanctioning={eventData.sanctioning}
+    />
         </div>
       )}
     </div>

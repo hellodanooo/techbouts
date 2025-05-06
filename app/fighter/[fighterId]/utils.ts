@@ -172,10 +172,11 @@ export async function getVerifiedBoutsForFighter(fighterId: string): Promise<Bou
         promotionId: boutData.promotionId || '',
         promotionName: boutData.promotionName || '',
         sanctioning: boutData.sanctioning || '',
-        bout_type: boutData.bout_type || '',
         weightclassName: boutData.weightclassName || '',
         dayNum: boutData.dayNum || 0, // Add default value for dayNum
         class: boutData.class || '', // Add default value for class
+        bout_ruleset: boutData.bout_ruleset || '', // Add default value for bout_ruleset
+        bracket_bout_type: boutData.bracket_bout_type || '', // Add default value for bracket_bout_type
       } as Bout);
     });
     

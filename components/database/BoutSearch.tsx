@@ -377,6 +377,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ fighter }) => {
             photoPackagePrice: 0, // Default value, update as needed
             coachRegPrice: 0, // Default value, update as needed
             photoPackageEnabled: false, // Default value, update as needed
+            display_matches: true, // Default value, update as needed
           };
   
           const result = await addEvent(newEvent);
@@ -435,7 +436,7 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ fighter }) => {
         promotionName,
         date,
         sanctioning: sanctioningBody,
-        bout_type: 'default',
+        bout_ruleset: 'MT', 
         dayNum: 1,
         setIsCreatingMatch,
         setRed: () => {},

@@ -1,7 +1,228 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase_techbouts/config';
-import { RosterFighter, Bout, EventType } from '../types';
+import { RosterFighter, Bout, EventType, Bracket } from '../types';
+
+
+/**
+ * Saves a 3-fighter bracket with one fighter receiving a bye to Firestore
+ * Stores the bouts directly in the bouts_json collection
+ * 
+ * @param semifinalBout - The semifinal bout object
+ * @param byeFighter - The fighter who gets a bye to the final
+ * @param promoterId - The promoter ID
+ * @param eventId - The event ID
+ * @param bracketName - Optional name for the bracket
+ * @returns Promise<boolean> - Whether the operation was successful
+ */
+export const saveByeBracket = async ({
+  semifinalBout,
+  byeFighter,
+  promoterId,
+  eventId,
+ 
+}: {
+  semifinalBout: Bout;
+  byeFighter: RosterFighter;
+  promoterId: string;
+  eventId: string;
+  bracketName?: string;
+}): Promise<boolean> => {
+  try {
+    // Validate the bout structure
+    if (!semifinalBout || !semifinalBout.red || !semifinalBout.blue || !byeFighter) {
+      toast.error("Invalid bracket structure. Need a semifinal bout and a bye fighter.");
+      return false;
+    }
+
+    // Get the existing bouts document
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+    
+    // Generate a unique bracket ID to link the bouts
+    const bracketId = `bracket_bye_${Date.now()}_${promoterId}_${eventId}`;
+    
+    // Create array of all fighters in bracket with specific order:
+    // [red fighter, blue fighter, bye fighter]
+    const bracketFighters = [semifinalBout.red, semifinalBout.blue, byeFighter];
+    
+    // Update the semifinal bout with bracket information
+    const updatedSemifinalBout: Bout = {
+      ...semifinalBout,
+      bracket_bout_type: 'semifinal',
+      bracket_bout_fighters: bracketFighters,
+    };
+    
+    // Calculate final bout number - use the next number in sequence
+    const finalBoutNum = semifinalBout.boutNum + 1;
+    
+    // Create a placeholder final bout
+    const finalBout: Bout = {
+      boutId: `final_${bracketId}`,
+      weightclass: semifinalBout.weightclass,
+      ringNum: semifinalBout.ringNum,
+      boutNum: finalBoutNum,
+      red: null as any, // Will be filled with the winner of the semifinal later
+      blue: byeFighter, // The bye fighter
+      methodOfVictory: '',
+      confirmed: false,
+      eventId,
+      eventName: semifinalBout.eventName,
+      url: '',
+      date: semifinalBout.date,
+      promotionId: promoterId,
+      promotionName: semifinalBout.promotionName,
+      sanctioning: semifinalBout.sanctioning,
+      bout_ruleset: semifinalBout.bout_ruleset,
+      dayNum: semifinalBout.dayNum,
+      class: '',
+      bracket_bout_type: 'final',
+      bracket_bout_fighters: bracketFighters,
+    };
+
+    // Save the bouts
+    if (boutsDoc.exists()) {
+      // Get existing bouts
+      const data = boutsDoc.data();
+      const existingBouts = data.bouts || [];
+      
+      // Add the new bouts
+      await setDoc(boutsRef, { 
+        bouts: [...existingBouts, updatedSemifinalBout, finalBout] 
+      });
+    } else {
+      // Create new bouts document with these bouts
+      await setDoc(boutsRef, { bouts: [updatedSemifinalBout, finalBout] });
+    }
+
+    toast.success(`3-Fighter bracket with bye created successfully`);
+    return true;
+  } catch (error) {
+    console.error("Error saving bye bracket:", error);
+    toast.error("Failed to save bracket with bye");
+    return false;
+  }
+};
+
+/**
+ * Saves a 4-fighter bracket with two semifinals and a final to Firestore
+ * Stores the bouts directly in the bouts_json collection
+ * 
+ * @param semifinal1 - The first semifinal bout
+ * @param semifinal2 - The second semifinal bout
+ * @param promoterId - The promoter ID
+ * @param eventId - The event ID
+ * @param bracketName - Optional name for the bracket
+ * @returns Promise<boolean> - Whether the operation was successful
+ */
+export const saveFourManBracket = async ({
+  semifinal1,
+  semifinal2,
+  promoterId,
+  eventId,
+}: {
+  semifinal1: Bout;
+  semifinal2: Bout;
+  promoterId: string;
+  eventId: string;
+  bracketName?: string;
+}): Promise<boolean> => {
+  try {
+    // Validate the bracket structure
+    if (!semifinal1 || !semifinal2 || 
+        !semifinal1.red || !semifinal1.blue || 
+        !semifinal2.red || !semifinal2.blue) {
+      toast.error("Invalid bracket structure. Need two complete semifinal bouts.");
+      return false;
+    }
+
+    // Get the existing bouts document
+    const boutsRef = doc(
+      db,
+      `events/promotions/${promoterId}/${eventId}/bouts_json/bouts`
+    );
+    const boutsDoc = await getDoc(boutsRef);
+
+    // Generate a unique bracket ID to link the bouts
+    const bracketId = `bracket_four_${Date.now()}_${promoterId}_${eventId}`;
+    
+    // Create an array of all fighters in the bracket with specific order:
+    // [red fighter from semifinal1, red fighter from semifinal2, blue fighter from semifinal1, blue fighter from semifinal2]
+    const bracketFighters = [
+      semifinal1.red, 
+      semifinal2.red, 
+      semifinal1.blue, 
+      semifinal2.blue
+    ];
+    
+    // Update the semifinal bouts with bracket information
+    const updatedSemifinal1: Bout = {
+      ...semifinal1,
+      bracket_bout_type: 'semifinal',
+      bracket_bout_fighters: bracketFighters,
+    };
+    
+    const updatedSemifinal2: Bout = {
+      ...semifinal2,
+      bracket_bout_type: 'semifinal',
+      bracket_bout_fighters: bracketFighters,
+    };
+    
+    // Calculate the final bout number - should be higher than both semifinal bout numbers
+    const finalBoutNum = Math.max(semifinal1.boutNum, semifinal2.boutNum) + 1;
+    
+    // Create a placeholder final bout
+    const finalBout: Bout = {
+      boutId: `final_${bracketId}`,
+      weightclass: semifinal1.weightclass,
+      ringNum: semifinal1.ringNum,
+      boutNum: finalBoutNum,
+      red: null as any, // Will be filled with the winner of semifinal 1
+      blue: null as any, // Will be filled with the winner of semifinal 2
+      methodOfVictory: '',
+      confirmed: false,
+      eventId,
+      eventName: semifinal1.eventName,
+      url: '',
+      date: semifinal1.date,
+      promotionId: promoterId,
+      promotionName: semifinal1.promotionName,
+      sanctioning: semifinal1.sanctioning,
+      bout_ruleset: semifinal1.bout_ruleset,
+      dayNum: semifinal1.dayNum,
+      class: '',
+      bracket_bout_type: 'final',
+      bracket_bout_fighters: bracketFighters,
+    };
+
+    // Save the bouts
+    if (boutsDoc.exists()) {
+      // Get existing bouts
+      const data = boutsDoc.data();
+      const existingBouts = data.bouts || [];
+      
+      // Add the new bouts
+      await setDoc(boutsRef, { 
+        bouts: [...existingBouts, updatedSemifinal1, updatedSemifinal2, finalBout] 
+      });
+    } else {
+      // Create new bouts document with these bouts
+      await setDoc(boutsRef, { 
+        bouts: [updatedSemifinal1, updatedSemifinal2, finalBout] 
+      });
+    }
+
+    toast.success(`4-Fighter bracket created successfully`);
+    return true;
+  } catch (error) {
+    console.error("Error saving four-man bracket:", error);
+    toast.error("Failed to save 4-fighter bracket");
+    return false;
+  }
+};
 
 
 /**
@@ -111,7 +332,7 @@ export const createMatchesFromWeighins = async ({
   promotionName,
   date,
   sanctioning,
-  bout_type = '',
+  bout_ruleset = '',
   dayNum = 1,
   ringNum = 1, 
   startingBoutNum = 1,
@@ -126,7 +347,7 @@ export const createMatchesFromWeighins = async ({
   promotionName: string;
   date: string;
   sanctioning: string;
-  bout_type?: string;
+  bout_ruleset?: string;
   dayNum?: number;
   ringNum?: number;
   startingBoutNum?: number;
@@ -410,7 +631,7 @@ export const createMatchesFromWeighins = async ({
         promotionId: promoterId,
         promotionName,
         sanctioning,
-        bout_type,
+        bout_ruleset,
         dayNum,
         class: '',
         boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
@@ -462,7 +683,7 @@ export const createMatchesFromWeightclasses = async ({
   promotionName,
   date,
   sanctioning,
-  bout_type = '',
+  bout_ruleset = '',
   dayNum = 1,
   ringNum = 1, 
   startingBoutNum = 1,
@@ -477,7 +698,7 @@ export const createMatchesFromWeightclasses = async ({
   promotionName: string;
   date: string;
   sanctioning: string;
-  bout_type?: string;
+  bout_ruleset?: string;
   dayNum?: number;
   ringNum?: number;
   startingBoutNum?: number;
@@ -773,7 +994,7 @@ export const createMatchesFromWeightclasses = async ({
           promotionId: promoterId,
           promotionName,
           sanctioning,
-          bout_type,
+          bout_ruleset,
           dayNum,
           class: '',
           boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
@@ -1163,7 +1384,7 @@ export const createMatch = async ({
   promotionName,
   date,
   sanctioning,
-  bout_type,
+  bout_ruleset,
   dayNum,
   setIsCreatingMatch,
   setRed,
@@ -1180,7 +1401,7 @@ export const createMatch = async ({
   promotionName: string;
   date: string;
   sanctioning: string;
-  bout_type: string;
+  bout_ruleset: string;
   dayNum: number;
   setIsCreatingMatch: (value: boolean) => void;
   setRed: (fighter: RosterFighter | null) => void;
@@ -1232,7 +1453,7 @@ export const createMatch = async ({
       promotionId: promoterId,
       promotionName,
       sanctioning,
-      bout_type,
+      bout_ruleset,
       dayNum,
       class: '',
       boutId: `day${dayNum}ring${ringNum}bout${boutNum}${sanctioning}${promoterId}${eventId}`,
@@ -1269,12 +1490,6 @@ console.log('bout', bout)
     setIsCreatingMatch(false);
   }
 };
-
-
-
-
-
-
 
 
 
@@ -1742,7 +1957,7 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
             <td class="tb-match-info">
               <div class="tb-bout-number">${bout.boutNum}</div>
               <div class="tb-weightclass">${bout.weightclass || ''}</div>
-              <div class="tb-bout-type">${bout.bout_type || ''}</div>
+              <div class="tb-bout-type">${bout.bout_ruleset || ''}</div>
               ${isBoutFinished(bout) ? `
               <div class="tb-bout-result">
                 <div class="tb-result-red">${redFighter.result}</div>
@@ -1797,7 +2012,7 @@ export const generateBoutsHtml = (bouts: Bout[], eventData?: EventType) => {
             <td class="tb-match-info">
               <div class="tb-bout-number">${bout.boutNum}</div>
               <div class="tb-weightclass">${bout.weightclass || ''}</div>
-              <div class="tb-bout-type">${bout.bout_type || ''}</div>
+              <div class="tb-bout-type">${bout.bout_ruleset || ''}</div>
             </td>
             <td>
               <div class="tb-blue-fighter">
@@ -1874,6 +2089,11 @@ export const handleExportHtml = async (bouts: Bout[], eventData?: EventType): Pr
     }
   }
 };
+
+
+
+
+
 
 
 

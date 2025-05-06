@@ -120,6 +120,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     customWaiver: eventData.customWaiver || '',
     redirect_url: eventData.redirect_url || '',
     display_roster: eventData.display_roster || false,
+    display_matches: eventData.display_matches || false,
   });
 
 
@@ -748,6 +749,17 @@ const [redirectUrlEnabled, setRedirectUrlEnabled] = useState(!!formData.redirect
   />
   <Label htmlFor="display-roster">Display Roster</Label>
   </div>
+  <div className="flex items-center space-x-4">
+  <Switch
+    id="display-matches"
+    checked={formData.display_matches}
+    onCheckedChange={handleSwitchChange('display_matches')}
+  />
+  <Label htmlFor="display-matches">Display Matches</Label>
+  </div>
+
+  
+  
 
 
               </div>
