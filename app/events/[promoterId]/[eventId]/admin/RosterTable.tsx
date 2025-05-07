@@ -519,6 +519,21 @@ export default function RosterTable({
                             className="object-cover"
                           />
                         </div>
+                        
+                        <div className="flex justify-start bg-gray-100 border border-black rounded-md mr-auto ml-auto pl-1 pr-1 -mt-1"
+              style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
+            >
+              <div className="text-center pl-0.5">
+                {fighter && fighter.gender?.startsWith('F') ? (
+                  <span className="text-pink-500">F</span>
+                ) : fighter?.gender?.startsWith('M') ? (
+                  <span className="text-blue-500">M</span>
+                ) : (
+                  fighter ? fighter.gender : null
+                                  )}
+              </div>
+              <div className="text-center pl-0.5">{fighter ? fighter.age : null}</div>
+            </div>
                       </TableCell>
                       <TableCell
                         onClick={() => handleFighterClick(fighter)}

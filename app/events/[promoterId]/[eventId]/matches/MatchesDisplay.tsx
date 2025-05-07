@@ -1,3 +1,4 @@
+// app/events/[promoterId]/[eventId]/matches/MatchesDisplay.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -5,9 +6,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { RosterFighter, Bout, EventType } from '@/utils/types';
-import { BoutRow, isBoutFinished } from '@/components/matches/BoutDisplay';
+import { BoutRow } from '@/components/matches/BoutDisplay';
 import { Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { isBoutFinished } from "@/utils/events/matches";
 
 
 interface MatchesDisplayProps {
@@ -195,28 +197,16 @@ export default function MatchesDisplay({
                             </TableCell>
                           </TableRow>
                           
-                          {/* Get bracket if this is a final bout */}
-                          {bout.bracket_bout_type === 'final' ? (
-                            (() => {
-                              return (
-                                <BoutRow 
-                                  bout={bout} 
-                                  index={index}
-                                  isAdmin={isAdmin}
-                                  handleFighterClick={handleFighterClick}
-                                  onBoutSelect={onBoutSelect}
-                                />
-                              );
-                            })()
-                          ) : (
                             <BoutRow 
+                              key={`finished-${index}`}
                               bout={bout} 
+                              allBouts={sortedBouts}
                               index={index}
                               isAdmin={isAdmin}
                               handleFighterClick={handleFighterClick}
                               onBoutSelect={onBoutSelect}
                             />
-                          )}
+                       
                         </React.Fragment>
                       );
                     }
@@ -226,6 +216,7 @@ export default function MatchesDisplay({
                       <BoutRow 
                         key={`finished-${index}`}
                         bout={bout} 
+                        allBouts={sortedBouts}
                         index={index}
                         isAdmin={isAdmin}
                         handleFighterClick={handleFighterClick}
@@ -266,28 +257,17 @@ export default function MatchesDisplay({
                         </TableCell>
                       </TableRow>
                       
-                      {/* Get bracket if this is a final bout */}
-                      {bout.bracket_bout_type === 'final' ? (
-                        (() => {
-                          return (
-                            <BoutRow 
-                              bout={bout} 
-                              index={index}
-                              isAdmin={isAdmin}
-                              handleFighterClick={handleFighterClick}
-                              onBoutSelect={onBoutSelect}
-                            />
-                          );
-                        })()
-                      ) : (
+                  
                         <BoutRow 
+                          key={`unfinished-${index}`}
                           bout={bout} 
+                          allBouts={sortedBouts}
                           index={index}
                           isAdmin={isAdmin}
                           handleFighterClick={handleFighterClick}
                           onBoutSelect={onBoutSelect}
                         />
-                      )}
+                 
                     </React.Fragment>
                   );
                 }
@@ -297,6 +277,7 @@ export default function MatchesDisplay({
                   <BoutRow 
                     key={`unfinished-${index}`}
                     bout={bout} 
+                    allBouts={sortedBouts}
                     index={index}
                     isAdmin={isAdmin}
                     handleFighterClick={handleFighterClick}

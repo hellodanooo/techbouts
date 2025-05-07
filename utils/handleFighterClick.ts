@@ -57,7 +57,7 @@ export const fighterClick = (
     } else {
       // Non-admin users - maybe just navigate to fighter profile
       if (fighter.fighter_id) {
-        router.push(`/fighters/${fighter.fighter_id}`);
+        router.push(`/fighter/${fighter.fighter_id}`);
       }
     }
   };

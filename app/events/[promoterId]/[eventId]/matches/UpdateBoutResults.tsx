@@ -26,8 +26,8 @@ export default function UpdateBoutResults({
   onClose,
   onSuccess,
 }: UpdateBoutResultsProps) {
-  const [redResult, setRedResult] = useState<'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-'>(bout.red.result || '-');
-  const [blueResult, setBlueResult] = useState<'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-'>(bout.blue.result || '-');
+  const [redResult, setRedResult] = useState<'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-'>(bout.red?.result ?? '-');
+  const [blueResult, setBlueResult] = useState<'W' | 'L' | 'NC' | 'DQ' | 'DRAW' | '-'>(bout.blue?.result ?? '-');
   const [methodOfVictory, setMethodOfVictory] = useState(bout.methodOfVictory || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -81,14 +81,14 @@ export default function UpdateBoutResults({
       <CardHeader>
         <h3 className="text-xl font-semibold">Update Bout Results</h3>
         <p className="text-sm text-muted-foreground">
-          Bout {bout.boutNum} - {bout.red.first} {bout.red.last} vs {bout.blue.first} {bout.blue.last}
+          Bout {bout.boutNum} - {bout.red?.first} {bout.red?.last} vs {bout.blue?.first} {bout.blue?.last}
         </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {/* Red Corner Result */}
           <div className="space-y-2">
-            <Label htmlFor="redResult">{bout.red.first} {bout.red.last} (Red Corner)</Label>
+            <Label htmlFor="redResult">{bout.red?.first} {bout.red?.last} (Red Corner)</Label>
             <Select
               value={redResult}
               onValueChange={(val) => handleResultChange('red', val)}
@@ -108,7 +108,7 @@ export default function UpdateBoutResults({
 
           {/* Blue Corner Result */}
           <div className="space-y-2">
-            <Label htmlFor="blueResult">{bout.blue.first} {bout.blue.last} (Blue Corner)</Label>
+            <Label htmlFor="blueResult">{bout.blue?.first} {bout.blue?.last} (Blue Corner)</Label>
             <Select
               value={blueResult}
               onValueChange={(val) => handleResultChange('blue', val)}

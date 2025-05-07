@@ -116,8 +116,8 @@ export interface Bout {
   weightclass: number;
   ringNum: number;
   boutNum: number;
-  red: RosterFighter;
-  blue: RosterFighter;
+  red: RosterFighter | null;
+  blue: RosterFighter | null;
   scrapeVerificationScore?: number;
 methodOfVictory: string;
 confirmed?: boolean;

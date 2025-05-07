@@ -164,10 +164,10 @@ export function ByeBracketDisplay({
                 <BoutRow 
                   bout={semifinalBout}
                   index={0}
-                  isAdmin={isAdmin}
+                  isAdmin={false}
                   handleFighterClick={handleFighterClick}
-                  onBoutSelect={onBoutSelect}
-                />
+                  onBoutSelect={onBoutSelect} allBouts={[]}
+                                  />
               </TableBody>
             </Table>
           )}
@@ -192,8 +192,7 @@ export function ByeBracketDisplay({
                   index={1}
                   isAdmin={isAdmin}
                   handleFighterClick={handleFighterClick}
-                  onBoutSelect={onBoutSelect}
-                />
+                  onBoutSelect={onBoutSelect} allBouts={[]}                />
               </TableBody>
             </Table>
           </div>

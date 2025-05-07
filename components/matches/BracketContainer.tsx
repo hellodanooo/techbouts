@@ -1,12 +1,15 @@
 // components/matches/BracketContainer.tsx
 
-import React, { useState, useMemo, useContext, useCallback, createContext } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Bout, RosterFighter, Bracket } from '@/utils/types';
-import { Trophy, GitMerge, X } from "lucide-react";
+import { Trophy, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ByeBracketDisplay } from '@/components/matches/ByeBracketDisplay';
 import { FullBracketDisplay } from '@/components/matches/FullBracketDisplay';
+import { TbTournament } from "react-icons/tb";
+import { findBoutNumberByFighterPositions } from '@/utils/brackets';
+
 
 // Modal component for bracket display
 export const BracketModal = ({ 
@@ -221,90 +224,100 @@ export const getBracketForBout = (bouts: Bout[], bout: Bout): Bracket | null => 
   return createBracket(bracketBouts);
 };
 
-// BracketContext for managing bracket modal state across components
-interface BracketContextType {
-  openBracketModal: (bracket: Bracket) => void;
-  currentBracket: Bracket | null;
-  isModalOpen: boolean;
-  closeBracketModal: () => void;
-  handleFighterClick: (fighter: RosterFighter) => void;
-  onBoutSelect?: (bout: Bout) => void;
-}
-
-// Create context with default values
-const BracketContext = createContext<BracketContextType>({
-  openBracketModal: () => {},
-  currentBracket: null,
-  isModalOpen: false,
-  closeBracketModal: () => {},
-  handleFighterClick: () => {},
-  onBoutSelect: undefined
-});
-
-// Provider component for the bracket context
-export function BracketProvider({ 
-  children, 
-  handleFighterClick,
-  onBoutSelect
-}: { 
-  children: React.ReactNode;
-  handleFighterClick: (fighter: RosterFighter) => void;
-  onBoutSelect?: (bout: Bout) => void;
-}) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentBracket, setCurrentBracket] = useState<Bracket | null>(null);
+// Create a bracket from an array of fighters
+// Updated version of createBracketFromFighters
+export const createBracketFromFighters = (
+  bout: Bout,
+  bracketFighters: RosterFighter[],
+  allBouts: Bout[] = []
+): Bracket | null => {
+  if (!bracketFighters || bracketFighters.length < 3) {
+    console.error('Need at least 3 fighters for a bracket');
+    return null;
+  }
   
-  const openBracketModal = useCallback((bracket: Bracket) => {
-    setCurrentBracket(bracket);
-    setIsModalOpen(true);
-  }, []);
+  // Find actual bout numbers for semifinals if possible
+  let semifinal1BoutNum: string | number = 1;
+  let semifinal2BoutNum: string | number = 2;
   
-  const closeBracketModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
+  if (allBouts && allBouts.length > 0 && bracketFighters.length >= 4) {
+    // Try to get the actual bout numbers from the event
+    const sf1BoutNum = findBoutNumberByFighterPositions(bracketFighters, allBouts, 0, 2);
+    const sf2BoutNum = findBoutNumberByFighterPositions(bracketFighters, allBouts, 1, 3);
+    
+    // Use the found bout numbers or fall back to defaults
+    if (sf1BoutNum !== "TBD") semifinal1BoutNum = sf1BoutNum;
+    if (sf2BoutNum !== "TBD") semifinal2BoutNum = sf2BoutNum;
+  }
   
-  const contextValue = useMemo(() => ({
-    openBracketModal,
-    currentBracket,
-    isModalOpen,
-    closeBracketModal,
-    handleFighterClick,
-    onBoutSelect
-  }), [openBracketModal, currentBracket, isModalOpen, closeBracketModal, handleFighterClick, onBoutSelect]);
+  // For a 3-fighter bracket with bye
+  if (bracketFighters.length === 3) {
+    // Create semifinal bout with first two fighters
+    const semifinalBout: Bout = {
+      boutNum: semifinal1BoutNum as number,
+      red: bracketFighters[0],
+      blue: bracketFighters[1],
+      weightclass: bout.weightclass,
+      bout_ruleset: bout.bout_ruleset,
+      bracket_bout_type: 'semifinal',
+      boutId: bout.boutId,
+      ringNum: bout.ringNum,
+      methodOfVictory: bout.methodOfVictory,
+      eventId: bout.eventId,
+      bracket_bout_fighters: bracketFighters,
+      eventName: bout.eventName,
+      url: bout.url,
+      date: bout.date,
+      promotionId: bout.promotionId,
+      promotionName: bout.promotionName,
+      sanctioning: bout.sanctioning,
+      dayNum: bout.dayNum,
+      class: bout.class,
+    };
+    
+    // The third fighter gets a bye
+    return {
+      bouts: [semifinalBout],
+      bye: bracketFighters[2]
+    };
+  }
   
-  return (
-    <BracketContext.Provider value={contextValue}>
-      {children}
-      
-      {/* Bracket modal */}
-      <BracketModal 
-        isOpen={isModalOpen}
-        onClose={closeBracketModal}
-      >
-        {currentBracket && (
-          currentBracket.bye ? (
-            <ByeBracketDisplay 
-              bracket={currentBracket}
-              handleFighterClick={handleFighterClick}
-              onBoutSelect={onBoutSelect}
-            />
-          ) : (
-            <FullBracketDisplay 
-              bracket={currentBracket}
-              handleFighterClick={handleFighterClick}
-              onBoutSelect={onBoutSelect}
-            />
-          )
-        )}
-      </BracketModal>
-    </BracketContext.Provider>
-  );
-}
-
-// Hook to use the bracket context
-export function useBracketContext() {
-  return useContext(BracketContext);
-}
+  // For a 4-fighter bracket
+  if (bracketFighters.length >= 4) {
+    // Create first semifinal: fighter[0] vs fighter[2]
+    const semifinal1: Bout = {
+      ...bout,
+      boutNum: semifinal1BoutNum as number,
+      red: bracketFighters[0],
+      blue: bracketFighters[2],
+      bracket_bout_type: 'semifinal'
+    };
+    
+    // Create second semifinal: fighter[1] vs fighter[3]
+    const semifinal2: Bout = {
+      ...bout,
+      boutNum: semifinal2BoutNum as number,
+      red: bracketFighters[1],
+      blue: bracketFighters[3],
+      bracket_bout_type: 'semifinal'
+    };
+    
+    // Create final bout (empty, will be filled with semifinal winners)
+    const finalBout: Bout = {
+      ...bout,
+      boutNum: bout.boutNum, // Keep the original bout number for the final
+      bracket_bout_type: 'final',
+      red: null,
+      blue: null
+    };
+    
+    return {
+      bouts: [semifinal1, semifinal2, finalBout]
+    };
+  }
+  
+  return null;
+};
 
 // Helper function to check if bout is part of a bracket
 export function isBracketBout(bout: Bout): boolean {
@@ -316,49 +329,96 @@ export function hasFinalBout(bouts: Bout[]): boolean {
   return bouts.some(bout => bout.bracket_bout_type === 'final');
 }
 
-// Helper function to check if bout is finished
-export function isBoutFinished(bout: Bout): boolean {
-  const redResult = bout.red?.result;
-  const blueResult = bout.blue?.result;
-  
-  return (
-    redResult && 
-    redResult !== '-' &&
-    blueResult && 
-    blueResult !== '-'
-  );
-}
 
-// Component to create a bracket button for a final bout
+// Updated BracketButton Component for BracketContainer.tsx
 export function BracketButton({ 
   bout, 
-  allBouts 
+  allBouts,
+  bracketFighters,
+
 }: { 
   bout: Bout;
   allBouts: Bout[];
+  bracketFighters: Array<RosterFighter>;
+
 }) {
-  const { openBracketModal } = useBracketContext();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
-  // Get bracket for the bout
-  const bracket = useMemo(() => {
-    if (bout.bracket_bout_type === 'final') {
-      return getBracketForBout(allBouts, bout);
+  if (!bracketFighters || bracketFighters.length < 3) return null;
+  
+
+
+  // Get bout numbers for each semifinal match
+  const semifinal1BoutNum = findBoutNumberByFighterPositions(bracketFighters, allBouts, 0, 2);
+  const semifinal2BoutNum = findBoutNumberByFighterPositions(bracketFighters, allBouts, 1, 3);
+  
+
+  const handleFighterClick = (fighter: RosterFighter) => {
+    if (fighter.fighter_id) {
+      window.open(`https://www.techbouts.com/fighter/${fighter.fighter_id}`, '_blank');
     }
-    return null;
-  }, [bout, allBouts]);
+  };
+
+  const openBracketModal = () => {
+    // Log fighters array positions
+    console.log('Bracket Fighters Array:');
+    bracketFighters.forEach((fighter, index) => {
+      console.log(`Fighter ${index}: ${fighter.first} ${fighter.last} (${fighter.fighter_id})`);
+    });
+    
+    // For 3-fighter bracket
+    if (bracketFighters.length === 3) {
+      console.log('3-Fighter Bracket Structure:');
+      console.log(`Semifinal: ${bracketFighters[0].first} ${bracketFighters[0].last} vs ${bracketFighters[1].first} ${bracketFighters[1].last}`);
+      console.log(`Bye Fighter: ${bracketFighters[2].first} ${bracketFighters[2].last}`);
+    }
+    
+    // For 4-fighter bracket
+    if (bracketFighters.length >= 4) {
+      console.log('4-Fighter Bracket Structure:');
+      console.log(`Semifinal 1 (Bout ${semifinal1BoutNum}): ${bracketFighters[0].first} ${bracketFighters[0].last} vs ${bracketFighters[2].first} ${bracketFighters[2].last}`);
+      console.log(`Semifinal 2 (Bout ${semifinal2BoutNum}): ${bracketFighters[1].first} ${bracketFighters[1].last} vs ${bracketFighters[3].first} ${bracketFighters[3].last}`);
+    }
+    
+    setIsModalOpen(true);
+  };
   
-  if (!bracket) return null;
+  const closeBracketModal = () => {
+    setIsModalOpen(false);
+  };
   
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => openBracketModal(bracket)}
-      className="mt-2"
-    >
-      <GitMerge className="h-4 w-4 mr-2" />
-      View Bracket
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={openBracketModal}
+        className="mt-2"
+      >
+        <TbTournament className="h-4 w-4 mr-2" />
+        {bracketFighters.length >= 4 ? (
+          `Bouts ${semifinal1BoutNum}, ${semifinal2BoutNum}`
+        ) : (
+          `(${bracketFighters.length}-Fighter)`
+        )}
+      </Button>
+      
+      <BracketModal isOpen={isModalOpen} onClose={closeBracketModal}>
+        {bracketFighters.length === 3 ? (
+          // 3-fighter bracket with bye
+          <ByeBracketDisplay 
+            bracket={createBracketFromFighters(bout, bracketFighters, allBouts) || { bouts: [] }}
+            handleFighterClick={handleFighterClick}
+          />
+        ) : (
+          // 4-fighter or more bracket
+          <FullBracketDisplay 
+            bracket={createBracketFromFighters(bout, bracketFighters, allBouts) || { bouts: [] }}
+            handleFighterClick={handleFighterClick}
+          />
+        )}
+      </BracketModal>
+    </>
   );
 }
 

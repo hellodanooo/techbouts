@@ -6,14 +6,20 @@ import { Bout, RosterFighter } from '@/utils/types';
 import Image from 'next/image';
 import { FaEdit } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import { isBoutFinished } from '@/utils/events/matches';
 import { 
-  BracketProvider, 
-  isBracketBout, 
-  isBoutFinished, 
-  hasFinalBout,
   BracketButton,
-  FinalBracketBadge
+  isBracketBout as bracketIsBracketBout,
+  hasFinalBout as bracketHasFinalBout
 } from '@/components/matches/BracketContainer';
+import { 
+  findBoutNumRedFinal,
+  findBoutNumBlueFinal
+} from '@/utils/brackets';
+
+// Re-export the imported functions
+export const isBracketBout = bracketIsBracketBout;
+export const hasFinalBout = bracketHasFinalBout;
 
 // FighterStats Component
 interface FighterStatsProps {
@@ -21,7 +27,8 @@ interface FighterStatsProps {
   align: 'left' | 'right';
 }
 
-export function FighterStats({ fighter, align }: FighterStatsProps) {
+// Define FighterStats component without using 'export' keyword here
+function FighterStats({ fighter, align }: FighterStatsProps) {
   return (
     <div className={`absolute flex top-0 ${align === 'left' ? 'right-0' : 'left-0'} text-xs`}
       style={{ fontSize: 'clamp(0.5rem, 1vw, 1.5rem)' }}
@@ -76,7 +83,8 @@ interface FighterDisplayProps {
   showControls?: boolean;
 }
 
-export function FighterDisplay({ 
+// Define FighterDisplay component without using 'export' keyword here
+function FighterDisplay({ 
     fighter, 
     corner, 
     handleFighterClick,
@@ -110,7 +118,6 @@ export function FighterDisplay({
       return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
     };
   
-    // Rest of FighterDisplay implementation...
     return (
       <div className={`border border-${corner === 'red' ? 'red-500' : 'blue-500'} p-2 rounded-md w-full`}>
         <p className="font-medium mb-2">{corner === 'red' ? 'Red Corner' : 'Blue Corner'}</p>
@@ -189,20 +196,24 @@ export function FighterDisplay({
 // BoutRow Component with built-in bracket handling
 interface BoutRowProps {
   bout: Bout;
+  allBouts: Bout[];
   index: number;
   isAdmin?: boolean;
   handleFighterClick: (fighter: RosterFighter) => void;
-    onBoutSelect?: (bout: Bout) => void;
-  allBouts?: Bout[]; // Added to enable standalone bracket creation
+  onBoutSelect?: (bout: Bout) => void;
+  source?: 'MatchesDisplay' | 'BracketDisplay';
 }
 
-export function BoutRow({ 
+// Define BoutRow component without using 'export' keyword here
+function BoutRow({ 
   bout, 
+  allBouts,
   index, 
   isAdmin, 
-  allBouts,
-    handleFighterClick,
-    onBoutSelect,
+  handleFighterClick,
+  onBoutSelect,
+  source
+
 }: BoutRowProps) {
  
   
@@ -212,6 +223,8 @@ export function BoutRow({
   if (!isFinalBout && (!bout.red || !bout.blue)) return null;
   const redFighter = bout.red;
   const blueFighter = bout.blue;
+
+
   const isValidUrl = (url: string | undefined): boolean => {
     if (!url) return false;
     try {
@@ -237,81 +250,137 @@ export function BoutRow({
   };
 
 
+//////////////////////////////////////////////////////////////////
+///////////////////////// FINAL BOUT RENDERING
+if (isFinalBout) {
+  // For 3-fighter bracket, show the 3rd fighter (bye fighter) in blue corner
+  const is3FighterBracket = bout.bracket_bout_fighters && bout.bracket_bout_fighters.length === 3;
+  const byeFighter = is3FighterBracket ? (bout.bracket_bout_fighters ?? [])[2] : null;
+  
+  return (
+    <TableRow key={index}>
+      {/* RED FIGHTER - with 40% opacity for placeholder */}
+      <TableCell>
+        <div className="flex items-center justify-start relative opacity-40">
+          {/* Placeholder stats for red corner */}
+          <div
+            className="cursor-pointer flex-shrink-0"
+          >
+            <Image
+              src={defaultPhotoUrl}
+              alt="Red Fighter"
+              width={40}
+              height={40}
+              className="rounded-md mr-auto -mb-1"
+            />
+            <div className="flex justify-start bg-gray-100 border border-black rounded-md mr-auto ml-1 pl-1 pr-1"
+              style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
+            >
+              <div className="text-center pl-0.5">
+                <span className="text-blue-500">TBD</span>
+              </div>
+            </div>
+            
+            <div className="text-left">
+              <div className="font-medium" style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}>
+            
+                  `Winner Bout {findBoutNumRedFinal(bout.bracket_bout_fighters || [], allBouts)}`
+               
+              </div>
+              <div className="text-sm text-gray-500"
+                style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
+              >
+                TBD
+              </div>
+            </div>
+          </div>
+        </div>
+      </TableCell>
 
-  // If this is a final tournament bout
-  if (isFinalBout) {
-    return (
-      <TableRow key={index}>
-        {/* RED FIGHTER - with 40% opacity for placeholder */}
-        <TableCell>
-          <div className="flex items-center justify-start relative opacity-40">
-            {/* Placeholder stats for red corner */}
+      {/* CENTER CONTENT */}
+      <TableCell className="text-center">
+        {/* Admin edit button - same as regular bouts */}
+        {isAdmin && onBoutSelect && (
+          <div
+            className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
+            onClick={() => onBoutSelect(bout)}
+          >
+            <FaEdit style={{ fontSize: '1.2rem' }} />
+          </div>
+        )}
+        
+        {/* Bout details - same as regular bouts */}
+        <div
+          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-400 mx-auto"
+          style={{ fontSize: '0.9rem' }}
+        >
+          {bout.boutNum}
+        </div>
+        <div>{bout.weightclass}</div>
+        <div>{bout.bout_ruleset}</div>
+        
+        {/* Bracket button */}
+        {source !== 'BracketDisplay' && (
+          <BracketButton 
+            bout={bout}
+            allBouts={allBouts} 
+            bracketFighters={bout.bracket_bout_fighters || []}
+          />
+        )}
+      </TableCell>
+
+      {/* BLUE FIGHTER */}
+      <TableCell>
+        {is3FighterBracket && byeFighter ? (
+          // Show actual bye fighter for 3-fighter bracket
+          <div className="flex items-center justify-end relative">
+            {byeFighter && <FighterStats fighter={byeFighter} align="right" />}
+
             <div
-              className="cursor-pointer flex-shrink-0"
+              className="cursor-pointer flex-shrink-0 text-right"
+              onClick={() => byeFighter && handleFighterClick(byeFighter)}
             >
               <Image
-                src={defaultPhotoUrl}
-                alt="Red Fighter"
+                src={getPhotoUrl(byeFighter)}
+                alt="Blue Fighter"
                 width={40}
                 height={40}
-                className="rounded-md mr-auto -mb-1"
+                className="rounded-md ml-auto -mb-1"
               />
-              <div className="flex justify-start bg-gray-100 border border-black rounded-md mr-auto ml-1 pl-1 pr-1"
+              <div className="flex justify-end bg-gray-100 border border-black rounded-md ml-auto mr-1 pl-1 pr-1"
                 style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
               >
+                {byeFighter && byeFighter.weighin > 0 && <div className='mr-1'>{byeFighter.weighin} lbs</div>}
                 <div className="text-center pl-0.5">
-                  <span className="text-blue-500">TBD</span>
+                  {byeFighter && byeFighter.gender?.startsWith('F') ? (
+                    <span className="text-pink-500">F</span>
+                  ) : byeFighter?.gender?.startsWith('M') ? (
+                    <span className="text-blue-500">M</span>
+                  ) : (
+                    byeFighter ? byeFighter.gender : null
+                  )}
                 </div>
+                <div className="text-center pl-0.5">{byeFighter ? byeFighter.age : null}</div>
               </div>
-              
-              <div className="text-left">
+
+              <div className="text-right">
                 <div
                   className="font-medium"
                   style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
                 >
-                  Winner SF1
+                  {byeFighter && truncateText(byeFighter.first, 8)} {byeFighter && truncateText(byeFighter.last, 8)}
                 </div>
-                <div className="text-sm text-gray-500"
+                <div
+                  className="text-sm text-gray-500"
                   style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
                 >
-                  TBD
+                  {byeFighter ? truncateText(byeFighter.gym, 15) : null}
                 </div>
               </div>
             </div>
           </div>
-        </TableCell>
-  
-        {/* CENTER CONTENT */}
-        <TableCell className="text-center">
-          {/* Admin edit button - same as regular bouts */}
-          {isAdmin && onBoutSelect && (
-            <div
-              className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
-              onClick={() => onBoutSelect(bout)}
-            >
-              <FaEdit style={{ fontSize: '1.2rem' }} />
-            </div>
-          )}
-          
-          {/* Bout details - same as regular bouts */}
-          <div
-            className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-400 mx-auto"
-            style={{ fontSize: '0.9rem' }}
-          >
-            {bout.boutNum}
-          </div>
-          <div>{bout.weightclass}</div>
-          <div>{bout.bout_ruleset}</div>
-          
-          {/* Tournament final badge */}
-          <FinalBracketBadge />
-          
-          {/* Bracket button */}
-          {allBouts && <BracketButton bout={bout} allBouts={allBouts} />}
-        </TableCell>
-  
-        {/* BLUE FIGHTER - with 40% opacity for placeholder */}
-        <TableCell>
+        ) : (
+          // Show placeholder for 4-fighter bracket
           <div className="flex items-center justify-end relative opacity-40">
             <div
               className="cursor-pointer flex-shrink-0 text-right"
@@ -332,11 +401,8 @@ export function BoutRow({
               </div>
   
               <div className="text-right">
-                <div
-                  className="font-medium"
-                  style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
-                >
-                  Winner SF2
+                <div className="font-medium" style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}>
+                  Winner Bout {findBoutNumBlueFinal(bout.bracket_bout_fighters || [], allBouts)}
                 </div>
                 <div
                   className="text-sm text-gray-500"
@@ -347,12 +413,13 @@ export function BoutRow({
               </div>
             </div>
           </div>
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
   // Standard bout row display 
   return (
@@ -360,14 +427,14 @@ export function BoutRow({
       {/* RED FIGHTER */}
       <TableCell>
         <div className="flex items-center justify-start relative">
-          <FighterStats fighter={redFighter} align="left" />
+          {redFighter && <FighterStats fighter={redFighter} align="left" />}
           
           <div
             className="cursor-pointer flex-shrink-0"
-            onClick={() => handleFighterClick(redFighter)}
+            onClick={() => redFighter && handleFighterClick(redFighter)}
           >
             <Image
-              src={getPhotoUrl(redFighter)}
+              src={redFighter ? getPhotoUrl(redFighter) : defaultPhotoUrl}
               alt="Red Fighter"
               width={40}
               height={40}
@@ -377,16 +444,16 @@ export function BoutRow({
               style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
             >
               <div className="text-center pl-0.5">
-                {redFighter.gender?.startsWith('F') ? (
+                {redFighter && redFighter.gender?.startsWith('F') ? (
                   <span className="text-pink-500">F</span>
-                ) : redFighter.gender?.startsWith('M') ? (
+                ) : redFighter?.gender?.startsWith('M') ? (
                   <span className="text-blue-500">M</span>
                 ) : (
-                  redFighter.gender
-                )}
+                  redFighter ? redFighter.gender : null
+                                  )}
               </div>
-              <div className="text-center pl-0.5">{redFighter.age}</div>
-              {redFighter.weighin > 0 && <div className='ml-1'>{redFighter.weighin} lbs</div>}
+              <div className="text-center pl-0.5">{redFighter ? redFighter.age : null}</div>
+              {redFighter && redFighter.weighin > 0 && <div className='ml-1'>{redFighter.weighin} lbs</div>}
             </div>
             
             <div className="text-left">
@@ -394,12 +461,12 @@ export function BoutRow({
                 className="font-medium"
                 style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
               >
-                {truncateText(redFighter.first, 8)} {truncateText(redFighter.last, 8)}
+                {redFighter && truncateText(redFighter.first, 8)} {redFighter && truncateText(redFighter.last, 8)}
               </div>
               <div className="text-sm text-gray-500"
                 style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
               >
-                {truncateText(redFighter.gym, 15)}
+                {redFighter ? truncateText(redFighter.gym, 15) : null}
               </div>
             </div>
           </div>
@@ -408,6 +475,7 @@ export function BoutRow({
 
       {/* CENTER CONTENT */}
       <TableCell className="text-center">
+        
         {isAdmin && onBoutSelect && (
           <div
             className="p-1 cursor-pointer hover:bg-gray-100 mb-2 flex justify-center items-center"
@@ -416,6 +484,10 @@ export function BoutRow({
             <FaEdit style={{ fontSize: '1.2rem' }} />
           </div>
         )}
+
+
+
+
         <div
           className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-400 mx-auto"
           style={{ fontSize: '0.9rem' }}
@@ -427,23 +499,33 @@ export function BoutRow({
         {/* Show result if bout is finished */}
         {isBoutFinished(bout) && (
           <div className="mt-2 font-bold">
-            <div className="text-red-600">{redFighter.result}</div>
-            <div className="text-blue-600">{blueFighter.result}</div>
+            {redFighter && <div className="text-red-600">{redFighter.result}</div>}
+            {blueFighter && <div className="text-blue-600">{blueFighter.result}</div>}
           </div>
         )}
+
+
+        {(bout.bracket_bout_type === 'semifinal') && (source !== 'BracketDisplay') && (
+          <BracketButton 
+          bout={bout} 
+          allBouts={allBouts} 
+          bracketFighters={bout.bracket_bout_fighters || []} 
+        />
+
+)}
       </TableCell>
 
       {/* BLUE FIGHTER */}
       <TableCell>
         <div className="flex items-center justify-end relative">
-          <FighterStats fighter={blueFighter} align="right" />
+          {blueFighter && <FighterStats fighter={blueFighter} align="right" />}
 
           <div
             className="cursor-pointer flex-shrink-0 text-right"
-            onClick={() => handleFighterClick(blueFighter)}
+            onClick={() => blueFighter && handleFighterClick(blueFighter)}
           >
             <Image
-              src={getPhotoUrl(blueFighter)}
+              src={blueFighter ? getPhotoUrl(blueFighter) : defaultPhotoUrl}
               alt="Blue Fighter"
               width={40}
               height={40}
@@ -452,17 +534,17 @@ export function BoutRow({
             <div className="flex justify-end bg-gray-100 border border-black rounded-md ml-auto mr-1 pl-1 pr-1"
               style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
             >
-              {blueFighter.weighin > 0 && <div className='mr-1'>{blueFighter.weighin} lbs</div>}
+              {blueFighter && blueFighter.weighin > 0 && <div className='mr-1'>{blueFighter.weighin} lbs</div>}
               <div className="text-center pl-0.5">
-                {blueFighter.gender?.startsWith('F') ? (
+                {blueFighter && blueFighter.gender?.startsWith('F') ? (
                   <span className="text-pink-500">F</span>
-                ) : blueFighter.gender?.startsWith('M') ? (
+                ) : blueFighter?.gender?.startsWith('M') ? (
                   <span className="text-blue-500">M</span>
                 ) : (
-                  blueFighter.gender
+                  blueFighter ? blueFighter.gender : null
                 )}
               </div>
-              <div className="text-center pl-0.5">{blueFighter.age}</div>
+              <div className="text-center pl-0.5">{blueFighter ? blueFighter.age : null}</div>
             </div>
 
             <div className="text-right">
@@ -470,13 +552,13 @@ export function BoutRow({
                 className="font-medium"
                 style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
               >
-                {truncateText(blueFighter.first, 8)} {truncateText(blueFighter.last, 8)}
+                {blueFighter && truncateText(blueFighter.first, 8)} {blueFighter && truncateText(blueFighter.last, 8)}
               </div>
               <div
                 className="text-sm text-gray-500"
                 style={{ fontSize: 'clamp(0.7rem, 2vw, 1.5rem)', lineHeight: '1.1' }}
               >
-                {truncateText(blueFighter.gym, 15)}
+                {blueFighter ? truncateText(blueFighter.gym, 15) : null}
               </div>
             </div>
           </div>
@@ -486,10 +568,9 @@ export function BoutRow({
   );
 }
 
-// Export bracket-related functions and components
-export { 
-  BracketProvider,
-  isBracketBout, 
-  isBoutFinished,
-  hasFinalBout
+// Export all components and functions in a single export statement
+export {
+  FighterStats,
+  FighterDisplay,
+  BoutRow
 };

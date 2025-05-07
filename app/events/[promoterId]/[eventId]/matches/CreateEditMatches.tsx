@@ -499,8 +499,8 @@ const updateBracket = () => {
             <p>bout: {boutNum} Ring: {ringNum} Day: {dayNum} Weight: {weightclass}</p>
             {openSections.boutSettings ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
           </CollapsibleTrigger>
-          <CollapsibleContent className="p-4 bg-white">
-            <div className="border rounded-md p-4 space-y-4">
+            <CollapsibleContent className="p-2 bg-white">
+            <div className="border rounded-md p-2 space-y-2 h-1/2 overflow-y-auto">
               {/* Add bracket name input field when in bracket mode */}
               {isBracketMode && (
                 <div className="space-y-2">
@@ -644,31 +644,30 @@ const updateBracket = () => {
               <Table>
                 <TableBody>
                   <BoutRow 
-                    bout={{
-                      boutId: existingBoutId || 'preview',
-                      red,
-                      blue,
-                      weightclass,
-                      boutNum,
-                      ringNum,
-                      dayNum,
-                      bout_ruleset,
-                      confirmed: boutConfirmed,
-                      eventId,
-                      eventName: eventData.event_name,
-                      date: eventData.date,
-                      sanctioning: eventData.sanctioning,
-                      url: '',
-                      promotionId: promoterId,
-                      promotionName: eventData.promoterId,
-                      class: '',
-                      methodOfVictory: '',
-                    }} 
-                    index={0}
-                    isAdmin={false}
-                    handleFighterClick={navigateToFighterDetail}
-                    onBoutSelect={() => toggleSection('boutSettings')}
-                  />
+                      bout={{
+                        boutId: existingBoutId || 'preview',
+                        red,
+                        blue,
+                        weightclass,
+                        boutNum,
+                        ringNum,
+                        dayNum,
+                        bout_ruleset,
+                        confirmed: boutConfirmed,
+                        eventId,
+                        eventName: eventData.event_name,
+                        date: eventData.date,
+                        sanctioning: eventData.sanctioning,
+                        url: '',
+                        promotionId: promoterId,
+                        promotionName: eventData.promoterId,
+                        class: '',
+                        methodOfVictory: '',
+                      }}
+                      index={0}
+                      isAdmin={false}
+                      handleFighterClick={navigateToFighterDetail}
+                      onBoutSelect={() => toggleSection('boutSettings')} allBouts={[]}                  />
                 </TableBody>
               </Table>
             </div>
@@ -720,10 +719,9 @@ const updateBracket = () => {
               )}
             </div>
           )}
-        </div>
 
-        {/* TOP BUTTONS */}
-        <div className="flex mt-4 space-x-2 justify-center">
+{/* BUTTONS */}
+<div className="flex mt-4 space-x-2 justify-center">
           {isEdit && existingBoutId && (
             <Button 
               variant="secondary" 
@@ -760,6 +758,12 @@ const updateBracket = () => {
             Close
           </Button>
         </div>
+
+        </div>
+
+     
+    
+
       </CardContent>
     </Card>
   );

@@ -1,3 +1,4 @@
+// utils/events/matches.ts
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase_techbouts/config';
@@ -1340,25 +1341,30 @@ export const updateBoutResults = async ({
       return false;
     }
 
-    // Update the bout with results
+    // Create new fighter objects with updated results
+    // This avoids mutating the original objects and preserves all properties
+    const updatedRedFighter = existingBouts[boutIndex].red 
+      ? { ...existingBouts[boutIndex].red, result: redResult }
+      : null;
+      
+    const updatedBlueFighter = existingBouts[boutIndex].blue
+      ? { ...existingBouts[boutIndex].blue, result: blueResult }
+      : null;
+
+    // Create a new bout object with the updated fighters and method of victory
     const updatedBout = {
       ...existingBouts[boutIndex],
-      red: {
-        ...existingBouts[boutIndex].red,
-        result: redResult
-      },
-      blue: {
-        ...existingBouts[boutIndex].blue,
-        result: blueResult
-      },
+      red: updatedRedFighter,
+      blue: updatedBlueFighter,
       methodOfVictory: methodOfVictory
     };
 
-    // Replace the bout in the array
-    existingBouts[boutIndex] = updatedBout;
+    // Create a new array with the updated bout
+    const updatedBouts = [...existingBouts];
+    updatedBouts[boutIndex] = updatedBout;
 
     // Save back to Firebase
-    await setDoc(boutsRef, { bouts: existingBouts });
+    await setDoc(boutsRef, { bouts: updatedBouts });
     
     toast.success("Bout results updated successfully");
     return true;
@@ -1683,11 +1689,11 @@ export const editBout = async ({
 
 
 export const isBoutFinished = (bout: Bout): boolean => {
-  // Check if both red and blue have results other than null, blank, or "-"
+  if (!bout.red || !bout.blue) return false;
+
   const redResult = bout.red?.result;
   const blueResult = bout.blue?.result;
   
-  // Consider a bout finished if both fighters have valid results
   return (
     redResult && 
     redResult !== '-' &&
@@ -1695,6 +1701,8 @@ export const isBoutFinished = (bout: Bout): boolean => {
     blueResult !== '-'
   );
 };
+
+
 
 /**
  * Validates if a URL is properly formatted
