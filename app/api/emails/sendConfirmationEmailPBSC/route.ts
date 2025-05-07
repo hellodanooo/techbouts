@@ -1,4 +1,4 @@
-// app/api/sendConfirmationEmail/route.ts
+// app/api/emails/sendConfirmationEmailPBSC/route.ts
 import { NextResponse } from 'next/server';
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 

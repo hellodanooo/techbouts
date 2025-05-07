@@ -129,6 +129,7 @@ export async function GET() {
    
       name: extractField(event, 'name', 'string') || extractField(event, 'event_name', 'string') || '',
       display_matches: extractField(event, 'display_matches', 'boolean') || false,
+      recieve_email_notifications: extractField(event, 'recieve_email_notifications', 'boolean') || false, // Added missing property
     }));
 
     console.log('Fetched Upcoming Events:', events);

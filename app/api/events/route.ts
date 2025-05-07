@@ -71,6 +71,7 @@ export async function GET() {
             zip: event.zip ?? "",
       
             display_matches: event.display_matches ?? false,
+            recieve_email_notifications: event.recieve_email_notifications ?? false,
           };
         });
       }

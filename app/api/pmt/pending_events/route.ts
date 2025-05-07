@@ -133,6 +133,7 @@ export async function GET() {
       livepage2Enabled: extractField(event, 'livepage2Enabled', 'boolean') || false,
       name: extractField(event, 'name', 'string') || extractField(event, 'event_name', 'string') || '',
         display_matches: extractField(event, 'display_matches', 'boolean') || false,
+        recieve_email_notifications: extractField(event, 'recieve_email_notifications', 'boolean') || false,
       };
     });
 

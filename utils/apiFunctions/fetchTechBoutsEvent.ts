@@ -93,6 +93,7 @@ export async function fetchTechBoutsEvent(promoterId: string, eventId: string): 
       redirect_url: data.redirect_url || '',
       display_roster: data.display_roster || false,
       display_matches: data.display_matches || false,
+      recieve_email_notifications: data.recieve_email_notifications || true,
       
     };
 

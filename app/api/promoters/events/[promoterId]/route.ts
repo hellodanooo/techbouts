@@ -75,6 +75,7 @@ export async function GET(
               coachRegPrice: event.coachRegPrice ?? 0,
               photoPackageEnabled: event.photoPackageEnabled ?? false,
               display_matches: event.display_matches ?? false,
+              recieve_email_notifications: event.recieve_email_notifications ?? false,
               
             } as EventType;
           });

@@ -26,7 +26,8 @@ interface TournamentDashboardProps {
 export default function PageContentEvent({
   eventData,
   eventId,
-  promoterId
+  promoterId,
+  promoterEmail,
 }: TournamentDashboardProps) {
   const [imageError, setImageError] = useState(false);
   const { user, isAdmin, isPromoter, isNewUser } = useAuth();
@@ -281,6 +282,7 @@ const stripeInstance = useMemo(() => {
                     <Register
                       eventId={eventId}
                       promoterId={promoterId}
+                      promoterEmail={promoterEmail}
                       locale={locale}
                       eventName={eventData.event_name}
                       closeModal={() => setRegisterOpen(false)}
@@ -292,6 +294,7 @@ const stripeInstance = useMemo(() => {
                       customWaiver={eventData.customWaiver}
                       payLaterEnabled={eventData.payLaterEnabled || false}
                       redirectUrl={eventData.redirect_url || ''}
+                      sendPromoterNotificationEmail={eventData.recieve_email_notifications || false}
                     />
                   )}
                 </CardContent>

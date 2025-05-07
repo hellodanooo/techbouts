@@ -1,6 +1,5 @@
 // /components/events/Register.tsx
 
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
@@ -24,6 +23,7 @@ import FighterForm from './FighterForm';
 interface RegisterProps {
   eventId: string;
   promoterId: string;
+  promoterEmail: string;
   locale: string;
   eventName: string;
   closeModal: () => void;
@@ -35,6 +35,7 @@ interface RegisterProps {
   customWaiver?: string;
   payLaterEnabled: boolean;
   redirectUrl?: string;
+  sendPromoterNotificationEmail?: boolean;
 }
 
 
@@ -72,7 +73,7 @@ interface RegistrationError {
   details?: unknown;
 }
 
-const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, sanctioning, customWaiver, payLaterEnabled, redirectUrl }) => {
+const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, registrationFee: baseRegistrationFee, eventName, locale, user, sanctioningLogoUrl, promotionLogoUrl, promoterId, promoterEmail, sanctioning, customWaiver, payLaterEnabled, redirectUrl, sendPromoterNotificationEmail }) => {
 
   const [fighterData, setFighterData] = useState<FullContactFighter | null>(null);
   const [creditCode, setCreditCode] = useState<string>('');
@@ -498,6 +499,42 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
   };
 
+  const sendEmailToPromoter = async (sanctioning: string, fighterData: FullContactFighter, eventName: string, eventId: string) => {
+
+   
+      try {
+        const emailResponse = await axios.post('/api/emails/promoterNotificationEmail', {
+          email: promoterEmail,
+          promoterId,
+          firstName: fighterData.first,
+          lastName: fighterData.last,
+          weightClass: fighterData.weightclass,
+          gym: fighterData.gym,
+          gender: fighterData.gender,
+          dob: fighterData.dob,
+          age: fighterData.age,
+          eventName,
+          eventId,
+          heightFoot: fighterData.heightFoot,
+          heightInch: fighterData.heightInch,
+          phone: fighterData.phone,
+          coach: fighterData.coach_name,
+          coach_phone: fighterData.coach_phone,
+          locale,
+
+        });
+      
+        if (emailResponse.status === 200) {
+          alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
+        }
+      } catch (error) {
+        console.error('Error sending confirmation email:', error);
+        alert(formContent.emailErrorMessage);
+      }
+
+  };
+
+
   async function saveFighterToFirestore(
     db: Firestore,
     eventId: string,
@@ -689,6 +726,11 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
         setStatusMessage('Email Sent');
 
+        if (sendPromoterNotificationEmail) {
+          await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
+          setStatusMessage('Pomoter Notified');
+        }
+
 
         if (sanctioning === 'PBSC') {
           // Set the redirect URL based on the locale
@@ -843,11 +885,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       setIsSubmitting(false);
     }
   };
-
-
-
-
-
 
 
 

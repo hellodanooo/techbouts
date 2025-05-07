@@ -245,7 +245,8 @@ export const approvePendingEvent = async (pendingEvent: EventType): Promise<{ su
       coachRegEnabled: pendingEvent.coachRegEnabled || false,
       coachRegPrice: pendingEvent.coachRegPrice || 0,
       photoPackageEnabled: pendingEvent.photoPackageEnabled || false,
-      display_matches: pendingEvent.display_matches || false, // Added property
+      display_matches: pendingEvent.display_matches || false,
+      recieve_email_notifications: false
     };
 
     // Add to events collection

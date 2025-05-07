@@ -197,18 +197,16 @@ export interface EventType {
   locale: string;
   photoPackagePrice: number;
   photoPackageEnabled: boolean;
-
   payLaterEnabled?: boolean;
   sanctioningLogoUrl?: string;
   promotionLogoUrl?: string;
   stripeAccountId?: string;
   customWaiver?: string;
   bout_type?: string;
-  
   redirect_url?: string;
-
   display_roster?: boolean;
   display_matches: boolean;
+  recieve_email_notifications: boolean;
 }
 
 export type GymRecord = {

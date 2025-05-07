@@ -121,6 +121,7 @@ export default function EditEventForm({ eventData, promoterId, eventId }: EditEv
     redirect_url: eventData.redirect_url || '',
     display_roster: eventData.display_roster || false,
     display_matches: eventData.display_matches || false,
+    recieve_email_notifications: eventData.recieve_email_notifications || true,
   });
 
 
@@ -756,6 +757,15 @@ const [redirectUrlEnabled, setRedirectUrlEnabled] = useState(!!formData.redirect
     onCheckedChange={handleSwitchChange('display_matches')}
   />
   <Label htmlFor="display-matches">Display Matches</Label>
+  </div>
+
+  <div className="flex items-center space-x-4">
+  <Switch
+    id="recieve-email-notifications"
+    checked={formData.recieve_email_notifications}
+    onCheckedChange={handleSwitchChange('recieve_email_notifications')}
+  />
+  <Label htmlFor="recieve-email-notifications">Recieve Email Notifications</Label>
   </div>
 
   

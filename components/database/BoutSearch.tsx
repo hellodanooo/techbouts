@@ -377,7 +377,8 @@ const BoutSearch: React.FC<BoutSearchProps> = ({ fighter }) => {
             photoPackagePrice: 0, // Default value, update as needed
             coachRegPrice: 0, // Default value, update as needed
             photoPackageEnabled: false, // Default value, update as needed
-            display_matches: true, // Default value, update as needed
+            display_matches: true,
+            recieve_email_notifications: false
           };
   
           const result = await addEvent(newEvent);

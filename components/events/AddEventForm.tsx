@@ -58,6 +58,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
     promotionLogoUrl: promoter?.logo || '',
     locale: 'en',
     currency: 'USD',
+    recieve_email_notifications: true,
   });
 
   const [sanctioning, setSanctioning] = useState('');
@@ -239,7 +240,8 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
         photoPackageEnabled: formData.photoPackageEnabled ?? false,
         sanctioningLogoUrl: sanctioningLogoUrl,
         promotionLogoUrl: formData.promotionLogoUrl ?? "",
-        display_matches: formData.display_matches ?? false, // Added property
+        display_matches: formData.display_matches ?? false,
+        recieve_email_notifications: true,
       };
       
       // Call the appropriate API based on sanctioning type
@@ -469,7 +471,21 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
                 className="w-full p-2 border rounded"
                 onChange={handleInputChange}
               />
+
+
+
+<div>Recieve Email Notifications</div>
+<input
+  type="checkbox"
+  name="recieve_email_notifications"
+  checked={formData.recieve_email_notifications ?? false}
+  onChange={handleInputChange}
+  className="w-full p-2 border rounded"
+/>
+
             </div>
+
+
           )}
 
           {submitError && <div className="text-red-500 text-sm mt-2">{submitError}</div>}

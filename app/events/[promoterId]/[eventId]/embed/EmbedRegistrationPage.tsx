@@ -163,6 +163,7 @@ export default function EmbedRegistrationPage({
             <Register
               eventId={eventId}
               promoterId={eventData.promoterId}
+              promoterEmail={eventData.promoterEmail ?? ''}
               locale={locale}
               eventName={eventData.event_name ?? eventData.name ?? 'Event'}
               closeModal={() => null}
