@@ -241,7 +241,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
         sanctioningLogoUrl: sanctioningLogoUrl,
         promotionLogoUrl: formData.promotionLogoUrl ?? "",
         display_matches: formData.display_matches ?? false,
-        recieve_email_notifications: true,
+        recieve_email_notifications: false,
       };
       
       // Call the appropriate API based on sanctioning type
@@ -317,7 +317,10 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ onClose, promoter }) => {
               onChange={handleInputChange}
             />
 
+
+
             <GoogleAutocomplete onSelect={handleAddressSelect} />
+
 
             <div className="mt-3 p-2 bg-blue-50 border border-blue-100 rounded text-sm">
             <p className="font-medium">

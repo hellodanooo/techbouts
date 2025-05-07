@@ -71,8 +71,6 @@ export const addEvent = async (eventData: EventType): Promise<{ success: boolean
   }
 };
 
-
-
 const getEventsJson = async (): Promise<EventType[]> => {
   const docRef = doc(db, 'events', 'events_json');
   const snapshot = await getDoc(docRef);

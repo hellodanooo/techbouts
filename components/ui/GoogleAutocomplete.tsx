@@ -119,6 +119,8 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
         </div>
       )}
 
+
+
       {manualTimeoutReached && (
         <label className="block mt-2">
           <input
@@ -167,6 +169,9 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
         </div>
       )}
 
+
+
+
       {showManualEntry && (
         <div className="mt-4 space-y-2">
           <input
@@ -204,6 +209,7 @@ const GoogleAutocomplete: React.FC<GoogleAutocompleteProps> = ({ onSelect }) => 
             Submit Manual Address
           </button>
         </div>
+        
       )}
     </div>
   );

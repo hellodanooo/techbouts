@@ -381,6 +381,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
       return;
     }
 
+
+
     const creditCodeRef = doc(db, 'couponCodes', creditCode);
     const creditCodeDoc = await getDoc(creditCodeRef);
 
@@ -499,40 +501,44 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
   };
 
+
+
+
   const sendEmailToPromoter = async (sanctioning: string, fighterData: FullContactFighter, eventName: string, eventId: string) => {
-
+    
+    console.log('sendEmailToPromoter:', promoterEmail);
    
-      try {
-        const emailResponse = await axios.post('/api/emails/promoterNotificationEmail', {
-          email: promoterEmail,
-          promoterId,
-          firstName: fighterData.first,
-          lastName: fighterData.last,
-          weightClass: fighterData.weightclass,
-          gym: fighterData.gym,
-          gender: fighterData.gender,
-          dob: fighterData.dob,
-          age: fighterData.age,
-          eventName,
-          eventId,
-          heightFoot: fighterData.heightFoot,
-          heightInch: fighterData.heightInch,
-          phone: fighterData.phone,
-          coach: fighterData.coach_name,
-          coach_phone: fighterData.coach_phone,
-          locale,
-
-        });
-      
-        if (emailResponse.status === 200) {
-          alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
-        }
-      } catch (error) {
-        console.error('Error sending confirmation email:', error);
-        alert(formContent.emailErrorMessage);
+    try {
+      const emailResponse = await axios.post('/api/emails/promoterNotificationEmail', {
+        email: promoterEmail,
+        promoterId,
+        firstName: fighterData.first,
+        lastName: fighterData.last,
+        weightClass: fighterData.weightclass,
+        gym: fighterData.gym,
+        gender: fighterData.gender,
+        dob: fighterData.dob,
+        age: fighterData.age,
+        eventName,
+        eventId,
+        heightFoot: fighterData.heightFoot,
+        heightInch: fighterData.heightInch,
+        phone: fighterData.phone,
+        coach: fighterData.coach_name,
+        coach_phone: fighterData.coach_phone,
+        locale,
+        sanctioning, // Added sanctioning parameter
+      });
+    
+      if (emailResponse.status === 200) {
+        alert(`${formContent.successMessage} ${fighterData.email.toLowerCase()}`);
       }
-
+    } catch (error) {
+      console.error('Error sending sendEmailToPromoter email:', error);
+      alert(formContent.emailErrorMessage);
+    }
   };
+
 
 
   async function saveFighterToFirestore(
@@ -726,7 +732,10 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
         setStatusMessage('Email Sent');
 
+    console.log('sendPromoterNotificationEmail:', sendPromoterNotificationEmail);
+
         if (sendPromoterNotificationEmail) {
+
           await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
           setStatusMessage('Pomoter Notified');
         }
@@ -817,10 +826,17 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
 
           setStatusMessage('Email Sent');
+          
+
+setStatusMessage('Notifying Promoter...');
+
+          if (sendPromoterNotificationEmail) {
+            await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
+            setStatusMessage('Promoter Notified');
+          }
+
           setStatusMessage('Registration Successful');
-
-
-
+      
           if (sanctioning === 'PBSC') {
             // Set the redirect URL based on the locale
             const pbscRedirectUrl = locale === 'es'

@@ -1,8 +1,4 @@
 // app/api/emails/promoterNotificationEmail/route.ts
-
-// this for the new api cal
-
-// app/api/emails/promoterNotificationEmail/route.ts
 import { NextResponse } from 'next/server';
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
@@ -15,6 +11,7 @@ const ses = new SESClient({
 });
 
 export async function POST(request: Request) {
+  console.log("Api Request received for promoter notification email");
   try {
     const body = await request.json();
     const { 
@@ -34,7 +31,8 @@ export async function POST(request: Request) {
       phone, 
       coach, 
       coach_phone,
-      locale
+      locale,
+      sanctioning // Added sanctioning parameter
     } = body;
 
     const emailHTML_EN = `
@@ -110,6 +108,10 @@ export async function POST(request: Request) {
         <div style="font-family: Arial, sans-serif; font-size: 16px;">
           <h2 style="color: #333;">Nuevo Registro de Peleador</h2>
           <p>Un nuevo peleador se ha registrado para tu evento: <strong>${eventName}</strong></p>
+          <a href="https://www.techbouts.com/events/${promoterId}/${eventId}" 
+             style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px;">
+            Ver Página del Evento
+          </a>
           <h3>Detalles del Peleador:</h3>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <tr style="background-color: #f2f2f2;">
@@ -171,9 +173,24 @@ export async function POST(request: Request) {
     const subject = locale === 'es' 
       ? `Nuevo Registro: ${firstName} ${lastName} - ${eventName}` 
       : `New Registration: ${firstName} ${lastName} - ${eventName}`;
+    
+    // Set the email source based on sanctioning body
+    let emailSource = '"Muay Thai Purist" <info@muaythaipurist.com>'; // Default source
+    
+
+
+    if (sanctioning === 'PBSC') {
+      emailSource = '"Born To Win CSC" <borntowincsc@gmail.com>';
+    } else if (sanctioning === 'PMT') {
+      emailSource = '"Muay Thai Purist" <info@pointmuaythaica.com>';
+    } else if (sanctioning === 'IKF') {
+      emailSource = '"Muay Thai Purist" <info@muaythaipurist.com>';
+    }
+
+console.log("Email Source:", emailSource);
 
     const command = new SendEmailCommand({
-      Source: '"TechBouts Notifications" <notifications@techbouts.com>',
+      Source: emailSource,
       Destination: {
         ToAddresses: [email], // This is the promoter's email
       },
