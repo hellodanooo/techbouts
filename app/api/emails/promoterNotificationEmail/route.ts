@@ -192,7 +192,7 @@ console.log("Email Source:", emailSource);
     const command = new SendEmailCommand({
       Source: emailSource,
       Destination: {
-        ToAddresses: [email], // This is the promoter's email
+        ToAddresses: [email, emailSource], // This is the promoter's email
       },
       Message: {
         Subject: {
