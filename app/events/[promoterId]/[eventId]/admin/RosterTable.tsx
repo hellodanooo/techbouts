@@ -413,6 +413,16 @@ export default function RosterTable({
                   }
 
                   <TableHead>Photo</TableHead>
+
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort('first')}
+                  >
+                    Stats
+                    {sortKey === 'first' && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
+                  </TableHead>
+
+
                   <TableHead
                     className="cursor-pointer select-none"
                     onClick={() => handleSort('first')}
@@ -510,7 +520,13 @@ export default function RosterTable({
                         </TableCell>
                       )}
 
-                      <TableCell>
+
+
+
+                      <TableCell
+                      className='relative'
+                      >
+
                         <div className="relative h-10 w-10 overflow-hidden rounded-full">
                           <Image
                             src={getPhotoUrl(fighter)}
@@ -534,7 +550,45 @@ export default function RosterTable({
               </div>
               <div className="text-center pl-0.5">{fighter ? fighter.age : null}</div>
             </div>
+
+
+
+      
+
                       </TableCell>
+
+                        <TableCell
+                        className='relative mr-2'
+                        >
+         <div
+  id='statsTabs'
+  className="absolute inset-y-0 -left-3 flex flex-col items-center justify-center leading-tight"
+  style={{ fontSize: 'clamp(0.7rem, 0.7rem, 1.5rem)' }}
+>
+                {fighter && (fighter.mt_win > 0 || fighter.mt_loss > 0) && (
+                <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
+                  <span className="text-black-500">MT: ({fighter.mt_win} - {fighter.mt_loss})</span>
+                </div>
+                )}
+
+                {fighter && (fighter.mma_win > 0 || fighter.mma_loss > 0) && (
+                <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
+                  <span className="text-black-500">MMA: ({fighter.mma_win} - {fighter.mma_loss})</span>
+                </div>
+                )}
+
+                {fighter && fighter.pmt_win > 0 || fighter.pmt_loss > 0 && (
+                <div className="text-left pl-0.5 rounded-sm bg-green-100 whitespace-nowrap">
+                  <span className="text-black-500">PMT: ({fighter.pmt_win} - {fighter.pmt_loss})</span>
+                </div>
+                )}
+                </div>
+                        </TableCell>
+
+
+
+
+
                       <TableCell
                         onClick={() => handleFighterClick(fighter)}
                         className="cursor-pointer hover:text-blue-600 hover:underline"
