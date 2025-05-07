@@ -563,7 +563,7 @@ export default function RosterTable({
          <div
   id='statsTabs'
   className="absolute inset-y-0 -left-3 flex flex-col items-center justify-center leading-tight"
-  style={{ fontSize: 'clamp(0.7rem, 0.7rem, 1.5rem)' }}
+  style={{ fontSize: 'clamp(0.6rem, 0.6rem, 1.5rem)' }}
 >
                 {fighter && (fighter.mt_win > 0 || fighter.mt_loss > 0) && (
                 <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
