@@ -17,6 +17,8 @@ import CreateEditMatches from './CreateEditMatches';
 import { fighterClick } from '@/utils/handleFighterClick';
 import { handleExportHtml } from '@/utils/events/matches';
 import { ClipboardCopy } from "lucide-react";
+import { BracketTable } from '@/components/matches/BracketTable';
+
 
 interface PageClientProps {
   eventId: string;
@@ -409,6 +411,31 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
         onBoutsRefresh={refreshBouts}
       />
       
+
+      {/* interface BracketTableProps {
+  roster: RosterFighter[];
+  handleFighterClick?: (fighter: RosterFighter) => void;
+  isAdmin?: boolean;
+  onBoutSelect?: (bout: Bout) => void;
+
+} */}
+
+
+
+<BracketTable
+  roster={roster}
+  handleFighterClick={handleFighterClick}
+  isAdmin={isAdminOrSanctioningOrPromoter}
+  onBoutSelect={handleBoutSelect}
+/>
+
+ 
+
+
+
+
+
+
       {/* Add the CreateEditBout here at the parent level */}
       {isAdminOrSanctioningOrPromoter && (selectedFighter || selectedBout) && ( // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">

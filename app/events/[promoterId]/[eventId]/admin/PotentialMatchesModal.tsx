@@ -25,6 +25,10 @@ interface ModalProps {
     last?: string;
     weightclass?: string | number;
     gender?: string;
+    gym?: string;
+    age?: number;
+    mt_loss?: number;
+    mt_win?: number;
   };
   onClose: () => void;
 }
@@ -133,7 +137,9 @@ export default function FindPotentialMatchesModal({ fighter, onClose }: ModalPro
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            Potential Matches for {fighter.first} {fighter.last}
+            <div><div>Potential Matches for {fighter.first} {fighter.last} {fighter.weightclass} {fighter.gym}</div>
+            <div>{fighter.gender} {fighter.age} ({fighter.mt_win} - {fighter.mt_loss})</div>
+            </div>
           </DialogTitle>
           <DialogDescription>
             Showing fighters with similar weightclass ({fighter.weightclass} lbs)
