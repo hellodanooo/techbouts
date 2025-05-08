@@ -216,11 +216,11 @@ export const fetchTechBoutsRoster = async (promoterId: string, eventId: string) 
   ////////////////////////////////   suporting functions
 
   const determineAgeGender = (age: number, gender: string): string => {
-    if (age >= 40) return gender === 'MALE' ? 'MASTER MALE' : 'MASTER FEMALE';
-    if (age >= 18) return gender === 'MALE' ? 'ADULT MALE' : 'ADULT FEMALE';
-    if (age >= 15) return gender === 'MALE' ? 'JUNIOR MALE' : 'JUNIOR FEMALE';
-    if (age >= 12) return gender === 'MALE' ? 'CADET MALE' : 'CADET FEMALE';
-    return gender === 'MALE' ? 'YOUTH MALE' : 'YOUTH FEMALE';
+    if (age >= 40) return gender === 'MALE' ? 'MEN' : 'WOMEN';
+    if (age >= 18) return gender === 'MALE' ? 'MEN' : 'WOMEN';
+    if (age >= 15) return gender === 'MALE' ? 'BOYS' : 'GIRLS';
+    if (age >= 12) return gender === 'MALE' ? 'BOYS' : 'GIRLS';
+    return gender === 'MALE' ? 'BOYS' : 'GIRLS';
   };
 
 

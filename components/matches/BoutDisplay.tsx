@@ -35,38 +35,39 @@ function FighterStats({ fighter, align }: FighterStatsProps) {
     >
       <table className="border-collapse" style={{ lineHeight: '0.8', borderSpacing: '0px' }}>
         <tbody>
-          <tr>
-            <td className="custom-font-megapunch opacity-30 text-right">YRS:</td>
-            <td className="text-left">{fighter.years_exp}</td>
-          </tr>
+       
           
           {(fighter.mt_win > 0 || fighter.mt_loss > 0) && (
-            <tr>
-              <td className="custom-font-megapunch opacity-30 text-right">MT:</td>
+            <tr className="bg-red-100 rounded-md">
+              <td className=" text-right">MT:</td>
               <td className="text-left ">{fighter.mt_win}-{fighter.mt_loss}</td>
             </tr>
           )}
           
           {(fighter.mma_win > 0 || fighter.mma_loss > 0) && (
-            <tr>
-              <td className="custom-font-megapunch opacity-30 w-5 text-right">MMA:</td>
+            <tr className="bg-red-100 rounded-md">
+              <td className=" w-5 text-right">MMA:</td>
               <td className="text-left ">{fighter.mma_win}-{fighter.mma_loss}</td>
             </tr>
           )}
           
           {(fighter.pmt_win > 0 || fighter.pmt_loss > 0) && (
-            <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-right">PMT:</td>
+            <tr className="bg-green-100 rounded-md">
+              <td className=" w-10 text-right">PMT:</td>
               <td className="text-left">{fighter.pmt_win}-{fighter.pmt_loss}</td>
             </tr>
           )}
           
           {(fighter.pb_win > 0 || fighter.pb_loss > 0) && (
             <tr>
-              <td className="custom-font-megapunch opacity-30 w-10 text-right">PBSC:</td>
+              <td className=" w-10 text-right">PBSC:</td>
               <td className="text-left">{fighter.pb_win}-{fighter.pb_loss}</td>
             </tr>
           )}
+             <tr>
+            <td className=" text-right">YRS:</td>
+            <td className="text-left">{fighter.years_exp}</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -260,7 +261,9 @@ if (isFinalBout) {
   return (
     <TableRow key={index}>
       {/* RED FIGHTER - with 40% opacity for placeholder */}
-      <TableCell>
+      <TableCell 
+      style={{width: '45%'}}
+      >
         <div className="flex items-center justify-start relative opacity-40">
           {/* Placeholder stats for red corner */}
           <div
@@ -298,7 +301,10 @@ if (isFinalBout) {
       </TableCell>
 
       {/* CENTER CONTENT */}
-      <TableCell className="text-center">
+      <TableCell className="text-center"
+            style={{width: '10%'}}
+
+      >
         {/* Admin edit button - same as regular bouts */}
         {isAdmin && onBoutSelect && (
           <div
@@ -330,7 +336,10 @@ if (isFinalBout) {
       </TableCell>
 
       {/* BLUE FIGHTER */}
-      <TableCell>
+      <TableCell
+            style={{width: '45%'}}
+
+      >
         {is3FighterBracket && byeFighter ? (
           // Show actual bye fighter for 3-fighter bracket
           <div className="flex items-center justify-end relative">
@@ -425,7 +434,9 @@ if (isFinalBout) {
   return (
     <TableRow key={index}>
       {/* RED FIGHTER */}
-      <TableCell>
+      <TableCell
+        style={{width: '45%', opacity: redFighter?.first === 'VACANT' ? 0.3 : 1}}
+      >
         <div className="flex items-center justify-start relative">
           {redFighter && <FighterStats fighter={redFighter} align="left" />}
           
@@ -471,10 +482,14 @@ if (isFinalBout) {
             </div>
           </div>
         </div>
+
       </TableCell>
 
       {/* CENTER CONTENT */}
-      <TableCell className="text-center">
+      <TableCell className="text-center"
+            style={{width: '10%'}}
+
+      >
         
         {isAdmin && onBoutSelect && (
           <div
@@ -516,7 +531,10 @@ if (isFinalBout) {
       </TableCell>
 
       {/* BLUE FIGHTER */}
-      <TableCell>
+      <TableCell
+        style={{width: '45%', opacity: blueFighter?.first === 'VACANT' ? 0.3 : 1}}
+
+      >
         <div className="flex items-center justify-end relative">
           {blueFighter && <FighterStats fighter={blueFighter} align="right" />}
 

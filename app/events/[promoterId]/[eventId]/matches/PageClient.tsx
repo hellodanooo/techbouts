@@ -399,6 +399,16 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
         onBoutSelect={handleBoutSelect}
       />
 
+<div className='mt-5 mb-5'>
+<BracketTable
+  roster={roster}
+  handleFighterClick={handleFighterClick}
+  isAdmin={isAdminOrSanctioningOrPromoter}
+  onBoutSelect={handleBoutSelect}
+/>
+</div>
+
+
       <RosterTable 
         promoterId={promoterId} 
         eventId={eventId} 
@@ -411,26 +421,6 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
         onBoutsRefresh={refreshBouts}
       />
       
-
-      {/* interface BracketTableProps {
-  roster: RosterFighter[];
-  handleFighterClick?: (fighter: RosterFighter) => void;
-  isAdmin?: boolean;
-  onBoutSelect?: (bout: Bout) => void;
-
-} */}
-
-
-
-<BracketTable
-  roster={roster}
-  handleFighterClick={handleFighterClick}
-  isAdmin={isAdminOrSanctioningOrPromoter}
-  onBoutSelect={handleBoutSelect}
-/>
-
- 
-
 
 
 

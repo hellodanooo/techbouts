@@ -1,15 +1,28 @@
 // components/matches/BracketTable.tsx
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { RosterFighter, Bracket, Bout } from '@/utils/types';
 import { FullBracketDisplay } from './FullBracketDisplay';
+import { Button } from "@/components/ui/button";
+
+// Define the allowed age_gender types to match the type in RosterFighter
+type AgeGenderType = 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS';
 
 interface BracketTableProps {
   roster: RosterFighter[];
   handleFighterClick?: (fighter: RosterFighter) => void;
   isAdmin?: boolean;
   onBoutSelect?: (bout: Bout) => void;
+}
 
+// Define a clear structure for our grouped categories
+interface WeightClassCategory {
+  categoryKey: string;       // Composite key for the category
+  weightClassValue: number;  // Numeric weight class for sorting
+  weightClass: string;       // Weight class as a string (e.g., "125")
+  ageGenderGroup: AgeGenderType; // Age/gender group with proper type
+  displayName: string;       // Formatted display name
+  bracketGroups: Bracket[];  // Array of brackets in this category
 }
 
 export function BracketTable({
@@ -17,64 +30,78 @@ export function BracketTable({
   handleFighterClick = () => {},
   isAdmin = false,
   onBoutSelect,
-
 }: BracketTableProps) {
+  // Add state for the current filter
+  const [activeFilter, setActiveFilter] = useState<AgeGenderType | 'ALL'>('ALL');
+  
   // Group fighters by weightclass and age_gender
-  const groupedFighters = useMemo(() => {
-    const groups: { [key: string]: RosterFighter[] } = {};
+  const groupedFightersByCategory = useMemo(() => {
+    const fighterGroups: { [categoryKey: string]: RosterFighter[] } = {};
     
     roster.forEach(fighter => {
-      if (!fighter.weightclass || !fighter.age || !fighter.gender) return;
+      if (!fighter.weightclass || !fighter.age_gender) return;
       
       // Create a category key combining weightclass and age_gender
-      const key = `${fighter.weightclass}_${fighter.age}_${fighter.gender}`;
+      const categoryKey = `${fighter.weightclass}_${fighter.age_gender}`;
       
-      if (!groups[key]) {
-        groups[key] = [];
+      if (!fighterGroups[categoryKey]) {
+        fighterGroups[categoryKey] = [];
       }
       
-      groups[key].push(fighter);
+      fighterGroups[categoryKey].push(fighter);
     });
     
-    return groups;
+    return fighterGroups;
   }, [roster]);
   
   // Generate brackets from grouped fighters
-  const brackets = useMemo(() => {
-    const result: {
-      category: string;
-      displayName: string;
-      brackets: Bracket[];
-      weightValue: number; // Add this to sort by weight value
-    }[] = [];
+  const weightClassCategories = useMemo(() => {
+    const categoryList: WeightClassCategory[] = [];
     
-    // For each group, create brackets of 4 fighters
-    Object.entries(groupedFighters).forEach(([key, fighters]) => {
-      const categoryParts = key.split('_');
-      const weightclass = categoryParts[0];
-      const age = categoryParts[1];
-      const gender = categoryParts[2];
-      const displayName = `${weightclass} - ${age}yr ${gender === 'M' ? 'Male' : 'Female'}`;
-      const weightValue = parseFloat(weightclass); // Convert to numeric for sorting
+    // Process each fighter group by category
+    Object.entries(groupedFightersByCategory).forEach(([categoryKey, fightersInCategory]) => {
+      const categoryParts = categoryKey.split('_');
+      const weightClass = categoryParts[0];
+      const gender = fightersInCategory[0]?.gender || 'UNKNOWN';
       
-      // Calculate how many brackets we need
-      const numBrackets = Math.ceil(fighters.length / 4);
-      const brackets: Bracket[] = [];
+      // Ensure ageGenderGroup is one of the valid types
+      const ageGenderPart = categoryParts[1]; 
+      // Type guard to ensure we have a valid age_gender value
+      const isValidAgeGender = (value: string): value is AgeGenderType => {
+        return ['MEN', 'WOMEN', 'BOYS', 'GIRLS'].includes(value);
+      };
       
-      for (let i = 0; i < numBrackets; i++) {
+      // If we don't have a valid age_gender, skip this category
+      if (!isValidAgeGender(ageGenderPart)) {
+        console.warn(`Invalid age_gender value detected: ${ageGenderPart}`);
+        return;
+      }
+      
+      const ageGenderGroup: AgeGenderType = ageGenderPart;
+      const displayName = `${weightClass} - ${ageGenderGroup}`;
+      const weightClassValue = parseFloat(weightClass); // Convert to numeric for sorting
+      
+      // Calculate how many brackets we need for this category
+      const numBracketsNeeded = Math.ceil(fightersInCategory.length / 4);
+      const bracketGroups: Bracket[] = [];
+      
+      // Create brackets of 4 fighters each
+      for (let bracketIndex = 0; bracketIndex < numBracketsNeeded; bracketIndex++) {
         // Get up to 4 fighters for this bracket
-        const bracketFighters = fighters.slice(i * 4, (i + 1) * 4);
+        const fightersInBracket = fightersInCategory.slice(bracketIndex * 4, (bracketIndex + 1) * 4);
         
         // Fill in vacant spots if needed
-        while (bracketFighters.length < 4) {
-          bracketFighters.push({
-            fighter_id: `vacant-${i}-${bracketFighters.length}`,
-            first: 'Vacant',
-            last: '',
-            weightclass: weightValue,
-            age: parseInt(age, 10),
-            gender: gender === 'M' ? 'MALE' : 'FEMALE',
-            result: 'W',
+        while (fightersInBracket.length < 4) {
+          // Determine gender based on age_gender
+          
+          fightersInBracket.push({
+            fighter_id: `vacant-${bracketIndex}-${fightersInBracket.length}`,
+            first: 'VACANT',
+            last: 'SPACE',
+            weightclass: weightClassValue,
+            age: 0,
+            gender: gender, 
+            result: '-',
             weighin: 0,
             payment_info: {
               paymentIntentId: '',
@@ -90,7 +117,7 @@ export function BracketTable({
             coach_name: '',
             state: '',
             city: '',
-            age_gender: gender === 'M' ? 'MEN' : 'WOMEN',
+            age_gender: ageGenderGroup, // Properly typed now
             docId: '',
             mt_win: 0,
             mt_loss: 0,
@@ -115,17 +142,18 @@ export function BracketTable({
           });
         }
         
-        // Placeholder for bout numbers - we'll assign them after sorting
+        // Create bracket bouts with temporary bout numbers (will be assigned later)
+        // Semifinal 1: Fighter 0 vs Fighter 1
         const semifinal1: Bout = {
           boutNum: 0, // Temporary value
-          red: bracketFighters[0],
-          blue: bracketFighters[1],
-          weightclass: weightValue,
+          red: fightersInBracket[0],
+          blue: fightersInBracket[1],
+          weightclass: weightClassValue,
           bracket_bout_fighters: [
-            bracketFighters[0],
-            bracketFighters[1],
-            bracketFighters[2],
-            bracketFighters[3]
+            fightersInBracket[0],
+            fightersInBracket[1],
+            fightersInBracket[2],
+            fightersInBracket[3]
           ],
           boutId: '',
           ringNum: 0,
@@ -139,19 +167,21 @@ export function BracketTable({
           sanctioning: '',
           bout_ruleset: '',
           dayNum: 0,
-          class: ''
+          class: '',
+          bracket_bout_type: 'semifinal'
         };
         
+        // Semifinal 2: Fighter 2 vs Fighter 3
         const semifinal2: Bout = {
           boutNum: 0, // Temporary value
-          red: bracketFighters[2],
-          blue: bracketFighters[3],
-          weightclass: weightValue,
+          red: fightersInBracket[2],
+          blue: fightersInBracket[3],
+          weightclass: weightClassValue,
           bracket_bout_fighters: [
-            bracketFighters[0],
-            bracketFighters[1],
-            bracketFighters[2],
-            bracketFighters[3]
+            fightersInBracket[0],
+            fightersInBracket[1],
+            fightersInBracket[2],
+            fightersInBracket[3]
           ],
           boutId: '',
           ringNum: 0,
@@ -165,18 +195,19 @@ export function BracketTable({
           sanctioning: '',
           bout_ruleset: '',
           dayNum: 0,
-          class: ''
+          class: '',
+          bracket_bout_type: 'semifinal'
         };
         
-        // Create a placeholder final bout
+        // Finals: Winners of semifinals (not yet determined)
         const final: Bout = {
           boutNum: 0, // Temporary value
-          weightclass: weightValue,
+          weightclass: weightClassValue,
           bracket_bout_fighters: [
-            bracketFighters[0],
-            bracketFighters[1],
-            bracketFighters[2],
-            bracketFighters[3]
+            fightersInBracket[0],
+            fightersInBracket[1],
+            fightersInBracket[2],
+            fightersInBracket[3]
           ],
           boutId: '',
           ringNum: 0,
@@ -192,54 +223,85 @@ export function BracketTable({
           dayNum: 0,
           class: '',
           red: null,
-          blue: null
+          blue: null,
+          bracket_bout_type: 'final'
         };
         
-        // Create the bracket - using only the bouts property since the error suggests 'id' doesn't exist in Bracket
-        const bracket: Bracket = {
+        // Create the complete bracket with all bouts
+        const bracketGroup: Bracket = {
           bouts: [semifinal1, semifinal2, final]
         };
         
-        brackets.push(bracket);
+        bracketGroups.push(bracketGroup);
       }
       
-      result.push({
-        category: key,
+      // Add this category with all its brackets to our list
+      categoryList.push({
+        categoryKey,
+        weightClassValue,
+        weightClass,
+        ageGenderGroup,
         displayName,
-        brackets,
-        weightValue
+        bracketGroups
       });
     });
     
-    // Sort result by weight value (ascending)
-    return result.sort((a, b) => a.weightValue - b.weightValue);
-  }, [groupedFighters]);
+    // Sort categories by weight class in ascending order
+    return categoryList.sort((a, b) => a.weightClassValue - b.weightClassValue);
+  }, [groupedFightersByCategory]);
   
   // Assign bout numbers after sorting
-  const processedBrackets = useMemo(() => {
-    let boutCounter = 1;
+  const processedCategories = useMemo(() => {
+    let boutNumberCounter = 1;
     
     // Create a deep copy to avoid modifying the original
-    const processedResults = [...brackets];
+    const categoriesWithBoutNumbers = [...weightClassCategories];
     
-    // Assign bout numbers
-    processedResults.forEach(categoryGroup => {
-      categoryGroup.brackets.forEach(bracket => {
-        // First assign semifinals
-        bracket.bouts.forEach((bout, index) => {
-          if (index < 2) { // Semifinals
-            bout.boutNum = boutCounter++;
+    // Assign bout numbers sequentially
+    categoriesWithBoutNumbers.forEach(category => {
+      category.bracketGroups.forEach(bracket => {
+        // First assign semifinal bout numbers
+        bracket.bouts.forEach((bout, boutIndex) => {
+          if (boutIndex < 2) { // Semifinals
+            bout.boutNum = boutNumberCounter++;
           }
         });
         
-        // Then assign finals (they come after all semifinals)
-        bracket.bouts[2].boutNum = boutCounter++;
+        // Then assign final bout numbers after all semifinals
+        bracket.bouts[2].boutNum = boutNumberCounter++;
       });
     });
     
-    return processedResults;
-  }, [brackets]);
+    return categoriesWithBoutNumbers;
+  }, [weightClassCategories]);
   
+  // Filter the categories based on the active filter
+  const filteredCategories = useMemo(() => {
+    if (activeFilter === 'ALL') {
+      return processedCategories;
+    }
+    return processedCategories.filter(
+      category => category.ageGenderGroup === activeFilter
+    );
+  }, [processedCategories, activeFilter]);
+  
+  // Count the number of brackets in each age/gender category
+  const categoryCount = useMemo(() => {
+    const counts: Record<AgeGenderType, number> = {
+      'MEN': 0,
+      'WOMEN': 0,
+      'BOYS': 0,
+      'GIRLS': 0
+    };
+    
+    processedCategories.forEach(category => {
+      counts[category.ageGenderGroup] += 1;
+    });
+    
+    return counts;
+  }, [processedCategories]);
+  
+  // No fighters in the roster
   if (roster.length === 0) {
     return (
       <div className="border border-dashed rounded-lg bg-gray-50 p-4 text-center">
@@ -252,41 +314,97 @@ export function BracketTable({
   
   return (
     <div className="space-y-8">
-      {processedBrackets.map(({ category, displayName, brackets }) => (
-        <div key={category} className="border rounded-lg p-4">
-          <h2 className="text-xl font-bold mb-4">{displayName}</h2>
+
+
+<h2 className="text-2xl font-bold mb-4 text-center">
+        Bracket Display
+        </h2>
+
+      {/* Filter buttons at the top */}
+      <div className="flex flex-wrap gap-2 justify-center mb-6">
+        <Button
+          variant={activeFilter === 'ALL' ? "default" : "outline"}
+          onClick={() => setActiveFilter('ALL')}
+          className="min-w-24"
+        >
+          ALL ({processedCategories.length})
+        </Button>
+        
+        <Button
+          variant={activeFilter === 'MEN' ? "default" : "outline"}
+          onClick={() => setActiveFilter('MEN')}
+          className="min-w-24 hover:bg-blue-700"
+        >
+          MEN ({categoryCount.MEN})
+        </Button>
+        
+        <Button
+          variant={activeFilter === 'WOMEN' ? "default" : "outline"}
+          onClick={() => setActiveFilter('WOMEN')}
+          className="min-w-24 hover:bg-pink-600"
+        >
+          WOMEN ({categoryCount.WOMEN})
+        </Button>
+        
+        <Button
+          variant={activeFilter === 'BOYS' ? "default" : "outline"}
+          onClick={() => setActiveFilter('BOYS')}
+          className="min-w-24 hover:bg-blue-500"
+        >
+          BOYS ({categoryCount.BOYS})
+        </Button>
+        
+        <Button
+          variant={activeFilter === 'GIRLS' ? "default" : "outline"}
+          onClick={() => setActiveFilter('GIRLS')}
+          className="min-w-24 hover:bg-pink-400"
+        >
+          GIRLS ({categoryCount.GIRLS})
+        </Button>
+      </div>
+      
+      {/* Display filtered categories */}
+      {filteredCategories.map(({ categoryKey, displayName, bracketGroups }) => (
+        <div key={categoryKey} className="border rounded-lg p-4">
+          <h2 className="text-xl font-bold mb-4 bg-black text-white rounded-lg p-2 text-center">{displayName}</h2>
           
-          {brackets.length > 1 ? (
+          {bracketGroups.length > 1 ? (
             <div className="space-y-6">
-              {brackets.map((bracket, index) => (
-                <div key={`${category}-${index}`}>
+              {bracketGroups.map((bracket, index) => (
+                <div key={`${categoryKey}-${index}`}>
                   <h3 className="text-lg font-semibold mb-2">Bracket {index + 1}</h3>
                   <FullBracketDisplay
                     bracket={bracket}
                     handleFighterClick={handleFighterClick}
                     isAdmin={isAdmin}
                     onBoutSelect={onBoutSelect}
-             
                   />
                 </div>
               ))}
             </div>
           ) : (
             <FullBracketDisplay
-              bracket={brackets[0]}
+              bracket={bracketGroups[0]}
               handleFighterClick={handleFighterClick}
               isAdmin={isAdmin}
               onBoutSelect={onBoutSelect}
-             
             />
           )}
         </div>
       ))}
       
-      {processedBrackets.length === 0 && (
+      {processedCategories.length === 0 && (
         <div className="border border-dashed rounded-lg bg-gray-50 p-4 text-center">
           <p className="text-sm text-gray-500">
-            No valid brackets could be created. Ensure fighters have weightclass, age, and gender assigned.
+            No valid brackets could be created. Ensure fighters have weightclass and age_gender assigned.
+          </p>
+        </div>
+      )}
+      
+      {filteredCategories.length === 0 && processedCategories.length > 0 && (
+        <div className="border border-dashed rounded-lg bg-gray-50 p-4 text-center">
+          <p className="text-sm text-gray-500">
+            No {activeFilter.toLowerCase()} brackets found. Try another filter.
           </p>
         </div>
       )}

@@ -150,6 +150,8 @@ export async function addFighterToPmtRoster(
       dq: fighter.dq || 0,
       fights: fighter.pmt_fights || [],
       lastUpdated: new Date().toISOString(),
+      gender: '',
+      events_participated: []
     };
     
     // Create a reference to the fighter document in the roster subcollection

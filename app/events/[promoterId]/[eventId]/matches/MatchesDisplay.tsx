@@ -112,6 +112,11 @@ export default function MatchesDisplay({
 
   return (
     <Card className="w-full">
+
+<h2 className="text-lg text-center font-bold mb-4">
+        {eventData.name} - Fight Card
+      </h2>
+
       <CardHeader>
         <div className="flex flex-wrap justify-between items-center mb-2">
           <div className="flex space-x-2">
@@ -156,7 +161,7 @@ export default function MatchesDisplay({
     
       
         {sortedBouts.length === 0 ? (
-          <p className="text-muted-foreground">No matches found with current filters</p>
+          <p className="text-muted-foreground text-center">No Matches Found</p>
         ) : (
           <Table>
             <TableHeader>

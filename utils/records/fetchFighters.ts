@@ -137,6 +137,7 @@ export const fetchPMTFighters = async (year: string): Promise<PmtFighterRecord[]
           state: '',
           website: '',
           pmt_id: data.pmt_id,
+          events_participated: data.events_participated || [], 
         };
       });
 

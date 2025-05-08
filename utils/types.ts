@@ -63,19 +63,18 @@ export interface PmtFighterRecord {
   pmt_id: string;
   first: string;
   last: string;
+  gender: string;
   gym?: string;
   email?: string;
   age?: number;
-  weightclass?: number; // Single weight class instead of an array
+  weightclass?: number; 
   weighin?: number;
   win?: number;
-
   loss?: number;
-  tournament_win?: number;
-  tournament_loss?: number;
   nc?: number;
   dq?: number;
   lastUpdated?: string;
+  weightclasses?: number[]; 
 
   // Skill Ratings (Optional)
   bodykick?: number;
@@ -109,6 +108,7 @@ export interface PmtFighterRecord {
     legkick?: number;
     ringawareness?: number;
   }>;
+  events_participated: Array<{ eventId: string }>;
 }
 
 export interface Bout {
