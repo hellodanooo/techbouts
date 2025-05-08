@@ -63,33 +63,33 @@ export interface PmtFighterRecord {
   pmt_id: string;
   first: string;
   last: string;
+  dob: string;
   gender: string;
-  gym?: string;
-  email?: string;
-  age?: number;
-  weightclass?: number; 
-  weighin?: number;
-  win?: number;
-  loss?: number;
-  nc?: number;
-  dq?: number;
-  lastUpdated?: string;
-  weightclasses?: number[]; 
+  gym: string;
+  email: string;
+  age: number;
+  weightclass: number; 
+  win: number;
+  loss: number;
+  nc: number;
+  dq: number;
+  lastUpdated: string;
+  weightclasses: number[]; 
 
   // Skill Ratings (Optional)
-  bodykick?: number;
-  boxing?: number;
-  clinch?: number;
-  defense?: number;
-  footwork?: number;
-  headkick?: number;
-  kicks?: number;
-  knees?: number;
-  legkick?: number;
-  ringawareness?: number;
+  bodykick: number;
+  boxing: number;
+  clinch: number;
+  defense: number;
+  footwork: number;
+  headkick: number;
+  kicks: number;
+  knees: number;
+  legkick: number;
+  ringawareness: number;
 
   // Fight History
-  fights?: Array<{
+  fights: Array<{
     eventId: string;
     eventName: string;
     date: string;
@@ -109,6 +109,7 @@ export interface PmtFighterRecord {
     ringawareness?: number;
   }>;
   events_participated: Array<{ eventId: string }>;
+  searchKeywords: string[]; 
 }
 
 export interface Bout {

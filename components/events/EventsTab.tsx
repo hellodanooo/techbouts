@@ -199,6 +199,8 @@ const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
           ringawareness: 0,
           lastUpdated: new Date().toISOString(),
           searchKeywords: [],
+          weightclass: 0, // Add default value for weightclass as a number
+          events_participated: [], // Add default value for events_participated
         },
       ])
     );

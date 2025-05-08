@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { calculateRecordsAll, FighterRecord, ProcessedEvent } from '@/utils/pmt/calculateRecordsAll';
+import { calculateRecordsAll, ProcessedEvent } from '@/utils/pmt/calculateRecordsAll';
 import { addMergePmtRecords } from '@/utils/pmt/addMergePmtRecords';
 import { db as techboutsDb } from '@/lib/firebase_techbouts/config';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
+import { PmtFighterRecord } from '@/utils/types';
 
 export default function TransferPmtToTechbouts() {
-  const [pmtRecords, setPmtRecords] = useState<Map<string, FighterRecord>>(new Map());
-  const [filteredRecords, setFilteredRecords] = useState<[string, FighterRecord][]>([]);
+  const [pmtRecords, setPmtRecords] = useState<Map<string, PmtFighterRecord>>(new Map());
+  const [filteredRecords, setFilteredRecords] = useState<[string, PmtFighterRecord][]>([]);
   const [processedEvents, setProcessedEvents] = useState<ProcessedEvent[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
@@ -160,7 +160,7 @@ export default function TransferPmtToTechbouts() {
             {/* Calculate Records Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Step 1: Calculate PMT Records</CardTitle>
+                <CardTitle>Step 1: Calculate PMT Records From Results</CardTitle>
                 <CardDescription>
                   Retrieve and calculate all fighter records from the PMT database.
                 </CardDescription>

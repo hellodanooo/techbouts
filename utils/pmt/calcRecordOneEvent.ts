@@ -6,8 +6,8 @@
 
 
 
-import { CalculationResult, FighterResult, FighterRecord, ProcessedEvent, computeKeywords } from '@/utils/pmt/calculateRecordsAll';
-
+import { CalculationResult, FighterResult, ProcessedEvent, computeKeywords } from '@/utils/pmt/calculateRecordsAll';
+import { PmtFighterRecord } from '../types';
 import {
 
     doc,
@@ -43,7 +43,7 @@ export async function calcRecordOneEvent(eventId: string): Promise<CalculationRe
       const resultsData = resultsJsonSnap.data();
       const fighters = resultsData.fighters as FighterResult[];
   
-      const fighterRecords = new Map<string, FighterRecord>();
+      const fighterRecords = new Map<string, PmtFighterRecord>();
       const uniqueFighterIds = new Set<string>();
   
       fighters.forEach((fighter) => {
@@ -80,6 +80,8 @@ export async function calcRecordOneEvent(eventId: string): Promise<CalculationRe
             age: fighter.age || 0,
             gender: fighter.gender || '',
             dob: fighter.dob || '',
+            weightclass: 0,
+            events_participated: []
           });
         }
   

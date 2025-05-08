@@ -14,15 +14,15 @@ import {
   } from 'firebase/firestore';
   
   // Import the FighterRecord interface from the shared location
-  import { FighterRecord, computeKeywords, ProcessedEvent } from './calculateRecordsAll';
-  
+  import { computeKeywords, ProcessedEvent } from './calculateRecordsAll';
+  import { PmtFighterRecord } from '../types';
   /**
    * Generates a formatted fighter ID in the format firstlastDDMMYYYY
    * 
    * @param record FighterRecord to generate ID for
    * @returns Formatted fighter ID
    */
-  function generateFighterId(record: FighterRecord): string {
+  function generateFighterId(record: PmtFighterRecord): string {
     // Extract first name and last name (uppercase, no spaces)
     const firstName = record.first.toUpperCase().replace(/\s+/g, '');
     const lastName = record.last.toUpperCase().replace(/\s+/g, '');
@@ -63,7 +63,7 @@ import {
    */
   export async function addMergePmtRecords(
     techboutsDb: Firestore,
-    pmtRecords: Map<string, FighterRecord>,
+    pmtRecords: Map<string, PmtFighterRecord>,
     progressCallback?: (message: string) => void,
     processedEvents: ProcessedEvent[] = []
 

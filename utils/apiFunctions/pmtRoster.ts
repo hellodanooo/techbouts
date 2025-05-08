@@ -28,7 +28,7 @@ function transformPmtFighterToRosterFighter(pmt: PmtFighterRecord): RosterFighte
     state: "",
     city: "",
     weightclass: pmt.weightclass ?? 0,
-    weighin: pmt.weighin ?? 0,
+    weighin: 0,
     age_gender: "MEN",
     docId: "",
     // Record fields: using available PMT wins/losses or defaulting to 0
@@ -151,7 +151,20 @@ export async function addFighterToPmtRoster(
       fights: fighter.pmt_fights || [],
       lastUpdated: new Date().toISOString(),
       gender: '',
-      events_participated: []
+      events_participated: [],
+      dob: '',
+      weightclasses: [],
+      bodykick: 0,
+      boxing: 0,
+      clinch: 0,
+      defense: 0,
+      footwork: 0,
+      headkick: 0,
+      kicks: 0,
+      knees: 0,
+      legkick: 0,
+      ringawareness: 0,
+      searchKeywords: []
     };
     
     // Create a reference to the fighter document in the roster subcollection

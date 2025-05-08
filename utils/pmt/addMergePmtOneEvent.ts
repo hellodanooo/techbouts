@@ -16,7 +16,9 @@ import {
     setDoc,
 } from 'firebase/firestore';
 
-import { FighterRecord, ProcessedEvent } from './calculateRecordsAll';
+import { ProcessedEvent } from './calculateRecordsAll';
+import { PmtFighterRecord } from '../types';
+
 
 /**
  * Saves or merges a single event's fighter records into the TechBouts database.
@@ -27,7 +29,7 @@ import { FighterRecord, ProcessedEvent } from './calculateRecordsAll';
  */
 export async function saveOneEventRecord(
     techboutsDb: Firestore,
-    eventRecord: Map<string, FighterRecord>,
+    eventRecord: Map<string, PmtFighterRecord>,
     processedEvent: ProcessedEvent,
     progressCallback?: (message: string) => void
 ): Promise<{ success: boolean; updated: number; created: number; message: string }> {

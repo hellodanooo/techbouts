@@ -716,6 +716,16 @@ const TabbedFighterDatabase = () => {
 
   return (
     <div className="w-full">
+
+    <div className="flex justify-center mb-6">
+      <img 
+        src="/logos/pmt_logo_2024_sm.png" 
+        alt="PMT Logo" 
+        className="h-20 w-auto" 
+      />
+    </div>
+
+
       <Tabs defaultValue={selectedYear} onValueChange={handleYearChange}>
         <div className="flex justify-center items-center mb-4">
          

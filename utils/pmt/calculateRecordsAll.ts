@@ -12,6 +12,9 @@ import {
     Query,
     DocumentData
   } from 'firebase/firestore';
+
+  import { PmtFighterRecord } from '../types';
+
   import { db } from '@/lib/firebase_pmt/config';
   
 
@@ -24,7 +27,7 @@ import {
   }
   
   export interface CalculationResult {
-    fighterRecords: Map<string, FighterRecord>;
+    fighterRecords: Map<string, PmtFighterRecord>;
     processedEvents: ProcessedEvent[];
   }
 
@@ -56,54 +59,7 @@ import {
     dob: string;
   }
   
-  export interface FighterRecord {
-    pmt_id: string;
-    first: string;
-    last: string;
-    gender: string;
-    gym: string;
-    email: string;
-    weightclasses: number[];
-    win: number;
-    loss: number;
-    nc: number;
-    dq: number;
-    bodykick: number;
-    boxing: number;
-    clinch: number;
-    defense: number;
-    footwork: number;
-    headkick: number;
-    kicks: number;
-    knees: number;
-    legkick: number;
-    ringawareness: number;
-    fights: Array<{
-      eventId: string;
-      eventName: string;
-      date: string;
-      result: string;
-      weightclass: number;
-      opponent_id?: string;
-      bout_type: string;
-      bodykick: number;
-      boxing: number;
-      clinch: number;
-      defense: number;
-      footwork: number;
-      headkick: number;
-      kicks: number;
-      knees: number;
-      legkick: number;
-      ringawareness: number;
-    }>;
-    lastUpdated: string;
-    searchKeywords: string[];
-    age: number;
-    dob: string;
-  
 
-  }
   
   /**
    * Computes search keywords for a fighter
@@ -143,7 +99,7 @@ import {
     progressCallback?: (message: string) => void
   ): Promise<CalculationResult> {
     const BATCH_SIZE = 500;
-    const fighterRecords = new Map<string, FighterRecord>();
+    const fighterRecords = new Map<string, PmtFighterRecord>();
     let lastEventDoc: DocumentSnapshot | null = null;
     let totalEventsProcessed = 0;
     let totalEvents = 0;
@@ -216,6 +172,7 @@ import {
                 last: fighter.last?.toUpperCase() || '',
                 gym: fighter.gym?.toUpperCase() || '',
                 email: fighter.email || '',
+                weightclass: fighter.weightclass || 0, // Add the missing weightclass property
                 weightclasses: [fighter.weightclass],
                 win: 0,
                 loss: 0,
@@ -237,7 +194,8 @@ import {
                 age: fighter.age || 0,
                 gender: fighter.gender || '',
                 dob: fighter.dob || '',
-              });
+                events_participated: []
+              } as PmtFighterRecord);
             }
   
             const record = fighterRecords.get(fighterId)!;
