@@ -354,8 +354,26 @@ export const createMatchesFromWeighins = async ({
   startingBoutNum?: number;
   setIsCreatingMatches: (value: boolean) => void;
   updateStatus?: (message: string) => void; // Status update callback
-  saveMatches?: boolean; // Flag for saving matches
+  saveMatches?: boolean; 
 }) => {
+
+
+  switch(sanctioning) {
+    case 'PBSC':
+      bout_ruleset = 'PB';
+      break;
+    case 'PMT':
+      bout_ruleset = 'PMT';
+      break;
+    case 'IKF':
+      bout_ruleset = 'MT';
+      break;
+    default:
+      bout_ruleset = '';
+  }
+
+
+
   // Helper function to update status if callback provided
   const reportStatus = (message: string) => {
     console.log(message); // Always log to console
@@ -363,6 +381,8 @@ export const createMatchesFromWeighins = async ({
       updateStatus(message); // Update UI if callback provided
     }
   };
+
+
 
   if (!eventId || !promoterId) {
     toast.error("Missing event or promoter IDs");
@@ -707,6 +727,23 @@ export const createMatchesFromWeightclasses = async ({
   updateStatus?: (message: string) => void;
   saveMatches?: boolean;
 }) => {
+
+
+  switch(sanctioning) {
+    case 'PBSC':
+      bout_ruleset = 'PB';
+      break;
+    case 'PMT':
+      bout_ruleset = 'PMT';
+      break;
+    case 'IKF':
+      bout_ruleset = 'MT';
+      break;
+    default:
+      bout_ruleset = '';
+  }
+
+
   // Helper function to update status if callback provided
   const reportStatus = (message: string) => {
     console.log(message); // Always log to console

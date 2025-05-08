@@ -20,6 +20,7 @@ import { ClipboardCopy } from "lucide-react";
 import { BracketTable } from '@/components/matches/BracketTable';
 
 
+
 interface PageClientProps {
   eventId: string;
   promoterId: string;
@@ -44,22 +45,22 @@ export default function PageClient({
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isCreatingMatches, setIsCreatingMatches] = useState(false);
   const [sanctioningEmail, setSanctioningEmail] = useState<string | null>(null);
-  
+
   // Lifted state for fighter selection
 
-  
-  const [red, setRed] = useState<RosterFighter | null>(null);
-const [blue, setBlue] = useState<RosterFighter | null>(null);
-const [third, setThird] = useState<RosterFighter | null>(null);
-const [fourth, setFourth] = useState<RosterFighter | null>(null);
-const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
 
-  
-  
+  const [red, setRed] = useState<RosterFighter | null>(null);
+  const [blue, setBlue] = useState<RosterFighter | null>(null);
+  const [third, setThird] = useState<RosterFighter | null>(null);
+  const [fourth, setFourth] = useState<RosterFighter | null>(null);
+  const [selectedFighter, setSelectedFighter] = useState<RosterFighter | null>(null);
+
+
+
   const [selectedBout, setSelectedBout] = useState<Bout | null>(null);
-  
+
   const [matchMethod, setMatchMethod] = useState<'weighins' | 'weightclasses'>('weighins');
-const [showMatchOptions, setShowMatchOptions] = useState(false);
+  const [showMatchOptions, setShowMatchOptions] = useState(false);
 
   // Set up sanctioning email based on event sanctioning body
   useEffect(() => {
@@ -71,13 +72,13 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
       setSanctioningEmail('');
     }
   }, [eventData.sanctioning]);
-  
+
   // Check authorization statuses
   const isPromoter = user?.email === eventData.promoterEmail;
   const isSanctioning = user?.email === sanctioningEmail;
   const isAuthorized = isAdmin || isPromoter || isSanctioning;
   const isAdminOrSanctioningOrPromoter = isAdmin || isSanctioning || isPromoter;
-  
+
   // Create a shared fighter click handler for all child components
   const handleFighterClick = useMemo(() => {
     return fighterClick(
@@ -99,10 +100,10 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
     try {
       // Fetch bouts - they'll be automatically processed by the updated fetchTechboutsBouts function
       const updatedBouts = await fetchTechboutsBouts(promoterId, eventId);
-      
+
       // Simply update the state with the processed bouts
       setBouts(updatedBouts);
-      
+
       // Clear fighter selection states after refresh
       setSelectedFighter(null);
       setRed(null);
@@ -129,58 +130,58 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
       setShowMatchOptions(true);
       return;
     }
-    
+
     // Reset options display
     setShowMatchOptions(false);
-    
+
     // Reset status messages and show modal
     setStatusMessages([]);
     setShowStatusModal(true);
     setIsCreatingMatches(true);
-  
+
     // First add an initial message
     setStatusMessages([`🔍 Starting match creation process using ${matchMethod}...`]);
-  
+
     const matchedFighterIds = new Set();
     bouts.forEach((bout) => {
       if (bout.red?.fighter_id) matchedFighterIds.add(bout.red.fighter_id);
       if (bout.blue?.fighter_id) matchedFighterIds.add(bout.blue.fighter_id);
     });
-  
+
     // Filter the roster to only include unmatched fighters
-    const unmatchedRoster = roster.filter(fighter => 
+    const unmatchedRoster = roster.filter(fighter =>
       !matchedFighterIds.has(fighter.fighter_id)
     );
-  
+
     // We'll use a set to prevent duplicate messages
     const processedMessages = new Set();
-  
+
     // Create a wrapper around console.log to capture all logs
     const originalConsoleLog = console.log;
-    console.log = function(message, ...args) {
+    console.log = function (message, ...args) {
       // Call the original console.log
       originalConsoleLog.apply(console, [message, ...args]);
-      
+
       // If it's a string that looks like one of our status messages and we haven't processed it yet
-      if (typeof message === 'string' && 
-          (message.includes('🔍') || 
-           message.includes('📋') || 
-           message.includes('✅') || 
-           message.includes('👥') || 
-           message.includes('👶') || 
-           message.includes('🔄') || 
-           message.includes('⚙️') ||
-           message.includes('❌')) && 
-          !processedMessages.has(message)) {
-        
+      if (typeof message === 'string' &&
+        (message.includes('🔍') ||
+          message.includes('📋') ||
+          message.includes('✅') ||
+          message.includes('👥') ||
+          message.includes('👶') ||
+          message.includes('🔄') ||
+          message.includes('⚙️') ||
+          message.includes('❌')) &&
+        !processedMessages.has(message)) {
+
         // Mark this message as processed
         processedMessages.add(message);
-        
+
         // Update the UI
         setStatusMessages(prev => [...prev, message]);
       }
     };
-  
+
     try {
       // Create a more direct status updater function
       const updateStatus = (message: string) => {
@@ -188,15 +189,15 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
         if (!processedMessages.has(message)) {
           // Log to console (will be captured by our wrapper)
           originalConsoleLog(message);
-          
+
           // Mark this message as processed
           processedMessages.add(message);
-          
+
           // Force an immediate state update
           setStatusMessages(prev => [...prev, message]);
         }
       };
-  
+
       // Call the appropriate match creation function based on selected method
       let result;
       if (matchMethod === 'weighins') {
@@ -226,7 +227,7 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
           roster: unmatchedRoster,
         });
       }
-  
+
       // If successful, refresh the bouts display
       if (result && result.success) {
         updateStatus(`✅ Successfully created matches using ${matchMethod}! Refreshing display...`);
@@ -277,121 +278,121 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
   return (
     <div className="">
       <Header />
-      
+
       <div className="bg-gray-100 p-2 rounded mb-4 flex justify-center">
         {isAdminOrSanctioningOrPromoter && (
           <div className="text-sm text-gray-700">
-            {isSanctioning ? 'Sanctioning Access Enabled' : 
-             isPromoter ? 'Promoter Access Enabled' : 
-             'Admin Access Enabled'}
+            {isSanctioning ? 'Sanctioning Access Enabled' :
+              isPromoter ? 'Promoter Access Enabled' :
+                'Admin Access Enabled'}
           </div>
         )}
       </div>
-      
-
-
-
-   {isAdminOrSanctioningOrPromoter && (
-  <div className="flex flex-wrap justify-center gap-2 mx-2 my-4">
-    
-    {showMatchOptions ? (
-  <div className="bg-gray-50 p-4 rounded-lg border shadow-sm max-w-xl mx-auto my-4">
-    <div className="mb-3 text-center">
-      <h3 className="text-sm font-medium text-gray-700">1. Select matching method:</h3>
-      <div className="flex justify-center gap-3 mt-2">
-        <Button 
-          variant={matchMethod === 'weighins' ? 'default' : 'outline'}
-          onClick={() => setMatchMethod('weighins')}
-          disabled={isCreatingMatches}
-          className="flex-1 max-w-[150px]"
-          size="sm"
-        >
-          <span>Use Weighins</span>
-        </Button>
-        
-        <Button 
-          variant={matchMethod === 'weightclasses' ? 'default' : 'outline'}
-          onClick={() => setMatchMethod('weightclasses')}
-          disabled={isCreatingMatches}
-          className="flex-1 max-w-[150px]"
-          size="sm"
-        >
-          <span>Use Weightclasses</span>
-        </Button>
-      </div>
-    </div>
-    
-    <div className="text-center">
-      <h3 className="text-sm font-medium text-gray-700 mb-2">2. Create matches:</h3>
-      <div className="flex justify-center gap-3">
-        <Button 
-          onClick={handleAutoMatch}
-          disabled={isCreatingMatches}
-          size="sm"
-          className="flex-1 max-w-[150px]"
-        >
-          {isCreatingMatches ? "Creating..." : "Create Matches"}
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          onClick={() => setShowMatchOptions(false)}
-          disabled={isCreatingMatches}
-          size="sm"
-          className="flex-1 max-w-[150px]"
-        >
-          Cancel
-        </Button>
-      </div>
-    </div>
-  </div>
-) : (
-  <Button 
-    onClick={handleAutoMatch}
-    disabled={isCreatingMatches}
-    size="sm"
-  >
-    {isCreatingMatches ? "Creating..." : "Auto Match"}
-  </Button>
-)}
-        
-    <Button
-      variant="outline"
-      onClick={() => handleExportHtml(bouts, eventData)}
-      className="flex items-center gap-1"
-      disabled={isCreatingMatches}
-      size="sm"
-    >
-      <ClipboardCopy size={14} />
-      Copy HTML
-    </Button>
-
-    <Button 
-      variant="destructive" 
-      onClick={handleDeleteMatches}
-      className="flex items-center gap-1"
-      disabled={isCreatingMatches}
-      size="sm"
-    >
-      <Trash2 size={14} />
-      Delete Matches
-    </Button>
-  </div>
-)}
 
 
 
 
-      <StatusMessages 
-        messages={statusMessages} 
-        isVisible={showStatusModal} 
-        onClose={closeStatusModal} 
+      {isAdminOrSanctioningOrPromoter && (
+        <div className="flex flex-wrap justify-center gap-2 mx-2 my-4">
+
+          {showMatchOptions ? (
+            <div className="bg-gray-50 p-4 rounded-lg border shadow-sm max-w-xl mx-auto my-4">
+              <div className="mb-3 text-center">
+                <h3 className="text-sm font-medium text-gray-700">1. Select matching method:</h3>
+                <div className="flex justify-center gap-3 mt-2">
+                  <Button
+                    variant={matchMethod === 'weighins' ? 'default' : 'outline'}
+                    onClick={() => setMatchMethod('weighins')}
+                    disabled={isCreatingMatches}
+                    className="flex-1 max-w-[150px]"
+                    size="sm"
+                  >
+                    <span>Use Weighins</span>
+                  </Button>
+
+                  <Button
+                    variant={matchMethod === 'weightclasses' ? 'default' : 'outline'}
+                    onClick={() => setMatchMethod('weightclasses')}
+                    disabled={isCreatingMatches}
+                    className="flex-1 max-w-[150px]"
+                    size="sm"
+                  >
+                    <span>Use Weightclasses</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">2. Create matches:</h3>
+                <div className="flex justify-center gap-3">
+                  <Button
+                    onClick={handleAutoMatch}
+                    disabled={isCreatingMatches}
+                    size="sm"
+                    className="flex-1 max-w-[150px]"
+                  >
+                    {isCreatingMatches ? "Creating..." : "Create Matches"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMatchOptions(false)}
+                    disabled={isCreatingMatches}
+                    size="sm"
+                    className="flex-1 max-w-[150px]"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Button
+              onClick={handleAutoMatch}
+              disabled={isCreatingMatches}
+              size="sm"
+            >
+              {isCreatingMatches ? "Creating..." : "Auto Match"}
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            onClick={() => handleExportHtml(bouts, eventData)}
+            className="flex items-center gap-1"
+            disabled={isCreatingMatches}
+            size="sm"
+          >
+            <ClipboardCopy size={14} />
+            Copy HTML
+          </Button>
+
+          <Button
+            variant="destructive"
+            onClick={handleDeleteMatches}
+            className="flex items-center gap-1"
+            disabled={isCreatingMatches}
+            size="sm"
+          >
+            <Trash2 size={14} />
+            Delete Matches
+          </Button>
+        </div>
+      )}
+
+
+
+
+      <StatusMessages
+        messages={statusMessages}
+        isVisible={showStatusModal}
+        onClose={closeStatusModal}
       />
-      
-      <MatchesDisplay 
-        bouts={bouts} 
-        promoterId={promoterId} 
-        eventId={eventId} 
+
+      <MatchesDisplay
+        bouts={bouts}
+        promoterId={promoterId}
+        eventId={eventId}
         isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         eventData={eventData}
         // Pass down the shared state and handlers
@@ -399,28 +400,28 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
         onBoutSelect={handleBoutSelect}
       />
 
-<div className='mt-5 mb-5'>
-<BracketTable
-  roster={roster}
-  handleFighterClick={handleFighterClick}
-  isAdmin={isAdminOrSanctioningOrPromoter}
-  onBoutSelect={handleBoutSelect}
-/>
-</div>
+      <div className='mt-5 mb-5'>
+        <BracketTable
+          roster={roster}
+          handleFighterClick={handleFighterClick}
+          isAdmin={isAdminOrSanctioningOrPromoter}
+          onBoutSelect={handleBoutSelect}
+        />
+      </div>
 
 
-      <RosterTable 
-        promoterId={promoterId} 
-        eventId={eventId} 
-        roster={roster} 
-        eventData={eventData} 
+      <RosterTable
+        promoterId={promoterId}
+        eventId={eventId}
+        roster={roster}
+        eventData={eventData}
         isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
         bouts={bouts}
         // Pass down the shared state and handlers 
         handleFighterClick={handleFighterClick}
         onBoutsRefresh={refreshBouts}
       />
-      
+
 
 
 
@@ -433,33 +434,33 @@ const [showMatchOptions, setShowMatchOptions] = useState(false);
             {selectedBout ? "Edit Bout" : "Create New Bout"}
           </h2>
           <CreateEditMatches
-      roster={roster}
-      promoterId={promoterId}
-      eventId={eventId}
-      isAdmin={isAdminOrSanctioningOrPromoter}
-      red={selectedBout ? selectedBout.red : red}
-      blue={selectedBout ? selectedBout.blue : blue}
-      third={third}               
-      fourth={fourth}              
-      weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
-      setWeightclass={() => {}}
-      bout_ruleset={selectedBout?.bout_ruleset || "MT"}
-      setBoutRuleset={() => {}}
-      boutConfirmed={selectedBout ? true : false}
-      setBoutConfirmed={() => {}}
-      isCreatingMatch={false}
-      setRed={setRed}
-      setBlue={setBlue}
-      setThird={setThird}         
-      setFourth={setFourth}      
-      setIsCreatingMatch={() => {}}
-      eventData={eventData}
-      action={selectedBout ? "edit" : "create"}
-      existingBoutId={selectedBout?.boutId}
-      existingBouts={bouts}
-      onClose={handleCloseCreateEditBout}
-      sanctioning={eventData.sanctioning}
-    />
+            roster={roster}
+            promoterId={promoterId}
+            eventId={eventId}
+            isAdmin={isAdminOrSanctioningOrPromoter}
+            red={selectedBout ? selectedBout.red : red}
+            blue={selectedBout ? selectedBout.blue : blue}
+            third={third}
+            fourth={fourth}
+            weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
+            setWeightclass={() => { }}
+            bout_ruleset={selectedBout?.bout_ruleset || "MT"}
+            setBoutRuleset={() => { }}
+            boutConfirmed={selectedBout ? true : false}
+            setBoutConfirmed={() => { }}
+            isCreatingMatch={false}
+            setRed={setRed}
+            setBlue={setBlue}
+            setThird={setThird}
+            setFourth={setFourth}
+            setIsCreatingMatch={() => { }}
+            eventData={eventData}
+            action={selectedBout ? "edit" : "create"}
+            existingBoutId={selectedBout?.boutId}
+            existingBouts={bouts}
+            onClose={handleCloseCreateEditBout}
+            sanctioning={eventData.sanctioning}
+          />
         </div>
       )}
     </div>

@@ -585,7 +585,7 @@ const updateBracket = () => {
                 <Select value={bout_ruleset} onValueChange={setBoutRuleset}>
                   <SelectTrigger id="bout_ruleset"><SelectValue placeholder="Select Bout Ruleset" /></SelectTrigger>
                   <SelectContent>
-                    {["MT", "MMA", "Boxing", "PMT", "PB", "KB"].map(type => (
+                    {["MT", "MMA", "PMT", "PB", "B", "KB"].map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
                       </SelectItem>

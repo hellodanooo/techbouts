@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { collection, getDocs, doc, setDoc, getFirestore } from "firebase/firestore";
+import { collection, getDocs,getDoc, doc, setDoc, getFirestore } from "firebase/firestore";
 import { Progress } from "@/components/ui/progress";
 
 // Import Firebase from your PMT config
@@ -72,63 +72,66 @@ export default function FighterDatabase() {
 
 
 
-  const handleMergepreviousYearsRecords = async () => {
-    setMerging(true);
-    setMergeMessage("Starting merge process...");
-    setProgress(0);
-    setProgressDetail("");
+const handleOptimizedMergeRecords = async () => {
+  setMerging(true);
+  setMergeMessage("Starting optimized merge process...");
+  setProgress(0);
+  setProgressDetail("");
+  
+  try {
+    // Get current year
+    const currentYear = new Date().getFullYear();
+    const historicalYears = [];
+    const currentCollection = `pmt_records_current`;
     
-    try {
-      // Get current year
-      const currentYear = new Date().getFullYear();
+    // STEP 1: Check if we need to update the baseline (beginning of year or new setup)
+    const metadataRef = doc(db, "records_metadata", "current_metadata");
+    const metadataSnap = await getDoc(metadataRef);
+    const metadata = metadataSnap.exists() ? metadataSnap.data() : null;
+    
+    // If no metadata exists or lastBaselineUpdate is from previous year, we need to rebuild baseline
+    const needsBaselineUpdate = !metadata || 
+      (metadata.lastBaselineUpdate && new Date(metadata.lastBaselineUpdate).getFullYear() < currentYear);
+    
+    if (needsBaselineUpdate) {
+      setProgressDetail("Creating new baseline from historical data...");
       
-      // Get all collections
-      setProgressDetail("Scanning collections...");
-      
-      // We can't directly list collections in the client SDK, so we need to query known collections
-      const yearCollections: string[] = [];
-      const years: number[] = [];
-      
-      // Check known year collections (assuming you have records for 2022-2025)
+      // Find all historical collections
       for (let year = 2022; year < currentYear; year++) {
         const collectionName = `pmt_records_${year}`;
-        // Check if collection exists by trying to get the metadata document
         try {
           const testQuery = await getDocs(collection(db, collectionName));
           if (!testQuery.empty) {
-            yearCollections.push(collectionName);
-            years.push(year);
+            historicalYears.push(year);
           }
         } catch (error) {
           console.log(`Collection ${collectionName} doesn't exist or is empty:`, error);
         }
       }
       
-      if (yearCollections.length === 0) {
-        setMergeMessage("❌ No year collections found to merge.");
+      if (historicalYears.length === 0) {
+        setMergeMessage("❌ No historical collections found to merge.");
         setMerging(false);
         return;
       }
       
-      // Sort years numerically to ensure consistent naming
-      years.sort((a, b) => a - b);
+      // Sort years numerically
+      historicalYears.sort((a, b) => a - b);
       
-      // Create a dynamic historical collection name that includes the years
-      const historicalCollection = `pmt_records_hist_${years.join('_')}`;
-      
-      setProgressDetail(`Found ${yearCollections.length} collections: ${yearCollections.join(", ")}`);
+      // STEP 2: Create/update the merged baseline
+      setProgressDetail(`Building baseline from years: ${historicalYears.join(", ")}...`);
       setProgress(10);
       
-      // Create a Map to store merged fighter records
-      const fighterRecords = new Map();
-      let totalProcessedFighters = 0;
+      // Map to store merged records
+      const baselineFighters = new Map();
+      let totalProcessedBaseline = 0;
       
-      // Process each year collection
-      for (let i = 0; i < yearCollections.length; i++) {
-        const yearCollection = yearCollections[i];
-        setProgressDetail(`Processing ${yearCollection}...`);
+      // Process each historical year
+      for (let i = 0; i < historicalYears.length; i++) {
+        const year = historicalYears[i];
+        const yearCollection = `pmt_records_${year}`;
+        setProgressDetail(`Processing ${yearCollection} for baseline...`);
         
-        // Get fighter documents from this collection
         const yearSnapshot = await getDocs(collection(db, yearCollection));
         
         if (yearSnapshot.empty) {
@@ -136,7 +139,7 @@ export default function FighterDatabase() {
           continue;
         }
         
-        // Process each fighter in this collection
+        // Process all fighters from this year
         yearSnapshot.forEach(doc => {
           // Skip metadata and error documents
           if (doc.id === "metadata" || doc.id === "errors") return;
@@ -150,37 +153,19 @@ export default function FighterDatabase() {
           }
           
           // First time seeing this fighter
-          if (!fighterRecords.has(fighterId)) {
-            // Initialize events_participated if needed
-            let events_participated = [];
-            
-            // Handle different formats of events_participated
-            if (fighterData.events_participated) {
-              if (Array.isArray(fighterData.events_participated)) {
-                // Check if it's an array of strings or objects
-                if (fighterData.events_participated.length > 0) {
-                  if (typeof fighterData.events_participated[0] === 'string') {
-                    // Convert array of strings to array of objects
-                    events_participated = fighterData.events_participated.map(eventId => ({ eventId }));
-                  } else {
-                    // It's already an array of objects
-                    events_participated = fighterData.events_participated;
-                  }
-                }
-              }
-            }
-            
-            fighterRecords.set(fighterId, {
+          if (!baselineFighters.has(fighterId)) {
+            // Initialize fighter data
+            baselineFighters.set(fighterId, {
               ...fighterData,
-              events_participated: events_participated,
-              years: [yearCollection.replace("pmt_records_", "")]
+              historical_years: [year],
+              lastBaselineUpdate: new Date().toISOString()
             });
           } 
           // Merge with existing record
           else {
-            const existing = fighterRecords.get(fighterId);
+            const existing = baselineFighters.get(fighterId);
             
-            // Add stats
+            // Merge stats
             existing.win = (existing.win || 0) + (fighterData.win || 0);
             existing.loss = (existing.loss || 0) + (fighterData.loss || 0);
             existing.nc = (existing.nc || 0) + (fighterData.nc || 0);
@@ -207,91 +192,53 @@ export default function FighterDatabase() {
               ...(fighterData.weightclasses || [])
             ])];
             
-            // Merge events_participated arrays (ensuring unique event IDs)
-            if (!existing.events_participated) {
-              existing.events_participated = [];
+            // Merge events_participated arrays
+            existing.events_participated = [...new Set([
+              ...(existing.events_participated || []), 
+              ...(fighterData.events_participated || [])
+            ])];
+            
+            // Update historical years
+            if (!existing.historical_years.includes(year)) {
+              existing.historical_years.push(year);
+              existing.historical_years.sort();
             }
             
-            if (fighterData.events_participated) {
-              // Handle different formats of events_participated from the fighter data
-              let newEvents = [];
-              
-              if (Array.isArray(fighterData.events_participated)) {
-                if (fighterData.events_participated.length > 0) {
-                  if (typeof fighterData.events_participated[0] === 'string') {
-                    // It's an array of strings
-                    newEvents = fighterData.events_participated.map(eventId => ({ eventId }));
-                  } else {
-                    // It's already an array of objects
-                    newEvents = fighterData.events_participated;
-                  }
-                }
-              }
-              
-              // Create a set of existing event IDs for quick lookup
-              interface EventParticipation {
-                eventId: string;
-              }
-  
-              type ExistingEvent = string | EventParticipation;
-  
-              const existingEventIds = new Set(
-                existing.events_participated.map((event: ExistingEvent) => 
-                  typeof event === 'string' ? event : event.eventId
-                )
-              );
-              
-              // Add only unique events
-              newEvents.forEach(event => {
-                const eventId = typeof event === 'string' ? event : event.eventId;
-                if (!existingEventIds.has(eventId)) {
-                  existing.events_participated.push(typeof event === 'string' ? { eventId: event } : event);
-                }
-              });
-            }
-            
-            // Update lastUpdated
-            existing.lastUpdated = new Date().toISOString();
-            
-            // Add year to years array if not already included
-            const yearValue = yearCollection.replace("pmt_records_", "");
-            if (!existing.years.includes(yearValue)) {
-              existing.years.push(yearValue);
-            }
+            // Update lastBaselineUpdate
+            existing.lastBaselineUpdate = new Date().toISOString();
             
             // Update the Map
-            fighterRecords.set(fighterId, existing);
+            baselineFighters.set(fighterId, existing);
           }
           
-          totalProcessedFighters++;
+          totalProcessedBaseline++;
         });
         
-        // Update progress after each collection
-        setProgress(10 + Math.round((i + 1) / yearCollections.length * 40));
-        setProgressDetail(`Processed ${yearCollection}: ${totalProcessedFighters} fighters so far`);
+        // Update progress
+        setProgress(10 + Math.round((i + 1) / historicalYears.length * 30));
+        setProgressDetail(`Processed ${yearCollection}: ${totalProcessedBaseline} fighters in baseline`);
       }
       
-      // Write merged records to historical collection with the dynamic name
-      setProgressDetail(`Writing ${fighterRecords.size} merged records to ${historicalCollection}...`);
+      // STEP 3: Write baseline to current_records collection
+      setProgressDetail(`Writing ${baselineFighters.size} baseline records to ${currentCollection}...`);
       
       // Convert Map to array for Firestore
-      const recordsArray = Array.from(fighterRecords.entries()).map(([id, record]) => ({
+      const baselineArray = Array.from(baselineFighters.entries()).map(([id, record]) => ({
         id,
         ...record,
-        lastUpdated: new Date().toISOString()
+        lastBaselineUpdate: new Date().toISOString()
       }));
       
-      // Use batches to write records (Firestore has a 500 document limit per batch)
-      const MAX_BATCH_SIZE = 400; // Keep slightly below the 500 limit to be safe
+      // Use batches to write records
+      const MAX_BATCH_SIZE = 350;
       let batchCount = 0;
       
-      for (let i = 0; i < recordsArray.length; i += MAX_BATCH_SIZE) {
-        const chunk = recordsArray.slice(i, i + MAX_BATCH_SIZE);
-        setProgressDetail(`Writing batch ${batchCount + 1} (${chunk.length} records)...`);
+      for (let i = 0; i < baselineArray.length; i += MAX_BATCH_SIZE) {
+        const chunk = baselineArray.slice(i, i + MAX_BATCH_SIZE);
+        setProgressDetail(`Writing baseline batch ${batchCount + 1} (${chunk.length} records)...`);
         
-        // We have to write documents one by one since client SDK doesn't support batches the same way
         const writePromises = chunk.map(record => {
-          const docRef = doc(db, historicalCollection, record.pmt_id);
+          const docRef = doc(db, currentCollection, record.pmt_id);
           return setDoc(docRef, record, { merge: true });
         });
         
@@ -299,34 +246,183 @@ export default function FighterDatabase() {
         batchCount++;
         
         // Update progress
-        setProgress(50 + Math.round((i + chunk.length) / recordsArray.length * 50));
-        setProgressDetail(`Batch ${batchCount} committed: ${chunk.length} records`);
+        setProgress(40 + Math.round((i + chunk.length) / baselineArray.length * 30));
+        setProgressDetail(`Baseline batch ${batchCount} committed: ${chunk.length} records`);
       }
       
-      setProgress(100);
-      setMergeMessage(`✅ Successfully merged ${recordsArray.length} fighters into ${historicalCollection}!`);
+      // Update metadata with the new baseline information
+      await setDoc(doc(db, "records_metadata", "current_metadata"), {
+        baselineFighters: baselineArray.length,
+        baselineYears: historicalYears,
+        lastBaselineUpdate: new Date().toISOString()
+      }, { merge: true });
       
-      // Create a metadata document
-      await setDoc(doc(db, "records_metadata", "metadata"), {
-        totalFighters: recordsArray.length,
-        lastUpdated: new Date().toISOString(),
-        sourceCollections: yearCollections,
-        includedYears: years
+      setProgressDetail(`Baseline updated with ${baselineArray.length} fighters from years ${historicalYears.join(", ")}`);
+    } else {
+      setProgressDetail("Baseline is up-to-date, skipping historical merge.");
+      setProgress(50);
+    }
+    
+    // STEP 4: Now merge current year data on top of the baseline
+    const currentYearCollection = `pmt_records_${currentYear}`;
+    setProgressDetail(`Merging current year records from ${currentYearCollection}...`);
+    
+    try {
+      // Check if current year collection exists
+      const currentYearQuery = await getDocs(collection(db, currentYearCollection));
+      
+      if (currentYearQuery.empty) {
+        setProgressDetail(`No records found for current year ${currentYear}, baseline is complete.`);
+        setProgress(100);
+        setMergeMessage(`✅ Optimized merge complete. Baseline is updated with all historical data.`);
+        setMerging(false);
+        return;
+      }
+      
+      // Process current year records
+      let totalCurrentFighters = 0;
+      const modifiedFighters = new Set();
+      
+      currentYearQuery.forEach(doc => {
+        if (doc.id === "metadata" || doc.id === "errors") return;
+        
+        const fighterData = doc.data();
+        const fighterId = fighterData.pmt_id;
+        
+        if (fighterId) {
+          modifiedFighters.add(fighterId);
+          totalCurrentFighters++;
+        }
       });
       
-    } catch (error: unknown) {
-      let errorMessage = "An unknown error occurred";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        console.error("Merge error:", error);
+      setProgressDetail(`Found ${totalCurrentFighters} fighters in current year ${currentYear}.`);
+      
+      // Batch update current fighters with current year data
+      const MAX_BATCH_SIZE = 400;
+      let batchCount = 0;
+      let processedFighters = 0;
+      
+      // Process in batches of fighter IDs
+      const fighterIds = Array.from(modifiedFighters);
+      
+      for (let i = 0; i < fighterIds.length; i += MAX_BATCH_SIZE) {
+        const chunk = fighterIds.slice(i, i + MAX_BATCH_SIZE);
+        setProgressDetail(`Processing current year batch ${batchCount + 1} (${chunk.length} fighters)...`);
+        
+        // For each fighter in this batch
+        const updatePromises = chunk.map(async (fighterId) => {
+          // Get current year record
+          const currentYearDoc = await getDoc(doc(db, currentYearCollection, fighterId as string));
+          
+          if (!currentYearDoc.exists()) return null;
+          
+          const currentYearData = currentYearDoc.data();
+          
+          // Get current record from baseline/current collection
+          const currentRecordDoc = await getDoc(doc(db, currentCollection, fighterId as string));
+          
+          let updatedRecord;
+          
+          if (currentRecordDoc.exists()) {
+            // Merge current year data with baseline
+            const baselineRecord = currentRecordDoc.data();
+            
+            // Start with baseline
+            updatedRecord = {
+              ...baselineRecord,
+              
+              // Add current year stats
+              win: (baselineRecord.win || 0) + (currentYearData.win || 0),
+              loss: (baselineRecord.loss || 0) + (currentYearData.loss || 0),
+              nc: (baselineRecord.nc || 0) + (currentYearData.nc || 0),
+              dq: (baselineRecord.dq || 0) + (currentYearData.dq || 0),
+              
+              // Add current year skill stats
+              bodykick: (baselineRecord.bodykick || 0) + (currentYearData.bodykick || 0),
+              boxing: (baselineRecord.boxing || 0) + (currentYearData.boxing || 0),
+              clinch: (baselineRecord.clinch || 0) + (currentYearData.clinch || 0),
+              defense: (baselineRecord.defense || 0) + (currentYearData.defense || 0),
+              footwork: (baselineRecord.footwork || 0) + (currentYearData.footwork || 0),
+              headkick: (baselineRecord.headkick || 0) + (currentYearData.headkick || 0),
+              kicks: (baselineRecord.kicks || 0) + (currentYearData.kicks || 0),
+              knees: (baselineRecord.knees || 0) + (currentYearData.knees || 0),
+              legkick: (baselineRecord.legkick || 0) + (currentYearData.legkick || 0),
+              ringawareness: (baselineRecord.ringawareness || 0) + (currentYearData.ringawareness || 0),
+              
+              // Merge fights arrays
+              fights: [...(baselineRecord.fights || []), ...(currentYearData.fights || [])],
+              
+              // Merge weightclasses (unique)
+              weightclasses: [...new Set([
+                ...(baselineRecord.weightclasses || []), 
+                ...(currentYearData.weightclasses || [])
+              ])],
+              
+              // Merge events_participated arrays
+              events_participated: [...new Set([
+                ...(baselineRecord.events_participated || []), 
+                ...(currentYearData.events_participated || [])
+              ])],
+              
+              // Track years
+              current_year: currentYear,
+              
+              // Update timestamp
+              lastUpdated: new Date().toISOString()
+            };
+          } else {
+            // This is a new fighter not in the baseline
+            updatedRecord = {
+              ...currentYearData,
+              first_appearance_year: currentYear,
+              current_year: currentYear,
+              lastUpdated: new Date().toISOString()
+            };
+          }
+          
+          // Write the merged record back to current collection
+          return setDoc(doc(db, currentCollection, fighterId as string), updatedRecord, { merge: true });
+        });
+        
+        await Promise.all(updatePromises.filter(Boolean));
+        batchCount++;
+        processedFighters += chunk.length;
+        
+        // Update progress
+        setProgress(70 + Math.round(processedFighters / totalCurrentFighters * 30));
+        setProgressDetail(`Current year batch ${batchCount} committed: ${chunk.length} fighters (${processedFighters}/${totalCurrentFighters})`);
       }
-      setMergeMessage(`❌ Merge Failed: ${errorMessage}`);
-    } finally {
-      setMerging(false);
+      
+      // Update metadata with the current year information
+      await setDoc(doc(db, "records_metadata", "current_metadata"), {
+        currentYearFighters: totalCurrentFighters,
+        currentYear: currentYear,
+        lastCurrentUpdate: new Date().toISOString()
+      }, { merge: true });
+      
+    } catch (error) {
+      console.error("Error processing current year records:", error);
+      setProgressDetail(`Error processing current year: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  };
+    
+    setProgress(100);
+    setMergeMessage(`✅ Optimized merge complete. Current records now reflect all historical data and ${currentYear} updates.`);
+    
+  } catch (error) {
+    let errorMessage = "An unknown error occurred";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error("Merge error:", error);
+    }
+    setMergeMessage(`❌ Optimized Merge Failed: ${errorMessage}`);
+  } finally {
+    setMerging(false);
+  }
+};
   
   
+
+
 
 
   // ✅ If user is not admin, show access denied
@@ -398,7 +494,7 @@ export default function FighterDatabase() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <Button onClick={handleMergepreviousYearsRecords} disabled={merging}>
+            <Button onClick={handleOptimizedMergeRecords} disabled={merging}>
               {merging ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Merge Records"}
             </Button>
           </div>
