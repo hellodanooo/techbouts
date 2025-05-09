@@ -112,7 +112,11 @@ export async function GET() {
       status: extractField(event, 'status', 'string') || 'pending',
       numMats: extractField(event, 'numMats', 'number') || 1,
       disableRegistration: extractField(event, 'disableRegistration', 'boolean') || false,
-      country: extractField(event, 'country', 'string') || 'USA', // Added default value
+      
+      
+      country: extractField(event, 'country', 'string') || 'USA',
+      
+      
       locale: extractField(event, 'locale', 'string') || 'en',
       event_details: extractField(event, 'event_details', 'string') || '',
       zip: extractField(event, 'zip', 'string') || '',
