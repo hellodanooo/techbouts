@@ -6,7 +6,6 @@ import { EventType } from '@/utils/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import AuthDisplay from '@/components/ui/AuthDisplay';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -30,7 +29,7 @@ export default function PageContentEvent({
   promoterEmail,
 }: TournamentDashboardProps) {
   const [imageError, setImageError] = useState(false);
-  const { user, isAdmin, isPromoter, isNewUser } = useAuth();
+  const { user, isAdmin} = useAuth();
   const [registerOpen, setRegisterOpen] = useState(false);
   const [locale, setLocale] = useState('en');
 
@@ -110,15 +109,12 @@ const stripeInstance = useMemo(() => {
   return (
     <Elements stripe={stripeInstance}>
 <Header />
+
+
       <div className="p-5">
         {user?.email}
         {eventData.promoterEmail}
-        <AuthDisplay
-          user={user}
-          isAdmin={isAdmin}
-          isPromoter={isPromoter}
-          isNewUser={isNewUser}
-        />
+      
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header Section */}
 

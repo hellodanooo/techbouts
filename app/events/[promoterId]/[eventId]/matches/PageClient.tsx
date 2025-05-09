@@ -18,7 +18,12 @@ import { fighterClick } from '@/utils/handleFighterClick';
 import { handleExportHtml } from '@/utils/events/matches';
 import { ClipboardCopy } from "lucide-react";
 import { BracketTable } from '@/components/matches/BracketTable';
-
+import { ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 
 interface PageClientProps {
@@ -61,6 +66,11 @@ export default function PageClient({
 
   const [matchMethod, setMatchMethod] = useState<'weighins' | 'weightclasses'>('weighins');
   const [showMatchOptions, setShowMatchOptions] = useState(false);
+
+  const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
+
+
+
 
   // Set up sanctioning email based on event sanctioning body
   useEffect(() => {
@@ -400,14 +410,39 @@ export default function PageClient({
         onBoutSelect={handleBoutSelect}
       />
 
-      <div className='mt-5 mb-5'>
-        <BracketTable
-          roster={roster}
-          handleFighterClick={handleFighterClick}
-          isAdmin={isAdminOrSanctioningOrPromoter}
-          onBoutSelect={handleBoutSelect}
-        />
-      </div>
+
+
+<div className="mt-5 mb-5 mx-2">
+  <Collapsible
+    open={isCollapsibleOpen}
+    onOpenChange={setIsCollapsibleOpen}
+    className="border rounded-md"
+  >
+          <CollapsibleTrigger asChild>
+
+    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 rounded-t-md border-b">
+      <h3 className="text-sm font-medium">Tournament Brackets</h3>
+        <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${
+              isCollapsibleOpen ? 'transform rotate-180' : ''
+            }`}
+          />
+          <span className="sr-only">Toggle</span>
+        </Button>
+    </div>
+    </CollapsibleTrigger>
+
+    <CollapsibleContent className="p-4">
+      <BracketTable
+        roster={roster}
+        handleFighterClick={handleFighterClick}
+        isAdmin={isAdminOrSanctioningOrPromoter}
+        onBoutSelect={handleBoutSelect}
+      />
+    </CollapsibleContent>
+  </Collapsible>
+</div>
 
 
       <RosterTable
@@ -444,8 +479,6 @@ export default function PageClient({
             fourth={fourth}
             weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
             setWeightclass={() => { }}
-            bout_ruleset={selectedBout?.bout_ruleset || "MT"}
-            setBoutRuleset={() => { }}
             boutConfirmed={selectedBout ? true : false}
             setBoutConfirmed={() => { }}
             isCreatingMatch={false}

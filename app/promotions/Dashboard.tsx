@@ -7,7 +7,6 @@ import MonthTable from '../../components/MonthTable';
 import { useRouter } from 'next/navigation';
 import AddEditPromoter from '@/components/AddEditPromoter';
 import { useAuth } from '@/context/AuthContext';
-import AuthDisplay from '@/components/ui/AuthDisplay';
 import Image from 'next/image';
 import Header from '@/components/headers/Header';
 
@@ -50,7 +49,7 @@ const PromoterDashboard = ({
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [activeSanctioning, setActiveSanctioning] = useState<'ALL' | 'PMT' | 'IKF' | 'PBSC'>('ALL');
   const [showPromoterModal, setShowPromoterModal] = useState(false);
-  const { user, isAdmin, isPromoter, isNewUser } = useAuth();
+  const { user, isAdmin, isPromoter } = useAuth();
 
   const activePromoters = useMemo(() => {
 
@@ -261,12 +260,7 @@ const PromoterDashboard = ({
     <div>
       <Header/>
 
-      <AuthDisplay
-        user={user}
-        isAdmin={isAdmin}
-        isPromoter={isPromoter}
-        isNewUser={isNewUser}
-      />
+     
                 <div className='flex p-2 pb-8 gap-4 items-center'>
 
       <div className='custom-font-megapunch' style={{ lineHeight: '1.2' }}>Promoter Dashboard</div>

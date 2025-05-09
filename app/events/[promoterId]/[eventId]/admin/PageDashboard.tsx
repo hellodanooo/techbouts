@@ -178,12 +178,11 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
 
         <div>
             <Header />
-            <AuthDisplay
-                user={user}
-                isAdmin={isAdmin}
-                isPromoter={isPromoter}
-                isNewUser={false}
-            />
+          
+<h1 className="font-bold text-center mb-4">
+                {eventData.event_name || eventData.name || 'Event'}<br></br> Dashboard
+            </h1>
+
 
             <div className='mb-6'>
                 <EditEventForm
@@ -344,8 +343,6 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
             blue={selectedBout ? selectedBout.blue : blue}
             weightclass={(selectedBout?.weightclass || selectedFighter?.weightclass || 0)}
             setWeightclass={() => {}}
-            bout_ruleset={selectedBout?.bout_ruleset || "MT"}
-            setBoutRuleset={() => {}}
             boutConfirmed={selectedBout ? true : false}
             setBoutConfirmed={() => {}}
             isCreatingMatch={false}

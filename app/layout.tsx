@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/react"
 import type { Viewport } from "next";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
+import LayoutWrapper from '@/components/LayoutWrapper'; // Adjust path as needed
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -17,14 +18,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
+
+
   return (
     <html lang="en">
      <body>
         <div className="min-h-full flex flex-col">
           <main className="flex-1 w-full">
              <AuthProvider> 
-              <div className="mb-20"></div>
-              {children}
+
+             <LayoutWrapper>
+    {children}
+  </LayoutWrapper>
+  
               <Analytics />
              </AuthProvider> 
           </main>

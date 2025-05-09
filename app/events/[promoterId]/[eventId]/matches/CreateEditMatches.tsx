@@ -33,8 +33,6 @@ interface SaveBoutProps {
   fourth: RosterFighter | null; // Add fourth fighter
   weightclass: number;
   setWeightclass: (value: number) => void;
-  bout_ruleset: string;
-  setBoutRuleset: (value: string) => void;
   boutConfirmed: boolean;
   setBoutConfirmed: (value: boolean) => void;
   isCreatingMatch: boolean;
@@ -60,8 +58,6 @@ export default function CreateBout({
   fourth,
   weightclass,
   setWeightclass,
-  bout_ruleset,
-  setBoutRuleset,
   boutConfirmed,
   setBoutConfirmed,
   isCreatingMatch,
@@ -87,11 +83,22 @@ export default function CreateBout({
   const [isBracketMode, setIsBracketMode] = useState(false);
   const [bracket, setBracket] = useState<Bracket | null>(null);
   const [bracketName, setBracketName] = useState('');
-
   const [openSections, setOpenSections] = useState({
     boutSettings: false,
   });
-  
+  const [bout_ruleset, setBoutRuleset] = useState("MT");
+
+  useEffect(() => {
+    if (sanctioning === "PBSC") {
+      setBoutRuleset("PBOX");
+    } else if (sanctioning === "PMT") {
+      setBoutRuleset("PMT");
+    } else if (sanctioning === "IKF") {
+      setBoutRuleset("MT");
+    }
+  }, [sanctioning]);
+
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({
       ...prev,
@@ -99,6 +106,10 @@ export default function CreateBout({
     }));
   };
 
+
+
+
+  
   // Check if we should switch to bracket mode when third fighter is selected
   useEffect(() => {
     if (third) {
@@ -108,7 +119,7 @@ export default function CreateBout({
       setIsBracketMode(false);
       setBracket(null);
     }
-  }, [red, blue, third, fourth, boutNum, ringNum, dayNum, weightclass, bout_ruleset]);
+  }, [red, blue, third, fourth, boutNum, ringNum, dayNum, weightclass]);
 
   // Update the bracket whenever fighters or bout settings change
 // Update the bracket whenever fighters or bout settings change
@@ -189,6 +200,9 @@ const updateBracket = () => {
 
     setBoutNum(maxExistingBout + 1);
   }, [action, existingBouts, ringNum, dayNum]);
+
+
+
 
   useEffect(() => {
     if (action === 'edit' && existingBoutId) {
@@ -580,19 +594,27 @@ const updateBracket = () => {
                 />
               </div>
 
+
+
               <div className="space-y-2">
                 <Label htmlFor="bout_ruleset">Bout Ruleset</Label>
-                <Select value={bout_ruleset} onValueChange={setBoutRuleset}>
-                  <SelectTrigger id="bout_ruleset"><SelectValue placeholder="Select Bout Ruleset" /></SelectTrigger>
-                  <SelectContent>
-                    {["MT", "MMA", "PMT", "PB", "B", "KB"].map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Select 
+              value={bout_ruleset}
+              onValueChange={setBoutRuleset}
+              >
+                <SelectTrigger id="bout_ruleset">
+          <SelectValue placeholder="Select Bout Ruleset" />
+        </SelectTrigger>
+        <SelectContent>
+          {["MT","MMA","BOX","PMT","PBOX","KBOX"].map(type => (
+            <SelectItem key={type} value={type}>{type}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
               </div>
+
+
+
 
               {/* SWAP CORNERS (only show in non-bracket mode) */}
               {!isBracketMode && (

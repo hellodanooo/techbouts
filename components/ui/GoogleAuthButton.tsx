@@ -4,10 +4,10 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { FaGooglePlusG } from "react-icons/fa6";
-import { ExternalLink, AlertTriangle, Copy } from 'lucide-react';
+import { ExternalLink, AlertTriangle, Copy, LogOut } from 'lucide-react';
 
 export default function GoogleAuthButton() {
-  const { signInWithGoogle, isAuthLoading, authError, isInEmbeddedBrowser } = useAuth();
+  const { user, signInWithGoogle, signOut, isAuthLoading, authError, isInEmbeddedBrowser } = useAuth();
   const [showCopyOption, setShowCopyOption] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -19,6 +19,10 @@ export default function GoogleAuthButton() {
       console.error('Error in Google sign-in button handler:', error);
       // Error is already handled in the auth context
     }
+  };
+
+  const handleSignOut = () => {
+    signOut();
   };
 
   const copyToClipboard = () => {
@@ -33,6 +37,24 @@ export default function GoogleAuthButton() {
         });
     }
   };
+
+  // If user is logged in, show logout button
+  if (user) {
+    return (
+      <button
+        onClick={handleSignOut}
+        disabled={isAuthLoading}
+        className="flex items-center justify-center gap-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {isAuthLoading ? (
+          <div className="w-5 h-5 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin" />
+        ) : (
+          <LogOut className="w-4 h-4" />
+        )}
+        <span className="text-sm sm:text-base">{isAuthLoading ? 'Signing out...' : 'Sign out'}</span>
+      </button>
+    );
+  }
 
   return (
     <div className="w-full space-y-4">
@@ -95,7 +117,7 @@ export default function GoogleAuthButton() {
         ) : (
           <FaGooglePlusG className="text-xl" />
         )}
-        <span>{isAuthLoading ? 'Signing in...' : 'Sign in with Google'}</span>
+        <span className="text-sm sm:text-base">{isAuthLoading ? 'Signing in...' : 'Sign in'}</span>
       </button>
       
       {isInEmbeddedBrowser && (

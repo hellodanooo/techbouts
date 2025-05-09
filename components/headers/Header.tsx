@@ -6,17 +6,30 @@ import { useState, useEffect } from "react";
 import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import GoogleAuthButton from '@/components/ui/GoogleAuthButton';
+import useIsMobile from '@/hooks/useIsMobile';
+
+
+import { 
+  Calendar, 
+  Database, 
+  Home, 
+  Mail, 
+} from 'lucide-react';
 
 interface HeaderProps {
   transparent?: boolean;
 }
 
-export default function Header({ transparent = false }: HeaderProps) {
+export default function ConsistentHeader({ transparent = false }: HeaderProps) {
   const { user, isAdmin, isPromoter, promoterId, signOut } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const pathname = usePathname();
 
+  const isMobile = useIsMobile();
+
+
+  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -26,203 +39,190 @@ export default function Header({ transparent = false }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
-  
-  const isActive = (path: string) => {
-    return pathname === path;
-  };
+
+
+
+
 
   // Determine the dashboard path
   const dashboardPath = promoterId 
     ? `/promotions/${promoterId}` 
-    : `/promotions/dashboard`; // Fallback in case promoterId is not available
+    : `/promotions/dashboard`;
 
-  return (
-    <header 
-      className={`w-full fixed top-0 z-50 transition-all duration-300 ${
-        transparent && !scrolled 
-          ? 'bg-transparent' 
-          : 'bg-white shadow-md'
-      }`}
-    >
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <div className="relative">
-         <Link  href="/" >
-          <Image 
-            src="/logos/techboutslogoFlat.png" 
-            alt="Logo" 
-            width={150} 
-            height={60}
-            className="mix-blend-multiply dark:mix-blend-screen drop-shadow-sm"
-          />
-          </Link>
-        </div>
+  const isActive = (path: string) => {
+    return pathname === path;
+  };
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
+  const isPathActive = (path: string) => {
+    return pathname.startsWith(path);
+  };
+
+
+
+  // Common navigation items component
+  const NavigationItems = ({ location }: { location: 'top' | 'bottom' }) => (
+    <>
+      <Link 
+        href="/events" 
+        className={`relative border rounded flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
+          isActive('/events') 
+        ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
+        :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+        }`}
+      >
+        {/* Indicator - consistent position for both locations */}
+        <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${
+          isActive('/events') ? 'opacity-100' : 'opacity-0'
+        }`}></span>
+        <Calendar className="w-5 h-5 mb-1" />
+        <span className="text-xs">Events</span>
+      </Link>
+
+
+
+
+      <Link 
+        href="/promotions" 
+        className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
+          isActive('/promotions') 
+          ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
+          :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+        }`}
+      >
+        {/* Indicator - consistent position for both locations */}
+        <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${
+          isActive('/promotions') ? 'opacity-100' : 'opacity-0'
+        }`}></span>
+        <Calendar className="w-5 h-5 mb-1" />
+        <span className="text-xs">{location === 'bottom' ? 'Promo' : 'Promotions'}</span>
+      </Link>
+
+      <Link 
+        href="/database" 
+        className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
+          isActive('/database') 
+          ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
+          :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+        }`}
+      >
+        <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${
+          isActive('/database') ? 'opacity-100' : 'opacity-0'
+        }`}></span>
+        <Database className="w-5 h-5 mb-1" />
+        <span className="text-xs">Data</span>
+      </Link>
       
-          <Link 
-            href="/events" 
-            className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
-          >
-            Events
-          </Link>
+      {isPromoter && (
+        <Link 
+          href={dashboardPath}
+          className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
+            isPathActive('/promotions/') 
+            ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
+            :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+          }`}
+        >
+          <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${
+            isPathActive('/promotions/') ? 'opacity-100' : 'opacity-0'
+          }`}></span>
+          <Home className="w-5 h-5 mb-1" />
+          <span className="text-xs">Dash</span>
+        </Link>
+      )}
+      
+      {isAdmin && (
+        <Link 
+          href="/emails" 
+          className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
+            isPathActive('/emails') 
+            ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
+            :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+          }`}
+        >
+          <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${
+            isPathActive('/emails') ? 'opacity-100' : 'opacity-0'
+          }`}></span>
+          <Mail className="w-5 h-5 mb-1" />
+          <span className="text-xs">Email</span>
+        </Link>
+      )}
+    </>
+  );
 
-          <Link 
-            href="/promotions" 
-            className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
-          >
-            Promotions
-          </Link>
-
-          <Link 
-            href="/database" 
-            className={`${isActive('/database') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
-          >
-            Database
-          </Link>
-          
-          {isPromoter && (
-            <Link 
-              href={dashboardPath}
-              className={`${pathname.startsWith('/promoters/') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
-            >
-              Dashboard
-            </Link>
-          )}
-          
-          {isAdmin && (
-            <Link 
-              href="/emails" 
-              className={`${pathname.startsWith('/emails') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
-            >
-              Email
-            </Link>
-          )}
-
-          {user ? (
-            <div className="flex items-center gap-4">
+  // Define the common header structure that will be used in both positions
+  const HeaderContent = ({ position }: { position: 'top' | 'bottom' }) => (
+    <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+      {/* Logo */}
+      <div className="relative">
+        <Link href="/">
+        <Image 
+  src={position === 'bottom' ? '/logos/techboutsLogo.png' : '/logos/techboutslogoFlat.png'} 
+  alt="Logo" 
+  width={position === 'bottom' ? 50 : 90} 
+  height={position === 'bottom' ? 24 : 36}
+  className="mix-blend-multiply dark:mix-blend-screen drop-shadow-sm"
+/>
+        </Link>
+      </div>
+      
+      {/* Navigation */}
+      <nav className="w-full flex items-center justify-center space-x-8">
+        <NavigationItems location={position} />
+      </nav>
+      
+      {/* Auth button */}
+      <div className="flex-shrink-0">
+        <GoogleAuthButton />
+        
+        {/* User menu popup */}
+        {showUserMenu && (
+          <div className={`absolute ${position === 'top' ? 'top-12' : 'bottom-12'} right-4 bg-white shadow-lg rounded-lg py-2 w-32 z-50`}>
+            {user && (
               <button 
-                onClick={signOut}
-                className="border-2 border-[#DD5746] text-[#DD5746] py-1 px-4 rounded hover:bg-[#DD5746] hover:text-white transition-colors"
+                onClick={() => {
+                  signOut();
+                  setShowUserMenu(false);
+                }}
+                className="w-full text-left px-4 py-2 text-[#DD5746] hover:bg-gray-50"
               >
                 Sign Out
               </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-4">
- 
-              <GoogleAuthButton />
-              
-            </div>
-          )}
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden text-[#8B322C]" 
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor" 
-            className="w-6 h-6"
-          >
-            {isMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white shadow-lg">
-          <div className="container mx-auto px-4 py-2 flex flex-col space-y-3">
-            <Link 
-              href="/" 
-              className={`${isActive('/') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
-              onClick={closeMenu}
-            >
-              Home
-            </Link>
-            <Link 
-              href="/events" 
-              className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
-              onClick={closeMenu}
-            >
-              Events
-            </Link>
-            <Link 
-              href="/database" 
-              className={`${isActive('/database') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
-              onClick={closeMenu}
-            >
-              Database
-            </Link>
-            <Link 
-            href="/promotions" 
-            className={`${isActive('/events') ? 'font-semibold text-[#DD5746]' : transparent && !scrolled ? 'text-white' : 'text-[#4793AF]'} hover:text-[#DD5746] transition-colors`}
-          >
-            Promotions
-          </Link>
-            
-            {isPromoter && (
-              <Link 
-                href={dashboardPath}
-                className={`${pathname.startsWith('/promoters/') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
-                onClick={closeMenu}
-              >
-                Dashboard
-              </Link>
-            )}
-            
-            {isAdmin && (
-              <Link 
-                href="/admin" 
-                className={`${pathname.startsWith('/admin') ? 'font-semibold text-[#DD5746]' : 'text-[#4793AF]'} py-2`}
-                onClick={closeMenu}
-              >
-                Admin
-              </Link>
-            )}
-            
-            {user ? (
-              <div className="py-2 flex items-center justify-between">
-                <button 
-                  onClick={() => {
-                    signOut();
-                    closeMenu();
-                  }}
-                  className="text-sm text-[#DD5746]"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <Link 
-                href="/auth/login" 
-                className="bg-[#DD5746] text-white py-2 px-4 rounded text-center"
-                onClick={closeMenu}
-              >
-                Sign In
-              </Link>
             )}
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Only show top header on desktop */}
+      {!isMobile && (
+        <header 
+          className={`w-full fixed top-0 z-50 transition-all duration-300 ${
+            transparent && !scrolled 
+              ? 'bg-transparent' 
+              : ''
+          }`}
+        >
+          <HeaderContent position="top" />
+        </header>
       )}
-    </header>
+      
+      {/* Only show bottom header on mobile */}
+      {isMobile && (
+        <header
+          className={`w-full fixed bottom-0 z-50 transition-all duration-300 ${
+            transparent && !scrolled 
+              ? 'bg-black/50 backdrop-blur-md' 
+              : 'bg-white/90 backdrop-blur-md shadow-lg border-t border-gray-100/50'
+          }`}
+        >
+          <HeaderContent position="bottom" />
+        </header>
+      )}
+      
+   
+    </>
   );
 }

@@ -9,7 +9,6 @@ import AddPromoter from '@/components/AddEditPromoter';
 import AddEventForm from '@/components/events/AddEventForm';
 
 import { useAuth } from '@/context/AuthContext';
-import AuthDisplay from '@/components/ui/AuthDisplay';
 import Header from '@/components/headers/Header';
 
 interface Props {
@@ -28,7 +27,7 @@ const EventsDashboard = ({
 
   const [activeSanctioning, setActiveSanctioning] = useState<'ALL' | 'PMT' | 'IKF' | 'PBSC'>('ALL');
     const [showPromoterModal, setShowPromoterModal] = useState(false); 
-  const { user, isAdmin, isPromoter, isNewUser } = useAuth();
+  const {  isAdmin, isPromoter } = useAuth();
 const [showAddEventModal, setShowAddEventModal] = useState(false);
 
 
@@ -133,12 +132,7 @@ const [showAddEventModal, setShowAddEventModal] = useState(false);
   return (
     <div>
       <Header />
-  <AuthDisplay 
-        user={user}
-        isAdmin={isAdmin}
-        isPromoter={isPromoter}
-        isNewUser={isNewUser}
-      />
+  
       <h1>Events Dashboard</h1>
 
       {isAdmin || isPromoter && (
