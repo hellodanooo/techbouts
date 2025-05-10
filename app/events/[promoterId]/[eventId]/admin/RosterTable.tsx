@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
-import { RefreshCw, Save, CheckCircle, Plus, Loader2, ImageIcon } from "lucide-react";
+import { RefreshCw, Save, CheckCircle, Plus, Loader2 } from "lucide-react";
 import AddFighterModal from '../../../../../components/database/AddFighterModal';
 import { toast } from 'sonner';
 import { RosterFighter, EventType, Bout } from '@/utils/types';

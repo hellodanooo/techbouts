@@ -88,15 +88,16 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
           router,
           setRed,
           setBlue,
+          setThird,
+          setFourth,
           setSelectedFighter,
-          setThird, // Add missing argument
-          setFourth, // Add missing argument
           red,
           blue,
-          third, // Add missing argument
-          fourth // Add missing argument
+          third,
+          fourth
         );
-      }, [isAuthorized, router, red, blue]); // Changed from isAdmin to isAuthorized
+      }, [isAuthorized, router, red, blue, third, fourth]);
+     
 
 
       const refreshBouts = async () => {

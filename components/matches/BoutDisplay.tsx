@@ -239,7 +239,8 @@ function usePhotoManager() {
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
 
-  const loadFighterPhoto = async (fighterId: string, defaultPhoto: string) => {
+  const loadFighterPhoto = async (fighterId: string) => {
+
     if (!fighterId || photos[fighterId] !== undefined) return;
     
     setLoading(prev => ({ ...prev, [fighterId]: true }));
@@ -309,18 +310,18 @@ function BoutRow({
   // Load fighter photos
   useEffect(() => {
     if (bout.red?.fighter_id) {
-      loadFighterPhoto(bout.red.fighter_id, defaultPhotoUrl);
+      loadFighterPhoto(bout.red.fighter_id);
     }
     
     if (bout.blue?.fighter_id) {
-      loadFighterPhoto(bout.blue.fighter_id, defaultPhotoUrl);
+      loadFighterPhoto(bout.blue.fighter_id);
     }
     
     // Also load photos for bracket fighters if present
     if (bout.bracket_bout_fighters && bout.bracket_bout_fighters.length > 0) {
       bout.bracket_bout_fighters.forEach(fighter => {
         if (fighter?.fighter_id) {
-          loadFighterPhoto(fighter.fighter_id, defaultPhotoUrl);
+          loadFighterPhoto(fighter.fighter_id);
         }
       });
     }

@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { FaGooglePlusG } from "react-icons/fa6";
 import { ExternalLink, AlertTriangle, Copy, LogOut } from 'lucide-react';
 
 export default function GoogleAuthButton() {

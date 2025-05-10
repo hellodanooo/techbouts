@@ -502,8 +502,6 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   };
 
 
-
-
   const sendEmailToPromoter = async (sanctioning: string, fighterData: FullContactFighter, eventName: string, eventId: string) => {
     
     console.log('sendEmailToPromoter:', promoterEmail);
@@ -551,22 +549,28 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
     },
     currentDate: string,
     promoterId: string
-
   ): Promise<boolean> {
     try {
+      console.log(`[FIRESTORE_SAVE] Starting save for fighter: ${fighterData.fighter_id} in event: ${eventId}`);
+      
+      if (!fighterData.fighter_id) {
+        console.error(`[FIRESTORE_SAVE_ERROR] No fighter_id provided for saving to Firestore`);
+        return false;
+      }
+      
       // Create payment info object, ensuring no undefined values
       const payment_info = {
         paymentIntentId: fighterData.paymentIntentId || "",
         paymentAmount: fighterData.paymentAmount || 0,
         paymentCurrency: fighterData.paymentCurrency || 'USD'
       };
-
-      // Determine class based on experience and amateur status
-
-
+      
+      console.log(`[FIRESTORE_SAVE] Payment info prepared: ${JSON.stringify(payment_info)}`);
+  
       // Determine age_gender classification
       const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
-
+      console.log(`[FIRESTORE_SAVE] Age-gender classification: ${ageGenderClassification}`);
+  
       // Prepare fighter data to match FullContactFighter interface
       const fullContactFighterData: Partial<RosterFighter> = {
         // Basic Information
@@ -582,23 +586,20 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         heightInch: fighterData.heightInch || 0,
         heightCm: fighterData.heightCm || 0,
         
-
         // Gym Information
         gym: fighterData.gym,
         coach: fighterData.coach_name,
         coach_email: fighterData.coach_email || '',
         coach_name: fighterData.coach_name,
         coach_phone: fighterData.coach_phone,
-
-
+  
         // Location Information
         state: fighterData.state || '',
         city: fighterData.city || '',
-
+  
         // Physical Information
         weightclass: fighterData.weightclass,
-
-
+  
         // Record
         mt_win: fighterData.mt_win || 0,
         mt_loss: fighterData.mt_loss || 0,
@@ -608,48 +609,82 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         mma_loss: fighterData.mma_loss || 0,
         pmt_win: fighterData.pmt_win || 0,
         pmt_loss: fighterData.pmt_loss || 0,
-
+  
         // Experience & Classification
         years_exp: fighterData.years_exp || 0,
         age_gender: ageGenderClassification,
-
+  
         // Documentation
         docId: fighterData.fighter_id,
         payment_info,
-
-        // Additional data for tracking
+        
       };
-
+  
+      console.log(`[FIRESTORE_SAVE] Fighter data prepared for Firestore`);
+  
       // Reference to the roster_json document
       const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
-
+      console.log(`[FIRESTORE_SAVE] Firestore path: events/promotions/${promoterId}/${eventId}/roster_json/fighters`);
+  
       // Check if the document exists
-      const rosterJsonDoc = await getDoc(rosterJsonRef);
-      const batch = writeBatch(db);
-
-      if (rosterJsonDoc.exists()) {
-        // Document exists, get the current fighters array
-        const data = rosterJsonDoc.data();
-        const fighters = data.fighters || [];
-
-        // Add the new fighter to the array
-        fighters.push(fullContactFighterData);
-
-        // Update the document with the new array
-        batch.update(rosterJsonRef, { fighters: fighters });
-      } else {
-        // Document doesn't exist, create it with the fighter as the first item in the array
-        batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
+      console.log(`[FIRESTORE_SAVE] Checking if roster document exists`);
+      let rosterJsonDoc;
+      try {
+        rosterJsonDoc = await getDoc(rosterJsonRef);
+      } catch (error) {
+        console.error(`[FIRESTORE_SAVE_ERROR] Error getting roster document:`, error);
+        return false;
       }
-
-
-      // Commit the batch
-      await batch.commit();
-
-      return true;
+      
+      const batch = writeBatch(db);
+  
+      try {
+        if (rosterJsonDoc.exists()) {
+          console.log(`[FIRESTORE_SAVE] Roster document exists, updating existing document`);
+          // Document exists, get the current fighters array
+          const data = rosterJsonDoc.data();
+          const fighters = data.fighters || [];
+          console.log(`[FIRESTORE_SAVE] Current roster count: ${fighters.length}`);
+  
+          // Check if fighter already exists in the array (by fighter_id)
+          const existingFighterIndex = fighters.findIndex(
+            (f: RosterFighter) => f.fighter_id === fighterData.fighter_id
+          );
+  
+          if (existingFighterIndex >= 0) {
+            console.log(`[FIRESTORE_SAVE] Fighter already exists in roster, updating existing record`);
+            fighters[existingFighterIndex] = {
+              ...fighters[existingFighterIndex],
+              ...fullContactFighterData,
+              updated_at: currentDate
+            };
+          } else {
+            // Add the new fighter to the array
+            fighters.push(fullContactFighterData);
+            console.log(`[FIRESTORE_SAVE] Added fighter to existing array, new count: ${fighters.length}`);
+          }
+  
+          // Update the document with the new array
+          batch.update(rosterJsonRef, { fighters: fighters });
+        } else {
+          console.log(`[FIRESTORE_SAVE] Roster document doesn't exist, creating new document`);
+          // Document doesn't exist, create it with the fighter as the first item in the array
+          batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
+        }
+  
+        // Commit the batch
+        console.log(`[FIRESTORE_SAVE] Committing batch write to Firestore`);
+        await batch.commit();
+        console.log(`[FIRESTORE_SAVE] Batch write successful for fighter: ${fighterData.fighter_id}`);
+  
+        return true;
+      } catch (batchError) {
+        console.error(`[FIRESTORE_SAVE_ERROR] Error in batch operation:`, batchError);
+        return false;
+      }
     } catch (error) {
-      console.error('Error saving fighter data to Firestore:', error);
-      throw new Error('Failed to save fighter data');
+      console.error(`[FIRESTORE_SAVE_ERROR] Unexpected error saving fighter data to Firestore:`, error);
+      return false;
     }
   }
 
@@ -685,128 +720,210 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   const handleRegistrationSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    setStatusMessage('');
-
+    
+    // Initialize logging function
+    const logRegistrationStatus = (message: string, includeFighterInfo: boolean = false) => {
+      // Update UI status
+      setStatusMessage(message);
+      
+      // Create a timestamped log message
+      const timestamp = new Date().toISOString();
+      
+      // Base log info
+      const logInfo: {
+        timestamp: string;
+        message: string;
+        eventId: string;
+        eventName: string;
+        sanctioning: string;
+        registrationType: string;
+        fighter?: {
+          id: string;
+          name: string;
+          email: string;
+          gym: string;
+          weightClass: string;
+        };
+      } = {
+        timestamp,
+        message,
+        eventId,
+        eventName,
+        sanctioning,
+        registrationType: isCreditCodeValid ? 'credit_code' : 
+                          currentRegistrationFee === 0 ? 'free' : 
+                          isPayLater ? 'pay_later' : 'paid'
+      };
+      
+      // Add fighter info if available
+      if (includeFighterInfo && fighterData) {
+        logInfo['fighter'] = {
+          id: fighterData.fighter_id,
+          name: `${fighterData.first} ${fighterData.last}`,
+          email: fighterData.email,
+          gym: fighterData.gym,
+          weightClass: fighterData.weightclass.toString()
+        };
+      }
+      
+      // Log to console (will appear in Vercel logs)
+      console.log(`[REGISTRATION_LOG] ${JSON.stringify(logInfo)}`);
+    };
+  
+    // Clear previous status
+    logRegistrationStatus('Starting registration process');
+  
     const formError = validateForm();
     if (formError) {
+      logRegistrationStatus(`Form validation error: ${formError}`);
       alert(formError);
       setIsSubmitting(false);
       return;
     }
-
+  
     if (!fighterData) {
+      logRegistrationStatus('Fighter data is missing');
       console.log('Fighter data is missing.');
       setIsSubmitting(false);
       return;
     }
-
+  
     const currentDate = format(new Date(), 'yyyy-MM-dd');
-
+  
     try {
       // Check if registration is free (valid credit code or registration fee is 0)
       const isFreeRegistration = isCreditCodeValid || currentRegistrationFee === 0;
-
+      let firestoreSaveSuccess = false;
+      
       if (isFreeRegistration) {
-        setStatusMessage('Submitting free registration data...');
-
-        await saveFighterToFirestore(db, eventId, fighterData, currentDate, promoterId);
-        setStatusMessage('Submitted Successfully.');
-
-        // Update credit code as redeemed if using a credit code
-        if (isCreditCodeValid && creditCode) {
-          setStatusMessage('Marking Credit Code as redeemed...');
-
-          await setDoc(doc(db, 'couponCodes', creditCode), {
-            redeemed: true,
-            redeemedBy: fighterData.email,
-            redeemedAt: currentDate,
-            eventId: eventId
-          }, { merge: true });
-
-          setStatusMessage('Code Marked Redeemed');
+        logRegistrationStatus('Processing free registration...', true);
+  
+        try {
+          logRegistrationStatus('Saving fighter data to Firestore...', true);
+          firestoreSaveSuccess = await saveFighterToFirestore(db, eventId, fighterData, currentDate, promoterId);
+          
+          if (!firestoreSaveSuccess) {
+            logRegistrationStatus('Failed to save fighter data to Firestore', true);
+            throw new Error('Failed to save fighter data to roster');
+          }
+          
+          logRegistrationStatus('Fighter data saved to Firestore successfully', true);
+  
+          // Update credit code as redeemed if using a credit code
+          if (isCreditCodeValid && creditCode) {
+            logRegistrationStatus('Marking Credit Code as redeemed...', true);
+  
+            await setDoc(doc(db, 'couponCodes', creditCode), {
+              redeemed: true,
+              redeemedBy: fighterData.email,
+              redeemedAt: currentDate,
+              eventId: eventId
+            }, { merge: true });
+  
+            logRegistrationStatus('Credit code marked as redeemed', true);
+          }
+        } catch (firestoreError) {
+          logRegistrationStatus(`Error saving to Firestore: ${firestoreError}`, true);
+          throw firestoreError; // Re-throw to be caught by the outer catch block
         }
-
-        setStatusMessage('Sending confirmation email...');
-
-        await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
-
-        setStatusMessage('Email Sent');
-
-    console.log('sendPromoterNotificationEmail:', sendPromoterNotificationEmail);
-
-        if (sendPromoterNotificationEmail) {
-
-          await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
-          setStatusMessage('Pomoter Notified');
+  
+        // Only proceed with emails if Firestore save was successful
+        if (firestoreSaveSuccess) {
+          try {
+            logRegistrationStatus('Sending confirmation email...', true);
+            await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
+            logRegistrationStatus('Confirmation email sent successfully', true);
+          } catch (emailError) {
+            // Log email error but don't stop the process since fighter data is already saved
+            logRegistrationStatus(`Error sending confirmation email: ${emailError}`, true);
+            console.error('Error sending confirmation email:', emailError);
+            alert(formContent.emailErrorMessage);
+          }
+  
+          if (sendPromoterNotificationEmail) {
+            try {
+              logRegistrationStatus('Sending email to promoter...', true);
+              await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
+              logRegistrationStatus('Promoter notification email sent', true);
+            } catch (promoterEmailError) {
+              // Log promoter email error but don't stop the process
+              logRegistrationStatus(`Error sending promoter email: ${promoterEmailError}`, true);
+              console.error('Error sending promoter notification:', promoterEmailError);
+            }
+          }
+  
+          // Only redirect if everything was successful
+          if (sanctioning === 'PBSC') {
+            // Set the redirect URL based on the locale
+            const pbscRedirectUrl = locale === 'es'
+              ? 'https://www.pointboxing.com/rules-espanol'
+              : 'https://www.pointboxing.com/rules';
+              
+            logRegistrationStatus('Redirecting to PBSC rules...', true);
+            handleRedirect(pbscRedirectUrl);
+          } else if (redirectUrl) {
+            logRegistrationStatus(`Redirecting to ${redirectUrl}...`, true);
+            handleRedirect(redirectUrl);
+          } else {
+            logRegistrationStatus('Registration completed successfully, closing modal', true);
+            closeModal();
+          }
         }
-
-
-        if (sanctioning === 'PBSC') {
-          // Set the redirect URL based on the locale
-          const pbscRedirectUrl = locale === 'es'
-            ? 'https://www.pointboxing.com/rules-espanol'
-            : 'https://www.pointboxing.com/rules';
-            
-          setStatusMessage('Redirecting to PBSC rules...');
-          handleRedirect(pbscRedirectUrl);
-        } else if (redirectUrl) {
-          setStatusMessage('Redirecting...');
-          handleRedirect(redirectUrl);
-        } else {
-          closeModal();
-        }
-
-
-
-    } else {
-
-
+      } else {
         // Handle paid registration
-        setStatusMessage('Posting Payment...');
-
-        if (!stripe || !elements) {
-          throw new Error('Stripe.js not loaded');
-        }
-
-        let token;
         if (!isPayLater) {
+          logRegistrationStatus('Processing paid registration...', true);
+  
+          if (!stripe || !elements) {
+            throw new Error('Stripe.js not loaded');
+          }
+  
           const cardElement = elements.getElement(CardElement);
           if (!cardElement) {
             throw new Error('CardElement not found');
           }
-
-          const { token: createdToken, error: stripeError } = await stripe.createToken(cardElement);
-          if (stripeError) {
-            console.error('Stripe error:', stripeError); // Debug log
-            throw new Error(stripeError.message);
+  
+          logRegistrationStatus('Creating Stripe token...', true);
+          let token;
+          try {
+            const { token: createdToken, error: stripeError } = await stripe.createToken(cardElement);
+            if (stripeError) {
+              logRegistrationStatus(`Stripe error: ${stripeError.message}`, true);
+              throw new Error(stripeError.message);
+            }
+            token = createdToken;
+          } catch (stripeError) {
+            logRegistrationStatus(`Error creating Stripe token: ${stripeError}`, true);
+            throw stripeError;
           }
-
-          token = createdToken;
-        }
-
-        let fighterDataWithPayment = fighterData;
-
-        if (!isPayLater) {
-          const paymentResponse = await axios.post('/api/stripe', {
-            token: token?.id,
-            eventId,
-            amount: convertedFee.amount,
-            currency: convertedFee.currency,
-            idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
-            fighter_id: fighterData.fighter_id,
-            locale,
-            sanctioning
-          });
-
-
-        
-
-          if (!paymentResponse.data.success || !paymentResponse.data.paymentIntentId) {
-            setStatusMessage(formContent.paymentFailedMessage);
-            throw new Error('Payment failed: Unable to process payment');
+  
+          // Process payment
+          let paymentResponse;
+          try {
+            logRegistrationStatus('Processing payment...', true);
+            paymentResponse = await axios.post('/api/stripe', {
+              token: token?.id,
+              eventId,
+              amount: convertedFee.amount,
+              currency: convertedFee.currency,
+              idempotencyKey: `reg-charge-${fighterData.fighter_id}-${Date.now()}`,
+              fighter_id: fighterData.fighter_id,
+              locale,
+              sanctioning
+            });
+  
+            if (!paymentResponse.data.success || !paymentResponse.data.paymentIntentId) {
+              logRegistrationStatus(`Payment failed: ${JSON.stringify(paymentResponse.data)}`, true);
+              throw new Error('Payment failed: Unable to process payment');
+            }
+          } catch (paymentError) {
+            logRegistrationStatus(`Payment error: ${paymentError}`, true);
+            throw paymentError;
           }
-        
-          fighterDataWithPayment = {
+  
+          logRegistrationStatus(`Payment successful, paymentIntentId: ${paymentResponse.data.paymentIntentId}`, true);
+          
+          const fighterDataWithPayment = {
             ...fighterData,
             paymentIntentId: paymentResponse.data.paymentIntentId,
             paymentAmount: convertedFee.amount,
@@ -816,45 +933,78 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
             paymentAmount: number;
             paymentCurrency: string;
           };
-        
-
-          await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate, promoterId);
-
-          setStatusMessage('Submitted Successfully.');
-          setStatusMessage('Sending confirmation email...');
-
-          await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
-
-          setStatusMessage('Email Sent');
+  
+          // Save to Firestore
+          try {
+            logRegistrationStatus('Saving fighter data to Firestore...', true);
+            firestoreSaveSuccess = await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate, promoterId);
+            
+            if (!firestoreSaveSuccess) {
+              logRegistrationStatus('Failed to save fighter data to Firestore', true);
+              throw new Error('Failed to save fighter data to roster');
+            }
+            
+            logRegistrationStatus('Fighter data saved successfully', true);
+          } catch (firestoreError) {
+            logRegistrationStatus(`Error saving to Firestore: ${firestoreError}`, true);
+            
+            // Important: Since payment was processed but data wasn't saved,
+            // log this critical error for follow-up
+            console.error('CRITICAL ERROR: Payment processed but fighter data not saved to roster:', {
+              paymentIntentId: paymentResponse?.data?.paymentIntentId,
+              fighterId: fighterData.fighter_id,
+              event: eventId
+            });
+            
+            throw firestoreError;
+          }
+  
+          // Only proceed with emails if Firestore save was successful
+          if (firestoreSaveSuccess) {
+            try {
+              logRegistrationStatus('Sending confirmation email...', true);
+              await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
+              logRegistrationStatus('Confirmation email sent successfully', true);
+            } catch (emailError) {
+              // Log email error but don't stop the process since fighter data is already saved
+              logRegistrationStatus(`Error sending confirmation email: ${emailError}`, true);
+              console.error('Error sending confirmation email:', emailError);
+              alert(formContent.emailErrorMessage);
+            }
+  
+            if (sendPromoterNotificationEmail) {
+              try {
+                logRegistrationStatus('Sending email to promoter...', true);
+                await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
+                logRegistrationStatus('Promoter notification email sent', true);
+              } catch (promoterEmailError) {
+                // Log promoter email error but don't stop the process
+                logRegistrationStatus(`Error sending promoter email: ${promoterEmailError}`, true);
+                console.error('Error sending promoter notification:', promoterEmailError);
+              }
+            }
+  
+            // Only redirect if everything was successful
+            logRegistrationStatus('Registration successful', true);
           
-
-setStatusMessage('Notifying Promoter...');
-
-          if (sendPromoterNotificationEmail) {
-            await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
-            setStatusMessage('Promoter Notified');
+            if (sanctioning === 'PBSC') {
+              const pbscRedirectUrl = locale === 'es'
+                ? 'https://www.pointboxing.com/rules-espanol'
+                : 'https://www.pointboxing.com/rules';
+                
+              logRegistrationStatus('Redirecting to PBSC rules...', true);
+              handleRedirect(pbscRedirectUrl);
+            } else if (redirectUrl) {
+              logRegistrationStatus(`Redirecting to ${redirectUrl}...`, true);
+              handleRedirect(redirectUrl);
+            } else {
+              logRegistrationStatus('Registration completed successfully, closing modal', true);
+              closeModal();
+            }
           }
-
-          setStatusMessage('Registration Successful');
-      
-          if (sanctioning === 'PBSC') {
-            // Set the redirect URL based on the locale
-            const pbscRedirectUrl = locale === 'es'
-              ? 'https://www.pointboxing.com/rules-espanol'
-              : 'https://www.pointboxing.com/rules';
-              
-            setStatusMessage('Redirecting to PBSC rules...');
-            handleRedirect(pbscRedirectUrl);
-          } else if (redirectUrl) {
-            setStatusMessage('Redirecting...');
-            handleRedirect(redirectUrl);
-          } else {
-            closeModal();
-          }
-
-
-      } else {
-          setStatusMessage('Submitting registration with pay later option...');
+        } else {
+          // Pay Later option
+          logRegistrationStatus('Processing pay-later registration...', true);
   
           // Save the fighter registration data with a flag to indicate pay later.
           const fighterDataWithPayLater = {
@@ -865,39 +1015,73 @@ setStatusMessage('Notifying Promoter...');
             paymentStatus: 'pending'
           };
           
-          await saveFighterToFirestore(db, eventId, fighterDataWithPayLater, currentDate, promoterId);
-          
-          // Optionally, send a confirmation email indicating "pay later" instructions.
-          await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
-          
-          setStatusMessage('Registration Successful. Please pay at weigh-ins.');
-          
-
-
-
-          if (sanctioning === 'PBSC') {
-            // Set the redirect URL based on the locale
-            const pbscRedirectUrl = locale === 'es'
-              ? 'https://www.pointboxing.com/rules-espanol'
-              : 'https://www.pointboxing.com/rules';
-              
-            setStatusMessage('Redirecting to PBSC rules...');
-            handleRedirect(pbscRedirectUrl);
-          } else if (redirectUrl) {
-            setStatusMessage('Redirecting...');
-            handleRedirect(redirectUrl);
-          } else {
-            closeModal();
+          // Save to Firestore
+          try {
+            logRegistrationStatus('Saving fighter data with pay-later flag to Firestore...', true);
+            firestoreSaveSuccess = await saveFighterToFirestore(db, eventId, fighterDataWithPayLater, currentDate, promoterId);
+            
+            if (!firestoreSaveSuccess) {
+              logRegistrationStatus('Failed to save fighter data to Firestore', true);
+              throw new Error('Failed to save fighter data to roster');
+            }
+            
+            logRegistrationStatus('Fighter data saved successfully', true);
+          } catch (firestoreError) {
+            logRegistrationStatus(`Error saving to Firestore: ${firestoreError}`, true);
+            throw firestoreError;
           }
-
+          
+          // Only proceed with emails if Firestore save was successful
+          if (firestoreSaveSuccess) {
+            try {
+              logRegistrationStatus('Sending confirmation email...', true);
+              await sendConfirmationEmail(sanctioning, fighterData, eventName, eventId);
+              logRegistrationStatus('Confirmation email sent successfully', true);
+            } catch (emailError) {
+              // Log email error but don't stop the process since fighter data is already saved
+              logRegistrationStatus(`Error sending confirmation email: ${emailError}`, true);
+              console.error('Error sending confirmation email:', emailError);
+              alert(formContent.emailErrorMessage);
+            }
+          
+            if (sendPromoterNotificationEmail) {
+              try {
+                logRegistrationStatus('Sending email to promoter...', true);
+                await sendEmailToPromoter(sanctioning, fighterData, eventName, eventId);
+                logRegistrationStatus('Promoter notification email sent', true);
+              } catch (promoterEmailError) {
+                // Log promoter email error but don't stop the process
+                logRegistrationStatus(`Error sending promoter email: ${promoterEmailError}`, true);
+                console.error('Error sending promoter notification:', promoterEmailError);
+              }
+            }
+            
+            logRegistrationStatus('Registration successful. Please pay at weigh-ins.', true);
+            
+            if (sanctioning === 'PBSC') {
+              const pbscRedirectUrl = locale === 'es'
+                ? 'https://www.pointboxing.com/rules-espanol'
+                : 'https://www.pointboxing.com/rules';
+                
+              logRegistrationStatus('Redirecting to PBSC rules...', true);
+              handleRedirect(pbscRedirectUrl);
+            } else if (redirectUrl) {
+              logRegistrationStatus(`Redirecting to ${redirectUrl}...`, true);
+              handleRedirect(redirectUrl);
+            } else {
+              logRegistrationStatus('Registration completed successfully, closing modal', true);
+              closeModal();
+            }
+          }
         }
       }
     } catch (error: unknown) {
-      setStatusMessage('An error occurred. Please try again.');
       const handledError = handleRegistrationError(error);
+      logRegistrationStatus(`Error during registration: ${handledError.message}`, true);
       console.error('Error during registration:', handledError);
       alert(handledError.message || formContent.generalErrorMessage);
     } finally {
+      logRegistrationStatus('Registration process completed', true);
       setIsSubmitting(false);
     }
   };
