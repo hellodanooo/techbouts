@@ -67,8 +67,8 @@ export default function ConsistentHeader({ transparent = false }: HeaderProps) {
         href="/events" 
         className={`relative border rounded flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
           isActive('/events') 
-        ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
-        :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+        ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746] p-2'
+        :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50 p-2' 
         }`}
       >
         {/* Indicator - consistent position for both locations */}
@@ -86,8 +86,8 @@ export default function ConsistentHeader({ transparent = false }: HeaderProps) {
         href="/promotions" 
         className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
           isActive('/promotions') 
-          ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
-          :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+          ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746] p-2'
+          :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50 p-2' 
         }`}
       >
         {/* Indicator - consistent position for both locations */}
@@ -102,8 +102,8 @@ export default function ConsistentHeader({ transparent = false }: HeaderProps) {
         href="/database" 
         className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
           isActive('/database') 
-          ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
-          :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+          ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746] p-2'
+          :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50 p-2' 
         }`}
       >
         <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${
@@ -118,8 +118,8 @@ export default function ConsistentHeader({ transparent = false }: HeaderProps) {
           href={dashboardPath}
           className={`relative py-2 flex flex-col items-center ${location === 'bottom' ? 'w-1/5' : ''} transition-colors ${
             isPathActive('/promotions/') 
-            ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746]'
-            :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50' 
+            ? 'text-white/80 bg-black/80 text-white hover:text-[#DD5746] p-2'
+            :  'text-black/80 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50 p-2' 
           }`}
         >
           <span className={`absolute ${location === 'bottom' ? '-top-1' : 'bottom-0'} left-1/2 transform -translate-x-1/2 ${location === 'bottom' ? 'w-8 h-1' : 'w-full h-0.5'} rounded-full bg-[#DD5746] transition-all duration-300 ${

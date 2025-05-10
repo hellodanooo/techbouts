@@ -25,6 +25,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import Header from "@/components/headers/Header";
+
 const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
 
 interface FighterPageContentProps {
@@ -142,6 +144,10 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
 
   return (
     <div className="min-h-screen bg-background py-12">
+      <Header/>
+
+
+
       <div className="max-w-6xl mx-auto px-4">
         {/* Back Button */}
         <div className="mb-6">
@@ -160,8 +166,19 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
               <CardTitle className="text-4xl">
                 {fighter.first} {fighter.last}
               </CardTitle>
+
+              {(!isFighter) && ( 
+  
+  <div>Sign In to Edit</div>
+  )}
+
               {(isFighter || isAdmin) && (
+                
                 <div>
+
+
+
+
                   {editMode ? (
                     <div className="flex space-x-2">
                       <Button 
@@ -498,39 +515,44 @@ export function FighterPageContent({ fighter }: FighterPageContentProps) {
         />
 
         {/* Bout Form */}
-        <Card>
-  <CardHeader className="text-center space-y-2">
-    <CardTitle className="text-2xl">Add Bout Record</CardTitle>
-    <CardDescription>
-      <Button 
-        variant="ghost"
-        onClick={toggleCollapse}
-        className="mx-auto flex items-center justify-center text-muted-foreground hover:text-primary"
-      >
-        {isCollapsed ? (
-          <>
-            <ChevronDown className="h-4 w-4 mr-1" />
-            <Radar className="h-4 w-4" />
-            <span className="ml-2">Show Add Bout</span>
-          </>
-        ) : (
-          <>
-            <ChevronUp className="h-4 w-4 mr-1" />
-            <span>Hide Add Bout</span>
-          </>
-        )}
-      </Button>
-    </CardDescription>
-  </CardHeader>
 
-  {!isCollapsed && (
-    <CardContent>
-      <BoutSearch
-      fighter={fighter}
-      />
-    </CardContent>
-  )}
-</Card>
+{(isAdmin || isFighter) && (
+          <Card>
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-2xl">Add Bout Record</CardTitle>
+            <CardDescription>
+              <Button 
+                variant="ghost"
+                onClick={toggleCollapse}
+                className="mx-auto flex items-center justify-center text-muted-foreground hover:text-primary"
+              >
+                {isCollapsed ? (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    <Radar className="h-4 w-4" />
+                    <span className="ml-2">Show Add Bout</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    <span>Hide Add Bout</span>
+                  </>
+                )}
+              </Button>
+            </CardDescription>
+          </CardHeader>
+        
+          {!isCollapsed && (
+            <CardContent>
+              <BoutSearch
+              fighter={fighter}
+              />
+            </CardContent>
+          )}
+        </Card>
+)}
+
+
 
       </div>
     </div>

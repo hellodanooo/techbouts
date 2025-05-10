@@ -51,7 +51,6 @@ export default function GoogleAuthButton() {
         ) : (
           <LogOut className="w-4 h-4" />
         )}
-        <span className="text-sm sm:text-base">{isAuthLoading ? 'Signing out...' : 'Sign out'}</span>
       </button>
     );
   }
@@ -115,9 +114,10 @@ export default function GoogleAuthButton() {
         {isAuthLoading ? (
           <div className="w-5 h-5 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin" />
         ) : (
-          <FaGooglePlusG className="text-xl" />
-        )}
-        <span className="text-sm sm:text-base">{isAuthLoading ? 'Signing in...' : 'Sign in'}</span>
+          <div></div>
+        )
+        }
+        <span className="text-sm sm:text-base">{isAuthLoading ? 'Signing in...' : 'Login'}</span>
       </button>
       
       {isInEmbeddedBrowser && (

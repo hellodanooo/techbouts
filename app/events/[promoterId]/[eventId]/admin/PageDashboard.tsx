@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import EditEventForm from './EditEventForm';
 import RosterTable from './RosterTable';
 import OfficialsEvent from './OfficialsEvent';
-import Matches from '../matches/PageClient';
+import MatchesDisplay from '../matches/MatchesDisplay';
 import { EventType } from '@/utils/types';
 import { useAuth } from '@/context/AuthContext';
 import AuthDisplay from '@/components/ui/AuthDisplay';
@@ -254,14 +254,15 @@ export default function PageDashboard({ eventData, eventId, promoterId, roster, 
                         </button>
                     </div>
 
-                        <Matches
-                            initialRoster={roster}
-                            eventId={eventId}
-                            promoterId={promoterId}
-                            eventData={eventData}
-                            bouts={bouts}
-                            roster={roster} // Pass roster as required
-                        />
+                    <MatchesDisplay
+        bouts={bouts}
+        promoterId={promoterId}
+        eventId={eventId}
+        isAdmin={isAdminOrSanctioningOrPromoter} // Updated from isAdmin to isAdminOrSanctioningOrPromoter
+        eventData={eventData}
+        // Pass down the shared state and handlers
+        handleFighterClick={handleFighterClick}
+      />
 
 
 

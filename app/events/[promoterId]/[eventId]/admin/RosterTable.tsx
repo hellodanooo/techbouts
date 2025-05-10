@@ -3,16 +3,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import FindPotentialMatchesModal from './PotentialMatchesModal';
-import { RefreshCw, Save, CheckCircle, Plus, Loader2 } from "lucide-react";
+import { RefreshCw, Save, CheckCircle, Plus, Loader2, ImageIcon } from "lucide-react";
 import AddFighterModal from '../../../../../components/database/AddFighterModal';
 import { toast } from 'sonner';
 import { RosterFighter, EventType, Bout } from '@/utils/types';
 import { refreshOneFighterData, saveTechBoutsWeighin, fetchTechBoutsRoster } from '@/utils/apiFunctions/techboutsRoster';
 import { fetchPmtRoster, savePmtWeighin } from '@/utils/apiFunctions/pmtRoster';
+import { fetchFighterPhoto } from '@/utils/images/fetchFighterPhoto'; // Import the new function
 
 import { checkFighterExistsInDatabase, addFighterToDatabase } from "@/utils/records/database";
-
-
 
 import {
   Card,
@@ -41,10 +40,7 @@ interface RosterTableProps {
   bouts: Bout[];
   handleFighterClick: (fighter: RosterFighter) => void;
   onBoutsRefresh?: () => void;
-
 }
-
-const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
 
 export default function RosterTable({ 
   roster, 
@@ -76,7 +72,52 @@ export default function RosterTable({
 
   const [fightersInDatabase, setFightersInDatabase] = useState<{ [key: string]: boolean }>({});
   const [addingToDatabase, setAddingToDatabase] = useState<{ [key: string]: boolean }>({});
+  
+  // NEW: Photo states
+  const [fighterPhotos, setFighterPhotos] = useState<{ [key: string]: string | null }>({});
+  const [loadingPhotos, setLoadingPhotos] = useState<{ [key: string]: boolean }>({});
 
+  const defaultPhotoUrl = eventData.sanctioning === 'PBSC' ? "/images/pbsc_fighter_icon.png" : "/images/techbouts_fighter_icon.png";
+
+  // NEW: Load fighter photos
+  useEffect(() => {
+    const loadFighterPhotos = async () => {
+      const photoPromises = rosterData
+        .filter(fighter => fighter.fighter_id)
+        .map(async fighter => {
+          const fighterId = fighter.fighter_id!;
+          
+          // Set loading state
+          setLoadingPhotos(prev => ({ ...prev, [fighterId]: true }));
+          
+          try {
+            // Fetch photo from Firebase storage
+            const photoUrl = await fetchFighterPhoto(fighterId);
+            
+            // Update photo URL in state
+            setFighterPhotos(prev => ({ 
+              ...prev, 
+              [fighterId]: photoUrl 
+            }));
+            
+            return { fighterId, photoUrl };
+          } catch (error) {
+            console.error(`Error loading photo for fighter ${fighterId}:`, error);
+            return { fighterId, photoUrl: null };
+          } finally {
+            // Clear loading state
+            setLoadingPhotos(prev => ({ ...prev, [fighterId]: false }));
+          }
+        });
+      
+      // Wait for all photo fetches to complete
+      await Promise.all(photoPromises);
+    };
+    
+    if (rosterData?.length) {
+      loadFighterPhotos();
+    }
+  }, [rosterData]);
 
   const handleAddToDatabase = async (fighter: RosterFighter) => {
     if (!fighter.fighter_id) return;
@@ -106,7 +147,6 @@ export default function RosterTable({
       setAddingToDatabase(prev => ({ ...prev, [fighter.fighter_id!]: false }));
     }
   };
-
 
   const matchedFighterIds = useMemo(() => {
     const ids = new Set<string>();
@@ -170,6 +210,21 @@ export default function RosterTable({
     return filtered;
   }, [rosterData, searchTerm, sortKey, sortDirection, showUnmatchedOnly, matchedFighterIds]);
 
+  // UPDATED: Now also checks firebase storage photos
+  const getPhotoUrl = (fighter: RosterFighter): string => {
+    if (!fighter.fighter_id) return defaultPhotoUrl;
+    
+    // First check if we have a Firebase photo
+    const firebasePhoto = fighterPhotos[fighter.fighter_id];
+    if (firebasePhoto) return firebasePhoto;
+    
+    // Then check existing photo URL
+    if (fighter.photo && isValidUrl(fighter.photo)) return fighter.photo;
+    
+    // Fall back to default
+    return defaultPhotoUrl;
+  };
+
   const isValidUrl = (url: string | undefined): boolean => {
     if (!url) return false;
     try {
@@ -178,10 +233,6 @@ export default function RosterTable({
     } catch {
       return false;
     }
-  };
-
-  const getPhotoUrl = (fighter: RosterFighter): string => {
-    return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
   };
 
   const handleWeighinChange = (fighterId: string, value: string) => {
@@ -204,7 +255,6 @@ export default function RosterTable({
       setConductWeighins(true);
     }
   }, [rosterData]);
-
 
   const refreshRosterData = async () => {
     try {
@@ -230,7 +280,6 @@ export default function RosterTable({
     await refreshRosterData();
   };
 
-
   useEffect(() => {
     const checkFightersExistence = async () => {
       const existenceMap: { [key: string]: boolean } = {};
@@ -251,7 +300,6 @@ export default function RosterTable({
     }
   }, [rosterData]);
 
-
   if (!rosterData?.length) {
     return (
       <Card className="w-full mt-2">
@@ -268,16 +316,16 @@ export default function RosterTable({
           </div>
 
           {openAddFighterModal && eventId && (
-  <AddFighterModal
-    eventId={eventId}
-    savesTo="roster"
-    promoterId={promoterId}
-    isOpen={openAddFighterModal}
-    onClose={() => setOpenAddFighterModal(false)}
-    onRosterUpdated={handleFighterAdded}
-    sanctioning={eventData.sanctioning}
-  />
-)}
+            <AddFighterModal
+              eventId={eventId}
+              savesTo="roster"
+              promoterId={promoterId}
+              isOpen={openAddFighterModal}
+              onClose={() => setOpenAddFighterModal(false)}
+              onRosterUpdated={handleFighterAdded}
+              sanctioning={eventData.sanctioning}
+            />
+          )}
         </CardHeader>
 
         <CardContent>
@@ -339,45 +387,32 @@ export default function RosterTable({
     <div className="mt-2">
       <Card className="w-full">
         <CardHeader>
-        <div className="flex items-center justify-center gap-2">
-  Roster {showUnmatchedOnly ? (
-    <div>{displayedRoster.length} Unmatched</div>
-  ) : (
-    <div>All {rosterData.length} Fighters</div>
-  )}
-</div>
+          <div className="flex items-center justify-center gap-2">
+            Roster {showUnmatchedOnly ? (
+              <div>{displayedRoster.length} Unmatched</div>
+            ) : (
+              <div>All {rosterData.length} Fighters</div>
+            )}
+          </div>
           <CardTitle className="flex items-center justify-center gap-2">
-           
+            {isAdmin && (
+              <div className='flex'>
+                <Button
+                  onClick={() => setOpenAddFighterModal(true)}
+                  className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4" /> Add
+                </Button>
 
-
-           {            isAdmin && (
-            
-       <div className='flex'>
-
-       
-            <Button
-              onClick={() => setOpenAddFighterModal(true)}
-              className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
-              >
-              <Plus className="h-4 w-4" /> Add
-            </Button>
-
-            <Button
-              variant={conductWeighins ? 'default' : 'outline'}
-              onClick={() => setConductWeighins(prev => !prev)}
-              className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
-            >
-              {conductWeighins ? 'Weighins On' : 'Weighins'}
-            </Button>
-
-            </div>
-
-          )}
-
-
-
-
-
+                <Button
+                  variant={conductWeighins ? 'default' : 'outline'}
+                  onClick={() => setConductWeighins(prev => !prev)}
+                  className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto"
+                >
+                  {conductWeighins ? 'Weighins On' : 'Weighins'}
+                </Button>
+              </div>
+            )}
 
             <Button
               variant={showUnmatchedOnly ? 'default' : 'outline'}
@@ -405,11 +440,11 @@ export default function RosterTable({
               <TableHeader>
                 <TableRow>
                   {conductWeighins && 
-                  <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort('weighin')}
-                  >Weighin
-                  </TableHead>
+                    <TableHead
+                      className="cursor-pointer select-none"
+                      onClick={() => handleSort('weighin')}
+                    >Weighin
+                    </TableHead>
                   }
 
                   <TableHead>Photo</TableHead>
@@ -421,7 +456,6 @@ export default function RosterTable({
                     Stats
                     {sortKey === 'first' && (sortDirection === 'asc' ? ' ▲' : ' ▼')}
                   </TableHead>
-
 
                   <TableHead
                     className="cursor-pointer select-none"
@@ -461,31 +495,28 @@ export default function RosterTable({
                   <TableHead>Records</TableHead>
                   {isAdmin && (
                     <TableHead>Refresh</TableHead>
-                  )  
-                }
+                  )}
                   {isAdmin && (
-
                     <TableHead>Search</TableHead>
                   )}
-              {isAdmin && (
+                  {isAdmin && (
                     <TableHead>Database</TableHead>
                   )}
-                
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {displayedRoster.map((fighter, index) => {
-                  // console.log("map log", fighter.fighter_id, fighter.weightclass);
                   const fighterId = fighter.fighter_id || '';
                   const name = `${fighter.first || ''} ${fighter.last || ''}`;
                   const hasUnsavedChanges = unsavedChanges.has(fighterId);
+                  const isLoadingPhoto = loadingPhotos[fighterId];
 
                   return (
                     <TableRow key={index}>
                       {conductWeighins && (
                         <TableCell>
-                            <div className="flex items-center">
+                          <div className="flex items-center">
                             <input
                               className="no-zoom"
                               style={{ width: '50px' }}
@@ -493,101 +524,94 @@ export default function RosterTable({
                               value={weighinValues[fighterId] || ''}
                               onChange={(e) => handleWeighinChange(fighterId, e.target.value)}
                               onClick={(e) => {
-                              e.stopPropagation();
-                              e.currentTarget.select();
+                                e.stopPropagation();
+                                e.currentTarget.select();
                               }}
                               disabled={!isAdmin}
                             />
                             
                             {isAdmin && hasUnsavedChanges && !savingWeights[fighterId] && (
                               <button 
-                              className="ml-1 bg-green-500 text-white p-1 rounded hover:bg-blue-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSaveWeight(fighterId);
-                              }}
+                                className="ml-1 bg-green-500 text-white p-1 rounded hover:bg-blue-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveWeight(fighterId);
+                                }}
                               >
-                              <Save className="h-4 w-4" />
+                                <Save className="h-4 w-4" />
                               </button>
                             )}
                             
                             {savingWeights[fighterId] && (
                               <div className="ml-1">
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                               </div>
                             )}
-                            </div>
+                          </div>
                         </TableCell>
                       )}
 
-
-
-
-                      <TableCell
-                      className='relative'
-                      >
-
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                          <Image
-                            src={getPhotoUrl(fighter)}
-                            alt={name}
-                            fill
-                            className="object-cover"
-                          />
+                      <TableCell className='relative'>
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gray-100">
+                          {isLoadingPhoto ? (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                            </div>
+                          ) : (
+                            <Image
+                              src={getPhotoUrl(fighter)}
+                              alt={name}
+                              fill
+                              className="object-cover"
+                              onError={(e) => {
+                                // Fall back to default on error
+                                (e.target as HTMLImageElement).src = defaultPhotoUrl;
+                              }}
+                            />
+                          )}
                         </div>
                         
                         <div className="flex justify-start bg-gray-100 border border-black rounded-md mr-auto ml-auto pl-1 pr-1 -mt-1"
-              style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
-            >
-              <div className="text-center pl-0.5">
-                {fighter && fighter.gender?.startsWith('F') ? (
-                  <span className="text-pink-500">F</span>
-                ) : fighter?.gender?.startsWith('M') ? (
-                  <span className="text-blue-500">M</span>
-                ) : (
-                  fighter ? fighter.gender : null
-                                  )}
-              </div>
-              <div className="text-center pl-0.5">{fighter ? fighter.age : null}</div>
-            </div>
-
-
-
-      
-
+                          style={{ fontSize: 'clamp(0.6rem, 1vw, 1.5rem)', width: 'fit-content', height: 'fit-content' }}
+                        >
+                          <div className="text-center pl-0.5">
+                            {fighter && fighter.gender?.startsWith('F') ? (
+                              <span className="text-pink-500">F</span>
+                            ) : fighter?.gender?.startsWith('M') ? (
+                              <span className="text-blue-500">M</span>
+                            ) : (
+                              fighter ? fighter.gender : null
+                            )}
+                          </div>
+                          <div className="text-center pl-0.5">{fighter ? fighter.age : null}</div>
+                        </div>
                       </TableCell>
 
-                        <TableCell
-                        className='relative mr-2'
+                      <TableCell className='relative mr-2'>
+                        <div
+                          id='statsTabs'
+                          className="absolute inset-y-0 -left-3 flex flex-col items-center justify-center leading-tight"
+                          style={{ fontSize: 'clamp(0.6rem, 0.6rem, 1.5rem)' }}
                         >
-         <div
-  id='statsTabs'
-  className="absolute inset-y-0 -left-3 flex flex-col items-center justify-center leading-tight"
-  style={{ fontSize: 'clamp(0.6rem, 0.6rem, 1.5rem)' }}
->
-                {fighter && (fighter.mt_win > 0 || fighter.mt_loss > 0) && (
-                <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
-                  <span className="text-black-500">MT: ({fighter.mt_win} - {fighter.mt_loss})</span>
-                </div>
-                )}
+                          {fighter && (fighter.mt_win > 0 || fighter.mt_loss > 0) && (
+                            <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
+                              <span className="text-black-500">MT: ({fighter.mt_win} - {fighter.mt_loss})</span>
+                            </div>
+                          )}
 
-                {fighter && (fighter.mma_win > 0 || fighter.mma_loss > 0) && (
-                <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
-                  <span className="text-black-500">MMA: ({fighter.mma_win} - {fighter.mma_loss})</span>
-                </div>
-                )}
+                          {fighter && (fighter.mma_win > 0 || fighter.mma_loss > 0) && (
+                            <div className="text-left pl-0.5 rounded-sm bg-red-100 whitespace-nowrap">
+                              <span className="text-black-500">MMA: ({fighter.mma_win} - {fighter.mma_loss})</span>
+                            </div>
+                          )}
 
-                {fighter && fighter.pmt_win > 0 || fighter.pmt_loss > 0 && (
-                <div className="text-left pl-0.5 rounded-sm bg-green-100 whitespace-nowrap">
-                  <span className="text-black-500">PMT: ({fighter.pmt_win} - {fighter.pmt_loss})</span>
-                </div>
-                )}
-                </div>
-                        </TableCell>
-
-
-
-
+                          {fighter && (fighter.pmt_win > 0 || fighter.pmt_loss > 0) && (
+                            <div className="text-left pl-0.5 rounded-sm bg-green-100 whitespace-nowrap">
+                              <span className="text-black-500">PMT: ({fighter.pmt_win} - {fighter.pmt_loss})</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
 
                       <TableCell
                         onClick={() => handleFighterClick(fighter)}
@@ -599,78 +623,76 @@ export default function RosterTable({
                       <TableCell>{fighter.weightclass || '-'}</TableCell>
                       <TableCell>{fighter.age || '-'}</TableCell>
                       <TableCell>{fighter.gender || '-'}</TableCell>
-                        <TableCell>
+                      <TableCell>
                         <div>
                           {fighter.mt_win > 0 || fighter.mt_loss > 0 ? `${fighter.mt_win || 0}-${fighter.mt_loss || 0}` : ''}
                           {fighter.mma_win > 0 || fighter.mma_loss > 0 ? ` ${fighter.mma_win || 0}-${fighter.mma_loss || 0}` : ''}
                         </div>
-                        </TableCell>
+                      </TableCell>
                       
                       {isAdmin && (
-                             <TableCell>
-                             <span
-                               className={`
-           cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium 
-           ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
-         `}
-                               onClick={() =>
-                                 refreshOneFighterData(fighter, promoterId, eventId, setIsRefreshing, setRosterData)
-                               }
-                             >
-                               <RefreshCw
-                                 className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''
-                                   }`}
-                               />
-                               {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
-                             </span>
-                           </TableCell>
+                        <TableCell>
+                          <span
+                            className={`
+                              cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium 
+                              ${isRefreshing[fighterId] ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}
+                            `}
+                            onClick={() =>
+                              refreshOneFighterData(fighter, promoterId, eventId, setIsRefreshing, setRosterData)
+                            }
+                          >
+                            <RefreshCw
+                              className={`h-3 w-3 mr-1 ${isRefreshing[fighterId] ? 'animate-spin' : ''}`}
+                            />
+                            {isRefreshing[fighterId] ? 'Updating...' : 'Refresh'}
+                          </span>
+                        </TableCell>
                       )}
-                 
-                 {isAdmin && (
-                      <TableCell>
-                        <span
-                          className="cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedFighter(fighter);
-                            setOpenPotentialMatchesModal(true);
-                          }}
-                        >
-                          Search
-                        </span>
-                      </TableCell>
-                    )}
+                      
+                      {isAdmin && (
+                        <TableCell>
+                          <span
+                            className="cursor-pointer inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFighter(fighter);
+                              setOpenPotentialMatchesModal(true);
+                            }}
+                          >
+                            Search
+                          </span>
+                        </TableCell>
+                      )}
 
- {isAdmin && (
-  <TableCell className="text-center">
-    {fightersInDatabase[fighterId] !== undefined ? (
-      fightersInDatabase[fighterId] ? (
-        <CheckCircle className="h-5 w-5 text-green-500" />
-      ) : (
-        <Button
-          size="sm"
-          variant="outline"
-          className="px-2 py-1 text-xs h-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAddToDatabase(fighter);
-          }}
-          disabled={addingToDatabase[fighterId]}
-        >
-          {addingToDatabase[fighterId] ? (
-            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-          ) : (
-            <Plus className="h-3 w-3 mr-1" />
-          )}
-          Add
-        </Button>
-      )
-    ) : (
-      <span className="text-xs text-gray-400">Checking...</span>
-    )}
-  </TableCell>
-)}
-
+                      {isAdmin && (
+                        <TableCell className="text-center">
+                          {fightersInDatabase[fighterId] !== undefined ? (
+                            fightersInDatabase[fighterId] ? (
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="px-2 py-1 text-xs h-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToDatabase(fighter);
+                                }}
+                                disabled={addingToDatabase[fighterId]}
+                              >
+                                {addingToDatabase[fighterId] ? (
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <Plus className="h-3 w-3 mr-1" />
+                                )}
+                                Add
+                              </Button>
+                            )
+                          ) : (
+                            <span className="text-xs text-gray-400">Checking...</span>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}
@@ -687,6 +709,8 @@ export default function RosterTable({
           promoterId={promoterId}
           isOpen={openAddFighterModal}
           onClose={() => setOpenAddFighterModal(false)}
+          onRosterUpdated={handleFighterAdded}
+          sanctioning={eventData.sanctioning}
         />
       )}
 
