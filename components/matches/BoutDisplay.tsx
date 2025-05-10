@@ -74,7 +74,6 @@ function FighterStats({ fighter, align }: FighterStatsProps) {
   );
 }
 
-// FighterDisplay Component for single fighter display
 interface FighterDisplayProps {
   fighter: RosterFighter | null;
   corner: 'red' | 'blue';
@@ -82,16 +81,17 @@ interface FighterDisplayProps {
   handleEditFighter?: (fighter: RosterFighter) => void;
   handleDeleteFighter?: (fighter: RosterFighter) => void;
   showControls?: boolean;
+  sanctioning?: string;
 }
 
-// Define FighterDisplay component without using 'export' keyword here
 function FighterDisplay({ 
     fighter, 
     corner, 
     handleFighterClick,
     handleEditFighter,
     handleDeleteFighter,
-    showControls = false
+    showControls = false,
+    sanctioning
   }: FighterDisplayProps) {
     if (!fighter) {
       return (
@@ -113,7 +113,7 @@ function FighterDisplay({
       }
     };
   
-    const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
+    const defaultPhotoUrl = sanctioning === 'pbsc' ? "/images/pbsc_fighter_icon.png" : "/images/techbouts_fighter_icon.png";
   
     const getPhotoUrl = (fighter: RosterFighter): string => {
       return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
@@ -236,7 +236,12 @@ function BoutRow({
     }
   };
 
-  const defaultPhotoUrl = "/images/techbouts_fighter_icon.png";
+
+
+
+  const defaultPhotoUrl = bout.sanctioning === 'PBSC' ? "/images/pbsc_fighter_icon.png" : "/images/techbouts_fighter_icon.png";
+
+
 
   const getPhotoUrl = (fighter: RosterFighter): string => {
     return isValidUrl(fighter.photo) ? fighter.photo as string : defaultPhotoUrl;
