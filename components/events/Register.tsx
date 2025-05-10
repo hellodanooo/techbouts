@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { db } from '@/lib/firebase_techbouts/config';
-import { Firestore, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { FullContactFighter, RosterFighter } from '@/utils/types';
+import { FullContactFighter } from '@/utils/types';
 // Shadcn UI Components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -539,163 +539,212 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
 
 
 
-  async function saveFighterToFirestore(
-    db: Firestore,
-    eventId: string,
-    fighterData: FullContactFighter & {
-      paymentIntentId?: string;
-      paymentAmount?: number;
-      paymentCurrency?: string;
-    },
-    currentDate: string,
-    promoterId: string
-  ): Promise<boolean> {
+  // async function saveFighterToFirestore(
+  //   db: Firestore,
+  //   eventId: string,
+  //   fighterData: FullContactFighter & {
+  //     paymentIntentId?: string;
+  //     paymentAmount?: number;
+  //     paymentCurrency?: string;
+  //   },
+  //   currentDate: string,
+  //   promoterId: string
+  // ): Promise<boolean> {
+  //   try {
+  //     console.log(`[FIRESTORE_SAVE] Starting save for fighter: ${fighterData.fighter_id} in event: ${eventId}`);
+      
+  //     if (!fighterData.fighter_id) {
+  //       console.error(`[FIRESTORE_SAVE_ERROR] No fighter_id provided for saving to Firestore`);
+  //       return false;
+  //     }
+      
+  //     // Create payment info object, ensuring no undefined values
+  //     const payment_info = {
+  //       paymentIntentId: fighterData.paymentIntentId || "",
+  //       paymentAmount: fighterData.paymentAmount || 0,
+  //       paymentCurrency: fighterData.paymentCurrency || 'USD'
+  //     };
+      
+  //     console.log(`[FIRESTORE_SAVE] Payment info prepared: ${JSON.stringify(payment_info)}`);
+  
+  //     // Determine age_gender classification
+  //     const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
+  //     console.log(`[FIRESTORE_SAVE] Age-gender classification: ${ageGenderClassification}`);
+  
+  //     // Prepare fighter data to match FullContactFighter interface
+  //     const fullContactFighterData: Partial<RosterFighter> = {
+  //       // Basic Information
+  //       fighter_id: fighterData.fighter_id,
+  //       first: fighterData.first,
+  //       last: fighterData.last,
+  //       dob: fighterData.dob,
+  //       age: fighterData.age,
+  //       gender: fighterData.gender,
+  //       email: fighterData.email.toLowerCase(),
+  //       phone: fighterData.phone,
+  //       heightFoot: fighterData.heightFoot || 0,
+  //       heightInch: fighterData.heightInch || 0,
+  //       heightCm: fighterData.heightCm || 0,
+        
+  //       // Gym Information
+  //       gym: fighterData.gym,
+  //       coach: fighterData.coach_name,
+  //       coach_email: fighterData.coach_email || '',
+  //       coach_name: fighterData.coach_name,
+  //       coach_phone: fighterData.coach_phone,
+  
+  //       // Location Information
+  //       state: fighterData.state || '',
+  //       city: fighterData.city || '',
+  
+  //       // Physical Information
+  //       weightclass: fighterData.weightclass,
+  
+  //       // Record
+  //       mt_win: fighterData.mt_win || 0,
+  //       mt_loss: fighterData.mt_loss || 0,
+  //       boxing_win: fighterData.boxing_win || 0,
+  //       boxing_loss: fighterData.boxing_loss || 0,
+  //       mma_win: fighterData.mma_win || 0,
+  //       mma_loss: fighterData.mma_loss || 0,
+  //       pmt_win: fighterData.pmt_win || 0,
+  //       pmt_loss: fighterData.pmt_loss || 0,
+  
+  //       // Experience & Classification
+  //       years_exp: fighterData.years_exp || 0,
+  //       age_gender: ageGenderClassification,
+  
+  //       // Documentation
+  //       docId: fighterData.fighter_id,
+  //       payment_info,
+        
+  //     };
+  
+  //     console.log(`[FIRESTORE_SAVE] Fighter data prepared for Firestore`);
+  
+  //     // Reference to the roster_json document
+  //     const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
+  //     console.log(`[FIRESTORE_SAVE] Firestore path: events/promotions/${promoterId}/${eventId}/roster_json/fighters`);
+  
+  //     // Check if the document exists
+  //     console.log(`[FIRESTORE_SAVE] Checking if roster document exists`);
+  //     let rosterJsonDoc;
+  //     try {
+  //       rosterJsonDoc = await getDoc(rosterJsonRef);
+  //     } catch (error) {
+  //       console.error(`[FIRESTORE_SAVE_ERROR] Error getting roster document:`, error);
+  //       return false;
+  //     }
+      
+  //     const batch = writeBatch(db);
+  
+  //     try {
+  //       if (rosterJsonDoc.exists()) {
+  //         console.log(`[FIRESTORE_SAVE] Roster document exists, updating existing document`);
+  //         // Document exists, get the current fighters array
+  //         const data = rosterJsonDoc.data();
+  //         const fighters = data.fighters || [];
+  //         console.log(`[FIRESTORE_SAVE] Current roster count: ${fighters.length}`);
+  
+  //         // Check if fighter already exists in the array (by fighter_id)
+  //         const existingFighterIndex = fighters.findIndex(
+  //           (f: RosterFighter) => f.fighter_id === fighterData.fighter_id
+  //         );
+  
+  //         if (existingFighterIndex >= 0) {
+  //           console.log(`[FIRESTORE_SAVE] Fighter already exists in roster, updating existing record`);
+  //           fighters[existingFighterIndex] = {
+  //             ...fighters[existingFighterIndex],
+  //             ...fullContactFighterData,
+  //             updated_at: currentDate
+  //           };
+  //         } else {
+  //           // Add the new fighter to the array
+  //           fighters.push(fullContactFighterData);
+  //           console.log(`[FIRESTORE_SAVE] Added fighter to existing array, new count: ${fighters.length}`);
+  //         }
+  
+  //         // Update the document with the new array
+  //         batch.update(rosterJsonRef, { fighters: fighters });
+  //       } else {
+  //         console.log(`[FIRESTORE_SAVE] Roster document doesn't exist, creating new document`);
+  //         // Document doesn't exist, create it with the fighter as the first item in the array
+  //         batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
+  //       }
+  
+  //       // Commit the batch
+  //       console.log(`[FIRESTORE_SAVE] Committing batch write to Firestore`);
+  //       await batch.commit();
+  //       console.log(`[FIRESTORE_SAVE] Batch write successful for fighter: ${fighterData.fighter_id}`);
+  
+  //       return true;
+  //     } catch (batchError) {
+  //       console.error(`[FIRESTORE_SAVE_ERROR] Error in batch operation:`, batchError);
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     console.error(`[FIRESTORE_SAVE_ERROR] Unexpected error saving fighter data to Firestore:`, error);
+  //     return false;
+  //   }
+  // }
+
+
+
+
+  const saveToFirestore = async (
+    fighterData: FullContactFighter, 
+    paymentOption: 'free' | 'pay-later' | 'paid',
+    paymentData?: {
+      paymentIntentId: string;
+      paymentAmount: number;
+      paymentCurrency: string;
+    }
+  ): Promise<boolean> => {
     try {
-      console.log(`[FIRESTORE_SAVE] Starting save for fighter: ${fighterData.fighter_id} in event: ${eventId}`);
+      console.log(`Calling API to save fighter data (${paymentOption})...`);
       
-      if (!fighterData.fighter_id) {
-        console.error(`[FIRESTORE_SAVE_ERROR] No fighter_id provided for saving to Firestore`);
-        return false;
-      }
-      
-      // Create payment info object, ensuring no undefined values
+      // Create a payment_info object based on the payment option
       const payment_info = {
-        paymentIntentId: fighterData.paymentIntentId || "",
-        paymentAmount: fighterData.paymentAmount || 0,
-        paymentCurrency: fighterData.paymentCurrency || 'USD'
+        paymentIntentId: paymentOption === 'paid' && paymentData ? paymentData.paymentIntentId : '',
+        paymentAmount: paymentOption === 'free' ? 0 : (paymentData?.paymentAmount || convertedFee.amount),
+        paymentCurrency: paymentData?.paymentCurrency || convertedFee.currency
       };
       
-      console.log(`[FIRESTORE_SAVE] Payment info prepared: ${JSON.stringify(payment_info)}`);
-  
-      // Determine age_gender classification
-      const ageGenderClassification = determineAgeGender(fighterData.age, fighterData.gender);
-      console.log(`[FIRESTORE_SAVE] Age-gender classification: ${ageGenderClassification}`);
-  
-      // Prepare fighter data to match FullContactFighter interface
-      const fullContactFighterData: Partial<RosterFighter> = {
-        // Basic Information
-        fighter_id: fighterData.fighter_id,
-        first: fighterData.first,
-        last: fighterData.last,
-        dob: fighterData.dob,
-        age: fighterData.age,
-        gender: fighterData.gender,
-        email: fighterData.email.toLowerCase(),
-        phone: fighterData.phone,
-        heightFoot: fighterData.heightFoot || 0,
-        heightInch: fighterData.heightInch || 0,
-        heightCm: fighterData.heightCm || 0,
-        
-        // Gym Information
-        gym: fighterData.gym,
-        coach: fighterData.coach_name,
-        coach_email: fighterData.coach_email || '',
-        coach_name: fighterData.coach_name,
-        coach_phone: fighterData.coach_phone,
-  
-        // Location Information
-        state: fighterData.state || '',
-        city: fighterData.city || '',
-  
-        // Physical Information
-        weightclass: fighterData.weightclass,
-  
-        // Record
-        mt_win: fighterData.mt_win || 0,
-        mt_loss: fighterData.mt_loss || 0,
-        boxing_win: fighterData.boxing_win || 0,
-        boxing_loss: fighterData.boxing_loss || 0,
-        mma_win: fighterData.mma_win || 0,
-        mma_loss: fighterData.mma_loss || 0,
-        pmt_win: fighterData.pmt_win || 0,
-        pmt_loss: fighterData.pmt_loss || 0,
-  
-        // Experience & Classification
-        years_exp: fighterData.years_exp || 0,
-        age_gender: ageGenderClassification,
-  
-        // Documentation
-        docId: fighterData.fighter_id,
-        payment_info,
-        
+      // Create a copy of the fighter data with the payment_info added
+      const fighterToSave = {
+        ...fighterData,
+        payment_info
       };
-  
-      console.log(`[FIRESTORE_SAVE] Fighter data prepared for Firestore`);
-  
-      // Reference to the roster_json document
-      const rosterJsonRef = doc(db, 'events', 'promotions', promoterId, eventId, 'roster_json', 'fighters');
-      console.log(`[FIRESTORE_SAVE] Firestore path: events/promotions/${promoterId}/${eventId}/roster_json/fighters`);
-  
-      // Check if the document exists
-      console.log(`[FIRESTORE_SAVE] Checking if roster document exists`);
-      let rosterJsonDoc;
-      try {
-        rosterJsonDoc = await getDoc(rosterJsonRef);
-      } catch (error) {
-        console.error(`[FIRESTORE_SAVE_ERROR] Error getting roster document:`, error);
+      
+      const response = await axios.post('/api/fighters/save', {
+        eventId,
+        fighterData: fighterToSave,
+        currentDate: format(new Date(), 'yyyy-MM-dd'),
+        promoterId
+      });
+      
+      if (!response.data.success) {
+        console.log(`API error: ${response.data.message}`);
         return false;
       }
       
-      const batch = writeBatch(db);
-  
-      try {
-        if (rosterJsonDoc.exists()) {
-          console.log(`[FIRESTORE_SAVE] Roster document exists, updating existing document`);
-          // Document exists, get the current fighters array
-          const data = rosterJsonDoc.data();
-          const fighters = data.fighters || [];
-          console.log(`[FIRESTORE_SAVE] Current roster count: ${fighters.length}`);
-  
-          // Check if fighter already exists in the array (by fighter_id)
-          const existingFighterIndex = fighters.findIndex(
-            (f: RosterFighter) => f.fighter_id === fighterData.fighter_id
-          );
-  
-          if (existingFighterIndex >= 0) {
-            console.log(`[FIRESTORE_SAVE] Fighter already exists in roster, updating existing record`);
-            fighters[existingFighterIndex] = {
-              ...fighters[existingFighterIndex],
-              ...fullContactFighterData,
-              updated_at: currentDate
-            };
-          } else {
-            // Add the new fighter to the array
-            fighters.push(fullContactFighterData);
-            console.log(`[FIRESTORE_SAVE] Added fighter to existing array, new count: ${fighters.length}`);
-          }
-  
-          // Update the document with the new array
-          batch.update(rosterJsonRef, { fighters: fighters });
-        } else {
-          console.log(`[FIRESTORE_SAVE] Roster document doesn't exist, creating new document`);
-          // Document doesn't exist, create it with the fighter as the first item in the array
-          batch.set(rosterJsonRef, { fighters: [fullContactFighterData] });
-        }
-  
-        // Commit the batch
-        console.log(`[FIRESTORE_SAVE] Committing batch write to Firestore`);
-        await batch.commit();
-        console.log(`[FIRESTORE_SAVE] Batch write successful for fighter: ${fighterData.fighter_id}`);
-  
-        return true;
-      } catch (batchError) {
-        console.error(`[FIRESTORE_SAVE_ERROR] Error in batch operation:`, batchError);
-        return false;
-      }
+      console.log('Fighter saved successfully via API');
+      return true;
     } catch (error) {
-      console.error(`[FIRESTORE_SAVE_ERROR] Unexpected error saving fighter data to Firestore:`, error);
+      console.log(`Error saving fighter via API: ${error}`);
+      console.error('Error in saveToFirestore:', error);
       return false;
     }
-  }
+  };
 
-  // Helper function to determine age_gender classification
-  function determineAgeGender(age: number, gender: string): 'MEN' | 'WOMEN' | 'BOYS' | 'GIRLS' {
-    if (age >= 18) {
-      return gender.toLowerCase() === 'male' ? 'MEN' : 'WOMEN';
-    } else {
-      return gender.toLowerCase() === 'male' ? 'BOYS' : 'GIRLS';
-    }
-  }
+
+
+
+
+
+
+
+
 
   function handleRegistrationError(error: unknown): RegistrationError {
     if (error instanceof Error) {
@@ -799,8 +848,8 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
         logRegistrationStatus('Processing free registration...', true);
   
         try {
-          logRegistrationStatus('Saving fighter data to Firestore...', true);
-          firestoreSaveSuccess = await saveFighterToFirestore(db, eventId, fighterData, currentDate, promoterId);
+          logRegistrationStatus('Processing free registration...', true);
+          firestoreSaveSuccess = await saveToFirestore(fighterData, 'free');
           
           if (!firestoreSaveSuccess) {
             logRegistrationStatus('Failed to save fighter data to Firestore', true);
@@ -923,22 +972,18 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
   
           logRegistrationStatus(`Payment successful, paymentIntentId: ${paymentResponse.data.paymentIntentId}`, true);
           
-          const fighterDataWithPayment = {
-            ...fighterData,
-            paymentIntentId: paymentResponse.data.paymentIntentId,
-            paymentAmount: convertedFee.amount,
-            paymentCurrency: convertedFee.currency
-          } as FullContactFighter & {
-            paymentIntentId: string;
-            paymentAmount: number;
-            paymentCurrency: string;
-          };
+        
   
           // Save to Firestore
           try {
+
             logRegistrationStatus('Saving fighter data to Firestore...', true);
-            firestoreSaveSuccess = await saveFighterToFirestore(db, eventId, fighterDataWithPayment, currentDate, promoterId);
-            
+            firestoreSaveSuccess = await saveToFirestore(fighterData, 'paid', {
+              paymentIntentId: paymentResponse.data.paymentIntentId,
+              paymentAmount: convertedFee.amount,
+              paymentCurrency: convertedFee.currency
+            });
+
             if (!firestoreSaveSuccess) {
               logRegistrationStatus('Failed to save fighter data to Firestore', true);
               throw new Error('Failed to save fighter data to roster');
@@ -1006,19 +1051,12 @@ const RegistrationComponent: React.FC<RegisterProps> = ({ eventId, closeModal, r
           // Pay Later option
           logRegistrationStatus('Processing pay-later registration...', true);
   
-          // Save the fighter registration data with a flag to indicate pay later.
-          const fighterDataWithPayLater = {
-            ...fighterData,
-            paymentIntentId: '',
-            paymentAmount: convertedFee.amount,
-            paymentCurrency: convertedFee.currency,
-            paymentStatus: 'pending'
-          };
-          
+                
           // Save to Firestore
           try {
-            logRegistrationStatus('Saving fighter data with pay-later flag to Firestore...', true);
-            firestoreSaveSuccess = await saveFighterToFirestore(db, eventId, fighterDataWithPayLater, currentDate, promoterId);
+
+            logRegistrationStatus('Processing pay-later registration...', true);
+            firestoreSaveSuccess = await saveToFirestore(fighterData, 'pay-later');
             
             if (!firestoreSaveSuccess) {
               logRegistrationStatus('Failed to save fighter data to Firestore', true);

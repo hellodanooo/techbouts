@@ -56,6 +56,7 @@ payment_info: {
   paymentIntentId: string | '';
   paymentAmount: number | 0;
   paymentCurrency: string | '';
+  
 };
 }
 
